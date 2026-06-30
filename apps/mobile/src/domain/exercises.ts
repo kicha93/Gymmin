@@ -1,0 +1,374 @@
+import { exercises } from "./exerciseCatalog";
+import { stageExerciseCategories } from "./stageExerciseCategories";
+import type { GarminCategory } from "./stageExerciseCategories";
+import type { StageType } from "./workouts";
+
+export { exercises, exercisesByGarminCategory } from "./exerciseCatalog";
+
+export const muscleKeys = [
+  "abductors",
+  "abs",
+  "adductors",
+  "biceps",
+  "calves",
+  "chest",
+  "forearm",
+  "glutes",
+  "hamstrings",
+  "hips",
+  "lats",
+  "lowerBack",
+  "obliques",
+  "quads",
+  "shoulders",
+  "traps",
+  "triceps"
+] as const;
+
+export const equipmentKeys = [
+  "ankleWeight",
+  "band",
+  "barbell",
+  "battleRope",
+  "bench",
+  "bike",
+  "bosuBall",
+  "box",
+  "cableMachine",
+  "dumbbell",
+  "ezBar",
+  "foamRoller",
+  "jumpRope",
+  "kettlebell",
+  "machine",
+  "medicineBall",
+  "other",
+  "plate",
+  "pullupBar",
+  "rings",
+  "rope",
+  "sandbag",
+  "sled",
+  "slidingDisc",
+  "smithMachine",
+  "squatRack",
+  "swissBall",
+  "trx",
+  "weightVest"
+] as const;
+
+export type MuscleKey = (typeof muscleKeys)[number];
+export type EquipmentKey = (typeof equipmentKeys)[number];
+export type InfluenceScore = 0 | 1 | 2;
+export type EquipmentScore = 0 | 1;
+
+export type Exercise = {
+  id: string;
+  name: string;
+  polishName: string;
+  garminCategory: GarminCategory;
+  garminName: string;
+  foundInGarmin: boolean;
+  image: string;
+  url: string;
+  difficulty: string;
+  description: string;
+  muscleImpact: Record<MuscleKey, InfluenceScore>;
+  equipment: Record<EquipmentKey, EquipmentScore>;
+};
+
+export type ExerciseOption = {
+  exerciseId: string;
+  garminCategory: GarminCategory;
+  label: string;
+  muscleImpact: Record<MuscleKey, InfluenceScore>;
+  value: string;
+};
+
+export type ExerciseSection = {
+  data: Array<ExerciseOption & { sectionKey: string }>;
+  title: string;
+};
+
+
+export type ExerciseLanguage = "en" | "pl";
+
+export const muscleLabels: Record<ExerciseLanguage, Record<MuscleKey, string>> = {
+  en: {
+    abductors: "Abductors",
+    abs: "Abdominals",
+    adductors: "Adductors",
+    biceps: "Biceps",
+    calves: "Calves",
+    chest: "Chest",
+    forearm: "Forearms",
+    glutes: "Glutes",
+    hamstrings: "Hamstrings",
+    hips: "Hips",
+    lats: "Lats",
+    lowerBack: "Lower back",
+    obliques: "Obliques",
+    quads: "Quadriceps",
+    shoulders: "Shoulders",
+    traps: "Trapezius",
+    triceps: "Triceps"
+  },
+  pl: {
+    abductors: "Odwodziciele",
+    abs: "Mięśnie brzucha",
+    adductors: "Przywodziciele",
+    biceps: "Bicepsy",
+    calves: "Łydki",
+    chest: "Klatka piersiowa",
+    forearm: "Przedramiona",
+    glutes: "Pośladki",
+    hamstrings: "Mięśnie dwugłowe uda",
+    hips: "Biodra",
+    lats: "Mięśnie najszersze grzbietu",
+    lowerBack: "Dolna część pleców",
+    obliques: "Mięśnie skośne brzucha",
+    quads: "Mięśnie czworogłowe uda",
+    shoulders: "Barki",
+    traps: "Mięśnie czworoboczne",
+    triceps: "Tricepsy"
+  }
+};
+
+export function getExerciseDisplayName(name: string, language: ExerciseLanguage) {
+  const exercise = findExerciseByName(name);
+  if (!exercise) {
+    return name;
+  }
+
+  return language === "pl" ? exercise.polishName : exercise.name;
+}
+
+export function getExerciseOptions(language: ExerciseLanguage) {
+  return exercises
+    .map((exercise) => ({
+      exerciseId: exercise.id,
+      garminCategory: exercise.garminCategory,
+      label: language === "pl" ? exercise.polishName : exercise.name,
+      muscleImpact: exercise.muscleImpact,
+      value: exercise.name
+    }));
+}
+
+export function getExerciseOptionsForStageType(language: ExerciseLanguage, stageType: StageType | "") {
+  if (!stageType || stageType === "other") {
+    return getExerciseOptions(language);
+  }
+
+  const allowedCategories = new Set(stageExerciseCategories[stageType]);
+
+  if (!allowedCategories.size) {
+    return [];
+  }
+
+  return exercises
+    .filter((exercise) => allowedCategories.has(exercise.garminCategory))
+    .map((exercise) => ({
+      exerciseId: exercise.id,
+      garminCategory: exercise.garminCategory,
+      label: language === "pl" ? exercise.polishName : exercise.name,
+      muscleImpact: exercise.muscleImpact,
+      value: exercise.name
+    }));
+}
+
+function formatGarminCategory(category: string) {
+  return category
+    .toLowerCase()
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+export function buildExerciseSections(
+  options: readonly ExerciseOption[],
+  language: ExerciseLanguage,
+  selectedMuscle: MuscleKey | "all"
+): ExerciseSection[] {
+  const groups: Array<{
+    data: Array<ExerciseOption & { sectionKey: string }>;
+    key: string;
+    title: string;
+  }> = [];
+
+  function getOrCreateGroup(groupKey: string, title: string) {
+    const existingGroup = groups.find((group) => group.key === groupKey);
+
+    if (existingGroup) {
+      return existingGroup;
+    }
+
+    const nextGroup = { data: [], key: groupKey, title };
+    groups.push(nextGroup);
+    return nextGroup;
+  }
+
+  options.forEach((option) => {
+    let groupKeys: string[];
+
+    if (selectedMuscle !== "all") {
+      if ((option.muscleImpact?.[selectedMuscle] ?? 0) <= 0) {
+        return;
+      }
+
+      groupKeys = [selectedMuscle];
+    } else {
+      const maximumImpact = Math.max(...muscleKeys.map((muscle) => option.muscleImpact?.[muscle] ?? 0));
+      groupKeys = maximumImpact > 0
+        ? muscleKeys.filter((muscle) => (option.muscleImpact?.[muscle] ?? 0) === maximumImpact)
+        : [`garmin:${option.garminCategory || "OTHER"}`];
+    }
+
+    groupKeys.forEach((groupKey) => {
+      const title = groupKey.startsWith("garmin:")
+        ? formatGarminCategory(groupKey.slice("garmin:".length))
+        : muscleLabels[language][groupKey as MuscleKey];
+      const currentGroup = getOrCreateGroup(groupKey, title);
+
+      currentGroup.data.push({
+        ...option,
+        sectionKey: `${groupKey}:${option.value}`
+      });
+    });
+  });
+
+  return groups
+    .map((group) => ({
+      data: [...group.data].sort((first, second) => first.label.localeCompare(second.label, language)),
+      title: group.title
+    }))
+    .sort((first, second) => first.title.localeCompare(second.title, language));
+}
+
+const exerciseOptionsCache = new Map<ExerciseLanguage, ExerciseOption[]>();
+const stageExerciseOptionsCache = new Map<string, ExerciseOption[]>();
+const exerciseSectionsCache = new Map<string, ExerciseSection[]>();
+
+export function clearExerciseCaches() {
+  exerciseOptionsCache.clear();
+  stageExerciseOptionsCache.clear();
+  exerciseSectionsCache.clear();
+}
+
+export function getCachedExerciseOptions(language: ExerciseLanguage) {
+  const cachedOptions = exerciseOptionsCache.get(language);
+
+  if (cachedOptions) {
+    return cachedOptions;
+  }
+
+  const options = getExerciseOptions(language);
+  exerciseOptionsCache.set(language, options);
+  return options;
+}
+
+export function getCachedExerciseOptionsForStageType(language: ExerciseLanguage, stageType: StageType | "") {
+  const cacheKey = `${language}:${stageType || "all"}`;
+  const cachedOptions = stageExerciseOptionsCache.get(cacheKey);
+
+  if (cachedOptions) {
+    return cachedOptions;
+  }
+
+  const options = getExerciseOptionsForStageType(language, stageType);
+  stageExerciseOptionsCache.set(cacheKey, options);
+  return options;
+}
+
+export function getExerciseSections(language: ExerciseLanguage, selectedMuscle: MuscleKey | "all") {
+  const cacheKey = `${language}:${selectedMuscle}`;
+  const cachedSections = exerciseSectionsCache.get(cacheKey);
+
+  if (cachedSections) {
+    return cachedSections;
+  }
+
+  const sections = buildExerciseSections(getCachedExerciseOptions(language), language, selectedMuscle);
+  exerciseSectionsCache.set(cacheKey, sections);
+  return sections;
+}
+
+export function getExerciseSectionsForStageType(
+  language: ExerciseLanguage,
+  stageType: StageType | "",
+  selectedMuscle: MuscleKey | "all"
+) {
+  const cacheKey = `${language}:${stageType || "all"}:${selectedMuscle}`;
+  const cachedSections = exerciseSectionsCache.get(cacheKey);
+
+  if (cachedSections) {
+    return cachedSections;
+  }
+
+  const sections = buildExerciseSections(
+    getCachedExerciseOptionsForStageType(language, stageType),
+    language,
+    selectedMuscle
+  );
+  exerciseSectionsCache.set(cacheKey, sections);
+  return sections;
+}
+
+export function getMuscleOptions(language: ExerciseLanguage) {
+  return muscleKeys
+    .map((value) => ({
+      label: muscleLabels[language][value],
+      value
+    }))
+    .sort((first, second) => first.label.localeCompare(second.label, language));
+}
+
+export function findExerciseByName(name: string) {
+  return exercises.find((exercise) => exercise.name === name || exercise.polishName === name);
+}
+
+export function findExerciseById(exerciseId: string) {
+  return exercises.find((exercise) => exercise.id === exerciseId);
+}
+
+function normalizeExerciseLookupValue(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+export function findCatalogExerciseBestEffort(name: string): Exercise | undefined {
+  const normalizedName = normalizeExerciseLookupValue(name);
+
+  if (!normalizedName) {
+    return undefined;
+  }
+
+  return (exercises as readonly Exercise[]).find((exercise) => {
+    const candidates: string[] = [
+      exercise.id,
+      exercise.name,
+      exercise.polishName,
+      exercise.garminName,
+      `${exercise.garminCategory} ${exercise.garminName}`
+    ];
+
+    return candidates.some((candidate) => normalizeExerciseLookupValue(candidate) === normalizedName);
+  });
+}
+
+export function getPrimaryMuscles(exercise: Exercise) {
+  return muscleKeys.filter((muscle) => exercise.muscleImpact[muscle] === 2);
+}
+
+export function getSecondaryMuscles(exercise: Exercise) {
+  return muscleKeys.filter((muscle) => exercise.muscleImpact[muscle] === 1);
+}
+
+export function getRequiredEquipment(exercise: Exercise) {
+  return equipmentKeys.filter((equipment) => exercise.equipment[equipment] > 0);
+}

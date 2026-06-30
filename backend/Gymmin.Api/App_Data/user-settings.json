@@ -1,0 +1,33 @@
+{
+  "dc8fda5cc05b4c04ac6e6307b67b6529": {
+    "userId": "dc8fda5cc05b4c04ac6e6307b67b6529",
+    "language": "pl",
+    "themeName": "light",
+    "defaultSetCount": "",
+    "defaultWeight": "",
+    "defaultStageType": null,
+    "defaultWorkoutExecutionMode": "guided",
+    "collapsedPanels": {
+      "settings-account": false,
+      "settings-info": false,
+      "settings-integrations": false,
+      "settings-notifications": false,
+      "settings-preferences": false,
+      "settings-training": false
+    },
+    "isAuthPanelDismissed": false,
+    "workoutReminders": {
+      "enabled": false,
+      "daysOfWeek": [
+        1,
+        3,
+        5
+      ],
+      "time": "18:00",
+      "message": "Czas na trening",
+      "onlyIfNoWorkoutToday": true,
+      "updatedAt": "2026-06-28T17:11:46.063+00:00"
+    },
+    "updatedAt": "2026-06-28T17:53:00.184+00:00"
+  }
+}

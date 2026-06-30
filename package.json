@@ -1,0 +1,14 @@
+{
+  "name": "gymmin",
+  "private": true,
+  "scripts": {
+    "mobile:test": "npm --prefix apps/mobile run test",
+    "mobile:typecheck": "npm --prefix apps/mobile run typecheck",
+    "mobile:build:android-apk": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android-apk.ps1",
+    "mobile:build:android-apk:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android-apk-local.ps1",
+    "mobile:build:android-apk:phone": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-and-publish-android-apk.ps1",
+    "mobile:apk:share": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-and-publish-android-apk.ps1",
+    "mobile:apk:publish-github": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-apk-github.ps1",
+    "backend:test": "dotnet test backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj"
+  }
+}

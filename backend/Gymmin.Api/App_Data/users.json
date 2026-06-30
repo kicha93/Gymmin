@@ -1,0 +1,74 @@
+[
+  {
+    "id": "dc8fda5cc05b4c04ac6e6307b67b6529",
+    "email": "atomicjumpers@gmail.com",
+    "name": "kicha93",
+    "password": {
+      "hash": "fjFrBwJQMPMrQSkee\u002Bi3hbioqj\u002BKhGkWnSjYEFnsnnk=",
+      "iterations": 120000,
+      "salt": "ET46OFhAxZ8z9A0ZBUzrhA=="
+    },
+    "sessions": [
+      {
+        "tokenHash": "fH/FM1lpCnkvLzWnI1SJyzxwuxcx7kWyECsyUgT94dk=",
+        "createdAt": "2026-06-28T17:11:06.182817+00:00"
+      }
+    ],
+    "createdAt": "2026-06-28T17:11:06.182817+00:00",
+    "updatedAt": "2026-06-28T17:11:06.182817+00:00"
+  },
+  {
+    "id": "49f083aff2b746c581fd3208e92a50fe",
+    "email": "codex-ai-rewrite-1253635661@gymmin.test",
+    "name": "Codex Rewrite",
+    "password": {
+      "hash": "J1QOWe\u002BzodfhhP\u002BB8qs\u002BtaL7J6z8AwmRLCy4D3e22P0=",
+      "iterations": 120000,
+      "salt": "fTA0R542h4vGUEyEoWTLyQ=="
+    },
+    "sessions": [
+      {
+        "tokenHash": "uub9btHj/pcwWQQM7X/hEeZ\u002BJK6GbwkRF62nOfx1b24=",
+        "createdAt": "2026-06-25T17:13:15.6691269+00:00"
+      }
+    ],
+    "createdAt": "2026-06-25T17:13:15.6691269+00:00",
+    "updatedAt": "2026-06-25T17:13:15.6691269+00:00"
+  },
+  {
+    "id": "0d8875bf80d64245b22e0016707dd8e3",
+    "email": "codex-ai-rewrite-other-2077716689@gymmin.test",
+    "name": "Other User",
+    "password": {
+      "hash": "KnYL0ATF8HausdKr/\u002BjQqPQ8WfbGP9ssNysDgMp/47E=",
+      "iterations": 120000,
+      "salt": "56EK\u002BwS40c5cqNiJyYSMfg=="
+    },
+    "sessions": [
+      {
+        "tokenHash": "VTqRH5NO7KaTbSX7swqB46M3WsbTQ6YsgrsCTfc1QuE=",
+        "createdAt": "2026-06-25T17:13:15.721769+00:00"
+      }
+    ],
+    "createdAt": "2026-06-25T17:13:15.721769+00:00",
+    "updatedAt": "2026-06-25T17:13:15.721769+00:00"
+  },
+  {
+    "id": "a04b08bb57e447939104c30c5b6da5c7",
+    "email": "codex-plan-auth-584484450@gymmin.test",
+    "name": "Codex Plan",
+    "password": {
+      "hash": "c1QuQF2wame\u002B5SJAEW6deIQ7ZbzcSZuxyazfiArdoaA=",
+      "iterations": 120000,
+      "salt": "KYeqIo5JegcjIKd36YcO3Q=="
+    },
+    "sessions": [
+      {
+        "tokenHash": "eEerzfc91BBy8WKG6WcVJFuNGP4ci1FTS57YXB7oZV4=",
+        "createdAt": "2026-06-25T17:13:35.402067+00:00"
+      }
+    ],
+    "createdAt": "2026-06-25T17:13:35.402067+00:00",
+    "updatedAt": "2026-06-25T17:13:35.402067+00:00"
+  }
+]

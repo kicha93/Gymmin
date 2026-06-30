@@ -1,0 +1,8 @@
+version: "2"
+tunnels:
+  gymmin-backend:
+    proto: http
+    addr: 5198
+  gymmin-expo:
+    proto: http
+    addr: 8081

@@ -166,6 +166,7 @@ Missing SMTP or OpenAI configuration does not block startup. Affected features f
 - SMTP configured for bug reports and password reset.
 - OpenAI API key configured if AI creator should work.
 - AI credits configured: initial grant, plan/rewrite cost and `DevGrantEnabled=false` in Production.
+- AI credits running on `Provider=Database` with PostgreSQL for production paid-credit safety. File provider is a dev fallback only.
 - Diagnostics disabled or protected.
 - HTTPS / reverse proxy configured.
 - CORS configured intentionally for the deployed mobile/backend setup.
@@ -200,6 +201,31 @@ Missing SMTP or OpenAI configuration does not block startup. Affected features f
    - auth sessions list,
    - password reset request with SMTP warning/fake configuration behavior.
 
+### AiCredits PostgreSQL concurrency smoke
+
+The AiCredits ledger hardening was manually verified on a real local
+PostgreSQL cluster without Docker. The test used PostgreSQL on
+`127.0.0.1:55432`, a dedicated smoke database and explicit EF migrations,
+including `HardenAiCreditsConcurrency`.
+
+Expected checks:
+
+- `GET /api/health` reports `storageProvider=Database`,
+  `databaseProvider=PostgreSQL` and `database.canConnect=true`.
+- Initial grant is idempotent: repeated balance reads do not create a second
+  `InitialGrant`.
+- With balance `1`, two parallel `POST /api/workout-creator/plan` requests
+  result in one `202 Accepted` and one `402 insufficient_ai_credits`.
+- Final balance for the successful consume path remains `0`; ledger has one
+  `Consume` with `BalanceAfter=0`.
+- Reusing the same `X-Idempotency-Key` for the same user returns the existing
+  job and creates only one `Consume`.
+- Different users can reuse the same `X-Idempotency-Key` independently.
+- A technical AI job failure creates exactly one `Refund`; repeated checks do
+  not add another refund.
+- Transaction indexes include unique guards for `UserId + RelatedJobId + Type`
+  and `UserId + Reason + IdempotencyKey`.
+
 ## TODO
 
 - Choose real hosting.
@@ -209,4 +235,5 @@ Missing SMTP or OpenAI configuration does not block startup. Affected features f
 - Add HTTPS/reverse proxy deployment notes for the selected host.
 - Add CI/CD migration step.
 - Add optional PostgreSQL smoke test in CI when a stable service container is available.
+- Add CI PostgreSQL AiCredits concurrency smoke test using a service container.
 - Stage 12B: add Google Play Billing, backend receipt validation, purchase restore/pending purchase handling and anti-duplicate purchase crediting.

@@ -139,6 +139,8 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - Login and registration are connected to the backend.
 - The mobile app exposes the AI workout creator only to logged-in users, and backend creator endpoints require bearer tokens.
 - AI creator and AI rewrite use account-bound AI credits. `1 AI credit = 1 plan generation or 1 workout modification`; the backend is the source of truth for balance and blocks AI jobs when the account has no credits.
+- AI credit consumption is protected by database transactions and an atomic conditional balance update in Database mode. File mode remains a development fallback, not the production safety boundary for paid credits.
+- AI credit concurrency, idempotency and technical-failure refund were smoke-tested on a real local PostgreSQL cluster without Docker, using the `HardenAiCreditsConcurrency` migration.
 - New users can receive an idempotent initial AI credit grant. Development/testing can use the guarded `/api/ai-credits/dev/grant` endpoint; production billing through Google Play is still TODO.
 - Workout creator jobs are asynchronous and persisted on both sides: the phone stores the active `jobId`, and the backend stores job state in File or Database storage.
 - Bug reports call the backend and are sent by SMTP when SMTP is configured.

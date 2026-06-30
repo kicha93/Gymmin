@@ -121,8 +121,13 @@ Backend trzyma:
 - koszt plan/rewrite z konfiguracji,
 - initial grant przyznawany idempotentnie,
 - techniczny refund, gdy job AI nie dostarczy uzywalnej propozycji.
+- transakcyjny consume w Database providerze przez atomowy warunkowy update salda,
+- idempotency scoped po uzytkowniku, typie operacji i `X-Idempotency-Key`,
+- idempotentny refund powiazany z jobem.
 
 Mobile tylko wyswietla saldo i koszt. Backend zawsze decyduje, czy konto ma wystarczajace saldo. Brak salda zwraca `402 insufficient_ai_credits`. Zakupy przez Google Play Billing sa zaplanowane na etap 12B; obecnie istnieje tylko dev/test grant do testowania przeplywow.
+
+File provider zachowuje poprawne zachowanie dev w pojedynczym procesie, ale produkcyjne kredyty AI powinny uzywac Database/PostgreSQL. In-memory lock nie jest glownym zabezpieczeniem salda.
 
 ### Historia i progres
 

@@ -18,7 +18,7 @@ public interface IAiCreditService
 
 public sealed class EfAiCreditService : IAiCreditService
 {
-    private readonly object _gate = new();
+    public const int MaxIdempotencyKeyLength = 160;
     private readonly IDbContextFactory<GymminDbContext> _dbFactory;
     private readonly AiCreditsOptions _options;
 
@@ -30,13 +30,12 @@ public sealed class EfAiCreditService : IAiCreditService
 
     public AiCreditBalanceResponse GetBalance(string userId)
     {
-        lock (_gate)
-        {
-            using var db = _dbFactory.CreateDbContext();
-            var account = EnsureAccount(db, userId);
-            db.SaveChanges();
-            return _options.ToBalanceResponse(account.Balance);
-        }
+        using var db = _dbFactory.CreateDbContext();
+        using var transaction = db.Database.BeginTransaction();
+        var account = EnsureAccount(db, userId);
+        db.SaveChanges();
+        transaction.Commit();
+        return _options.ToBalanceResponse(account.Balance);
     }
 
     public AiCreditTransactionsResponse GetTransactions(string userId, int limit)
@@ -75,23 +74,22 @@ public sealed class EfAiCreditService : IAiCreditService
 
     public AiCreditBalanceResponse GrantDev(string userId, int amount, string? reason)
     {
-        lock (_gate)
-        {
-            using var db = _dbFactory.CreateDbContext();
-            var account = EnsureAccount(db, userId);
-            AddTransaction(
-                db,
-                account,
-                amount,
-                AiCreditTransactionTypes.DevGrant,
-                string.IsNullOrWhiteSpace(reason) ? "Manual dev top-up" : reason.Trim(),
-                null,
-                null,
-                null,
-                null);
-            db.SaveChanges();
-            return _options.ToBalanceResponse(account.Balance);
-        }
+        using var db = _dbFactory.CreateDbContext();
+        using var transaction = db.Database.BeginTransaction();
+        var account = EnsureAccount(db, userId);
+        AddTransaction(
+            db,
+            account,
+            amount,
+            AiCreditTransactionTypes.DevGrant,
+            string.IsNullOrWhiteSpace(reason) ? "Manual dev top-up" : reason.Trim(),
+            null,
+            null,
+            null,
+            null);
+        db.SaveChanges();
+        transaction.Commit();
+        return _options.ToBalanceResponse(account.Balance);
     }
 
     public AiCreditConsumeResult ConsumeForJob(string userId, string jobId, int cost, string reason, string? idempotencyKey)
@@ -101,103 +99,167 @@ public sealed class EfAiCreditService : IAiCreditService
             return new AiCreditConsumeResult(true, null, GetBalance(userId).Balance);
         }
 
-        lock (_gate)
-        {
-            using var db = _dbFactory.CreateDbContext();
-
-            var normalizedIdempotencyKey = NormalizeIdempotencyKey(idempotencyKey);
-            if (normalizedIdempotencyKey is not null)
-            {
-                var existing = db.AiCreditTransactions
-                    .AsNoTracking()
-                    .Where(transaction =>
-                        transaction.UserId == userId &&
-                        transaction.Type == AiCreditTransactionTypes.Consume &&
-                        transaction.Reason == reason &&
-                        transaction.IdempotencyKey == normalizedIdempotencyKey)
-                    .OrderByDescending(transaction => transaction.CreatedAt)
-                    .FirstOrDefault();
-
-                if (existing?.RelatedJobId is not null)
-                {
-                    return new AiCreditConsumeResult(true, existing.Id, existing.BalanceAfter, existing.RelatedJobId);
-                }
-            }
-
-            var duplicateJob = db.AiCreditTransactions
-                .AsNoTracking()
-                .FirstOrDefault(transaction =>
-                    transaction.UserId == userId &&
-                    transaction.Type == AiCreditTransactionTypes.Consume &&
-                    transaction.RelatedJobId == jobId);
-            if (duplicateJob is not null)
-            {
-                return new AiCreditConsumeResult(true, duplicateJob.Id, duplicateJob.BalanceAfter, jobId);
-            }
-
-            var account = EnsureAccount(db, userId);
-            if (account.Balance < cost)
-            {
-                db.SaveChanges();
-                return new AiCreditConsumeResult(false, null, account.Balance);
-            }
-
-            var transaction = AddTransaction(
-                db,
-                account,
-                -cost,
-                AiCreditTransactionTypes.Consume,
-                reason,
-                jobId,
-                null,
-                normalizedIdempotencyKey,
-                null);
-            db.SaveChanges();
-            return new AiCreditConsumeResult(true, transaction.Id, account.Balance);
-        }
+        using var db = _dbFactory.CreateDbContext();
+        using var transaction = db.Database.BeginTransaction();
+        var consume = ConsumeForJob(db, userId, jobId, cost, reason, idempotencyKey);
+        db.SaveChanges();
+        transaction.Commit();
+        return consume;
     }
 
     public bool RefundForJob(string userId, string jobId, string reason)
     {
-        lock (_gate)
+        using var db = _dbFactory.CreateDbContext();
+        using var transaction = db.Database.BeginTransaction();
+        var refunded = RefundForJob(db, userId, jobId, reason);
+        if (refunded)
         {
-            using var db = _dbFactory.CreateDbContext();
-            var consume = db.AiCreditTransactions
+            db.SaveChanges();
+        }
+        transaction.Commit();
+        return refunded;
+    }
+
+    public AiCreditConsumeResult ConsumeForJob(
+        GymminDbContext db,
+        string userId,
+        string jobId,
+        int cost,
+        string reason,
+        string? idempotencyKey)
+    {
+        if (cost <= 0)
+        {
+            var balance = EnsureAccount(db, userId).Balance;
+            return new AiCreditConsumeResult(true, null, balance);
+        }
+
+        var normalizedIdempotencyKey = NormalizeIdempotencyKey(idempotencyKey);
+        if (normalizedIdempotencyKey is not null)
+        {
+            var existing = db.AiCreditTransactions
                 .AsNoTracking()
-                .FirstOrDefault(transaction =>
+                .Where(transaction =>
                     transaction.UserId == userId &&
                     transaction.Type == AiCreditTransactionTypes.Consume &&
-                    transaction.RelatedJobId == jobId);
-            if (consume is null)
-            {
-                return false;
-            }
+                    transaction.Reason == reason &&
+                    transaction.IdempotencyKey == normalizedIdempotencyKey)
+                .OrderByDescending(transaction => transaction.CreatedAt)
+                .FirstOrDefault();
 
-            var existingRefund = db.AiCreditTransactions
-                .AsNoTracking()
-                .Any(transaction =>
-                    transaction.UserId == userId &&
-                    transaction.Type == AiCreditTransactionTypes.Refund &&
-                    transaction.RelatedJobId == jobId);
-            if (existingRefund)
+            if (existing?.RelatedJobId is not null)
             {
-                return false;
+                return new AiCreditConsumeResult(true, existing.Id, existing.BalanceAfter, existing.RelatedJobId);
             }
-
-            var account = EnsureAccount(db, userId);
-            AddTransaction(
-                db,
-                account,
-                Math.Abs(consume.Amount),
-                AiCreditTransactionTypes.Refund,
-                reason,
-                jobId,
-                null,
-                null,
-                null);
-            db.SaveChanges();
-            return true;
         }
+
+        var duplicateJob = db.AiCreditTransactions
+            .AsNoTracking()
+            .FirstOrDefault(transaction =>
+                transaction.UserId == userId &&
+                transaction.Type == AiCreditTransactionTypes.Consume &&
+                transaction.RelatedJobId == jobId);
+        if (duplicateJob is not null)
+        {
+            return new AiCreditConsumeResult(true, duplicateJob.Id, duplicateJob.BalanceAfter, jobId);
+        }
+
+        EnsureAccount(db, userId);
+        db.SaveChanges();
+
+        var now = DateTimeOffset.UtcNow;
+        var updatedRows = db.Database.ExecuteSqlInterpolated($"""
+            UPDATE "AiCreditAccounts"
+            SET "Balance" = "Balance" - {cost}, "UpdatedAt" = {now.ToUniversalTime().ToString("O")}
+            WHERE "UserId" = {userId} AND "Balance" >= {cost}
+            """);
+
+        db.ChangeTracker.Clear();
+
+        var account = db.AiCreditAccounts.First(account => account.UserId == userId);
+        if (updatedRows != 1)
+        {
+            return new AiCreditConsumeResult(false, null, account.Balance);
+        }
+
+        var ledger = AddLedgerTransaction(
+            db,
+            account.UserId,
+            -cost,
+            AiCreditTransactionTypes.Consume,
+            reason,
+            jobId,
+            null,
+            normalizedIdempotencyKey,
+            null,
+            account.Balance,
+            now);
+        return new AiCreditConsumeResult(true, ledger.Id, account.Balance);
+    }
+
+    public bool RefundForJob(GymminDbContext db, string userId, string jobId, string reason)
+    {
+        var job = db.WorkoutCreatorJobs.FirstOrDefault(item => item.UserId == userId && item.Id == jobId);
+        if (job?.TokenRefundedAt is not null)
+        {
+            return false;
+        }
+
+        var consume = db.AiCreditTransactions
+            .AsNoTracking()
+            .FirstOrDefault(transaction =>
+                transaction.UserId == userId &&
+                transaction.Type == AiCreditTransactionTypes.Consume &&
+                transaction.RelatedJobId == jobId);
+        if (consume is null)
+        {
+            return false;
+        }
+
+        var existingRefund = db.AiCreditTransactions
+            .AsNoTracking()
+            .Any(transaction =>
+                transaction.UserId == userId &&
+                transaction.Type == AiCreditTransactionTypes.Refund &&
+                transaction.RelatedJobId == jobId);
+        if (existingRefund)
+        {
+            return false;
+        }
+
+        EnsureAccount(db, userId);
+        db.SaveChanges();
+
+        var now = DateTimeOffset.UtcNow;
+        db.Database.ExecuteSqlInterpolated($"""
+            UPDATE "AiCreditAccounts"
+            SET "Balance" = "Balance" + {Math.Abs(consume.Amount)}, "UpdatedAt" = {now.ToUniversalTime().ToString("O")}
+            WHERE "UserId" = {userId}
+            """);
+        db.ChangeTracker.Clear();
+
+        var account = db.AiCreditAccounts.First(account => account.UserId == userId);
+        AddLedgerTransaction(
+            db,
+            account.UserId,
+            Math.Abs(consume.Amount),
+            AiCreditTransactionTypes.Refund,
+            reason,
+            jobId,
+            null,
+            null,
+            null,
+            account.Balance,
+            now);
+
+        if (job is not null)
+        {
+            db.Attach(job);
+            job.TokenRefundedAt = now;
+            job.TokenRefundReason = reason;
+        }
+
+        return true;
     }
 
     private AiCreditAccountEntity EnsureAccount(GymminDbContext db, string userId)
@@ -271,10 +333,51 @@ public sealed class EfAiCreditService : IAiCreditService
         return transaction;
     }
 
+    private static AiCreditTransactionEntity AddLedgerTransaction(
+        GymminDbContext db,
+        string userId,
+        int amount,
+        string type,
+        string? reason,
+        string? relatedJobId,
+        string? relatedPurchaseId,
+        string? idempotencyKey,
+        string? metadataJson,
+        int balanceAfter,
+        DateTimeOffset createdAt)
+    {
+        var transaction = new AiCreditTransactionEntity
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            UserId = userId,
+            Amount = amount,
+            Type = type,
+            Reason = reason,
+            RelatedJobId = relatedJobId,
+            RelatedPurchaseId = relatedPurchaseId,
+            IdempotencyKey = idempotencyKey,
+            BalanceAfter = balanceAfter,
+            MetadataJson = metadataJson,
+            CreatedAt = createdAt
+        };
+        db.AiCreditTransactions.Add(transaction);
+        return transaction;
+    }
+
     private static string? NormalizeIdempotencyKey(string? idempotencyKey)
     {
         var value = idempotencyKey?.Trim();
-        return string.IsNullOrWhiteSpace(value) ? null : value;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (value.Length > MaxIdempotencyKeyLength)
+        {
+            throw new InvalidAiCreditIdempotencyKeyException();
+        }
+
+        return value;
     }
 }
 
@@ -514,7 +617,17 @@ public sealed class FileBackedAiCreditService : IAiCreditService
     private static string? NormalizeIdempotencyKey(string? idempotencyKey)
     {
         var value = idempotencyKey?.Trim();
-        return string.IsNullOrWhiteSpace(value) ? null : value;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (value.Length > EfAiCreditService.MaxIdempotencyKeyLength)
+        {
+            throw new InvalidAiCreditIdempotencyKeyException();
+        }
+
+        return value;
     }
 
     private sealed record PersistedAiCredits(

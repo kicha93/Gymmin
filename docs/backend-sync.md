@@ -358,6 +358,21 @@ Zasady:
 - ledger transakcji jest append-only,
 - `Consume` jest tworzone przy zaakceptowaniu joba AI,
 - `Refund` jest tworzone przy technicznej porazce joba zgodnie z polityka MVP.
+- w Database provider consume dziala transakcyjnie przez atomowy warunkowy update salda: `Balance = Balance - cost WHERE Balance >= cost`,
+- idempotency key jest scoped po `UserId + operation type + IdempotencyKey`,
+- retry tego samego startu joba nie pobiera drugiego tokena,
+- refund jest idempotentny i w Database provider zapisuje ledger oraz metadata joba w jednej transakcji,
+- File provider jest tylko dev fallbackiem; produkcyjne tokeny powinny dzialac na Database/PostgreSQL.
+
+Smoke test PostgreSQL:
+
+- `HardenAiCreditsConcurrency` przechodzi na realnym PostgreSQL,
+- przy saldzie `1` dwa rownolegle requesty AI koncza sie jako dokladnie jeden zaakceptowany job i jeden `402 insufficient_ai_credits`,
+- saldo nie schodzi ponizej `0`, ledger ma jeden `Consume`, a `BalanceAfter` jest spojne,
+- ten sam `X-Idempotency-Key` dla tego samego usera zwraca ten sam job i nie pobiera drugiego tokena,
+- ten sam `X-Idempotency-Key` moze byc uzyty niezaleznie przez roznych userow,
+- techniczny failure joba tworzy dokladnie jeden `Refund` i ponowne sprawdzenie nie podbija salda drugi raz,
+- Docker nie jest wymagany do lokalnego smoke testu; mozna uzyc tymczasowego lokalnego klastra PostgreSQL.
 
 Endpointy:
 

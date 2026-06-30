@@ -262,10 +262,14 @@ Aktualnie dziala:
 - koszt `plan` i `rewrite` konfigurowany backendowo,
 - blokada AI przy braku tokenow przez `402 insufficient_ai_credits`,
 - techniczny refund tokena, jesli job AI nie dostarczy uzywalnej propozycji,
+- production-grade safety dla Database provider: atomowy consume tokena na poziomie bazy i idempotentny refund,
+- unikalny constraint dla `UserId + operation type + IdempotencyKey`, zeby retry nie pobieral drugiego tokena,
 - widok mobile `Tokeny AI` z saldem, kosztami, historia transakcji i paczkami przygotowanymi pod przyszly zakup,
 - dev/test grant poza Production.
 
-Nie ma jeszcze prawdziwych zakupow. Etap 12B powinien dodac Google Play Billing, walidacje purchase tokena na backendzie, pending/restore purchases oraz zabezpieczenie przed wielokrotnym naliczeniem tej samej transakcji.
+File provider nadal dziala jako dev fallback, ale produkcyjna sciezka dla tokenow AI to Database/PostgreSQL. Nie ma jeszcze prawdziwych zakupow. Etap 12B powinien dodac Google Play Billing, walidacje purchase tokena na backendzie, pending/restore purchases oraz zabezpieczenie przed wielokrotnym naliczeniem tej samej transakcji.
+
+Dogrywka 12A.1: AiCredits concurrency, idempotency i refund zostaly sprawdzone na realnym lokalnym PostgreSQL bez Dockera. Migracja `HardenAiCreditsConcurrency` przeszla, `GET /api/health` potwierdzil `Database/PostgreSQL`, rownolegle requesty przy saldzie `1` zakonczyly sie jako jeden zaakceptowany job i jeden `402`, idempotency key nie pobral drugiego tokena, a techniczny failure joba utworzyl pojedynczy `Refund`.
 
 ### Artykuły
 

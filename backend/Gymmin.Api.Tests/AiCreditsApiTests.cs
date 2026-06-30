@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using Gymmin.Api.Domain;
+using Gymmin.Api.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Gymmin.Api.Tests;
 
@@ -144,6 +146,57 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         Assert.Contains(HttpStatusCode.PaymentRequired, statuses);
         var balance = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
         Assert.Equal(0, balance!.Balance);
+        var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions?limit=20");
+        Assert.Equal(3, transactions!.Transactions.Count(transaction => transaction.Type == AiCreditTransactionTypes.Consume));
+        Assert.Equal(0, transactions.Transactions.Where(transaction => transaction.Type == AiCreditTransactionTypes.Consume).Min(transaction => transaction.BalanceAfter));
+    }
+
+    [Fact]
+    public async Task Same_idempotency_key_is_scoped_per_user()
+    {
+        using var firstClient = _factory.CreateClient();
+        using var secondClient = _factory.CreateClient();
+        var firstAuth = await TestPayloads.RegisterAsync(firstClient, "ai-idempotency-user-a");
+        var secondAuth = await TestPayloads.RegisterAsync(secondClient, "ai-idempotency-user-b");
+        firstClient.Authorize(firstAuth.Token);
+        secondClient.Authorize(secondAuth.Token);
+        firstClient.DefaultRequestHeaders.Add("X-Idempotency-Key", "same-key-across-users");
+        secondClient.DefaultRequestHeaders.Add("X-Idempotency-Key", "same-key-across-users");
+
+        var request = new CreateWorkoutPlanRequest(
+            [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
+            "en",
+            null);
+
+        var first = await firstClient.PostAsJsonAsync("/api/workout-creator/plan", request);
+        var second = await secondClient.PostAsJsonAsync("/api/workout-creator/plan", request);
+
+        Assert.Equal(HttpStatusCode.Accepted, first.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, second.StatusCode);
+        var firstBalance = await firstClient.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
+        var secondBalance = await secondClient.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
+        Assert.Equal(2, firstBalance!.Balance);
+        Assert.Equal(2, secondBalance!.Balance);
+    }
+
+    [Fact]
+    public async Task Too_long_idempotency_key_returns_bad_request_without_consuming_credit()
+    {
+        using var client = _factory.CreateClient();
+        var auth = await TestPayloads.RegisterAsync(client, "ai-idempotency-too-long");
+        client.Authorize(auth.Token);
+        client.DefaultRequestHeaders.Add("X-Idempotency-Key", new string('x', EfAiCreditService.MaxIdempotencyKeyLength + 1));
+
+        var response = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
+            [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
+            "en",
+            null));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+        Assert.Equal("invalid_idempotency_key", error!.Error.Code);
+        var balance = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
+        Assert.Equal(3, balance!.Balance);
     }
 
     [Fact]
@@ -174,6 +227,13 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
             var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions?limit=10");
             Assert.Contains(transactions!.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.Consume && transaction.Amount == -1);
             Assert.Contains(transactions.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.Refund && transaction.Amount == 1);
+            Assert.Single(transactions.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.Refund);
+
+            using var scope = _factory.Services.CreateScope();
+            var credits = scope.ServiceProvider.GetRequiredService<IAiCreditService>();
+            Assert.False(credits.RefundForJob(auth.User.Id, job.JobId, AiCreditReasons.TechnicalFailureRefund));
+            var afterSecondRefundAttempt = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
+            Assert.Equal(3, afterSecondRefundAttempt!.Balance);
         }
         finally
         {

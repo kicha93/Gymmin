@@ -667,6 +667,13 @@ app.MapPost("/api/workout-creator/plan", (
     {
         return InsufficientAiCredits(request);
     }
+    catch (InvalidAiCreditIdempotencyKeyException)
+    {
+        return Results.BadRequest(new ApiErrorResponse(new ApiError(
+            "invalid_idempotency_key",
+            $"X-Idempotency-Key must be {EfAiCreditService.MaxIdempotencyKeyLength} characters or fewer.",
+            DiagnosticsContext.GetCorrelationId(request.HttpContext))));
+    }
 
     logger.LogInformation("Started workout creator job {JobId} for user {UserId}. JobType={JobType}", job.JobId, userId, "plan");
     return Results.Accepted($"/api/workout-creator/plan/{job.JobId}", job);
@@ -712,6 +719,13 @@ app.MapPost("/api/workout-creator/rewrite", (
     catch (InsufficientAiCreditsException)
     {
         return InsufficientAiCredits(request);
+    }
+    catch (InvalidAiCreditIdempotencyKeyException)
+    {
+        return Results.BadRequest(new ApiErrorResponse(new ApiError(
+            "invalid_idempotency_key",
+            $"X-Idempotency-Key must be {EfAiCreditService.MaxIdempotencyKeyLength} characters or fewer.",
+            DiagnosticsContext.GetCorrelationId(request.HttpContext))));
     }
 
     logger.LogInformation("Started workout creator job {JobId} for user {UserId}. JobType={JobType}", job.JobId, userId, "rewrite");

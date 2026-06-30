@@ -56,6 +56,7 @@ public sealed class EfWorkoutPlanJobStore : IWorkoutPlanJobStore
     private CreateWorkoutPlanJobResponse StartJob(string jobType, string? language, string requestJson, string userId, AiCreditJobCharge? charge)
     {
         var now = DateTimeOffset.UtcNow;
+        var idempotencyKey = charge?.IdempotencyKey?.Trim();
         var job = new WorkoutCreatorJobEntity
         {
             CreatedAt = now,
@@ -66,29 +67,33 @@ public sealed class EfWorkoutPlanJobStore : IWorkoutPlanJobStore
             Status = "processing",
             UpdatedAt = now,
             UserId = userId,
-            IdempotencyKey = charge?.IdempotencyKey?.Trim(),
+            IdempotencyKey = idempotencyKey,
             TokenCost = charge?.Cost ?? 0
         };
 
         using (var db = _dbFactory.CreateDbContext())
         {
-            if (!string.IsNullOrWhiteSpace(charge?.IdempotencyKey))
+            using var transaction = db.Database.BeginTransaction();
+            if (!string.IsNullOrWhiteSpace(idempotencyKey))
             {
                 var existing = db.WorkoutCreatorJobs
                     .AsNoTracking()
                     .FirstOrDefault(item =>
                         item.UserId == userId &&
                         item.JobType == jobType &&
-                        item.IdempotencyKey == charge.IdempotencyKey.Trim());
+                        item.IdempotencyKey == idempotencyKey);
                 if (existing is not null)
                 {
+                    transaction.Commit();
                     return new CreateWorkoutPlanJobResponse(existing.Status, existing.Id);
                 }
             }
 
             var consume = charge is null
                 ? new AiCreditConsumeResult(true, null, 0)
-                : _credits.ConsumeForJob(userId, job.Id, charge.Cost, charge.Reason, charge.IdempotencyKey);
+                : _credits is EfAiCreditService efCredits
+                    ? efCredits.ConsumeForJob(db, userId, job.Id, charge.Cost, charge.Reason, charge.IdempotencyKey)
+                    : _credits.ConsumeForJob(userId, job.Id, charge.Cost, charge.Reason, charge.IdempotencyKey);
             if (!consume.Success)
             {
                 throw new InsufficientAiCreditsException();
@@ -101,6 +106,7 @@ public sealed class EfWorkoutPlanJobStore : IWorkoutPlanJobStore
                     .FirstOrDefault(item => item.UserId == userId && item.Id == consume.ExistingJobId);
                 if (existing is not null)
                 {
+                    transaction.Commit();
                     return new CreateWorkoutPlanJobResponse(existing.Status, existing.Id);
                 }
             }
@@ -110,12 +116,24 @@ public sealed class EfWorkoutPlanJobStore : IWorkoutPlanJobStore
             try
             {
                 db.SaveChanges();
+                transaction.Commit();
             }
-            catch
+            catch (DbUpdateException)
             {
-                if (charge is not null && charge.Cost > 0)
+                transaction.Rollback();
+
+                if (!string.IsNullOrWhiteSpace(idempotencyKey))
                 {
-                    _credits.RefundForJob(userId, job.Id, "JobCreationFailed");
+                    var existing = db.WorkoutCreatorJobs
+                        .AsNoTracking()
+                        .FirstOrDefault(item =>
+                            item.UserId == userId &&
+                            item.JobType == jobType &&
+                            item.IdempotencyKey == idempotencyKey);
+                    if (existing is not null)
+                    {
+                        return new CreateWorkoutPlanJobResponse(existing.Status, existing.Id);
+                    }
                 }
 
                 throw;
@@ -188,6 +206,7 @@ public sealed class EfWorkoutPlanJobStore : IWorkoutPlanJobStore
     private void UpdateJob(string jobId, string status, CreateWorkoutPlanResponse? result, string? error, bool refundToken = false)
     {
         using var db = _dbFactory.CreateDbContext();
+        using var transaction = db.Database.BeginTransaction();
         var job = db.WorkoutCreatorJobs.FirstOrDefault(item => item.Id == jobId);
 
         if (job is null)
@@ -203,13 +222,20 @@ public sealed class EfWorkoutPlanJobStore : IWorkoutPlanJobStore
         job.Status = status;
         job.UpdatedAt = DateTimeOffset.UtcNow;
 
-        if (refundToken && job.TokenCost > 0 && _credits.RefundForJob(job.UserId, jobId, AiCreditReasons.TechnicalFailureRefund))
+        var refunded = refundToken &&
+            job.TokenCost > 0 &&
+            (_credits is EfAiCreditService efCredits
+                ? efCredits.RefundForJob(db, job.UserId, jobId, AiCreditReasons.TechnicalFailureRefund)
+                : _credits.RefundForJob(job.UserId, jobId, AiCreditReasons.TechnicalFailureRefund));
+
+        if (refunded)
         {
             job.TokenRefundedAt = DateTimeOffset.UtcNow;
             job.TokenRefundReason = AiCreditReasons.TechnicalFailureRefund;
         }
 
         db.SaveChanges();
+        transaction.Commit();
     }
 
     private static CreateWorkoutPlanResponse? DeserializeResult(string? resultJson)

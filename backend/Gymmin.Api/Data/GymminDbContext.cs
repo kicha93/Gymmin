@@ -184,6 +184,7 @@ public sealed class GymminDbContext : DbContext
             entity.HasIndex(transaction => transaction.RelatedPurchaseId);
             entity.HasIndex(transaction => transaction.IdempotencyKey);
             entity.HasIndex(transaction => new { transaction.UserId, transaction.RelatedJobId, transaction.Type }).IsUnique();
+            entity.HasIndex(transaction => new { transaction.UserId, transaction.Reason, transaction.IdempotencyKey }).IsUnique();
             entity.HasOne(transaction => transaction.User)
                 .WithMany()
                 .HasForeignKey(transaction => transaction.UserId)

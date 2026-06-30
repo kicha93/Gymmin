@@ -65,3 +65,11 @@ public sealed class InsufficientAiCreditsException : Exception
     {
     }
 }
+
+public sealed class InvalidAiCreditIdempotencyKeyException : Exception
+{
+    public InvalidAiCreditIdempotencyKeyException()
+        : base("AI credit idempotency key is too long")
+    {
+    }
+}

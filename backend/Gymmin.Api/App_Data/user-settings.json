@@ -10,10 +10,11 @@
     "collapsedPanels": {
       "settings-account": false,
       "settings-info": false,
-      "settings-integrations": false,
+      "settings-integrations": true,
       "settings-notifications": false,
       "settings-preferences": false,
-      "settings-training": false
+      "settings-training": false,
+      "home-articles": true
     },
     "isAuthPanelDismissed": false,
     "workoutReminders": {
@@ -26,8 +27,8 @@
       "time": "18:00",
       "message": "Czas na trening",
       "onlyIfNoWorkoutToday": true,
-      "updatedAt": "2026-06-28T17:11:46.063+00:00"
+      "updatedAt": "2026-07-02T05:40:31.921+00:00"
     },
-    "updatedAt": "2026-06-28T17:53:00.184+00:00"
+    "updatedAt": "2026-07-02T09:50:40.609+00:00"
   }
 }

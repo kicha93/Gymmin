@@ -38,6 +38,9 @@ $env:Gymmin__AiCredits__InitialGrant = "3"
 $env:Gymmin__AiCredits__PlanCost = "1"
 $env:Gymmin__AiCredits__RewriteCost = "1"
 $env:Gymmin__AiCredits__DevGrantEnabled = "false"
+$env:Gymmin__GooglePlay__Enabled = "true"
+$env:Gymmin__GooglePlay__PackageName = "com.gymmin.app"
+$env:Gymmin__GooglePlay__ServiceAccountJsonBase64 = "<base64-json>"
 $env:BugReports__Smtp__Host = "..."
 $env:BugReports__Smtp__Port = "587"
 $env:BugReports__Smtp__Username = "..."
@@ -167,13 +170,17 @@ Missing SMTP or OpenAI configuration does not block startup. Affected features f
 - OpenAI API key configured if AI creator should work.
 - AI credits configured: initial grant, plan/rewrite cost and `DevGrantEnabled=false` in Production.
 - AI credits running on `Provider=Database` with PostgreSQL for production paid-credit safety. File provider is a dev fallback only.
+- Google Play one-time products created and active: `ai_tokens_10`, `ai_tokens_30`, `ai_tokens_100`.
+- Google Play service account configured through environment variables or a secret manager.
+- Google Play Billing tested with internal testing/license testers before public release.
 - Diagnostics disabled or protected.
 - HTTPS / reverse proxy configured.
 - CORS configured intentionally for the deployed mobile/backend setup.
 - Auth rate limiting enabled.
 - Logs collected by the hosting platform.
 - Database backups configured.
-- APK built with the production `ApiBaseUrl`.
+- GitHub sideload APK built with the intended test `ApiBaseUrl` when doing phone QA.
+- Store AAB built with the production `ApiBaseUrl`.
 - `/health` and `/api/diagnostics` verified after deployment.
 
 ## Manual PostgreSQL smoke test
@@ -226,6 +233,77 @@ Expected checks:
 - Transaction indexes include unique guards for `UserId + RelatedJobId + Type`
   and `UserId + Reason + IdempotencyKey`.
 
+## Google Play Billing
+
+Google Play Billing is used for Android AI credit purchases. The backend is the
+source of truth: the mobile app starts the purchase and sends the Google Play
+`purchaseToken` to:
+
+```http
+POST /api/ai-credits/purchases/google-play/verify
+```
+
+The backend validates the purchase with Google Play Developer API, checks the
+configured product pack, writes `AiCreditPurchases`, appends a `Purchase`
+transaction to the AiCredits ledger and then attempts server-side consume.
+
+Security rules:
+
+- do not commit service account JSON,
+- do not log or store plaintext purchase tokens,
+- use `ServiceAccountJsonBase64` or `ServiceAccountJsonPath` from secrets,
+- do not trust product credits or prices from mobile,
+- use Database/PostgreSQL for production paid credits.
+
+Play Console checklist:
+
+- app exists in Google Play Console with package name `com.gymmin.app`,
+- one-time products are created and active:
+  - `ai_tokens_10`,
+  - `ai_tokens_30`,
+  - `ai_tokens_100`,
+- prices are configured in Play Console,
+- license testers are configured,
+- a service account has Google Play Developer API access,
+- backend credentials are supplied through env/secrets,
+- purchases are tested via internal testing or license testers.
+
+Mobile build notes:
+
+- Expo Go is not enough for Google Play Billing.
+- Use a standalone Android APK/dev build/internal testing build with the native billing module.
+- `react-native-iap` and `react-native-nitro-modules` are the native billing dependencies and should be present in `apps/mobile/package.json` and `package-lock.json`.
+- `react-dom` is present only to satisfy release bundling of a transitive React Aria/Gluestack import.
+- The Android app config includes the `react-native-iap` Expo plugin, and the checked-in native Android project includes `com.android.vending.BILLING` plus the OpenIAP Google dependency.
+- Local Gradle/APK/AAB build smoke requires `ANDROID_HOME` or `ANDROID_SDK_ROOT`; CI/release machines must install Android SDK before building. Local debug APK and release AAB smoke passed after installing Android SDK command-line tools and the Billing/Nitro dependencies.
+- On Windows, release AAB should be built from a short path. Use `npm run mobile:store:aab -- -ApiBaseUrl "https://..."`; it mirrors the repo into `C:\gymmin-aab\repo`, clears stale native caches, runs `bundleRelease`, and writes `.artifacts/Gymmin-release-latest.aab`.
+- Release AAB builds require Google Play upload-key signing. Configure the key through `GYMMIN_UPLOAD_STORE_FILE`, `GYMMIN_UPLOAD_STORE_PASSWORD`, `GYMMIN_UPLOAD_KEY_ALIAS` and `GYMMIN_UPLOAD_KEY_PASSWORD`, or through the ignored local file `apps/mobile/android/upload-keystore.properties`. Missing signing config fails the release build instead of using the debug keystore.
+- GitHub Release phone-test packages should be built with `npm run mobile:apk:share -- -ApiBaseUrl "https://..."`. That command produces `.artifacts/Gymmin-arm64-v8a-release-latest.apk` by default; it is not the Store AAB artifact.
+- Generate the upload key outside the repository:
+
+```powershell
+keytool -genkeypair -v -keystore C:\secure\gymmin-upload-key.jks -alias gymmin-upload -keyalg RSA -keysize 2048 -validity 10000
+```
+
+- Verify the final bundle before Play upload:
+
+```powershell
+jarsigner -verify -verbose -certs .artifacts/Gymmin-release-latest.aab
+```
+
+  The certificate owner must not be `CN=Android Debug`.
+- If no emulator or phone is attached, the smoke only proves native Android linking. Runtime fallback checks for `billing_unavailable` and real purchase flows still need an installed Android build; real purchases need Play Console internal testing.
+- If backend verification fails after a successful purchase, use the in-app pending/restore purchase action.
+
+12B.2 status: code and AAB build are ready for Internal Testing, but a real
+purchase smoke is not complete until Play Console products, license testers, a
+Google Play service account and an installed Internal Testing build are all
+available.
+
+RTDN is not implemented yet. Future work should add Pub/Sub Real-time Developer
+Notifications for refunds, chargebacks, pending state changes and cancellation
+lifecycle updates.
+
 ## TODO
 
 - Choose real hosting.
@@ -236,4 +314,5 @@ Expected checks:
 - Add CI/CD migration step.
 - Add optional PostgreSQL smoke test in CI when a stable service container is available.
 - Add CI PostgreSQL AiCredits concurrency smoke test using a service container.
-- Stage 12B: add Google Play Billing, backend receipt validation, purchase restore/pending purchase handling and anti-duplicate purchase crediting.
+- Add RTDN handling for Google Play refunds/chargebacks/pending lifecycle.
+- Add CI/manual smoke for Google Play purchase validation with test products.

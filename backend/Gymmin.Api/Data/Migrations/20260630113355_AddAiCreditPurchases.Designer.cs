@@ -3,6 +3,7 @@ using System;
 using Gymmin.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Gymmin.Api.Data.Migrations
 {
     [DbContext(typeof(GymminDbContext))]
-    partial class GymminDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260630113355_AddAiCreditPurchases")]
+    partial class AddAiCreditPurchases
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.11");

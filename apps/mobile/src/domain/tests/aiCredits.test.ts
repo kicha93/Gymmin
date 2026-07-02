@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   emptyAiCreditBalance,
+  isGooglePlayPurchaseError,
   isInsufficientAiCreditsError,
   normalizeAiCreditBalance,
   normalizeAiCreditPacks,
+  normalizeAiCreditPurchaseVerifyResponse,
   normalizeAiCreditTransactions
 } from "../aiCredits";
+import { mapBillingError } from "../googlePlayBilling";
 
 describe("aiCredits", () => {
   it("normalizes balance response with safe fallbacks", () => {
@@ -56,7 +59,7 @@ describe("aiCredits", () => {
   it("normalizes active credit packs", () => {
     const packs = normalizeAiCreditPacks({
       packs: [
-        { active: true, credits: 10, displayName: "10 tokenów AI", productId: " ai_tokens_10 " },
+        { active: true, credits: 10, displayName: "10 tokenow AI", localizedPrice: "9,99 zl", productId: " ai_tokens_10 " },
         { active: true, credits: 0, displayName: "Broken", productId: "broken" },
         { active: true, credits: 5, displayName: "Missing id" }
       ]
@@ -66,15 +69,49 @@ describe("aiCredits", () => {
       {
         active: true,
         credits: 10,
-        displayName: "10 tokenów AI",
+        displayName: "10 tokenow AI",
+        localizedPrice: "9,99 zl",
         productId: "ai_tokens_10"
       }
     ]);
+  });
+
+  it("normalizes Google Play purchase verification responses", () => {
+    expect(normalizeAiCreditPurchaseVerifyResponse({
+      balance: 13,
+      creditsAdded: 10,
+      purchaseId: " purchase-1 ",
+      status: "credited",
+      transactionId: "tx-1"
+    })).toEqual({
+      balance: 13,
+      creditsAdded: 10,
+      purchaseId: "purchase-1",
+      status: "credited",
+      transactionId: "tx-1"
+    });
+
+    expect(normalizeAiCreditPurchaseVerifyResponse({ status: "credited" })).toBeNull();
   });
 
   it("detects insufficient credit errors without relying on UI text", () => {
     expect(isInsufficientAiCreditsError({ code: "insufficient_ai_credits" })).toBe(true);
     expect(isInsufficientAiCreditsError(new Error("Not enough AI credits"))).toBe(true);
     expect(isInsufficientAiCreditsError({ code: "network_error" })).toBe(false);
+  });
+
+  it("detects Google Play purchase API errors", () => {
+    expect(isGooglePlayPurchaseError({ code: "invalid_google_play_purchase" })).toBe(true);
+    expect(isGooglePlayPurchaseError({ code: "purchase_token_already_used" })).toBe(true);
+    expect(isGooglePlayPurchaseError({ code: "google_play_api_unavailable" })).toBe(true);
+    expect(isGooglePlayPurchaseError({ code: "rate_limited" })).toBe(false);
+  });
+
+  it("maps billing cancellation errors", () => {
+    expect(mapBillingError({ code: "E_USER_CANCELLED", message: "User cancelled purchase" })).toEqual({
+      code: "E_USER_CANCELLED",
+      isCancelled: true,
+      message: "User cancelled purchase"
+    });
   });
 });

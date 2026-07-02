@@ -123,9 +123,11 @@ Backend trzyma:
 - techniczny refund, gdy job AI nie dostarczy uzywalnej propozycji.
 - transakcyjny consume w Database providerze przez atomowy warunkowy update salda,
 - idempotency scoped po uzytkowniku, typie operacji i `X-Idempotency-Key`,
-- idempotentny refund powiazany z jobem.
+- idempotentny refund powiazany z jobem,
+- Google Play purchase records w `AiCreditPurchases`,
+- server-side Google Play purchase validation i consume dla produktow consumable.
 
-Mobile tylko wyswietla saldo i koszt. Backend zawsze decyduje, czy konto ma wystarczajace saldo. Brak salda zwraca `402 insufficient_ai_credits`. Zakupy przez Google Play Billing sa zaplanowane na etap 12B; obecnie istnieje tylko dev/test grant do testowania przeplywow.
+Mobile tylko wyswietla saldo i koszt. Backend zawsze decyduje, czy konto ma wystarczajace saldo. Brak salda zwraca `402 insufficient_ai_credits`. Przy zakupie mobile uruchamia Google Play Billing i wysyla `purchaseToken` do backendu; tokeny AI sa naliczane dopiero po pozytywnej walidacji backendowej. `purchaseToken` nie jest przechowywany plaintext ani zwracany w API.
 
 File provider zachowuje poprawne zachowanie dev w pojedynczym procesie, ale produkcyjne kredyty AI powinny uzywac Database/PostgreSQL. In-memory lock nie jest glownym zabezpieczeniem salda.
 

@@ -4,10 +4,14 @@ import {
   calculateEntryVolume,
   getActiveWorkoutSessionsForUi,
   getCompletedWorkoutSessions,
+  getDeletedWorkoutSessionIds,
   getExerciseProgressItems,
+  getWorkoutSessionStatusLabel,
   getWorkoutSessionUpdatedAt,
+  markWorkoutSessionDeleted,
   mergeWorkoutSessions,
   normalizeWorkoutSessions,
+  workoutHasHistory,
   type WorkoutSession
 } from "../workoutSessions";
 
@@ -99,5 +103,82 @@ describe("workoutSessions", () => {
     expect(calculateEntryVolume(completedSession.entries[0])).toBe(500);
     expect(getCompletedWorkoutSessions([completedSession, abandonedSession, deletedSession])).toHaveLength(1);
     expect(getExerciseProgressItems([completedSession, abandonedSession, deletedSession])).toHaveLength(1);
+  });
+
+  it("marks a workout history entry as a tombstone and excludes it from UI/progress", () => {
+    const completedSession = session({
+      id: "completed",
+      status: "completed",
+      finishedAt: "2026-01-01T11:00:00.000Z",
+      entries: [{
+        id: "entry-1",
+        stageIndex: 0,
+        seriesIndex: 0,
+        setIteration: 1,
+        elementIndex: 0,
+        type: "exercise",
+        exerciseId: "bench",
+        exerciseName: "Bench press",
+        actualWeight: "60",
+        actualReps: "10",
+        isCompleted: true
+      }]
+    });
+    const deletedSession = markWorkoutSessionDeleted(completedSession, "2026-01-02T12:00:00.000Z");
+
+    expect(deletedSession.deletedAt).toBe("2026-01-02T12:00:00.000Z");
+    expect(deletedSession.updatedAt).toBe("2026-01-02T12:00:00.000Z");
+    expect(getActiveWorkoutSessionsForUi([deletedSession])).toHaveLength(0);
+    expect(getCompletedWorkoutSessions([deletedSession])).toHaveLength(0);
+    expect(getExerciseProgressItems([deletedSession])).toHaveLength(0);
+    expect(getDeletedWorkoutSessionIds([deletedSession])).toEqual(["completed"]);
+  });
+
+  it("detects whether a workout has non-deleted history entries", () => {
+    expect(workoutHasHistory("workout-1", [])).toBe(false);
+    expect(workoutHasHistory("workout-1", [session({ id: "completed", status: "completed" })])).toBe(true);
+    expect(workoutHasHistory("workout-1", [session({ id: "abandoned", status: "abandoned" })])).toBe(true);
+    expect(workoutHasHistory("workout-1", [session({ id: "active", status: "active" })])).toBe(true);
+    expect(workoutHasHistory("workout-1", [
+      session({ id: "deleted", deletedAt: "2026-01-02T10:00:00.000Z" })
+    ])).toBe(false);
+    expect(workoutHasHistory("workout-1", [
+      session({ id: "other", sourceWorkoutId: "workout-2" })
+    ])).toBe(false);
+  });
+
+  it("detects workout history from legacy source workout id fields", () => {
+    expect(workoutHasHistory("legacy-workout", [
+      {
+        ...session({ id: "legacy-workout-id" }),
+        sourceWorkoutId: undefined,
+        workoutId: "legacy-workout"
+      } as unknown as WorkoutSession
+    ])).toBe(true);
+
+    expect(workoutHasHistory("legacy-client-workout", [
+      {
+        ...session({ id: "legacy-client-workout-id" }),
+        sourceWorkoutId: "",
+        clientWorkoutId: "legacy-client-workout"
+      } as unknown as WorkoutSession
+    ])).toBe(true);
+
+    expect(workoutHasHistory("legacy-nested-workout", [
+      {
+        ...session({ id: "legacy-nested-workout-id" }),
+        sourceWorkoutId: "",
+        sourceWorkout: { id: "legacy-nested-workout" }
+      } as unknown as WorkoutSession
+    ])).toBe(true);
+  });
+
+  it("maps session statuses to localized labels with a safe fallback", () => {
+    const plLabels = { abandoned: "Przerwany", active: "Aktywny", completed: "Ukończony", unknown: "Brak danych" };
+    const enLabels = { abandoned: "Abandoned", active: "Active", completed: "Completed", unknown: "No data" };
+
+    expect(getWorkoutSessionStatusLabel("abandoned", plLabels)).toBe("Przerwany");
+    expect(getWorkoutSessionStatusLabel("abandoned", enLabels)).toBe("Abandoned");
+    expect(getWorkoutSessionStatusLabel("mystery", plLabels)).toBe("Brak danych");
   });
 });

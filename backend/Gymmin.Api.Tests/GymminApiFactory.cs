@@ -20,6 +20,7 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
     internal FakeBugReportEmailSender BugReportEmailSender { get; } = new();
     public FakePasswordResetEmailSender PasswordResetEmailSender { get; } = new();
     internal FakeWorkoutPlanGenerator WorkoutPlanGenerator { get; } = new();
+    internal FakeGooglePlayPurchaseValidator GooglePlayPurchaseValidator { get; } = new();
 
     public GymminApiFactory()
     {
@@ -37,6 +38,8 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
                 ["Gymmin:Storage:Provider"] = "Database",
                 ["Gymmin:Storage:DatabaseProvider"] = "SQLite",
                 ["Gymmin:Storage:ApplyMigrationsOnStartup"] = "true",
+                ["Gymmin:GooglePlay:Enabled"] = "true",
+                ["Gymmin:GooglePlay:PackageName"] = "com.gymmin.app",
                 ["ConnectionStrings:DefaultConnection"] = $"Data Source={_databasePath}"
             });
         });
@@ -49,6 +52,7 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IFavoriteExerciseStore>();
             services.RemoveAll<IWorkoutSessionStore>();
             services.RemoveAll<IWorkoutPlanJobStore>();
+            services.RemoveAll<IAiCreditService>();
             services.AddDbContextFactory<GymminDbContext>(options => options.UseSqlite($"Data Source={_databasePath}"));
             services.AddSingleton<IUserStore, EfUserStore>();
             services.AddSingleton<IUserSettingsStore, EfUserSettingsStore>();
@@ -56,6 +60,11 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IFavoriteExerciseStore, EfFavoriteExerciseStore>();
             services.AddSingleton<IWorkoutSessionStore, EfWorkoutSessionStore>();
             services.AddSingleton<IWorkoutPlanJobStore, EfWorkoutPlanJobStore>();
+            services.AddSingleton<IAiCreditService, EfAiCreditService>();
+            services.RemoveAll<IAiCreditPurchaseService>();
+            services.AddSingleton<IAiCreditPurchaseService, EfAiCreditPurchaseService>();
+            services.RemoveAll<IGooglePlayPurchaseValidator>();
+            services.AddSingleton<IGooglePlayPurchaseValidator>(GooglePlayPurchaseValidator);
             services.AddHostedService<TestDatabaseInitializer>();
             services.RemoveAll<IWorkoutPlanGenerator>();
             services.AddSingleton<IWorkoutPlanGenerator>(WorkoutPlanGenerator);
@@ -150,6 +159,56 @@ internal sealed class FakeWorkoutPlanGenerator : IWorkoutPlanGenerator
             """[{"name":"Rewritten workout","steps":[]}]""",
             "fake-model",
             "fake"));
+    }
+}
+
+internal sealed class FakeGooglePlayPurchaseValidator : IGooglePlayPurchaseValidator
+{
+    public bool IsValid { get; set; } = true;
+    public bool IsRetryable { get; set; }
+    public bool ConsumeShouldFail { get; set; }
+    public bool ConsumeIsRetryable { get; set; } = true;
+    public string PurchaseState { get; set; } = GooglePlayPurchaseStates.Purchased;
+    public string? ProductIdOverride { get; set; }
+    public int ValidateCalls { get; private set; }
+    public int ConsumeCalls { get; private set; }
+
+    public Task<GooglePlayPurchaseValidationResult> ValidateOneTimeProductAsync(string productId, string purchaseToken, CancellationToken cancellationToken)
+    {
+        ValidateCalls++;
+        return Task.FromResult(new GooglePlayPurchaseValidationResult(
+            IsValid,
+            IsRetryable,
+            ProductIdOverride ?? productId,
+            $"GPA.fake-{purchaseToken[^Math.Min(6, purchaseToken.Length)..]}",
+            PurchaseState,
+            0,
+            1,
+            DateTimeOffset.UtcNow,
+            "PL",
+            """{"sanitized":true}""",
+            IsValid ? null : "invalid_google_play_purchase",
+            IsValid ? null : "Purchase could not be verified"));
+    }
+
+    public Task<GooglePlayConsumeResult> ConsumeOneTimeProductAsync(string productId, string purchaseToken, CancellationToken cancellationToken)
+    {
+        ConsumeCalls++;
+        return Task.FromResult(ConsumeShouldFail
+            ? new GooglePlayConsumeResult(false, ConsumeIsRetryable, "consume_failed", "Synthetic consume failure.")
+            : new GooglePlayConsumeResult(true, false, null, null));
+    }
+
+    public void Reset()
+    {
+        IsValid = true;
+        IsRetryable = false;
+        ConsumeShouldFail = false;
+        ConsumeIsRetryable = true;
+        PurchaseState = GooglePlayPurchaseStates.Purchased;
+        ProductIdOverride = null;
+        ValidateCalls = 0;
+        ConsumeCalls = 0;
     }
 }
 

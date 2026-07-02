@@ -2,7 +2,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$ApiBaseUrl,
   [string]$Architectures = "arm64-v8a",
-  [string]$SubstDrive = "G:",
+  [string]$ShortBuildRoot = "C:\gymmin-apk",
   [int]$DownloadPort = 8095,
   [ValidateSet("GitHub", "Ngrok", "Cloudflare")]
   [string]$PublishProvider = "GitHub",
@@ -24,6 +24,9 @@ $workspaceSdk = Join-Path $repoRoot ".android-sdk"
 $artifactsRoot = Join-Path $repoRoot ".artifacts"
 $downloadUrlFile = Join-Path $artifactsRoot "latest-apk-download-url.txt"
 $mobileBuildConfigPath = Join-Path $mobileRoot "src\config\buildConfig.ts"
+$shortRoot = $ShortBuildRoot.TrimEnd("\")
+$shortRepoRoot = Join-Path $shortRoot "repo"
+$shortMarkerPath = Join-Path $shortRoot ".gymmin-apk-build-root"
 
 function Write-Step {
   param([string]$Message)
@@ -31,11 +34,14 @@ function Write-Step {
 }
 
 function Write-MobileBuildConfig {
-  param([string]$ApiUrl)
+  param(
+    [string]$ApiUrl,
+    [string]$ConfigPath = $mobileBuildConfigPath
+  )
 
   $encodedApiUrl = $ApiUrl | ConvertTo-Json -Compress
   Set-Content `
-    -Path $mobileBuildConfigPath `
+    -Path $ConfigPath `
     -Value "export const BUILD_API_BASE_URL = $encodedApiUrl;" `
     -Encoding UTF8
 }
@@ -51,21 +57,6 @@ function Assert-Command {
   if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
     throw "Missing command '$Name'. $InstallHint"
   }
-}
-
-function Ensure-SubstDrive {
-  param(
-    [string]$Drive,
-    [string]$TargetPath
-  )
-
-  $driveName = $Drive.TrimEnd(":")
-  $existing = subst | Select-String -Pattern "^$([regex]::Escape($driveName)):\\:"
-  if ($existing) {
-    return
-  }
-
-  subst $Drive $TargetPath
 }
 
 function Get-GitHubCliPath {
@@ -136,6 +127,52 @@ function Publish-ApkToGitHubRelease {
   return $releaseUrl
 }
 
+function Clear-AndroidBuildCaches {
+  param([Parameter(Mandatory = $true)][string]$CopiedMobileRoot)
+
+  $targets = @(
+    (Join-Path $CopiedMobileRoot "android\build"),
+    (Join-Path $CopiedMobileRoot "android\.gradle"),
+    (Join-Path $CopiedMobileRoot "android\app\build"),
+    (Join-Path $CopiedMobileRoot "android\app\.cxx")
+  )
+
+  foreach ($target in $targets) {
+    if (Test-Path $target) {
+      Remove-Item -LiteralPath $target -Recurse -Force
+    }
+  }
+
+  $nodeModules = Join-Path $CopiedMobileRoot "node_modules"
+  if (Test-Path $nodeModules) {
+    Get-ChildItem -Path $nodeModules -Recurse -Directory -ErrorAction SilentlyContinue |
+      Where-Object { $_.Name -in @("build", ".gradle", ".cxx") -and $_.FullName -match "\\android(\\|$)" } |
+      Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+  }
+}
+
+function Copy-RepoToShortBuildPath {
+  if (Test-Path $shortRoot) {
+    if (-not (Test-Path $shortMarkerPath)) {
+      throw "ShortBuildRoot exists but is not marked as a Gymmin APK build folder: $shortRoot"
+    }
+  } else {
+    New-Item -ItemType Directory -Path $shortRoot | Out-Null
+    Set-Content -Path $shortMarkerPath -Value "Gymmin Android APK short-path build folder" -Encoding UTF8
+  }
+
+  Write-Step "Copying repo to short build path: $shortRepoRoot"
+  robocopy `
+    $repoRoot `
+    $shortRepoRoot `
+    /MIR `
+    /XD .git .artifacts .android-sdk apps\mobile\android\build backend\Gymmin.Api\bin backend\Gymmin.Api\obj backend\Gymmin.Api.Tests\bin backend\Gymmin.Api.Tests\obj `
+    /XF *.apk *.aab | Out-Host
+  if ($LASTEXITCODE -gt 7) {
+    throw "robocopy failed with exit code $LASTEXITCODE"
+  }
+}
+
 $normalizedApiBaseUrl = $ApiBaseUrl.Trim().TrimEnd("/")
 if (-not ($normalizedApiBaseUrl -match "^https?://")) {
   throw "ApiBaseUrl must start with http:// or https://. Received: $ApiBaseUrl"
@@ -173,31 +210,30 @@ if (-not $SkipTypecheck) {
 }
 
 New-Item -ItemType Directory -Path $artifactsRoot -Force | Out-Null
-Ensure-SubstDrive -Drive $SubstDrive -TargetPath $repoRoot
-
-$substRoot = "$SubstDrive\"
-$substAndroidRoot = Join-Path $substRoot "apps\mobile\android"
 $env:EXPO_PUBLIC_API_BASE_URL = $normalizedApiBaseUrl
 $env:NODE_ENV = "production"
 Write-MobileBuildConfig -ApiUrl $normalizedApiBaseUrl
 
-if ($env:ANDROID_SDK_ROOT -like "$repoRoot*") {
-  $env:ANDROID_SDK_ROOT = $env:ANDROID_SDK_ROOT.Replace($repoRoot, $substRoot.TrimEnd("\"))
-  $env:ANDROID_HOME = $env:ANDROID_SDK_ROOT
-}
+Copy-RepoToShortBuildPath
+
+$shortMobileRoot = Join-Path $shortRepoRoot "apps\mobile"
+$shortAndroidRoot = Join-Path $shortMobileRoot "android"
+$shortBuildConfigPath = Join-Path $shortMobileRoot "src\config\buildConfig.ts"
+Clear-AndroidBuildCaches -CopiedMobileRoot $shortMobileRoot
+Write-MobileBuildConfig -ApiUrl $normalizedApiBaseUrl -ConfigPath $shortBuildConfigPath
 
 Write-Step "Backend URL embedded in APK: $normalizedApiBaseUrl"
 Write-Step "Architectures: $Architectures"
-Write-Step "Building release APK from short path: $substAndroidRoot"
+Write-Step "Building release APK from short path: $shortAndroidRoot"
 
-Push-Location $substAndroidRoot
+Push-Location $shortAndroidRoot
 try {
   .\gradlew.bat assembleRelease "-PreactNativeArchitectures=$Architectures"
 } finally {
   Pop-Location
 }
 
-$apkPath = Join-Path $androidRoot "app\build\outputs\apk\release\app-release.apk"
+$apkPath = Join-Path $shortAndroidRoot "app\build\outputs\apk\release\app-release.apk"
 if (-not (Test-Path $apkPath)) {
   throw "APK was not found at expected path: $apkPath"
 }

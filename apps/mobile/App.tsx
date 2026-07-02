@@ -71,11 +71,14 @@ import {
   getExerciseProgressSummary,
   getSessionDurationMs,
   getSessionStartedAtTime,
+  getWorkoutSessionStatusLabel,
   getWorkoutSessionUpdatedAt,
   getWorkoutHistorySummary,
   getWorkoutSessionDisplayName,
+  markWorkoutSessionDeleted,
   mergeWorkoutSessions,
   normalizeWorkoutSessions,
+  workoutHasHistory,
   WORKOUT_SESSIONS_LEGACY_SYNC_STORAGE_KEY,
   WORKOUT_SESSIONS_STORAGE_BASE_KEY,
   WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY
@@ -104,6 +107,14 @@ import {
   muscleKeys
 } from "./src/domain/exercises";
 import type { Exercise, ExerciseOption, ExerciseSection, MuscleKey } from "./src/domain/exercises";
+import {
+  formatExerciseSetTarget,
+  getExerciseDetails,
+  getExerciseProgressKeyForDetails,
+  getExerciseTargetDisplay,
+  getWorkoutStepMuscleGroups,
+  resolveWorkoutStartExecutionMode
+} from "./src/domain/workoutExerciseSummary";
 import {
   addFavoriteExercise,
   getActiveFavoriteExercises,
@@ -153,11 +164,19 @@ import {
 import {
   emptyAiCreditBalance,
   isInsufficientAiCreditsError,
+  normalizeAiCreditPurchaseVerifyResponse,
   normalizeAiCreditBalance,
   normalizeAiCreditPacks,
   normalizeAiCreditTransactions
 } from "./src/domain/aiCredits";
 import type { AiCreditBalance, AiCreditPack, AiCreditTransaction } from "./src/domain/aiCredits";
+import {
+  getAiCreditProducts,
+  getPendingAiCreditPurchases,
+  initBilling,
+  mapBillingError,
+  purchaseAiCreditPack
+} from "./src/domain/googlePlayBilling";
 import {
   backBodyRegionMap,
   backBodySvg,
@@ -350,6 +369,16 @@ const translations = {
     aiCreditsBuy: "Kup tokeny",
     aiCreditsPurchaseSoon: "Zakup tokenów będzie dostępny wkrótce",
     aiCreditsLoadError: "Nie udało się pobrać salda tokenów",
+    aiCreditsPreparingPurchase: "Trwa przygotowanie zakupu...",
+    aiCreditsProcessingPurchase: "Przetwarzanie zakupu...",
+    aiCreditsPurchaseCancelled: "Zakup anulowany",
+    aiCreditsPurchaseCompleted: "Zakup zakończony",
+    aiCreditsPurchaseAdded: "Tokeny zostały dodane",
+    aiCreditsPurchaseVerifyError: "Nie udało się potwierdzić zakupu",
+    aiCreditsPurchasePending: "Zakup oczekuje na płatność",
+    aiCreditsPurchaseRetry: "Spróbuj ponownie",
+    aiCreditsRestorePurchases: "Przywróć oczekujące zakupy",
+    aiCreditsBillingUnavailable: "Zakupy Google Play są niedostępne w tym buildzie lub na tym urządzeniu.",
     aiCreditsDescription: "1 token AI = 1 wygenerowanie albo modyfikacja treningu przez AI.",
     aiCreditsPlanCost: "Koszt stworzenia planu",
     aiCreditsRewriteCost: "Koszt modyfikacji treningu",
@@ -393,12 +422,16 @@ const translations = {
     defaultSetCount: "Domyślna liczba serii",
     defaultWeight: "Domyślny ciężar",
     defaultWorkoutExecutionMode: "Tryb wykonywania treningu",
+    defaultWorkoutExecutionModeHint: "Tryb wykonania treningu możesz zmienić w ustawieniach",
     descending: "Malejąco",
     executionGuided: "Krok po kroku",
     executionReadonlyPostWorkout: "Tylko podgląd, uzupełnię po treningu",
     executionInlineTable: "Tabela do uzupełniania na bieżąco",
     startWorkout: "Rozpocznij trening",
     chooseExecutionMode: "Wybierz tryb wykonywania",
+    showWorkedMuscles: "Pokaż pracujące mięśnie",
+    workedMuscles: "Pracujące mięśnie",
+    noExerciseMuscleData: "Brak danych o mięśniach dla tego ćwiczenia",
     start: "Rozpocznij",
     cancel: "Anuluj",
     done: "Wykonane",
@@ -417,6 +450,7 @@ const translations = {
     actualCalories: "Kalorie",
     actualHeartRate: "Tętno",
     note: "Notatka",
+    close: "Zamknij",
     duration: "Czas trwania",
     progress: "Postęp",
     activeWorkoutNotice: "Masz aktywny trening",
@@ -432,6 +466,19 @@ const translations = {
     workoutHistoryTitle: "Historia treningów",
     workoutDetails: "Szczegóły treningu",
     exerciseProgress: "Progres ćwiczenia",
+    exerciseDetails: "Szczegóły ćwiczenia",
+    noExerciseDetails: "Brak szczegółów dla tego ćwiczenia",
+    exerciseAnimation: "Animacja ćwiczenia",
+    exerciseAnimationPlaceholder: "Animacja zostanie dodana później.",
+    howToPerform: "Jak wykonywać",
+    techniquePlaceholder: "Opis techniki zostanie dodany później.",
+    tips: "Wskazówki",
+    tipsPlaceholder: "Wskazówki techniczne zostaną dodane później.",
+    commonMistakes: "Typowe błędy",
+    commonMistakesPlaceholder: "Typowe błędy zostaną dodane później.",
+    exerciseHistory: "Historia ćwiczenia",
+    exerciseHistoryPlaceholder: "Historia ćwiczenia będzie dostępna po wykonaniu treningów.",
+    showDetails: "Pokaż szczegóły",
     lastResult: "Ostatni wynik",
     viewFullHistory: "Zobacz całą historię",
     details: "Szczegóły",
@@ -466,6 +513,13 @@ const translations = {
     completedStatusLabel: "Ukończony",
     abandonedStatusLabel: "Przerwany",
     activeStatusLabel: "Aktywny",
+    collapse: "Zwiń",
+    expand: "Rozwiń",
+    deleteHistoryEntryTitle: "Usuń wpis z historii?",
+    deleteHistoryEntryCopy: "Czy na pewno chcesz usunąć ten wpis z historii treningów? Tej operacji nie można cofnąć.",
+    deleteWorkoutWithHistoryTitle: "Usunąć trening z historią?",
+    deleteWorkoutWithHistoryCopy: "Ten trening ma już wpisy w historii. Usunięcie treningu jest nieodwracalne. Historia treningów pozostanie zapisana, ale nie będzie już można przywrócić usuniętego treningu. Czy na pewno chcesz kontynuować?",
+    deleteWorkoutAction: "Usuń trening",
     disabled: "Wyłączone",
     editSavedWorkout: "Edycja zapisanego treningu",
     editWorkout: "Edytuj trening",
@@ -754,6 +808,16 @@ const translations = {
     aiCreditsBuy: "Buy credits",
     aiCreditsPurchaseSoon: "Credit purchase will be available soon",
     aiCreditsLoadError: "Could not load credit balance",
+    aiCreditsPreparingPurchase: "Preparing purchase...",
+    aiCreditsProcessingPurchase: "Processing purchase...",
+    aiCreditsPurchaseCancelled: "Purchase cancelled",
+    aiCreditsPurchaseCompleted: "Purchase completed",
+    aiCreditsPurchaseAdded: "Credits added",
+    aiCreditsPurchaseVerifyError: "Could not verify purchase",
+    aiCreditsPurchasePending: "Purchase is pending",
+    aiCreditsPurchaseRetry: "Try again",
+    aiCreditsRestorePurchases: "Restore pending purchases",
+    aiCreditsBillingUnavailable: "Google Play purchases are unavailable in this build or on this device.",
     aiCreditsDescription: "1 AI credit = 1 workout generation or AI workout modification.",
     aiCreditsPlanCost: "Plan generation cost",
     aiCreditsRewriteCost: "Workout modification cost",
@@ -797,12 +861,16 @@ const translations = {
     defaultSetCount: "Default set count",
     defaultWeight: "Default weight",
     defaultWorkoutExecutionMode: "Workout execution mode",
+    defaultWorkoutExecutionModeHint: "You can change the workout execution mode in settings",
     descending: "Descending",
     executionGuided: "Step by step",
     executionReadonlyPostWorkout: "Read-only, fill after workout",
     executionInlineTable: "Live table",
     startWorkout: "Start workout",
     chooseExecutionMode: "Choose execution mode",
+    showWorkedMuscles: "Show worked muscles",
+    workedMuscles: "Worked muscles",
+    noExerciseMuscleData: "No muscle data available for this exercise",
     start: "Start",
     cancel: "Cancel",
     done: "Done",
@@ -821,6 +889,7 @@ const translations = {
     actualCalories: "Calories",
     actualHeartRate: "Heart rate",
     note: "Note",
+    close: "Close",
     duration: "Duration",
     progress: "Progress",
     activeWorkoutNotice: "You have an active workout",
@@ -836,6 +905,19 @@ const translations = {
     workoutHistoryTitle: "Workout history",
     workoutDetails: "Workout details",
     exerciseProgress: "Exercise progress",
+    exerciseDetails: "Exercise details",
+    noExerciseDetails: "No details available for this exercise",
+    exerciseAnimation: "Exercise animation",
+    exerciseAnimationPlaceholder: "Animation will be added later.",
+    howToPerform: "How to perform",
+    techniquePlaceholder: "Technique description will be added later.",
+    tips: "Tips",
+    tipsPlaceholder: "Technique tips will be added later.",
+    commonMistakes: "Common mistakes",
+    commonMistakesPlaceholder: "Common mistakes will be added later.",
+    exerciseHistory: "Exercise history",
+    exerciseHistoryPlaceholder: "Exercise history will appear after completed workouts.",
+    showDetails: "Show details",
     lastResult: "Last result",
     viewFullHistory: "View full history",
     details: "Details",
@@ -870,6 +952,13 @@ const translations = {
     completedStatusLabel: "Completed",
     abandonedStatusLabel: "Abandoned",
     activeStatusLabel: "Active",
+    collapse: "Collapse",
+    expand: "Expand",
+    deleteHistoryEntryTitle: "Delete history entry?",
+    deleteHistoryEntryCopy: "Are you sure you want to delete this workout history entry? This action cannot be undone.",
+    deleteWorkoutWithHistoryTitle: "Delete workout with history?",
+    deleteWorkoutWithHistoryCopy: "This workout already has history entries. Deleting the workout cannot be undone. Workout history will remain saved, but the deleted workout cannot be restored. Are you sure you want to continue?",
+    deleteWorkoutAction: "Delete workout",
     disabled: "Off",
     editSavedWorkout: "Editing saved workout",
     editWorkout: "Edit workout",
@@ -2477,6 +2566,7 @@ type ScreenKey =
   | "aiCredits"
   | "profile"
   | "progress"
+  | "exerciseDetail"
   | "exerciseProgress"
   | "workoutHistory"
   | "workoutSessionDetail"
@@ -2933,6 +3023,9 @@ function GymminApp() {
   const [favoriteExercisesSyncStatus, setFavoriteExercisesSyncStatus] = useState<"local" | "synced" | "failed">("local");
   const [activeWorkoutSessionId, setActiveWorkoutSessionId] = useState<string | null>(null);
   const [selectedWorkoutSessionId, setSelectedWorkoutSessionId] = useState<string | null>(null);
+  const [selectedExerciseMuscleStep, setSelectedExerciseMuscleStep] = useState<WorkoutStep | null>(null);
+  const [selectedExerciseDetailStep, setSelectedExerciseDetailStep] = useState<WorkoutStep | null>(null);
+  const [exerciseDetailReturnScreen, setExerciseDetailReturnScreen] = useState<ScreenKey>("workoutDetail");
   const [workoutHistoryFilter, setWorkoutHistoryFilter] = useState<WorkoutHistoryStatusFilter>("all");
   const [workoutHistorySearch, setWorkoutHistorySearch] = useState("");
   const [workoutHistoryWorkoutIdFilter, setWorkoutHistoryWorkoutIdFilter] = useState<string | null>(null);
@@ -2940,8 +3033,6 @@ function GymminApp() {
   const [selectedExerciseProgressKey, setSelectedExerciseProgressKey] = useState<string | null>(null);
   const [sessionEntryIndex, setSessionEntryIndex] = useState(0);
   const [isPostWorkoutFillMode, setIsPostWorkoutFillMode] = useState(false);
-  const [isExecutionModeSheetVisible, setIsExecutionModeSheetVisible] = useState(false);
-  const [pendingExecutionMode, setPendingExecutionMode] = useState<WorkoutExecutionMode>("guided");
   const [activeSettingsSheet, setActiveSettingsSheet] = useState<SettingsSheetKey | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -2958,7 +3049,9 @@ function GymminApp() {
   const [aiCreditTransactions, setAiCreditTransactions] = useState<AiCreditTransaction[]>([]);
   const [aiCreditPacks, setAiCreditPacks] = useState<AiCreditPack[]>([]);
   const [aiCreditsError, setAiCreditsError] = useState("");
+  const [aiCreditsPurchaseMessage, setAiCreditsPurchaseMessage] = useState("");
   const [isAiCreditsLoading, setIsAiCreditsLoading] = useState(false);
+  const [isAiCreditPurchaseLoading, setIsAiCreditPurchaseLoading] = useState(false);
   const [isAuthActionSubmitting, setIsAuthActionSubmitting] = useState(false);
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
@@ -2990,6 +3083,7 @@ function GymminApp() {
   const [trainingFactIndex, setTrainingFactIndex] = useState(0);
   const [selectedCreatorProfileId, setSelectedCreatorProfileId] = useState<string | null>(null);
   const [pendingCreatorJob, setPendingCreatorJob] = useState<PendingCreatorJob | null>(null);
+  const [readOnlyWorkoutCollapsedPanels, setReadOnlyWorkoutCollapsedPanels] = useState<Record<string, boolean>>({});
   const [collapsedPanels, setCollapsedPanels] = useState<Record<string, boolean>>(
     defaultCollapsedPanels
   );
@@ -4422,7 +4516,7 @@ function GymminApp() {
     });
 
     return () => subscription.remove();
-  }, [activeScreen, activeSettingsSheet, creatorPhase, editingWorkoutId, selectedWorkoutId]);
+  }, [activeScreen, activeSettingsSheet, creatorPhase, editingWorkoutId, exerciseDetailReturnScreen, selectedWorkoutId]);
 
   useEffect(() => {
     if (creatorPhase !== "submitted") {
@@ -4595,13 +4689,132 @@ function GymminApp() {
       }
 
       if (packsResponse.ok) {
-        setAiCreditPacks(normalizeAiCreditPacks(await packsResponse.json().catch(() => null)));
+        const packs = normalizeAiCreditPacks(await packsResponse.json().catch(() => null));
+        const products = await getAiCreditProducts(packs.map((pack) => pack.productId)).catch(() => []);
+        setAiCreditPacks(packs.map((pack) => {
+          const product = products.find((item) => item.productId === pack.productId);
+          return product?.localizedPrice ? { ...pack, localizedPrice: product.localizedPrice } : pack;
+        }));
       }
     } catch (error) {
       console.error("Failed to load AI credits", error);
       setAiCreditsError(error instanceof Error ? error.message : t("aiCreditsLoadError"));
     } finally {
       setIsAiCreditsLoading(false);
+    }
+  }
+
+  async function verifyGooglePlayAiCreditPurchase(
+    purchase: { productId: string; purchaseToken: string; orderId?: string | null },
+    session = user
+  ) {
+    if (!session) {
+      return null;
+    }
+
+    const response = await fetch(`${apiBaseUrl}/api/ai-credits/purchases/google-play/verify`, {
+      body: JSON.stringify({
+        orderId: purchase.orderId ?? null,
+        productId: purchase.productId,
+        purchaseToken: purchase.purchaseToken
+      }),
+      headers: {
+        ...getAuthHeaders(session),
+        "Content-Type": "application/json"
+      },
+      method: "POST"
+    });
+
+    if (response.status === 401) {
+      handleUnauthorizedSession();
+      return null;
+    }
+
+    if (!response.ok) {
+      throw await createApiError(
+        response,
+        "/api/ai-credits/purchases/google-play/verify",
+        "POST",
+        t("aiCreditsPurchaseVerifyError")
+      );
+    }
+
+    const result = normalizeAiCreditPurchaseVerifyResponse(await response.json().catch(() => null));
+    if (!result) {
+      throw new Error(t("aiCreditsPurchaseVerifyError"));
+    }
+
+    setAiCreditBalance((current) => ({ ...current, balance: result.balance }));
+    setAiCreditsPurchaseMessage(result.status === "already_processed" ? t("aiCreditsPurchaseCompleted") : t("aiCreditsPurchaseAdded"));
+    await fetchAiCredits(session);
+    return result;
+  }
+
+  async function buyAiCreditPack(pack: AiCreditPack) {
+    if (!user || isAiCreditPurchaseLoading || !pack.active) {
+      return;
+    }
+
+    setIsAiCreditPurchaseLoading(true);
+    setAiCreditsError("");
+    setAiCreditsPurchaseMessage(t("aiCreditsPreparingPurchase"));
+    try {
+      const initialized = await initBilling();
+      if (!initialized) {
+        throw new Error(t("aiCreditsBillingUnavailable"));
+      }
+
+      setAiCreditsPurchaseMessage(t("aiCreditsProcessingPurchase"));
+      const purchase = await purchaseAiCreditPack(pack.productId);
+      addDiagnosticEvent({
+        area: "ai",
+        extra: {
+          orderId: purchase.orderId ?? null,
+          productId: purchase.productId
+        },
+        level: "info",
+        message: "Google Play purchase returned for verification",
+        screen: "aiCredits"
+      });
+      await verifyGooglePlayAiCreditPurchase(purchase, user);
+    } catch (error) {
+      const billingError = mapBillingError(error);
+      if (billingError.isCancelled) {
+        setAiCreditsPurchaseMessage(t("aiCreditsPurchaseCancelled"));
+      } else {
+        console.error("Failed to buy AI credits", error);
+        setAiCreditsError(error instanceof Error ? error.message : t("aiCreditsPurchaseVerifyError"));
+        setAiCreditsPurchaseMessage("");
+      }
+    } finally {
+      setIsAiCreditPurchaseLoading(false);
+    }
+  }
+
+  async function restorePendingAiCreditPurchases() {
+    if (!user || isAiCreditPurchaseLoading) {
+      return;
+    }
+
+    setIsAiCreditPurchaseLoading(true);
+    setAiCreditsError("");
+    setAiCreditsPurchaseMessage(t("aiCreditsProcessingPurchase"));
+    try {
+      const pendingPurchases = await getPendingAiCreditPurchases(aiCreditPacks.map((pack) => pack.productId));
+      if (!pendingPurchases.length) {
+        setAiCreditsPurchaseMessage(t("aiCreditsPurchasePending"));
+        return;
+      }
+
+      for (const purchase of pendingPurchases) {
+        await verifyGooglePlayAiCreditPurchase(purchase, user);
+      }
+    } catch (error) {
+      console.error("Failed to restore AI credit purchases", error);
+      setAiCreditsError(error instanceof Error ? error.message : t("aiCreditsPurchaseVerifyError"));
+      setAiCreditsPurchaseMessage("");
+    } finally {
+      setIsAiCreditPurchaseLoading(false);
     }
   }
 
@@ -5181,23 +5394,17 @@ function GymminApp() {
     setActiveScreen("workoutAiRewrite");
   }
 
-  function openExecutionModeSheet() {
-    setPendingExecutionMode(defaultWorkoutExecutionMode);
-    setIsExecutionModeSheetVisible(true);
-  }
-
-  function startSelectedWorkoutSession() {
+  function startSelectedWorkoutSession(executionMode = resolveWorkoutStartExecutionMode(defaultWorkoutExecutionMode)) {
     const savedWorkout = savedWorkouts.find((item) => item.id === selectedWorkoutId);
 
     if (!savedWorkout) {
       return;
     }
 
-    const session = createWorkoutSessionFromWorkout(savedWorkout.draft, savedWorkout.id, pendingExecutionMode);
+    const session = createWorkoutSessionFromWorkout(savedWorkout.draft, savedWorkout.id, executionMode);
 
     if (!session.entries.length) {
       Alert.alert(t("emptyWorkoutSession"));
-      setIsExecutionModeSheetVisible(false);
       return;
     }
 
@@ -5205,7 +5412,6 @@ function GymminApp() {
     setActiveWorkoutSessionId(session.id);
     setSessionEntryIndex(0);
     setIsPostWorkoutFillMode(false);
-    setIsExecutionModeSheetVisible(false);
     setActiveScreen("workoutSession");
   }
 
@@ -5946,7 +6152,7 @@ function GymminApp() {
     }));
   }
 
-  function deleteWorkout(workoutId: string) {
+  function performDeleteWorkout(workoutId: string) {
     setSavedWorkouts((current) => current.filter((item) => item.id !== workoutId));
     setSelectedWorkoutId("");
     setEditingWorkoutId(null);
@@ -5955,6 +6161,59 @@ function GymminApp() {
     deleteAccountWorkout(workoutId).catch((error) => {
       console.error("Failed to delete workout from account", error);
     });
+  }
+
+  function deleteWorkout(workoutId: string) {
+    if (workoutHasHistory(workoutId, workoutSessions)) {
+      Alert.alert(t("deleteWorkoutWithHistoryTitle"), t("deleteWorkoutWithHistoryCopy"), [
+        { text: t("cancel"), style: "cancel" },
+        {
+          text: t("deleteWorkoutAction"),
+          style: "destructive",
+          onPress: () => performDeleteWorkout(workoutId)
+        }
+      ]);
+      return;
+    }
+
+    performDeleteWorkout(workoutId);
+  }
+
+  function deleteWorkoutHistoryEntry(sessionId: string) {
+    const session = workoutSessions.find((item) => item.id === sessionId);
+    if (!session || session.deletedAt) {
+      return;
+    }
+
+    Alert.alert(t("deleteHistoryEntryTitle"), t("deleteHistoryEntryCopy"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("delete"),
+        style: "destructive",
+        onPress: () => {
+          const deletedSession = markWorkoutSessionDeleted(session);
+          setWorkoutSessions((current) => current.map((item) => item.id === sessionId ? deletedSession : item));
+          if (activeWorkoutSessionId === sessionId) {
+            setActiveWorkoutSessionId(null);
+          }
+          if (selectedWorkoutSessionId === sessionId) {
+            setSelectedWorkoutSessionId(null);
+            setActiveScreen("workoutHistory");
+          }
+        }
+      }
+    ]);
+  }
+
+  function isReadOnlyWorkoutPanelCollapsed(panelId: string) {
+    return readOnlyWorkoutCollapsedPanels[panelId] ?? false;
+  }
+
+  function toggleReadOnlyWorkoutPanel(panelId: string) {
+    setReadOnlyWorkoutCollapsedPanels((current) => ({
+      ...current,
+      [panelId]: !(current[panelId] ?? false)
+    }));
   }
 
   function addStep(kind: WorkoutStepKind) {
@@ -6492,6 +6751,11 @@ function GymminApp() {
       return true;
     }
 
+    if (activeScreen === "exerciseDetail") {
+      setActiveScreen(exerciseDetailReturnScreen);
+      return true;
+    }
+
     if (activeScreen === "workoutCreator") {
       if (creatorPhase !== "form") {
         setCreatorPhase("form");
@@ -6806,15 +7070,12 @@ function GymminApp() {
   }
 
   function getSessionStatusLabel(status: WorkoutSessionStatus) {
-    if (status === "completed") {
-      return t("completedStatusLabel");
-    }
-
-    if (status === "abandoned") {
-      return t("abandonedStatusLabel");
-    }
-
-    return t("activeStatusLabel");
+    return getWorkoutSessionStatusLabel(status, {
+      abandoned: t("abandonedStatusLabel"),
+      active: t("activeStatusLabel"),
+      completed: t("completedStatusLabel"),
+      unknown: t("noData")
+    });
   }
 
   function getExecutionModeLabel(mode: WorkoutExecutionMode) {
@@ -6922,6 +7183,12 @@ function GymminApp() {
   function openExerciseProgress(exerciseKey: string) {
     setSelectedExerciseProgressKey(exerciseKey);
     setActiveScreen("exerciseProgress");
+  }
+
+  function openExerciseDetail(step: WorkoutStep) {
+    setSelectedExerciseDetailStep(step);
+    setExerciseDetailReturnScreen(activeScreen);
+    setActiveScreen("exerciseDetail");
   }
 
   function renderHome() {
@@ -7647,7 +7914,20 @@ function GymminApp() {
                         {formatSessionDateTime(session)}
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={theme.muted} />
+                    <View style={styles.sessionEntryActions}>
+                      <Pressable
+                        accessibilityLabel={t("deleteHistoryEntryTitle")}
+                        accessibilityRole="button"
+                        style={[styles.sessionDeleteButton, { borderColor: theme.border }]}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          deleteWorkoutHistoryEntry(session.id);
+                        }}
+                      >
+                        <Ionicons name="trash-outline" size={18} color={theme.danger} />
+                      </Pressable>
+                      <Ionicons name="chevron-forward" size={20} color={theme.muted} />
+                    </View>
                   </View>
                   <Text style={[styles.workoutMeta, { color: theme.muted }]}>
                     {getSessionStatusLabel(session.status)} · {getExecutionModeLabel(session.executionMode)}
@@ -7692,7 +7972,19 @@ function GymminApp() {
     return (
       <View style={styles.historyScreen}>
         <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>{getWorkoutSessionDisplayName(session)}</Text>
+          <View style={styles.sessionEntryHeader}>
+            <View style={styles.workoutInfo}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{getWorkoutSessionDisplayName(session)}</Text>
+            </View>
+            <Pressable
+              accessibilityLabel={t("deleteHistoryEntryTitle")}
+              accessibilityRole="button"
+              style={[styles.sessionDeleteButton, { borderColor: theme.border }]}
+              onPress={() => deleteWorkoutHistoryEntry(session.id)}
+            >
+              <Ionicons name="trash-outline" size={18} color={theme.danger} />
+            </Pressable>
+          </View>
           <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatSessionDateTime(session)}</Text>
           <Text style={[styles.workoutMeta, { color: theme.muted }]}>
             {t("duration")}: {formatSessionDuration(session)}
@@ -7874,6 +8166,139 @@ function GymminApp() {
     );
   }
 
+  function renderExerciseDetailScreen() {
+    const step = selectedExerciseDetailStep;
+    const details = step ? getExerciseDetails(step, language) : null;
+    const progressKey = getExerciseProgressKeyForDetails(details);
+    const progressSummary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
+    const fallbackName = step?.exerciseName ? getExerciseDisplayName(step.exerciseName, language) : t("exerciseDetails");
+    const displayName = details?.displayName ?? fallbackName;
+    const hasMuscleData = Boolean(details && (details.primary.length || details.secondary.length));
+    const colors = {
+      inactive: "#4a4d4c",
+      primary: "#ff3347",
+      secondary: "#ffc43d"
+    };
+
+    function fill(muscle: MuscleKey) {
+      if (details?.primary.includes(muscle)) {
+        return colors.primary;
+      }
+
+      if (details?.secondary.includes(muscle)) {
+        return colors.secondary;
+      }
+
+      return colors.inactive;
+    }
+
+    function formatMuscleList(muscles: MuscleKey[]) {
+      return muscles.length ? muscles.map((muscle) => muscleLabels[language][muscle]).join(", ") : t("noData");
+    }
+
+    return (
+      <View style={styles.historyScreen}>
+        <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.sessionEntryHeader}>
+            <View style={styles.workoutInfo}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{displayName}</Text>
+              {details ? (
+                <Text style={[styles.workoutMeta, { color: theme.muted }]}>
+                  {[details.category, ...details.equipment.slice(0, 3)].filter(Boolean).join(" · ")}
+                </Text>
+              ) : (
+                <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("noExerciseDetails")}</Text>
+              )}
+            </View>
+            <AppButton
+              icon="chevron-back"
+              style={styles.builderBackButton}
+              textStyle={styles.builderBackButtonText}
+              theme={theme}
+              variant="outline"
+              onPress={() => setActiveScreen(exerciseDetailReturnScreen)}
+            >
+              {t("back")}
+            </AppButton>
+          </View>
+        </View>
+
+        <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseAnimation")}</Text>
+          <View style={[styles.exerciseAnimationPlaceholder, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
+            <Ionicons name="videocam-outline" size={28} color={theme.primary} />
+            <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>
+              {details?.hasAnimation && details.animationUrl ? details.animationUrl : t("exerciseAnimationPlaceholder")}
+            </Text>
+          </View>
+        </View>
+
+        <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.workoutName, { color: theme.text }]}>{t("workedMuscles")}</Text>
+          {hasMuscleData ? (
+            <>
+              <View style={styles.exerciseMuscleLists}>
+                <View style={styles.fieldGroup}>
+                  <Text style={[styles.label, { color: theme.muted }]}>{t("primaryMuscles")}</Text>
+                  <Text style={[styles.workoutMeta, { color: theme.text }]}>{formatMuscleList(details?.primary ?? [])}</Text>
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={[styles.label, { color: theme.muted }]}>{t("secondaryMuscles")}</Text>
+                  <Text style={[styles.workoutMeta, { color: theme.text }]}>{formatMuscleList(details?.secondary ?? [])}</Text>
+                </View>
+              </View>
+              <View style={styles.muscleOverviewFigures}>
+                <HumanMuscleFigure fill={fill} side="front" />
+                <HumanMuscleFigure fill={fill} side="back" />
+              </View>
+            </>
+          ) : (
+            <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("noExerciseMuscleData")}</Text>
+          )}
+        </View>
+
+        <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.workoutName, { color: theme.text }]}>{t("howToPerform")}</Text>
+          <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
+            {details?.exercise?.description || t("techniquePlaceholder")}
+          </Text>
+        </View>
+
+        <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.workoutName, { color: theme.text }]}>{t("tips")}</Text>
+          <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{t("tipsPlaceholder")}</Text>
+        </View>
+
+        <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.workoutName, { color: theme.text }]}>{t("commonMistakes")}</Text>
+          <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{t("commonMistakesPlaceholder")}</Text>
+        </View>
+
+        <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseHistory")}</Text>
+          {progressSummary ? (
+            <>
+              <Text style={[styles.workoutMeta, { color: theme.muted }]}>
+                {progressSummary.sessionCount} {t("workouts").toLowerCase()} · {progressSummary.results.length} {t("sessions").toLowerCase()}
+              </Text>
+              <Text style={[styles.workoutMeta, { color: theme.muted }]}>
+                {t("last")}: {formatEntryActual(progressSummary.lastResult.entry)}
+              </Text>
+              <Text style={[styles.workoutMeta, { color: theme.muted }]}>
+                {t("bestWeight")}: {formatNumber(progressSummary.bestWeight, "kg")}
+              </Text>
+              <Text style={[styles.workoutMeta, { color: theme.muted }]}>
+                {t("bestVolume")}: {formatNumber(progressSummary.bestVolumeSingleEntry, "kg")}
+              </Text>
+            </>
+          ) : (
+            <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("exerciseHistoryPlaceholder")}</Text>
+          )}
+        </View>
+      </View>
+    );
+  }
+
   function renderWorkoutDetail() {
     const selectedWorkout =
       savedWorkouts.find((item) => item.id === selectedWorkoutId) ?? savedWorkouts[0];
@@ -7906,30 +8331,6 @@ function GymminApp() {
           }))
       }));
 
-    function formatTarget(step: WorkoutStep) {
-      if (step.goalType === "buttonPress") {
-        return t("goalButtonPress");
-      }
-
-      if (step.goalType === "time") {
-        return step.targetValue || t("goalTime").toLowerCase();
-      }
-
-      if (step.goalType === "calories") {
-        return `${step.targetValue || "0"} ${t("caloriesSuffix")}`;
-      }
-
-      if (step.goalType === "heartRate") {
-        return `${step.targetComparator === "above" ? t("targetAbove") : t("targetBelow")} ${
-          step.targetValue || "0"
-        } bpm`;
-      }
-
-      return `${step.targetValue || "0"} ${t("repetitionsSuffix")}`;
-    }
-
-    const lastWorkoutSession = selectedWorkoutSessions[0];
-
     return (
       <>
         <View style={styles.sectionHeader}>
@@ -7960,38 +8361,24 @@ function GymminApp() {
           </View>
         </View>
         {selectedWorkout.draft.notes ? (
-          <Text style={[styles.workoutDetailDescription, { color: theme.muted }]}>
-            {selectedWorkout.draft.notes}
-          </Text>
-        ) : null}
-
-        {lastWorkoutSession ? (
-          <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.workoutName, { color: theme.text }]}>{t("lastResult")}</Text>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-              {formatSessionDateTime(lastWorkoutSession)}
+          <CollapsiblePanel
+            collapseLabel={t("collapse")}
+            expandLabel={t("expand")}
+            isCollapsed={isReadOnlyWorkoutPanelCollapsed("workout-notes")}
+            theme={theme}
+            title={t("workoutNotes")}
+            onToggle={() => toggleReadOnlyWorkoutPanel("workout-notes")}
+          >
+            <Text style={[styles.workoutDetailDescription, { color: theme.muted }]}>
+              {selectedWorkout.draft.notes}
             </Text>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-              {t("duration")}: {formatSessionDuration(lastWorkoutSession)}
-            </Text>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-              {t("completedItems")}: {getSessionCompletedCount(lastWorkoutSession)} / {lastWorkoutSession.entries.length}
-            </Text>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-              {t("executionMode")}: {getExecutionModeLabel(lastWorkoutSession.executionMode)}
-            </Text>
-            {calculateSessionVolume(lastWorkoutSession) > 0 ? (
-              <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                {t("volume")}: {formatNumber(calculateSessionVolume(lastWorkoutSession), "kg")}
-              </Text>
-            ) : null}
-          </View>
+          </CollapsiblePanel>
         ) : null}
 
         <AppButton
           icon="play-outline"
           theme={theme}
-          onPress={openExecutionModeSheet}
+          onPress={() => startSelectedWorkoutSession()}
         >
           {t("startWorkout")}
         </AppButton>
@@ -8016,13 +8403,27 @@ function GymminApp() {
           </Text>
         ) : null}
 
-        <WorkoutMuscleOverview language={language} theme={theme} workout={selectedWorkout.draft} />
+        <CollapsiblePanel
+          collapseLabel={t("collapse")}
+          expandLabel={t("expand")}
+          isCollapsed={isReadOnlyWorkoutPanelCollapsed("workout-overview")}
+          theme={theme}
+          title={t("overview")}
+          onToggle={() => toggleReadOnlyWorkoutPanel("workout-overview")}
+        >
+          <WorkoutMuscleOverviewContent language={language} theme={theme} workout={selectedWorkout.draft} />
+        </CollapsiblePanel>
 
         <View style={styles.workoutDetailStages}>
           {stageGroups.map(({ stage, series }, index) => (
-            <View
+            <CollapsiblePanel
+              collapseLabel={t("collapse")}
+              expandLabel={t("expand")}
               key={stage.id}
-              style={[styles.workoutDetailStage, { backgroundColor: theme.card, borderColor: theme.border }]}
+              isCollapsed={isReadOnlyWorkoutPanelCollapsed(`workout-stage-${stage.id}`)}
+              theme={theme}
+              title={stage.label || `${t("stage")} ${index + 1}`}
+              onToggle={() => toggleReadOnlyWorkoutPanel(`workout-stage-${stage.id}`)}
             >
               <View style={styles.workoutDetailStageHeader}>
                 <View style={[styles.workoutDetailStageBadge, { backgroundColor: theme.secondaryBand }]}>
@@ -8062,17 +8463,16 @@ function GymminApp() {
                         </Text>
                         {elements.map((element) => (
                           <View key={element.id} style={styles.workoutDetailElementRow}>
-                            <Text style={[styles.workoutDetailExerciseName, { color: theme.text }]}>
-                              {element.exerciseName
-                                ? getExerciseDisplayName(element.exerciseName, language)
-                                : element.stageType
-                                  ? t(stageTypeTranslationKeys[element.stageType])
-                                  : t("elementWithoutExercise")}
-                            </Text>
-                            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                              {formatTarget(element)}
-                              {element.loadKg ? ` · ${element.loadKg} kg` : ""}
-                            </Text>
+                            <ExerciseSummaryRow
+                              language={language}
+                              setCount={set.setCount || "1"}
+                              step={element}
+                              targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
+                              theme={theme}
+                              t={t}
+                              onPressDetails={() => openExerciseDetail(element)}
+                              onPressMuscles={() => setSelectedExerciseMuscleStep(element)}
+                            />
                             {element.notes ? (
                               <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
                                 {element.notes}
@@ -8085,15 +8485,17 @@ function GymminApp() {
                   ))}
                 </View>
               ) : null}
-            </View>
+            </CollapsiblePanel>
           ))}
         </View>
 
         <CollapsiblePanel
-          isCollapsed={false}
+          collapseLabel={t("collapse")}
+          expandLabel={t("expand")}
+          isCollapsed={isReadOnlyWorkoutPanelCollapsed("workout-history")}
           theme={theme}
           title={t("workoutHistory")}
-          onToggle={() => undefined}
+          onToggle={() => toggleReadOnlyWorkoutPanel("workout-history")}
         >
           {selectedWorkoutSessions.length ? (
             <View style={styles.sessionHistoryList}>
@@ -8111,7 +8513,7 @@ function GymminApp() {
                       {new Date(session.startedAt).toLocaleDateString()}
                     </Text>
                     <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                      {session.status} · {modeLabel} · {completedCount}/{session.entries.length}
+                      {getSessionStatusLabel(session.status)} · {modeLabel} · {completedCount}/{session.entries.length}
                       {durationMinutes ? ` · ${durationMinutes} min` : ""}
                     </Text>
                   </Pressable>
@@ -8324,14 +8726,17 @@ function GymminApp() {
                       {t("set")} {setIndex + 1} · {t("setCount")}: {set.setCount || "1"}
                     </Text>
                     {elements.map((element) => (
-                      <Text key={element.id} style={[styles.workoutMeta, { color: theme.muted }]}>
-                        {element.exerciseName
-                          ? getExerciseDisplayName(element.exerciseName, language)
-                          : element.stageType
-                            ? t(stageTypeTranslationKeys[element.stageType])
-                            : t("elementWithoutExercise")}
-                        {element.exerciseId ? "" : " · ?"}
-                      </Text>
+                      <ExerciseSummaryRow
+                        key={element.id}
+                        language={language}
+                        setCount={set.setCount || "1"}
+                        step={element}
+                        targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
+                        theme={theme}
+                        t={t}
+                        onPressDetails={() => openExerciseDetail(element)}
+                        onPressMuscles={() => setSelectedExerciseMuscleStep(element)}
+                      />
                     ))}
                   </View>
                 ))}
@@ -8505,6 +8910,9 @@ function GymminApp() {
               setActiveSettingsSheet("defaultWorkoutExecutionMode");
             }}
           />
+          <Text style={[styles.settingsHint, { color: theme.muted }]}>
+            {t("defaultWorkoutExecutionModeHint")}
+          </Text>
           <SettingsOption
             icon="star-outline"
             label={t("favoriteExercises")}
@@ -8735,9 +9143,12 @@ function GymminApp() {
           {aiCreditsError ? (
             <Text style={[styles.authError, { color: theme.danger }]}>{aiCreditsError}</Text>
           ) : null}
+          {aiCreditsPurchaseMessage ? (
+            <Text style={[styles.workoutMeta, { color: theme.primary }]}>{aiCreditsPurchaseMessage}</Text>
+          ) : null}
 
           <AppButton
-            disabled={isAiCreditsLoading}
+            disabled={isAiCreditsLoading || isAiCreditPurchaseLoading}
             icon="refresh-outline"
             theme={theme}
             variant="outline"
@@ -8748,7 +9159,7 @@ function GymminApp() {
 
           {isDevBuild ? (
             <AppButton
-              disabled={isAiCreditsLoading}
+              disabled={isAiCreditsLoading || isAiCreditPurchaseLoading}
               icon="add-circle-outline"
               theme={theme}
               variant="outline"
@@ -8768,15 +9179,32 @@ function GymminApp() {
                       <Text style={[styles.workoutName, { color: theme.text }]}>{pack.displayName}</Text>
                       <Text style={[styles.workoutMeta, { color: theme.muted }]}>
                         {pack.credits} {t("aiCredits").toLowerCase()}
+                        {pack.localizedPrice ? ` · ${pack.localizedPrice}` : ""}
                       </Text>
                     </View>
-                    <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("aiCreditsPurchaseSoon")}</Text>
+                    <AppButton
+                      disabled={isAiCreditPurchaseLoading || !pack.active}
+                      icon="card-outline"
+                      theme={theme}
+                      onPress={() => void buyAiCreditPack(pack)}
+                    >
+                      {isAiCreditPurchaseLoading ? t("aiCreditsProcessingPurchase") : t("aiCreditsBuy")}
+                    </AppButton>
                   </View>
                 ))}
               </View>
             ) : (
               <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("aiCreditsPurchaseSoon")}</Text>
             )}
+            <AppButton
+              disabled={isAiCreditPurchaseLoading || !aiCreditPacks.length}
+              icon="reload-outline"
+              theme={theme}
+              variant="outline"
+              onPress={() => void restorePendingAiCreditPurchases()}
+            >
+              {t("aiCreditsRestorePurchases")}
+            </AppButton>
           </View>
 
           <View style={styles.fieldGroup}>
@@ -9937,6 +10365,7 @@ function GymminApp() {
           {activeScreen === "workoutHistory" && renderWorkoutHistoryScreen()}
           {activeScreen === "workoutSessionDetail" && renderWorkoutSessionDetail()}
           {activeScreen === "progress" && renderProgressScreen()}
+          {activeScreen === "exerciseDetail" && renderExerciseDetailScreen()}
           {activeScreen === "exerciseProgress" && renderExerciseProgressScreen()}
           {activeScreen === "favoriteExercises" && renderFavoriteExercises()}
           {activeScreen === "aiCredits" && renderAiCredits()}
@@ -10012,6 +10441,7 @@ function GymminApp() {
                   activeScreen === "workoutHistory" ||
                   activeScreen === "workoutSessionDetail" ||
                   activeScreen === "progress" ||
+                  activeScreen === "exerciseDetail" ||
                   activeScreen === "exerciseProgress")) ||
               (item.key === "settings" &&
                 (activeScreen === "terms" ||
@@ -10073,75 +10503,17 @@ function GymminApp() {
             </Animated.View>
           </View>
         </Modal>
-        <Modal
-          animationType="fade"
-          transparent
-          visible={isExecutionModeSheetVisible}
-          onRequestClose={() => setIsExecutionModeSheetVisible(false)}
-        >
-          <View style={styles.bottomSheetRoot}>
-            <Pressable
-              accessibilityRole="button"
-              style={styles.bottomSheetBackdrop}
-              onPress={() => setIsExecutionModeSheetVisible(false)}
-            />
-            <View
-              style={[
-                styles.bottomSheetPanel,
-                {
-                  backgroundColor: theme.card,
-                  paddingBottom: bottomSheetBottomPadding
-                }
-              ]}
-            >
-              <Text style={[styles.bottomSheetTitle, { color: theme.text }]}>{t("chooseExecutionMode")}</Text>
-              <View style={[styles.bottomSheetOptionGroup, { borderColor: theme.border }]}>
-                {getWorkoutExecutionModeOptions(t).map((option, index, options) => {
-                  const selected = pendingExecutionMode === option.value;
-
-                  return (
-                    <Pressable
-                      key={option.value}
-                      accessibilityRole="button"
-                      style={[
-                        styles.bottomSheetOptionRow,
-                        {
-                          backgroundColor: selected ? theme.secondaryBand : theme.card,
-                          borderBottomColor: theme.border,
-                          borderBottomWidth: index === options.length - 1 ? 0 : 1
-                        }
-                      ]}
-                      onPress={() => setPendingExecutionMode(option.value)}
-                    >
-                      <Text style={[styles.bottomSheetOptionText, { color: theme.text }]}>
-                        {option.label}
-                      </Text>
-                      {selected ? <Ionicons name="checkmark-circle" size={22} color={theme.primary} /> : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <View style={styles.sessionActions}>
-                <AppButton
-                  icon="play-outline"
-                  style={styles.modeSheetButton}
-                  theme={theme}
-                  onPress={startSelectedWorkoutSession}
-                >
-                  {t("start")}
-                </AppButton>
-                <AppButton
-                  style={styles.modeSheetButton}
-                  theme={theme}
-                  variant="outline"
-                  onPress={() => setIsExecutionModeSheetVisible(false)}
-                >
-                  {t("cancel")}
-                </AppButton>
-              </View>
-            </View>
-          </View>
-        </Modal>
+        <ExerciseMuscleModal
+          language={language}
+          step={selectedExerciseMuscleStep}
+          t={t}
+          theme={theme}
+          onClose={() => setSelectedExerciseMuscleStep(null)}
+          onShowDetails={(step) => {
+            setSelectedExerciseMuscleStep(null);
+            openExerciseDetail(step);
+          }}
+        />
         {renderWorkoutSortSheet()}
     </SafeAreaView>
   );
@@ -10160,6 +10532,7 @@ function getScreenTitle(
     bugReportSuccess: t("bugReport"),
     builder: editingWorkoutId ? t("editWorkout") : t("addNewWorkout"),
     contact: t("contact"),
+    exerciseDetail: t("exerciseDetails"),
     exerciseProgress: t("exerciseProgress"),
     aiCredits: t("aiCredits"),
     favoriteExercises: t("favoriteExercises"),
@@ -10345,6 +10718,176 @@ function WorkoutMuscleOverviewContent({ language, theme, workout }: WorkoutMuscl
         <LegendItem color={colors.inactive} label={translate(language, "inactiveMuscleGroups")} theme={theme} />
       </View>
     </>
+  );
+}
+
+type ExerciseMuscleModalProps = {
+  language: LanguageCode;
+  onClose: () => void;
+  onShowDetails?: (step: WorkoutStep) => void;
+  step: WorkoutStep | null;
+  t: (key: TranslationKey) => string;
+  theme: Theme;
+};
+
+function ExerciseMuscleModal({ language, onClose, onShowDetails, step, t, theme }: ExerciseMuscleModalProps) {
+  const muscleGroups = useMemo(() => step ? getWorkoutStepMuscleGroups(step) : { primary: [], secondary: [] }, [step]);
+  const usage = useMemo(() => {
+    const nextUsage = Object.fromEntries(muscleKeys.map((muscle) => [muscle, 0])) as MuscleUsage;
+    muscleGroups.primary.forEach((muscle) => {
+      nextUsage[muscle] = 2;
+    });
+    muscleGroups.secondary.forEach((muscle) => {
+      nextUsage[muscle] = Math.max(nextUsage[muscle], 1) as 0 | 1 | 2;
+    });
+    return nextUsage;
+  }, [muscleGroups.primary, muscleGroups.secondary]);
+  const hasMuscleData = muscleGroups.primary.length > 0 || muscleGroups.secondary.length > 0;
+  const exerciseName = step?.exerciseName
+    ? getExerciseDisplayName(step.exerciseName, language)
+    : t("exercise");
+  const colors = {
+    inactive: "#4a4d4c",
+    primary: "#ff3347",
+    secondary: "#ffc43d"
+  };
+
+  function fill(muscle: MuscleKey) {
+    if (usage[muscle] === 2) {
+      return colors.primary;
+    }
+
+    if (usage[muscle] === 1) {
+      return colors.secondary;
+    }
+
+    return colors.inactive;
+  }
+
+  function formatMuscleList(muscles: MuscleKey[]) {
+    return muscles.length ? muscles.map((muscle) => muscleLabels[language][muscle]).join(", ") : t("noData");
+  }
+
+  return (
+    <Modal animationType="fade" transparent visible={Boolean(step)} onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.exerciseMuscleModal, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.panelHeroHeader}>
+            <View style={[styles.legalIcon, { backgroundColor: theme.secondaryBand }]}>
+              <Ionicons name="body-outline" size={26} color={theme.primary} />
+            </View>
+            <View style={styles.workoutInfo}>
+              <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>{t("workedMuscles")}</Text>
+              <Text style={[styles.creatorDescription, { color: theme.muted }]}>{exerciseName}</Text>
+            </View>
+          </View>
+
+          {hasMuscleData ? (
+            <>
+              <View style={styles.exerciseMuscleLists}>
+                <View style={styles.fieldGroup}>
+                  <Text style={[styles.label, { color: theme.muted }]}>{t("primaryMuscles")}</Text>
+                  <Text style={[styles.workoutName, { color: theme.text }]}>{formatMuscleList(muscleGroups.primary)}</Text>
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={[styles.label, { color: theme.muted }]}>{t("secondaryMuscles")}</Text>
+                  <Text style={[styles.workoutName, { color: theme.text }]}>{formatMuscleList(muscleGroups.secondary)}</Text>
+                </View>
+              </View>
+              <View style={styles.muscleOverviewFigures}>
+                <HumanMuscleFigure fill={fill} side="front" />
+                <HumanMuscleFigure fill={fill} side="back" />
+              </View>
+            </>
+          ) : (
+            <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>
+              {t("noExerciseMuscleData")}
+            </Text>
+          )}
+
+          {step && onShowDetails ? (
+            <AppButton icon="information-circle-outline" theme={theme} onPress={() => onShowDetails(step)}>
+              {t("showDetails")}
+            </AppButton>
+          ) : null}
+          <AppButton icon="close-outline" theme={theme} variant="outline" onPress={onClose}>
+            {t("close")}
+          </AppButton>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+type ExerciseSummaryRowProps = {
+  language: LanguageCode;
+  onPressDetails: () => void;
+  onPressMuscles: () => void;
+  setCount: string;
+  step: WorkoutStep;
+  t: (key: TranslationKey) => string;
+  targetText: string;
+  theme: Theme;
+};
+
+function ExerciseSummaryRow({ language, onPressDetails, onPressMuscles, setCount, step, t, targetText, theme }: ExerciseSummaryRowProps) {
+  const [sets, target] = targetText.split(" x ");
+  const rawExerciseName = typeof step.exerciseName === "string" ? step.exerciseName : "";
+  const rawExerciseId = typeof step.exerciseId === "string" ? step.exerciseId : "";
+  const exerciseName = rawExerciseName
+    ? getExerciseDisplayName(rawExerciseName, language)
+    : step.stageType
+      ? t(stageTypeTranslationKeys[step.stageType])
+      : t("elementWithoutExercise");
+  const muscleGroups = getWorkoutStepMuscleGroups(step);
+  const primaryMuscles = muscleGroups.primary
+    .map((muscle) => muscleLabels[language][muscle])
+    .slice(0, 2)
+    .join(", ");
+  const meta = [
+    primaryMuscles,
+    step.loadKg ? `${step.loadKg} kg` : ""
+  ].filter(Boolean).join(" · ");
+  const canShowMuscleButton = Boolean(rawExerciseId.trim() || rawExerciseName.trim());
+
+  return (
+    <Pressable accessibilityRole="button" style={styles.exerciseSummaryRow} onPress={onPressDetails}>
+      <View style={styles.exerciseSummaryCopy}>
+        <Text style={[styles.workoutDetailExerciseName, { color: theme.text }]} numberOfLines={2}>
+          {exerciseName}
+        </Text>
+        {meta ? (
+          <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={1}>
+            {meta}
+          </Text>
+        ) : null}
+      </View>
+      <View style={styles.exerciseSummaryRight}>
+        <View style={styles.exerciseSummaryTiles} accessibilityLabel={`${setCount || "-"} x ${getExerciseTargetDisplay(step)}`}>
+          <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
+            <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{sets || "-"}</Text>
+          </View>
+          <Text style={[styles.exerciseSummaryTimes, { color: theme.muted }]}>x</Text>
+          <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
+            <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{target || "-"}</Text>
+          </View>
+        </View>
+        {canShowMuscleButton ? (
+          <Pressable
+            accessibilityLabel={t("showWorkedMuscles")}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+            onPress={(event) => {
+              event.stopPropagation();
+              onPressMuscles();
+            }}
+          >
+            <Ionicons name="body-outline" size={20} color={theme.primary} />
+          </Pressable>
+        ) : null}
+      </View>
+    </Pressable>
   );
 }
 
@@ -11022,6 +11565,8 @@ type SettingsSectionProps = {
 type CollapsiblePanelProps = {
   actions?: ReactNode;
   children: ReactNode;
+  collapseLabel?: string;
+  expandLabel?: string;
   isCollapsed: boolean;
   onToggle: () => void;
   theme: Theme;
@@ -11031,6 +11576,8 @@ type CollapsiblePanelProps = {
 function CollapsiblePanel({
   actions,
   children,
+  collapseLabel = "Collapse",
+  expandLabel = "Expand",
   isCollapsed,
   onToggle,
   theme,
@@ -11040,7 +11587,7 @@ function CollapsiblePanel({
     <View style={[styles.panel, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <View style={[styles.panelHeader, { borderBottomColor: theme.border }]}>
         <Pressable
-          accessibilityLabel={isCollapsed ? `Rozwin panel ${title}` : `Zwin panel ${title}`}
+          accessibilityLabel={`${isCollapsed ? expandLabel : collapseLabel}: ${title}`}
           accessibilityRole="button"
           accessibilityState={{ expanded: !isCollapsed }}
           style={styles.panelTitleButton}
@@ -13462,6 +14009,20 @@ const styles = StyleSheet.create({
     minWidth: 38,
     width: 38
   },
+  sessionEntryActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 0,
+    gap: 8
+  },
+  sessionDeleteButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 38,
+    justifyContent: "center",
+    width: 38
+  },
   workoutList: {
     gap: 10
   },
@@ -13557,6 +14118,81 @@ const styles = StyleSheet.create({
   workoutDetailExerciseName: {
     fontSize: 15,
     fontWeight: "800"
+  },
+  exerciseSummaryRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between",
+    minHeight: 54,
+    paddingVertical: 4
+  },
+  exerciseSummaryCopy: {
+    flex: 1,
+    gap: 3,
+    minWidth: 0
+  },
+  exerciseSummaryRight: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 0,
+    gap: 8
+  },
+  exerciseSummaryTiles: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5
+  },
+  exerciseSummaryTile: {
+    alignItems: "center",
+    borderRadius: 8,
+    justifyContent: "center",
+    minHeight: 34,
+    minWidth: 36,
+    paddingHorizontal: 8
+  },
+  exerciseSummaryTileText: {
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  exerciseSummaryTimes: {
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  exerciseMuscleButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 38,
+    justifyContent: "center",
+    width: 38
+  },
+  modalOverlay: {
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.52)",
+    flex: 1,
+    justifyContent: "center",
+    padding: 18
+  },
+  exerciseMuscleModal: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 16,
+    maxHeight: "92%",
+    padding: 16,
+    width: "100%"
+  },
+  exerciseMuscleLists: {
+    gap: 10
+  },
+  exerciseAnimationPlaceholder: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    justifyContent: "center",
+    minHeight: 150,
+    padding: 16
   },
   sessionHistoryList: {
     gap: 10

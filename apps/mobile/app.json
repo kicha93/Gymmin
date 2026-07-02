@@ -19,6 +19,9 @@
       },
       "versionCode": 1,
       "package": "com.gymmin.app"
-    }
+    },
+    "plugins": [
+      "react-native-iap"
+    ]
   }
 }

@@ -371,6 +371,12 @@
       "createdAt": "2026-06-30T11:09:31.945797+00:00",
       "balance": 2,
       "updatedAt": "2026-06-30T11:09:31.9458009+00:00"
+    },
+    "dc8fda5cc05b4c04ac6e6307b67b6529": {
+      "userId": "dc8fda5cc05b4c04ac6e6307b67b6529",
+      "createdAt": "2026-06-30T18:52:18.9472068+00:00",
+      "balance": 3,
+      "updatedAt": "2026-06-30T18:52:18.9473107+00:00"
     }
   },
   "transactions": [
@@ -2375,6 +2381,19 @@
       "balanceAfter": 2,
       "metadataJson": null,
       "createdAt": "2026-06-30T11:09:31.9458009+00:00"
+    },
+    {
+      "id": "79e6c4584d5b403a8926647278875fae",
+      "userId": "dc8fda5cc05b4c04ac6e6307b67b6529",
+      "amount": 3,
+      "type": "InitialGrant",
+      "reason": "Initial AI credits grant",
+      "relatedJobId": null,
+      "relatedPurchaseId": null,
+      "idempotencyKey": null,
+      "balanceAfter": 3,
+      "metadataJson": null,
+      "createdAt": "2026-06-30T18:52:18.9473107+00:00"
     }
   ]
 }

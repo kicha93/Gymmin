@@ -19,6 +19,15 @@ export type AiCreditPack = {
   credits: number;
   displayName: string;
   active: boolean;
+  localizedPrice?: string | null;
+};
+
+export type AiCreditPurchaseVerifyResponse = {
+  status: "credited" | "already_processed" | "credited_consume_pending" | string;
+  creditsAdded: number;
+  balance: number;
+  transactionId?: string | null;
+  purchaseId: string;
 };
 
 export const emptyAiCreditBalance: AiCreditBalance = {
@@ -68,9 +77,36 @@ export function normalizeAiCreditPacks(value: unknown): AiCreditPack[] {
       active: item.active === true,
       credits: normalizeNonNegativeInteger(item.credits, 0),
       displayName: typeof item.displayName === "string" ? item.displayName : item.productId,
+      localizedPrice: typeof item.localizedPrice === "string" ? item.localizedPrice : null,
       productId: item.productId.trim()
     }];
   }).filter((pack) => pack.credits > 0);
+}
+
+export function normalizeAiCreditPurchaseVerifyResponse(value: unknown): AiCreditPurchaseVerifyResponse | null {
+  if (!isRecord(value) || typeof value.purchaseId !== "string" || !value.purchaseId.trim()) {
+    return null;
+  }
+
+  return {
+    balance: normalizeNonNegativeInteger(value.balance, 0),
+    creditsAdded: normalizeNonNegativeInteger(value.creditsAdded, 0),
+    purchaseId: value.purchaseId.trim(),
+    status: typeof value.status === "string" ? value.status : "",
+    transactionId: typeof value.transactionId === "string" ? value.transactionId : null
+  };
+}
+
+export function isGooglePlayPurchaseError(error: unknown): boolean {
+  if (!isRecord(error)) {
+    return false;
+  }
+
+  return typeof error.code === "string" && (
+    error.code === "invalid_google_play_purchase" ||
+    error.code === "purchase_token_already_used" ||
+    error.code.startsWith("google_play_")
+  );
 }
 
 export function isInsufficientAiCreditsError(error: unknown): boolean {

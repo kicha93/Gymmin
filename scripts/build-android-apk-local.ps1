@@ -3,6 +3,7 @@ param(
   [string]$ApiBaseUrl,
   [ValidateSet("debug", "release")]
   [string]$Variant = "debug",
+  [string]$Architectures = "arm64-v8a",
   [switch]$SkipTypecheck
 )
 
@@ -54,6 +55,7 @@ if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) {
 
 Write-Step "Mobile root: $mobileRoot"
 Write-Step "Backend URL embedded in APK: $normalizedApiBaseUrl"
+Write-Step "Architectures: $Architectures"
 
 if (-not $SkipTypecheck) {
   Write-Step "Running TypeScript check..."
@@ -79,11 +81,11 @@ try {
   try {
     if ($Variant -eq "release") {
       Write-Step "Building release APK..."
-      .\gradlew.bat assembleRelease
+      .\gradlew.bat assembleRelease "-PreactNativeArchitectures=$Architectures"
       $apkPath = Join-Path $androidRoot "app\build\outputs\apk\release\app-release.apk"
     } else {
       Write-Step "Building debug APK..."
-      .\gradlew.bat assembleDebug
+      .\gradlew.bat assembleDebug "-PreactNativeArchitectures=$Architectures"
       $apkPath = Join-Path $androidRoot "app\build\outputs\apk\debug\app-debug.apk"
     }
   } finally {

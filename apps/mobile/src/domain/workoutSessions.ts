@@ -110,6 +110,44 @@ export function getActiveWorkoutSessionsForUi(sessions: WorkoutSession[]): Worko
   return sessions.filter((session) => !session.deletedAt);
 }
 
+export function markWorkoutSessionDeleted(session: WorkoutSession, deletedAt = new Date().toISOString()): WorkoutSession {
+  return {
+    ...session,
+    deletedAt,
+    updatedAt: deletedAt
+  };
+}
+
+export function workoutHasHistory(workoutId: string, sessions: WorkoutSession[]): boolean {
+  const normalizedWorkoutId = workoutId.trim();
+  if (!normalizedWorkoutId) {
+    return false;
+  }
+
+  return normalizeWorkoutSessions(sessions).some(
+    (session) => !session.deletedAt && session.sourceWorkoutId === normalizedWorkoutId
+  );
+}
+
+export function getWorkoutSessionStatusLabel(
+  status: string,
+  labels: { abandoned: string; active: string; completed: string; unknown?: string }
+): string {
+  if (status === "completed") {
+    return labels.completed;
+  }
+
+  if (status === "abandoned") {
+    return labels.abandoned;
+  }
+
+  if (status === "active") {
+    return labels.active;
+  }
+
+  return labels.unknown ?? status;
+}
+
 export function getClientSessionId(session: WorkoutSession): string {
   return session.id;
 }
@@ -213,6 +251,27 @@ function cloneWorkoutDraft(value: unknown, fallbackName: string): WorkoutDraft {
   };
 }
 
+function getLegacySourceWorkoutId(value: Record<string, unknown>): string {
+  const sourceWorkout = value.sourceWorkout;
+  const nestedSourceWorkoutId = sourceWorkout && typeof sourceWorkout === "object"
+    ? (sourceWorkout as Record<string, unknown>).id
+    : undefined;
+  const candidates = [
+    value.sourceWorkoutId,
+    value.workoutId,
+    value.clientWorkoutId,
+    nestedSourceWorkoutId
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return "";
+}
+
 export function normalizeWorkoutSessions(value: unknown): WorkoutSession[] {
   if (!Array.isArray(value)) {
     return [];
@@ -225,6 +284,7 @@ export function normalizeWorkoutSessions(value: unknown): WorkoutSession[] {
       return;
     }
 
+    const record = item as Record<string, unknown>;
     const raw = item as Partial<WorkoutSession>;
     const id = typeof raw.id === "string" && raw.id.trim() ? raw.id.trim() : "";
     if (!id) {
@@ -239,7 +299,7 @@ export function normalizeWorkoutSessions(value: unknown): WorkoutSession[] {
         : "Workout";
     const session: WorkoutSession = {
       id,
-      sourceWorkoutId: typeof raw.sourceWorkoutId === "string" ? raw.sourceWorkoutId : "",
+      sourceWorkoutId: getLegacySourceWorkoutId(record),
       sourceWorkoutName,
       executionMode: isExecutionMode(raw.executionMode) ? raw.executionMode : "guided",
       status: isSessionStatus(raw.status) ? raw.status : "active",

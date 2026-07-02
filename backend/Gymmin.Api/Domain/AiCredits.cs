@@ -15,6 +15,7 @@ public static class AiCreditReasons
     public const string WorkoutCreatorPlan = "WorkoutCreatorPlan";
     public const string WorkoutCreatorRewrite = "WorkoutCreatorRewrite";
     public const string TechnicalFailureRefund = "TechnicalFailureRefund";
+    public const string GooglePlayPurchase = "GooglePlayPurchase";
 }
 
 public sealed record AiCreditBalanceResponse(
@@ -47,11 +48,39 @@ public sealed record DevGrantAiCreditsRequest(
     int Amount,
     string? Reason);
 
+public sealed record VerifyGooglePlayPurchaseRequest(
+    string? ProductId,
+    string? PurchaseToken,
+    string? OrderId);
+
+public sealed record VerifyGooglePlayPurchaseResponse(
+    string Status,
+    int CreditsAdded,
+    int Balance,
+    string? TransactionId,
+    string PurchaseId);
+
+public sealed record AiCreditPurchaseResponse(
+    string Id,
+    string Platform,
+    string ProductId,
+    int Credits,
+    string ProcessStatus,
+    string? GoogleOrderId,
+    DateTimeOffset CreatedAt);
+
+public sealed record AiCreditPurchasesResponse(
+    IReadOnlyList<AiCreditPurchaseResponse> Purchases);
+
 public sealed record AiCreditConsumeResult(
     bool Success,
     string? TransactionId,
     int Balance,
     string? ExistingJobId = null);
+
+public sealed record AiCreditPurchaseCreditResult(
+    int Balance,
+    string TransactionId);
 
 public sealed record AiCreditJobCharge(
     int Cost,
@@ -72,4 +101,27 @@ public sealed class InvalidAiCreditIdempotencyKeyException : Exception
         : base("AI credit idempotency key is too long")
     {
     }
+}
+
+public static class AiCreditPurchasePlatforms
+{
+    public const string AndroidGooglePlay = "AndroidGooglePlay";
+}
+
+public static class AiCreditPurchaseStatuses
+{
+    public const string Received = "Received";
+    public const string Verified = "Verified";
+    public const string Credited = "Credited";
+    public const string Consumed = "Consumed";
+    public const string Failed = "Failed";
+    public const string Duplicate = "Duplicate";
+}
+
+public static class GooglePlayPurchaseStates
+{
+    public const string Purchased = "Purchased";
+    public const string Pending = "Pending";
+    public const string Canceled = "Canceled";
+    public const string Unknown = "Unknown";
 }

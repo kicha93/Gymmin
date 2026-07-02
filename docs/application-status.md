@@ -204,6 +204,20 @@ Sesje:
 
 Historia i progres są liczone lokalnie z `WorkoutSession`.
 
+Aktualne zachowanie historii:
+
+- uzytkownik moze usunac pojedynczy wpis historii,
+- usuniecie wpisu historii ustawia `deletedAt` na `WorkoutSession`,
+- usuniety wpis znika z historii i progresu lokalnie,
+- tombstone jest synchronizowany przez `POST /api/sync/workout-sessions`,
+- usuniecie definicji treningu nie usuwa zapisanej historii,
+- przy usuwaniu treningu z historia aplikacja pokazuje mocniejsze potwierdzenie,
+- statusy sesji sa lokalizowane, wiec w PL `abandoned` jest wyswietlane jako `Przerwany`.
+
+Read-only workout view ma zwijane/rozwijane sekcje, m.in. przeglad, notatki,
+etapy i historie wykonania. Sekcja `Ostatni wynik` zostala usunieta z tego
+widoku.
+
 Historia pokazuje:
 
 - aktywne, ukończone i przerwane sesje,
@@ -264,10 +278,19 @@ Aktualnie dziala:
 - techniczny refund tokena, jesli job AI nie dostarczy uzywalnej propozycji,
 - production-grade safety dla Database provider: atomowy consume tokena na poziomie bazy i idempotentny refund,
 - unikalny constraint dla `UserId + operation type + IdempotencyKey`, zeby retry nie pobieral drugiego tokena,
-- widok mobile `Tokeny AI` z saldem, kosztami, historia transakcji i paczkami przygotowanymi pod przyszly zakup,
+- Google Play purchase validation po stronie backendu dla paczek `ai_tokens_10`, `ai_tokens_30`, `ai_tokens_100`,
+- tabela `AiCreditPurchases` z hashem purchase tokena, statusem przetwarzania i powiazaniem do ledger transaction,
+- endpoint `POST /api/ai-credits/purchases/google-play/verify`,
+- idempotentne naliczanie zakupow: ponowne wyslanie tego samego purchase tokena nie dodaje tokenow drugi raz,
+- server-side consume po poprawnym naliczeniu zakupu,
+- natywne zaleznosci mobile `react-native-iap` i `react-native-nitro-modules` oraz Android permission `com.android.vending.BILLING`,
+- Android debug APK build smoke przechodzi z natywnym Google Play Billing stackiem,
+- release AAB build smoke przechodzi przez skrypt `mobile:store:aab`, ktory buduje z krotkiej sciezki roboczej dla Windows/CMake,
+- build smoke wymaga Android SDK (`ANDROID_HOME` / `ANDROID_SDK_ROOT`); bez podlaczonego emulatora lub telefonu potwierdza linkowanie natywne, ale nie runtime UI,
+- widok mobile `Tokeny AI` z saldem, kosztami, historia transakcji, paczkami i akcja zakupu/restore pending purchases,
 - dev/test grant poza Production.
 
-File provider nadal dziala jako dev fallback, ale produkcyjna sciezka dla tokenow AI to Database/PostgreSQL. Nie ma jeszcze prawdziwych zakupow. Etap 12B powinien dodac Google Play Billing, walidacje purchase tokena na backendzie, pending/restore purchases oraz zabezpieczenie przed wielokrotnym naliczeniem tej samej transakcji.
+File provider nadal dziala jako dev fallback, ale produkcyjna sciezka dla tokenow AI to Database/PostgreSQL. Realne testy zakupow nie sa jeszcze zakonczone: wymagaja aplikacji w Play Console, aktywnych produktow, license testers, skonfigurowanego service account i instalacji builda z Internal Testing.
 
 Dogrywka 12A.1: AiCredits concurrency, idempotency i refund zostaly sprawdzone na realnym lokalnym PostgreSQL bez Dockera. Migracja `HardenAiCreditsConcurrency` przeszla, `GET /api/health` potwierdzil `Database/PostgreSQL`, rownolegle requesty przy saldzie `1` zakonczyly sie jako jeden zaakceptowany job i jeden `402`, idempotency key nie pobral drugiego tokena, a techniczny failure joba utworzyl pojedynczy `Refund`.
 
@@ -468,10 +491,10 @@ Aktualny tor produkcyjny dla backendu: PostgreSQL provider, jawne migracje i dep
 
 ## APK poza Expo Go
 
-Preferowany sposób przygotowania paczki:
+Aktualny, sprawdzony sposob przygotowania paczki na telefon:
 
 ```powershell
-npm run mobile:apk:share -- -ApiBaseUrl "https://your-backend-url.example.com"
+npm run mobile:github:apk -- -ApiBaseUrl "https://your-backend-url.example.com"
 ```
 
 Skrypt buduje release APK dla `arm64-v8a`, zapisuje go jako `.artifacts/Gymmin-arm64-v8a-release-latest.apk` i publikuje jako asset GitHub Release w prywatnym repo:
@@ -481,4 +504,12 @@ kicha93/gymmin-apk
 release: v1.0
 ```
 
-Tunele ngrok/Cloudflare zostają tylko jako fallback, bo pobieranie APK przez tymczasowe tunele potrafiło zatrzymywać się na 100% na Androidzie.
+To jest aktualny, sprawdzony flow pobierania i instalacji APK na Androidzie. Debug APK zostaje tylko jako awaryjna opcja developerska.
+
+Google Play / Store nie uzywa tej paczki APK. Dla Store uzywamy release AAB:
+
+```powershell
+npm run mobile:store:aab -- -ApiBaseUrl "https://your-backend-url.example.com"
+```
+
+Tunele ngrok/Cloudflare zostaja tylko jako fallback, bo pobieranie APK przez tymczasowe tunele potrafilo zatrzymywac sie na 100% na Androidzie.

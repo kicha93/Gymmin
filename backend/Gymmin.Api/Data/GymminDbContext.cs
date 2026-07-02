@@ -21,6 +21,7 @@ public sealed class GymminDbContext : DbContext
     public DbSet<WorkoutSessionEntity> WorkoutSessions => Set<WorkoutSessionEntity>();
     public DbSet<AiCreditAccountEntity> AiCreditAccounts => Set<AiCreditAccountEntity>();
     public DbSet<AiCreditTransactionEntity> AiCreditTransactions => Set<AiCreditTransactionEntity>();
+    public DbSet<AiCreditPurchaseEntity> AiCreditPurchases => Set<AiCreditPurchaseEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -184,10 +185,35 @@ public sealed class GymminDbContext : DbContext
             entity.HasIndex(transaction => transaction.RelatedPurchaseId);
             entity.HasIndex(transaction => transaction.IdempotencyKey);
             entity.HasIndex(transaction => new { transaction.UserId, transaction.RelatedJobId, transaction.Type }).IsUnique();
+            entity.HasIndex(transaction => new { transaction.UserId, transaction.RelatedPurchaseId, transaction.Type }).IsUnique();
             entity.HasIndex(transaction => new { transaction.UserId, transaction.Reason, transaction.IdempotencyKey }).IsUnique();
             entity.HasOne(transaction => transaction.User)
                 .WithMany()
                 .HasForeignKey(transaction => transaction.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AiCreditPurchaseEntity>(entity =>
+        {
+            entity.ToTable("AiCreditPurchases");
+            entity.HasKey(purchase => purchase.Id);
+            entity.Property(purchase => purchase.Platform).HasMaxLength(40).IsRequired();
+            entity.Property(purchase => purchase.ProductId).HasMaxLength(120).IsRequired();
+            entity.Property(purchase => purchase.PurchaseTokenHash).HasMaxLength(160).IsRequired();
+            entity.Property(purchase => purchase.PurchaseTokenLastChars).HasMaxLength(16);
+            entity.Property(purchase => purchase.GoogleOrderId).HasMaxLength(160);
+            entity.Property(purchase => purchase.PurchaseState).HasMaxLength(40).IsRequired();
+            entity.Property(purchase => purchase.ProcessStatus).HasMaxLength(40).IsRequired();
+            entity.Property(purchase => purchase.RelatedTransactionId).HasMaxLength(80);
+            entity.Property(purchase => purchase.ErrorCode).HasMaxLength(120);
+            entity.Property(purchase => purchase.ErrorMessage).HasMaxLength(500);
+            entity.HasIndex(purchase => purchase.UserId);
+            entity.HasIndex(purchase => purchase.ProductId);
+            entity.HasIndex(purchase => purchase.GoogleOrderId);
+            entity.HasIndex(purchase => purchase.PurchaseTokenHash).IsUnique();
+            entity.HasOne(purchase => purchase.User)
+                .WithMany()
+                .HasForeignKey(purchase => purchase.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -387,5 +413,31 @@ public sealed class AiCreditTransactionEntity
     public int BalanceAfter { get; set; }
     public string? MetadataJson { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+    public UserEntity? User { get; set; }
+}
+
+public sealed class AiCreditPurchaseEntity
+{
+    public string Id { get; set; } = "";
+    public string UserId { get; set; } = "";
+    public string Platform { get; set; } = "";
+    public string ProductId { get; set; } = "";
+    public int Credits { get; set; }
+    public string PurchaseTokenHash { get; set; } = "";
+    public string? PurchaseTokenLastChars { get; set; }
+    public string? GoogleOrderId { get; set; }
+    public string PurchaseState { get; set; } = "";
+    public int? ConsumptionState { get; set; }
+    public int? AcknowledgementState { get; set; }
+    public string ProcessStatus { get; set; } = "";
+    public string? RelatedTransactionId { get; set; }
+    public string? ErrorCode { get; set; }
+    public string? ErrorMessage { get; set; }
+    public string? RawResponseJson { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? VerifiedAt { get; set; }
+    public DateTimeOffset? CreditedAt { get; set; }
+    public DateTimeOffset? ConsumedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
     public UserEntity? User { get; set; }
 }

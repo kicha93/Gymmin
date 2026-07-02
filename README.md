@@ -30,6 +30,7 @@ docs/
   build-android-apk.md
   deployment.md
   run-mobile-tunnel.md
+  workout-ux.md
 scripts/
   start-expo-tunnel.ps1
 ```
@@ -44,15 +45,28 @@ npm install
 npm run start
 ```
 
-Expo Go is no longer the primary testing flow. The current practical phone-testing flow is a standalone Android APK.
+Expo Go is no longer the primary testing flow. The current practical phone-testing flow is a standalone Android release APK uploaded to GitHub Release.
 
-Build and publish an installable Android APK for phone download:
+Build and publish an installable Android release APK for phone download:
 
 ```powershell
 npm run mobile:apk:share -- -ApiBaseUrl "https://your-backend-url.example.com"
 ```
 
-This creates a small `arm64-v8a` release APK and uploads it to the private GitHub Release repository `kicha93/gymmin-apk`, release `v1.0`. Details are in `docs/build-android-apk.md`.
+This creates an `arm64-v8a` `.artifacts/Gymmin-arm64-v8a-release-latest.apk` and uploads it to the private GitHub Release repository `kicha93/gymmin-apk`, release `v1.0`. This is the phone-test APK flow that worked reliably on Android. Details are in `docs/build-android-apk.md`.
+
+Google Play Internal Testing uses an AAB:
+
+```powershell
+$env:GYMMIN_UPLOAD_STORE_FILE = "C:\secure\gymmin-upload-key.jks"
+$env:GYMMIN_UPLOAD_STORE_PASSWORD = "<password>"
+$env:GYMMIN_UPLOAD_KEY_ALIAS = "gymmin-upload"
+$env:GYMMIN_UPLOAD_KEY_PASSWORD = "<password>"
+npm run mobile:store:aab -- -ApiBaseUrl "https://your-backend-url.example.com"
+```
+
+The release AAB build requires the upload key and fails if signing is not
+configured, so it cannot accidentally use the Android debug keystore.
 
 ### Backend
 
@@ -132,6 +146,13 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - After login, app settings are synchronized to the user's backend account and kept locally as a cache/offline copy.
 - After login, catalog-only favorite exercises are synchronized to the user's backend account and remain available locally/offline.
 - After login, workout execution sessions are synchronized to the user's backend account and remain available locally/offline. History and progress are still calculated on-device from the local synchronized session cache.
+- Users can delete a single workout history entry. Mobile marks the `WorkoutSession` with `deletedAt`, hides it from history/progress immediately, and syncs the tombstone later when account sync is available.
+- Deleting a workout definition does not delete workout history. If the workout already has active history entries, the mobile app shows a stronger irreversible-action confirmation before soft-deleting the workout definition.
+- The read-only workout view has collapsible sections, and session status labels are localized instead of rendering raw enum values such as `abandoned`.
+- The read-only workout view shows compact exercise rows with set/target tiles such as `[3] x [8]` and a `body-outline` muscle button for catalog exercises.
+- The per-exercise muscle modal reuses the same front/back SVG anatomy map as the workout overview, filtered to one exercise.
+- Tapping an exercise row opens a dedicated exercise detail page with metadata, animation placeholder, worked muscles, technique placeholders and exercise history/progress when local data exists.
+- Starting a workout no longer asks for execution mode every time. The app uses the workout execution mode saved in Settings for the next session.
 - Mobile account-scoped data uses per-user AsyncStorage keys: `gymmin.account.anonymous.*` for signed-out data and `gymmin.account.{userId}.*` for signed-in cache/sync metadata. Account switching does not silently merge data from the previous account.
 - If signed-out local data exists after login, the app asks whether to merge it into the current account, keep it for later, or delete only the anonymous local data.
 - Workout reminders are local system notifications. They were manually verified in the standalone Android APK / development build. Their settings sync through `/api/settings`, while scheduled notification IDs stay per-user on the device under `gymmin.account.{owner}.workoutReminderNotificationIds`.
@@ -141,7 +162,9 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - AI creator and AI rewrite use account-bound AI credits. `1 AI credit = 1 plan generation or 1 workout modification`; the backend is the source of truth for balance and blocks AI jobs when the account has no credits.
 - AI credit consumption is protected by database transactions and an atomic conditional balance update in Database mode. File mode remains a development fallback, not the production safety boundary for paid credits.
 - AI credit concurrency, idempotency and technical-failure refund were smoke-tested on a real local PostgreSQL cluster without Docker, using the `HardenAiCreditsConcurrency` migration.
-- New users can receive an idempotent initial AI credit grant. Development/testing can use the guarded `/api/ai-credits/dev/grant` endpoint; production billing through Google Play is still TODO.
+- New users can receive an idempotent initial AI credit grant. Development/testing can use the guarded `/api/ai-credits/dev/grant` endpoint.
+- Android AI credit purchases are prepared through Google Play Billing: mobile sends the Google Play `purchaseToken` to `POST /api/ai-credits/purchases/google-play/verify`, and the backend validates the purchase, appends a `Purchase` ledger transaction, updates `AiCreditPurchases`, and performs server-side consume. `purchaseToken` is hashed and never stored plaintext.
+- Mobile uses `react-native-iap@15.3.4` plus `react-native-nitro-modules` as the native Google Play Billing stack. Android debug APK and release AAB build smoke pass with this stack when `ANDROID_HOME` / `ANDROID_SDK_ROOT` points to an installed Android SDK. The AAB build uses a short temporary build path to avoid Windows CMake path-length failures in Nitro/IAP native sources. Real billing tests still require Play Console one-time products (`ai_tokens_10`, `ai_tokens_30`, `ai_tokens_100`), license testers, a Google Play service account, and installing the app from an Internal Testing track.
 - Workout creator jobs are asynchronous and persisted on both sides: the phone stores the active `jobId`, and the backend stores job state in File or Database storage.
 - Bug reports call the backend and are sent by SMTP when SMTP is configured.
 - Every backend response includes `X-Correlation-Id`. Mobile sends `X-Correlation-Id` on API requests and attaches recent correlation ids plus local diagnostic events to bug reports.

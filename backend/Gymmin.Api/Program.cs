@@ -24,6 +24,7 @@ if (useDatabaseStorage)
     builder.Services.AddSingleton<IFavoriteExerciseStore, EfFavoriteExerciseStore>();
     builder.Services.AddSingleton<IWorkoutSessionStore, EfWorkoutSessionStore>();
     builder.Services.AddSingleton<IAiCreditService, EfAiCreditService>();
+    builder.Services.AddSingleton<IAiCreditPurchaseService, EfAiCreditPurchaseService>();
 }
 else
 {
@@ -34,10 +35,13 @@ else
     builder.Services.AddSingleton<IFavoriteExerciseStore, FileBackedFavoriteExerciseStore>();
     builder.Services.AddSingleton<IWorkoutSessionStore, FileBackedWorkoutSessionStore>();
     builder.Services.AddSingleton<IAiCreditService, FileBackedAiCreditService>();
+    builder.Services.AddSingleton<IAiCreditPurchaseService, FileBackedAiCreditPurchaseService>();
 }
 
 builder.Services.Configure<AiCreditsOptions>(builder.Configuration.GetSection("Gymmin:AiCredits"));
+builder.Services.Configure<GooglePlayOptions>(builder.Configuration.GetSection("Gymmin:GooglePlay"));
 builder.Services.AddHttpClient<IWorkoutPlanGenerator, OpenAiWorkoutPlanGenerator>();
+builder.Services.AddHttpClient<IGooglePlayPurchaseValidator, GooglePlayPurchaseValidator>();
 builder.Services.AddSingleton<IBugReportEmailSender, SmtpBugReportEmailSender>();
 builder.Services.AddSingleton<IPasswordResetEmailSender, SmtpPasswordResetEmailSender>();
 builder.Services.AddSingleton<AuthRateLimiter>();
@@ -632,6 +636,54 @@ aiCredits.MapPost("/dev/grant", (
     }
 
     return Results.Ok(credits.GrantDev(userId, body.Amount, body.Reason));
+});
+
+aiCredits.MapGet("/purchases", (HttpRequest request, IUserStore users, IAiCreditPurchaseService purchases) =>
+{
+    var userId = GetBearerUserId(request, users);
+    if (userId is null)
+    {
+        return Results.Unauthorized();
+    }
+
+    return Results.Ok(purchases.GetPurchases(userId));
+});
+
+aiCredits.MapPost("/purchases/google-play/verify", async (
+    VerifyGooglePlayPurchaseRequest body,
+    HttpRequest request,
+    IUserStore users,
+    IAiCreditPurchaseService purchases,
+    CancellationToken cancellationToken) =>
+{
+    var userId = GetBearerUserId(request, users);
+    if (userId is null)
+    {
+        return Results.Unauthorized();
+    }
+
+    var result = await purchases.VerifyGooglePlayPurchaseAsync(userId, body, cancellationToken);
+    if (result.Success)
+    {
+        return Results.Ok(result.Response);
+    }
+
+    var error = new ApiErrorResponse(new ApiError(
+        result.ErrorCode ?? "invalid_google_play_purchase",
+        result.ErrorMessage ?? "Purchase could not be verified",
+        DiagnosticsContext.GetCorrelationId(request.HttpContext)));
+
+    if (result.IsConflict)
+    {
+        return Results.Json(error, statusCode: StatusCodes.Status409Conflict);
+    }
+
+    if (result.IsRetryable)
+    {
+        return Results.Json(error, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    return Results.BadRequest(error);
 });
 
 app.MapPost("/api/workout-creator/plan", (

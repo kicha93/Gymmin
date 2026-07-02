@@ -11,7 +11,8 @@ public sealed class AiCreditsOptions
     public List<AiCreditPackOptions> Packs { get; set; } =
     [
         new AiCreditPackOptions("ai_tokens_10", 10, "10 tokenów AI", true),
-        new AiCreditPackOptions("ai_tokens_30", 30, "30 tokenów AI", true)
+        new AiCreditPackOptions("ai_tokens_30", 30, "30 tokenów AI", true),
+        new AiCreditPackOptions("ai_tokens_100", 100, "100 tokenów AI", true)
     ];
 
     public AiCreditBalanceResponse ToBalanceResponse(int balance) =>
@@ -23,3 +24,13 @@ public sealed record AiCreditPackOptions(
     int Credits,
     string DisplayName,
     bool Active);
+
+public sealed class GooglePlayOptions
+{
+    public bool Enabled { get; set; }
+    public string PackageName { get; set; } = "";
+    public string ServiceAccountJsonPath { get; set; } = "";
+    public string ServiceAccountJsonBase64 { get; set; } = "";
+    public bool ValidatePurchases { get; set; } = true;
+    public bool ConsumePurchases { get; set; } = true;
+}

@@ -252,6 +252,136 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
 
         var response = await client.GetFromJsonAsync<AiCreditPacksResponse>("/api/ai-credits/packs");
         Assert.Contains(response!.Packs, pack => pack.ProductId == "ai_tokens_10" && pack.Credits == 10);
+        Assert.Contains(response.Packs, pack => pack.ProductId == "ai_tokens_100" && pack.Credits == 100);
+    }
+
+    [Fact]
+    public async Task Google_play_purchase_verification_credits_account_once()
+    {
+        _factory.GooglePlayPurchaseValidator.Reset();
+        using var client = _factory.CreateClient();
+        var auth = await TestPayloads.RegisterAsync(client, "ai-google-purchase");
+        client.Authorize(auth.Token);
+
+        var response = await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest(
+            "ai_tokens_10",
+            "purchase-token-1",
+            "GPA.test-order"));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<VerifyGooglePlayPurchaseResponse>();
+        Assert.Equal("credited", body!.Status);
+        Assert.Equal(10, body.CreditsAdded);
+        Assert.Equal(13, body.Balance);
+        Assert.False(string.IsNullOrWhiteSpace(body.TransactionId));
+        Assert.False(string.IsNullOrWhiteSpace(body.PurchaseId));
+
+        var duplicate = await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest(
+            "ai_tokens_10",
+            "purchase-token-1",
+            "GPA.test-order"));
+        Assert.Equal(HttpStatusCode.OK, duplicate.StatusCode);
+        var duplicateBody = await duplicate.Content.ReadFromJsonAsync<VerifyGooglePlayPurchaseResponse>();
+        Assert.Equal("already_processed", duplicateBody!.Status);
+        Assert.Equal(0, duplicateBody.CreditsAdded);
+        Assert.Equal(13, duplicateBody.Balance);
+
+        var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions?limit=20");
+        Assert.Single(transactions!.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.Purchase);
+        Assert.Contains(transactions.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.Purchase && transaction.Amount == 10);
+    }
+
+    [Fact]
+    public async Task Google_play_purchase_token_cannot_be_reused_by_another_user()
+    {
+        _factory.GooglePlayPurchaseValidator.Reset();
+        using var firstClient = _factory.CreateClient();
+        using var secondClient = _factory.CreateClient();
+        var firstAuth = await TestPayloads.RegisterAsync(firstClient, "ai-google-owner-a");
+        var secondAuth = await TestPayloads.RegisterAsync(secondClient, "ai-google-owner-b");
+        firstClient.Authorize(firstAuth.Token);
+        secondClient.Authorize(secondAuth.Token);
+
+        var request = new VerifyGooglePlayPurchaseRequest("ai_tokens_10", "shared-purchase-token", null);
+        Assert.Equal(HttpStatusCode.OK, (await firstClient.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", request)).StatusCode);
+
+        var conflict = await secondClient.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", request);
+        Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
+        var error = await conflict.Content.ReadFromJsonAsync<ApiErrorResponse>();
+        Assert.Equal("purchase_token_already_used", error!.Error.Code);
+    }
+
+    [Fact]
+    public async Task Google_play_invalid_or_pending_purchase_does_not_credit()
+    {
+        _factory.GooglePlayPurchaseValidator.Reset();
+        _factory.GooglePlayPurchaseValidator.IsValid = false;
+        _factory.GooglePlayPurchaseValidator.PurchaseState = GooglePlayPurchaseStates.Pending;
+        using var client = _factory.CreateClient();
+        var auth = await TestPayloads.RegisterAsync(client, "ai-google-invalid");
+        client.Authorize(auth.Token);
+
+        var response = await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest(
+            "ai_tokens_10",
+            "pending-token",
+            null));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var balance = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
+        Assert.Equal(3, balance!.Balance);
+        var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions?limit=20");
+        Assert.DoesNotContain(transactions!.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.Purchase);
+    }
+
+    [Fact]
+    public async Task Google_play_consume_failure_is_retry_safe_without_second_credit()
+    {
+        _factory.GooglePlayPurchaseValidator.Reset();
+        _factory.GooglePlayPurchaseValidator.ConsumeShouldFail = true;
+        using var client = _factory.CreateClient();
+        var auth = await TestPayloads.RegisterAsync(client, "ai-google-consume-retry");
+        client.Authorize(auth.Token);
+
+        var request = new VerifyGooglePlayPurchaseRequest("ai_tokens_30", "consume-retry-token", null);
+        var first = await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", request);
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        var firstBody = await first.Content.ReadFromJsonAsync<VerifyGooglePlayPurchaseResponse>();
+        Assert.Equal("credited_consume_pending", firstBody!.Status);
+
+        _factory.GooglePlayPurchaseValidator.ConsumeShouldFail = false;
+        var second = await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", request);
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+        var secondBody = await second.Content.ReadFromJsonAsync<VerifyGooglePlayPurchaseResponse>();
+        Assert.Equal("already_processed", secondBody!.Status);
+        Assert.Equal(0, secondBody.CreditsAdded);
+        Assert.Equal(33, secondBody.Balance);
+        Assert.True(_factory.GooglePlayPurchaseValidator.ConsumeCalls >= 2);
+
+        var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions?limit=20");
+        Assert.Single(transactions!.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.Purchase);
+    }
+
+    [Fact]
+    public async Task Google_play_purchase_request_validation_and_security()
+    {
+        _factory.GooglePlayPurchaseValidator.Reset();
+        using var client = _factory.CreateClient();
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest("ai_tokens_10", "token", null))).StatusCode);
+
+        var auth = await TestPayloads.RegisterAsync(client, "ai-google-validation");
+        client.Authorize(auth.Token);
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest("", "token", null))).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest("ai_tokens_missing", "token", null))).StatusCode);
+
+        var purchase = await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest("ai_tokens_10", "secret-purchase-token", null));
+        Assert.Equal(HttpStatusCode.OK, purchase.StatusCode);
+        Assert.DoesNotContain("secret-purchase-token", await purchase.Content.ReadAsStringAsync());
+
+        var history = await client.GetFromJsonAsync<AiCreditPurchasesResponse>("/api/ai-credits/purchases");
+        Assert.Single(history!.Purchases);
+        var transactionBody = await (await client.GetAsync("/api/ai-credits/transactions?limit=20")).Content.ReadAsStringAsync();
+        Assert.DoesNotContain("secret-purchase-token", transactionBody);
     }
 
     private static async Task<HttpResponseMessage> WaitForJobAsync(HttpClient client, string path)

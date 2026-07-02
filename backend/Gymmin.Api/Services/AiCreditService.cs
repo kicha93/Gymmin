@@ -12,6 +12,7 @@ public interface IAiCreditService
     AiCreditTransactionsResponse GetTransactions(string userId, int limit);
     AiCreditPacksResponse GetPacks();
     AiCreditBalanceResponse GrantDev(string userId, int amount, string? reason);
+    AiCreditPurchaseCreditResult CreditPurchase(string userId, int amount, string purchaseId, string tokenHash, string? metadataJson);
     AiCreditConsumeResult ConsumeForJob(string userId, string jobId, int cost, string reason, string? idempotencyKey);
     bool RefundForJob(string userId, string jobId, string reason);
 }
@@ -90,6 +91,26 @@ public sealed class EfAiCreditService : IAiCreditService
         db.SaveChanges();
         transaction.Commit();
         return _options.ToBalanceResponse(account.Balance);
+    }
+
+    public AiCreditPurchaseCreditResult CreditPurchase(string userId, int amount, string purchaseId, string tokenHash, string? metadataJson)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        using var transaction = db.Database.BeginTransaction();
+        var account = EnsureAccount(db, userId);
+        var ledger = AddTransaction(
+            db,
+            account,
+            amount,
+            AiCreditTransactionTypes.Purchase,
+            AiCreditReasons.GooglePlayPurchase,
+            null,
+            purchaseId,
+            tokenHash,
+            metadataJson);
+        db.SaveChanges();
+        transaction.Commit();
+        return new AiCreditPurchaseCreditResult(account.Balance, ledger.Id);
     }
 
     public AiCreditConsumeResult ConsumeForJob(string userId, string jobId, int cost, string reason, string? idempotencyKey)
@@ -457,6 +478,17 @@ public sealed class FileBackedAiCreditService : IAiCreditService
             AddTransaction(account, amount, AiCreditTransactionTypes.DevGrant, string.IsNullOrWhiteSpace(reason) ? "Manual dev top-up" : reason.Trim(), null, null, null, null);
             Save();
             return _options.ToBalanceResponse(account.Balance);
+        }
+    }
+
+    public AiCreditPurchaseCreditResult CreditPurchase(string userId, int amount, string purchaseId, string tokenHash, string? metadataJson)
+    {
+        lock (_gate)
+        {
+            var account = EnsureAccount(userId);
+            var transaction = AddTransaction(account, amount, AiCreditTransactionTypes.Purchase, AiCreditReasons.GooglePlayPurchase, null, purchaseId, tokenHash, metadataJson);
+            Save();
+            return new AiCreditPurchaseCreditResult(account.Balance, transaction.Id);
         }
     }
 

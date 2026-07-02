@@ -323,6 +323,12 @@ gymmin.account.{owner}.workoutSessionsSync
 
 Historia i progres nadal liczą dane lokalnie po scaleniu cache.
 
+Usuniecie pojedynczego wpisu historii na mobile oznacza `WorkoutSession`
+przez `deletedAt`. Taki tombstone jest zachowywany lokalnie, znika z UI
+historii/progresu i jest wysylany przez `POST /api/sync/workout-sessions`.
+Usuniecie definicji treningu nie usuwa powiazanych sesji historii; historia
+korzysta z `sourceWorkoutName` i snapshotu planu jako fallbacku display.
+
 ## Per-user local storage
 
 Mobile oddziela dane:
@@ -381,6 +387,8 @@ GET /api/ai-credits/balance
 GET /api/ai-credits/transactions?limit=50
 GET /api/ai-credits/packs
 POST /api/ai-credits/dev/grant
+POST /api/ai-credits/purchases/google-play/verify
+GET /api/ai-credits/purchases
 ```
 
 Wszystkie wymagaja bearer tokena. `dev/grant` dziala tylko poza Production i tylko gdy `Gymmin:AiCredits:DevGrantEnabled=true`.
@@ -394,7 +402,20 @@ Konfiguracja:
       "InitialGrant": 3,
       "PlanCost": 1,
       "RewriteCost": 1,
-      "DevGrantEnabled": true
+      "DevGrantEnabled": true,
+      "Packs": [
+        { "ProductId": "ai_tokens_10", "Credits": 10, "DisplayName": "10 tokenow AI", "Active": true },
+        { "ProductId": "ai_tokens_30", "Credits": 30, "DisplayName": "30 tokenow AI", "Active": true },
+        { "ProductId": "ai_tokens_100", "Credits": 100, "DisplayName": "100 tokenow AI", "Active": true }
+      ]
+    },
+    "GooglePlay": {
+      "Enabled": true,
+      "PackageName": "com.gymmin.app",
+      "ServiceAccountJsonPath": "",
+      "ServiceAccountJsonBase64": "",
+      "ValidatePurchases": true,
+      "ConsumePurchases": true
     }
   }
 }
@@ -412,7 +433,74 @@ Brak tokenow dla AI zwraca `402`:
 }
 ```
 
-TODO etap 12B: Google Play Billing, produkty consumable, backendowa walidacja purchase tokena, idempotentne dodanie tokenow po zakupie, pending/restore purchases i zabezpieczenie przed wielokrotnym naliczeniem tej samej transakcji.
+### Google Play Billing purchase validation
+
+Tokeny AI sa produktami jednorazowymi/consumable w Google Play. Mobile uruchamia zakup i wysyla `productId` oraz `purchaseToken` do backendu. Mobile nigdy nie dodaje tokenow lokalnie.
+
+Backendowy endpoint:
+
+```http
+POST /api/ai-credits/purchases/google-play/verify
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "productId": "ai_tokens_10",
+  "purchaseToken": "token-from-google-play",
+  "orderId": "optional-order-id"
+}
+```
+
+Backend:
+
+- sprawdza, czy `productId` jest aktywna paczka z konfiguracji,
+- hashuje `purchaseToken` i nie zapisuje go plaintext w DB,
+- waliduje zakup przez Google Play Developer API,
+- sprawdza stan zakupu i dopasowanie produktu,
+- idempotentnie dodaje `AiCredits` transakcja `Purchase`,
+- po naliczeniu probuje wykonac server-side consume,
+- retry tego samego `purchaseToken` nie nalicza tokenow drugi raz,
+- ten sam `purchaseToken` u innego usera zwraca konflikt.
+
+Mobile uzywa `react-native-iap` oraz `react-native-nitro-modules` jako natywnego stacka Google Play Billing. Jezeli Billing/Play Store nie jest dostepny w danym buildzie lub na urzadzeniu, ekran `Tokeny AI` pokazuje kontrolowany fallback i nie crashuje aplikacji.
+
+Success:
+
+```json
+{
+  "status": "credited",
+  "creditsAdded": 10,
+  "balance": 13,
+  "transactionId": "transaction-id",
+  "purchaseId": "purchase-id"
+}
+```
+
+Duplicate/idempotent success:
+
+```json
+{
+  "status": "already_processed",
+  "creditsAdded": 0,
+  "balance": 13,
+  "transactionId": "existing-transaction-id",
+  "purchaseId": "purchase-id"
+}
+```
+
+Zakupy sa zapisywane w `AiCreditPurchases`. Tabela trzyma hash tokena zakupu, ostatnie znaki tokena do diagnostyki, `GoogleOrderId`, status przetwarzania i powiazana transakcje ledger. `purchaseToken` nie trafia do response, logow ani metadata transakcji.
+
+TODO po 12B:
+
+- dodac Real-time Developer Notifications przez Google Pub/Sub,
+- obsluzyc refund/chargeback/cancel lifecycle z Google Play,
+- wykonac manualny test w Play Console internal testing/license testers; kod, backend verify i AAB build sa gotowe, ale realny zakup wymaga konfiguracji Play Console i service account,
+- utrzymywac Android build smoke dla `react-native-iap` / `react-native-nitro-modules` po zmianach natywnych zaleznosci,
+- dodac CI/manual smoke dla produkcyjnej konfiguracji Google Play API.
 
 ## AI creator jobs
 

@@ -6,6 +6,7 @@ import {
   getExerciseProgressKeyForDetails,
   getExerciseTargetDisplay,
   getWorkoutStepMuscleGroups,
+  isRestTargetStep,
   resolveWorkoutStartExecutionMode
 } from "../workoutExerciseSummary";
 import type { WorkoutStep } from "../workouts";
@@ -46,6 +47,13 @@ describe("workoutExerciseSummary", () => {
     expect(getExerciseTargetDisplay(step({ goalType: "time", targetValue: "00:02:00" }))).toBe("2m");
     expect(formatExerciseSetTarget(step({ setCount: "3", targetValue: "" }))).toBe("3 x -");
     expect(formatExerciseSetTarget(step({ setCount: "", targetValue: "8" }))).toBe("- x 8");
+  });
+
+  it("formats rest targets as a single target tile without set multiplier", () => {
+    expect(isRestTargetStep(step({ stageType: "rest" }))).toBe(true);
+    expect(formatExerciseSetTarget(step({ goalType: "time", setCount: "3", stageType: "rest", targetValue: "00:02:00" }))).toBe("2m");
+    expect(formatExerciseSetTarget(step({ goalType: "time", setCount: "3", stageType: "rest", targetValue: "00:00:45" }))).toBe("45s");
+    expect(formatExerciseSetTarget(step({ goalType: "time", setCount: "3", stageType: "rest", targetValue: "" }))).toBe("-");
   });
 
   it("returns muscle groups for catalog exercises and empty data for unknown exercises", () => {

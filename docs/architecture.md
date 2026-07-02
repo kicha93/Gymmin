@@ -137,6 +137,10 @@ Historia i progres są liczone z lokalnych `WorkoutSession`.
 
 Backend synchronizuje dane źródłowe, ale nie liczy jeszcze statystyk. Dzięki temu historia i progres działają offline.
 
+### Articles
+
+Articles are local mobile content, not CMS-backed. The article model stores per-language `translations` with `title`, optional `summary` and `content`, plus `defaultLanguage`. Mobile resolves article text with `getArticleTranslation(article, language)`: current language first, default language second, first available translation third, and a safe empty-content fallback last. The current training-plan article has PL and EN variants.
+
 ### Przypomnienia
 
 Przypomnienia są lokalnymi powiadomieniami systemowymi. Działają w standalone Android APK / dev buildzie. Backend synchronizuje tylko ustawienia `workoutReminders`. Identyfikatory zaplanowanych powiadomień są lokalne i per-user. Po logout albo zmianie konta mobile anuluje/przelicza przypomnienia dla aktualnego ownera. `onlyIfNoWorkoutToday` działa best-effort na podstawie lokalnych `WorkoutSession`.

@@ -112,6 +112,7 @@ import {
   getExerciseDetails,
   getExerciseProgressKeyForDetails,
   getExerciseTargetDisplay,
+  isRestTargetStep,
   getWorkoutStepMuscleGroups,
   resolveWorkoutStartExecutionMode
 } from "./src/domain/workoutExerciseSummary";
@@ -183,7 +184,7 @@ import {
   frontBodyRegionMap,
   frontBodySvg
 } from "./src/domain/bodyMaps";
-import { articles } from "./src/domain/articles";
+import { articles, getArticleTranslation } from "./src/domain/articles";
 import type { Article } from "./src/domain/articles";
 import { GymminLogo, GymminMark } from "./src/components/GymminLogo";
 
@@ -404,7 +405,7 @@ const translations = {
     bugSubmitError: "Nie udało się wysłać zgłoszenia. Sprawdź połączenie i konfigurację backendu.",
     bugSubmitting: "Wysyłanie zgłoszenia...",
     bugSuccessOk: "OK",
-    bugValidation: "Podaj tytuł i opis problemu.",
+    bugValidation: "Podaj opis problemu.",
     contact: "Kontakt",
     contactIntro: "Masz pytanie albo sugestię? Skontaktuj się z nami mailowo. Błędy w aplikacji najlepiej zgłaszać przez formularz „Zgłoś błąd” w sekcji Informacje.",
     contactResponseTime: "Odpowiadamy na wiadomości tak szybko, jak to możliwe - zwykle w ciągu kilku dni roboczych.",
@@ -422,7 +423,6 @@ const translations = {
     defaultSetCount: "Domyślna liczba serii",
     defaultWeight: "Domyślny ciężar",
     defaultWorkoutExecutionMode: "Tryb wykonywania treningu",
-    defaultWorkoutExecutionModeHint: "Tryb wykonania treningu możesz zmienić w ustawieniach",
     descending: "Malejąco",
     executionGuided: "Krok po kroku",
     executionReadonlyPostWorkout: "Tylko podgląd, uzupełnię po treningu",
@@ -452,7 +452,15 @@ const translations = {
     note: "Notatka",
     close: "Zamknij",
     duration: "Czas trwania",
+    finish: "Zakończ",
     progress: "Postęp",
+    elapsedTime: "Czas treningu",
+    restTimer: "Timer odpoczynku",
+    startTimer: "Start",
+    pauseTimer: "Pauza",
+    resetTimer: "Reset",
+    finishIncompleteWorkoutTitle: "Zakończyć mimo braków?",
+    finishIncompleteWorkoutCopy: "Niektóre elementy nie zostały uzupełnione. Czy na pewno chcesz zapisać trening?",
     activeWorkoutNotice: "Masz aktywny trening",
     workoutSaved: "Trening zapisany",
     workoutSortAlphabetical: "Alfabetycznie",
@@ -524,6 +532,7 @@ const translations = {
     editSavedWorkout: "Edycja zapisanego treningu",
     editWorkout: "Edytuj trening",
     exercise: "Ćwiczenie",
+    exercisePlural: "Ćwiczenia",
     exercisePickerEmpty: "Brak ćwiczeń",
     exercisePickerLoading: "Ładowanie ćwiczeń...",
     exercisePickerTitle: "Wybierz ćwiczenie",
@@ -617,9 +626,9 @@ const translations = {
     sendResetInstructions: "Wyślij instrukcję",
     setNewPassword: "Ustaw nowe hasło",
     changePassword: "Zmień hasło",
-    currentPassword: "obecne hasło",
-    newPassword: "nowe hasło",
-    repeatNewPassword: "powtórz nowe hasło",
+    currentPassword: "Obecne hasło",
+    newPassword: "Nowe hasło",
+    repeatNewPassword: "Powtórz hasło",
     passwordChanged: "Hasło zostało zmienione",
     currentPasswordInvalid: "Obecne hasło jest nieprawidłowe",
     newPasswordTooShort: "Nowe hasło jest za krótkie",
@@ -648,6 +657,7 @@ const translations = {
     elementWithoutExercise: "Element bez ćwiczenia",
     account: "Konto",
     accountPlaceholder: "Puste na razie. Wrócimy tu do profilu, emaila i usunięcia konta.",
+    userData: "Dane",
     favoriteExercises: "Ulubione ćwiczenia",
     favoriteExercisesEmptyTitle: "Brak ulubionych ćwiczeń",
     favoriteExercisesEmptyCopy: "Oznacz ćwiczenia gwiazdką, aby mieć do nich szybki dostęp.",
@@ -662,6 +672,7 @@ const translations = {
     enableReminders: "Włącz przypomnienia",
     reminderDays: "Dni przypomnień",
     reminderMessage: "Wiadomość",
+    reminderDescription: "Opis",
     reminderOnlyIfNoWorkoutToday: "Przypominaj tylko, jeśli dzisiaj nie było treningu",
     remindersPermissionDenied: "Powiadomienia są wyłączone w ustawieniach telefonu. Włącz je, aby korzystać z przypomnień.",
     remindersScheduleError: "Nie udało się zaplanować przypomnień",
@@ -712,6 +723,7 @@ const translations = {
     type: "Typ",
     notSignedInProfile: "Nie jesteś zalogowany. Wróć do strony startowej i zaloguj się, aby zobaczyć profil.",
     logout: "Wyloguj",
+    viewAllWorkouts: "Zobacz wszystkie",
     termsIntroOne: "Ten regulamin określa zasady korzystania z aplikacji Gymmin. Aplikacja służy do tworzenia i porządkowania treningów siłowych.",
     termsIntroTwo: "Użytkownik odpowiada za poprawne dobranie obciążeń, techniki oraz intensywności ćwiczeń. Aplikacja nie zastępuje konsultacji z trenerem, fizjoterapeutą ani lekarzem.",
     termsIntroThree: "Dane treningowe zapisane w aplikacji powinny być wykorzystywane wyłącznie do planowania aktywności i monitorowania postępów. Błędy w działaniu aplikacji można zgłaszać przez formularz dostępny w sekcji Informacje.",
@@ -843,7 +855,7 @@ const translations = {
     bugSubmitError: "Could not send the report. Check the connection and backend configuration.",
     bugSubmitting: "Sending report...",
     bugSuccessOk: "OK",
-    bugValidation: "Enter a title and problem description.",
+    bugValidation: "Enter a problem description.",
     contact: "Contact",
     contactIntro: "Have a question or suggestion? Contact us by email. Bugs are best reported with the “Report a bug” form in Information.",
     contactResponseTime: "We reply as quickly as possible, usually within a few business days.",
@@ -861,7 +873,6 @@ const translations = {
     defaultSetCount: "Default set count",
     defaultWeight: "Default weight",
     defaultWorkoutExecutionMode: "Workout execution mode",
-    defaultWorkoutExecutionModeHint: "You can change the workout execution mode in settings",
     descending: "Descending",
     executionGuided: "Step by step",
     executionReadonlyPostWorkout: "Read-only, fill after workout",
@@ -891,7 +902,15 @@ const translations = {
     note: "Note",
     close: "Close",
     duration: "Duration",
+    finish: "Finish",
     progress: "Progress",
+    elapsedTime: "Workout time",
+    restTimer: "Rest timer",
+    startTimer: "Start",
+    pauseTimer: "Pause",
+    resetTimer: "Reset",
+    finishIncompleteWorkoutTitle: "Finish with missing data?",
+    finishIncompleteWorkoutCopy: "Some items have not been filled in. Are you sure you want to save this workout?",
     activeWorkoutNotice: "You have an active workout",
     workoutSaved: "Workout saved",
     workoutSortAlphabetical: "Alphabetically",
@@ -963,6 +982,7 @@ const translations = {
     editSavedWorkout: "Editing saved workout",
     editWorkout: "Edit workout",
     exercise: "Exercise",
+    exercisePlural: "Exercises",
     exercisePickerEmpty: "No exercises",
     exercisePickerLoading: "Loading exercises...",
     exercisePickerTitle: "Choose exercise",
@@ -1056,9 +1076,9 @@ const translations = {
     sendResetInstructions: "Send instructions",
     setNewPassword: "Set new password",
     changePassword: "Change password",
-    currentPassword: "current password",
-    newPassword: "new password",
-    repeatNewPassword: "repeat new password",
+    currentPassword: "Current password",
+    newPassword: "New password",
+    repeatNewPassword: "Repeat password",
     passwordChanged: "Password changed",
     currentPasswordInvalid: "Current password is incorrect",
     newPasswordTooShort: "New password is too short",
@@ -1087,6 +1107,7 @@ const translations = {
     elementWithoutExercise: "Element without exercise",
     account: "Account",
     accountPlaceholder: "Empty for now. We will return to profile, email and account removal here.",
+    userData: "Data",
     favoriteExercises: "Favorite exercises",
     favoriteExercisesEmptyTitle: "No favorite exercises yet",
     favoriteExercisesEmptyCopy: "Mark exercises with a star to access them quickly.",
@@ -1101,6 +1122,7 @@ const translations = {
     enableReminders: "Enable reminders",
     reminderDays: "Reminder days",
     reminderMessage: "Message",
+    reminderDescription: "Description",
     reminderOnlyIfNoWorkoutToday: "Remind only if I have not trained today",
     remindersPermissionDenied: "Notifications are disabled in phone settings. Enable them to use reminders.",
     remindersScheduleError: "Could not schedule reminders",
@@ -1151,6 +1173,7 @@ const translations = {
     type: "Type",
     notSignedInProfile: "You are not signed in. Go back to the start page and sign in to view your profile.",
     logout: "Log out",
+    viewAllWorkouts: "View all",
     termsIntroOne: "These terms define the rules for using Gymmin. The app is used to create and organize strength workouts.",
     termsIntroTwo: "The user is responsible for choosing appropriate loads, technique and exercise intensity. The app does not replace advice from a trainer, physiotherapist or doctor.",
     termsIntroThree: "Workout data saved in the app should be used only for activity planning and progress tracking. App issues can be reported with the form available in Information.",
@@ -3033,6 +3056,10 @@ function GymminApp() {
   const [selectedExerciseProgressKey, setSelectedExerciseProgressKey] = useState<string | null>(null);
   const [sessionEntryIndex, setSessionEntryIndex] = useState(0);
   const [isPostWorkoutFillMode, setIsPostWorkoutFillMode] = useState(false);
+  const [sessionNow, setSessionNow] = useState(() => Date.now());
+  const [restTimerEntryId, setRestTimerEntryId] = useState<string | null>(null);
+  const [restTimerRemainingSeconds, setRestTimerRemainingSeconds] = useState(0);
+  const [isRestTimerRunning, setIsRestTimerRunning] = useState(false);
   const [activeSettingsSheet, setActiveSettingsSheet] = useState<SettingsSheetKey | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -3055,6 +3082,7 @@ function GymminApp() {
   const [isAuthActionSubmitting, setIsAuthActionSubmitting] = useState(false);
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
+  const [isRepeatPasswordVisible, setIsRepeatPasswordVisible] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
@@ -4301,20 +4329,53 @@ function GymminApp() {
   }, []);
 
   useEffect(() => {
+    if (activeScreen !== "workoutSession" && !isRestTimerRunning) {
+      return undefined;
+    }
+
+    const intervalId = setInterval(() => {
+      setSessionNow(Date.now());
+      setRestTimerRemainingSeconds((current) => {
+        if (!isRestTimerRunning) {
+          return current;
+        }
+
+        return Math.max(0, current - 1);
+      });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [activeScreen, isRestTimerRunning]);
+
+  useEffect(() => {
+    if (restTimerRemainingSeconds <= 0 && isRestTimerRunning) {
+      setIsRestTimerRunning(false);
+    }
+  }, [isRestTimerRunning, restTimerRemainingSeconds]);
+
+  useEffect(() => {
+    setIsRestTimerRunning(false);
+  }, [activeWorkoutSessionId, sessionEntryIndex]);
+
+  useEffect(() => {
     const previousLanguage = previousReminderLanguageRef.current;
     if (previousLanguage === language) {
       return;
     }
 
     previousReminderLanguageRef.current = language;
-    const previousDefaultMessage = getDefaultWorkoutReminderSettings(previousLanguage).message;
-    if (workoutReminders.message !== previousDefaultMessage) {
+    const previousDefaults = getDefaultWorkoutReminderSettings(previousLanguage);
+    const nextDefaults = getDefaultWorkoutReminderSettings(language);
+    const shouldUpdateMessage = workoutReminders.message === previousDefaults.message;
+    const shouldUpdateDescription = (workoutReminders.description ?? "") === (previousDefaults.description ?? "");
+    if (!shouldUpdateMessage && !shouldUpdateDescription) {
       return;
     }
 
     updateWorkoutReminderSettings({
       ...workoutReminders,
-      message: getDefaultWorkoutReminderSettings(language).message
+      description: shouldUpdateDescription ? nextDefaults.description : workoutReminders.description,
+      message: shouldUpdateMessage ? nextDefaults.message : workoutReminders.message
     });
   }, [language, workoutReminders]);
 
@@ -5000,6 +5061,13 @@ function GymminApp() {
     });
   }
 
+  function updateWorkoutReminderDescription(description: string) {
+    updateWorkoutReminderSettings({
+      ...workoutReminders,
+      description
+    });
+  }
+
   function applyAccountSettings(settings: ApiUserSettings) {
     isApplyingAccountSettingsRef.current = true;
 
@@ -5462,6 +5530,40 @@ function GymminApp() {
     setIsPostWorkoutFillMode(false);
     setActiveScreen("workoutDetail");
     Alert.alert(t("workoutSaved"));
+  }
+
+  function isWorkoutSessionEntryFillRequired(entry: WorkoutSessionEntry) {
+    return entry.type !== "rest" && entry.type !== "warmup" && entry.plannedTargetType !== "buttonPress";
+  }
+
+  function hasIncompleteWorkoutSessionEntries(session: WorkoutSession) {
+    return session.entries.some((entry) => {
+      if (!isWorkoutSessionEntryFillRequired(entry)) {
+        return false;
+      }
+
+      return !entry.isCompleted || !entry.actualWeight?.trim() || !entry.actualReps?.trim();
+    });
+  }
+
+  function requestFinishActiveWorkoutSession() {
+    if (!activeWorkoutSession) {
+      return;
+    }
+
+    if (!hasIncompleteWorkoutSessionEntries(activeWorkoutSession)) {
+      finishActiveWorkoutSession();
+      return;
+    }
+
+    Alert.alert(t("finishIncompleteWorkoutTitle"), t("finishIncompleteWorkoutCopy"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("finish"),
+        style: "destructive",
+        onPress: finishActiveWorkoutSession
+      }
+    ]);
   }
 
   function abandonActiveWorkoutSession() {
@@ -6427,6 +6529,8 @@ function GymminApp() {
       setResetToken("");
       setNewPassword("");
       setNewPasswordConfirm("");
+      setIsNewPasswordVisible(false);
+      setIsRepeatPasswordVisible(false);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : t("authRequestError"));
     } finally {
@@ -6475,6 +6579,9 @@ function GymminApp() {
       setCurrentPassword("");
       setNewPassword("");
       setNewPasswordConfirm("");
+      setIsCurrentPasswordVisible(false);
+      setIsNewPasswordVisible(false);
+      setIsRepeatPasswordVisible(false);
       setAuthMessage(t("passwordChanged"));
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : t("changePasswordFailed"));
@@ -6571,7 +6678,7 @@ function GymminApp() {
     const normalizedTitle = bugTitle.trim();
     const normalizedDescription = bugDescription.trim();
 
-    if (!normalizedTitle || !normalizedDescription) {
+    if (!normalizedDescription) {
       setBugFormError(t("bugValidation"));
       return;
     }
@@ -7056,6 +7163,47 @@ function GymminApp() {
     return minutes ? `${hours} h ${minutes} min` : `${hours} h`;
   }
 
+  function formatTimerSeconds(totalSeconds: number) {
+    const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+    const hours = Math.floor(safeSeconds / 3600);
+    const minutes = Math.floor((safeSeconds % 3600) / 60);
+    const seconds = safeSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  function parseTimerSeconds(value?: string) {
+    if (!value?.trim()) {
+      return 0;
+    }
+
+    const trimmed = value.trim().toLowerCase();
+    const hmsMatch = trimmed.match(/^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/);
+    if (hmsMatch) {
+      const first = Number.parseInt(hmsMatch[1], 10);
+      const second = Number.parseInt(hmsMatch[2], 10);
+      const third = hmsMatch[3] ? Number.parseInt(hmsMatch[3], 10) : 0;
+      if ([first, second, third].every(Number.isFinite)) {
+        return hmsMatch[3] ? first * 3600 + second * 60 + third : first * 60 + second;
+      }
+    }
+
+    const minutesMatch = trimmed.match(/(\d+)\s*m/);
+    const secondsMatch = trimmed.match(/(\d+)\s*s/);
+    const minutes = minutesMatch ? Number.parseInt(minutesMatch[1], 10) : 0;
+    const seconds = secondsMatch ? Number.parseInt(secondsMatch[1], 10) : 0;
+    if (minutes || seconds) {
+      return minutes * 60 + seconds;
+    }
+
+    const numeric = Number.parseInt(trimmed, 10);
+    return Number.isFinite(numeric) ? numeric : 0;
+  }
+
   function formatSessionDuration(session: WorkoutSession) {
     return formatDurationMs(getSessionDurationMs(session));
   }
@@ -7192,6 +7340,8 @@ function GymminApp() {
   }
 
   function renderHome() {
+    const homeWorkouts = filteredWorkouts.slice(0, 5);
+
     return (
       <>
         {!isAuthPanelDismissed ? (
@@ -7273,16 +7423,16 @@ function GymminApp() {
           title={t("workouts")}
           onToggle={() => togglePanel("home-workouts")}
         >
-            {filteredWorkouts.length ? (
+            {homeWorkouts.length ? (
               <View style={styles.workoutList}>
-                {filteredWorkouts.map((item, index) => (
+                {homeWorkouts.map((item, index) => (
                   <Pressable
                     key={item.id}
                     accessibilityRole="button"
                     style={[
                       styles.workoutRow,
                       {
-                        borderBottomWidth: index === filteredWorkouts.length - 1 ? 0 : 1,
+                        borderBottomWidth: index === homeWorkouts.length - 1 ? 0 : 1,
                         borderColor: theme.border
                       }
                     ]}
@@ -7307,6 +7457,18 @@ function GymminApp() {
                 ))}
               </View>
             ) : null}
+            {filteredWorkouts.length > homeWorkouts.length ? (
+              <AppButton
+                icon="list-outline"
+                style={styles.secondaryButton}
+                textStyle={styles.secondaryButtonText}
+                theme={theme}
+                variant="outline"
+                onPress={() => setActiveScreen("workouts")}
+              >
+                {t("viewAllWorkouts")}
+              </AppButton>
+            ) : null}
         </CollapsiblePanel>
 
         <CollapsiblePanel
@@ -7315,34 +7477,43 @@ function GymminApp() {
           title={t("articles")}
           onToggle={() => togglePanel("home-articles")}
         >
-            {articles.map((article, index) => (
-              <Pressable
-                key={article.id}
-                accessibilityRole="button"
-                style={[
-                  styles.articleRow,
-                  {
-                    borderBottomWidth: index === articles.length - 1 ? 0 : 1,
-                    borderColor: theme.border
-                  }
-                ]}
-                onPress={() => {
-                  setSelectedArticleId(article.id);
-                  setActiveScreen("articleDetail");
-                }}
-              >
-                <View style={styles.articleContent}>
-                  <Text style={[styles.articleCategory, { color: theme.primary }]}>
-                    {article.category}
-                  </Text>
-                  <Text style={[styles.articleTitle, { color: theme.text }]}>{article.title}</Text>
-                  <Text style={[styles.articleMeta, { color: theme.muted }]}>
-                    {formatArticleDate(article.publishedAt)} · {article.readTime}
-                  </Text>
-                </View>
-                <Ionicons name="reader-outline" size={22} color={theme.primary} />
-              </Pressable>
-            ))}
+            {articles.map((article, index) => {
+              const translation = getArticleTranslation(article, language);
+
+              return (
+                <Pressable
+                  key={article.id}
+                  accessibilityRole="button"
+                  style={[
+                    styles.articleRow,
+                    {
+                      borderBottomWidth: index === articles.length - 1 ? 0 : 1,
+                      borderColor: theme.border
+                    }
+                  ]}
+                  onPress={() => {
+                    setSelectedArticleId(article.id);
+                    setActiveScreen("articleDetail");
+                  }}
+                >
+                  <View style={styles.articleContent}>
+                    <Text style={[styles.articleCategory, { color: theme.primary }]}>
+                      {translation.category}
+                    </Text>
+                    <Text style={[styles.articleTitle, { color: theme.text }]}>{translation.title}</Text>
+                    {translation.summary ? (
+                      <Text style={[styles.articleMeta, { color: theme.muted }]} numberOfLines={2}>
+                        {translation.summary}
+                      </Text>
+                    ) : null}
+                    <Text style={[styles.articleMeta, { color: theme.muted }]}>
+                      {formatArticleDate(article.publishedAt, language)} · {article.readTime}
+                    </Text>
+                  </View>
+                  <Ionicons name="reader-outline" size={22} color={theme.primary} />
+                </Pressable>
+              );
+            })}
         </CollapsiblePanel>
       </>
     );
@@ -7724,6 +7895,7 @@ function GymminApp() {
       <ArticleDetail
         article={article}
         backLabel={t("backToStart")}
+        language={language}
         theme={theme}
         onBack={() => setActiveScreen("home")}
       />
@@ -8421,68 +8593,74 @@ function GymminApp() {
               expandLabel={t("expand")}
               key={stage.id}
               isCollapsed={isReadOnlyWorkoutPanelCollapsed(`workout-stage-${stage.id}`)}
-              theme={theme}
-              title={stage.label || `${t("stage")} ${index + 1}`}
-              onToggle={() => toggleReadOnlyWorkoutPanel(`workout-stage-${stage.id}`)}
-            >
-              <View style={styles.workoutDetailStageHeader}>
+              leadingAccessory={
                 <View style={[styles.workoutDetailStageBadge, { backgroundColor: theme.secondaryBand }]}>
                   <Text style={[styles.workoutDetailStageBadgeText, { color: theme.primary }]}>
                     {index + 1}
                   </Text>
                 </View>
-                <View style={styles.workoutInfo}>
-                  <Text style={[styles.workoutName, { color: theme.text }]}>
-                    {stage.label || `${t("stage")} ${index + 1}`}
-                  </Text>
-                  <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                    {series.length
-                      ? `${series.length} ${t("setsPlural")}`
-                      : t("stageWithoutSets")}
-                  </Text>
-                </View>
-              </View>
-
+              }
+              theme={theme}
+              title={stage.label || `${t("stage")} ${index + 1}`}
+              onToggle={() => toggleReadOnlyWorkoutPanel(`workout-stage-${stage.id}`)}
+            >
               {stage.notes ? (
                 <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{stage.notes}</Text>
               ) : null}
 
               {series.length ? (
                 <View style={styles.workoutDetailSeriesList}>
-                  {series.map(({ set, elements }, setIndex) => (
-                    <View
-                      key={set.id}
-                      style={[styles.workoutDetailSeriesRow, { borderColor: theme.border }]}
-                    >
-                      <View style={styles.workoutInfo}>
-                        <Text style={[styles.workoutDetailExerciseName, { color: theme.text }]}>
-                          {t("set")} {setIndex + 1}
-                        </Text>
-                        <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                          {t("setCount")}: {set.setCount || "1"}
-                        </Text>
-                        {elements.map((element) => (
-                          <View key={element.id} style={styles.workoutDetailElementRow}>
-                            <ExerciseSummaryRow
-                              language={language}
-                              setCount={set.setCount || "1"}
-                              step={element}
-                              targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
-                              theme={theme}
-                              t={t}
-                              onPressDetails={() => openExerciseDetail(element)}
-                              onPressMuscles={() => setSelectedExerciseMuscleStep(element)}
-                            />
-                            {element.notes ? (
-                              <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
-                                {element.notes}
-                              </Text>
-                            ) : null}
-                          </View>
-                        ))}
+                  {series.map(({ set, elements }, setIndex) => {
+                    const headerElement = elements.find((element) => !isRestTargetStep(element)) ?? elements[0];
+
+                    return (
+                      <View
+                        key={set.id}
+                        style={[
+                          styles.workoutDetailSeriesRow,
+                          { borderColor: theme.border },
+                          setIndex === series.length - 1 ? styles.workoutDetailSeriesRowLast : null
+                        ]}
+                      >
+                        <View style={styles.workoutInfo}>
+                          {elements.map((element) => (
+                            <View key={element.id} style={styles.workoutDetailElementRow}>
+                              <ExerciseSummaryRow
+                                language={language}
+                                pairedTargetText={
+                                  isRestTargetStep(element)
+                                    ? (() => {
+                                      const elementIndex = elements.findIndex((item) => item.id === element.id);
+                                      const previousExercise = [...elements]
+                                        .slice(0, Math.max(0, elementIndex))
+                                        .reverse()
+                                        .find((item) => !isRestTargetStep(item));
+
+                                      return previousExercise
+                                        ? formatExerciseSetTarget({ ...previousExercise, setCount: set.setCount || "1" })
+                                        : undefined;
+                                    })()
+                                    : undefined
+                                }
+                                seriesIndex={headerElement?.id === element.id ? setIndex + 1 : undefined}
+                                step={element}
+                                targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
+                                theme={theme}
+                                t={t}
+                                onPressDetails={() => openExerciseDetail(element)}
+                                onPressMuscles={() => openExerciseDetail(element)}
+                              />
+                              {element.notes ? (
+                                <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
+                                  {element.notes}
+                                </Text>
+                              ) : null}
+                            </View>
+                          ))}
+                        </View>
                       </View>
-                    </View>
-                  ))}
+                    );
+                  })}
                 </View>
               ) : null}
             </CollapsiblePanel>
@@ -8723,19 +8901,18 @@ function GymminApp() {
                 {series.map(({ set, elements }, setIndex) => (
                   <View key={set.id} style={[styles.workoutDetailSeriesRow, { borderColor: theme.border }]}>
                     <Text style={[styles.workoutDetailExerciseName, { color: theme.text }]}>
-                      {t("set")} {setIndex + 1} · {t("setCount")}: {set.setCount || "1"}
+                      {t("set")} {setIndex + 1}
                     </Text>
                     {elements.map((element) => (
                       <ExerciseSummaryRow
                         key={element.id}
                         language={language}
-                        setCount={set.setCount || "1"}
                         step={element}
                         targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
                         theme={theme}
                         t={t}
                         onPressDetails={() => openExerciseDetail(element)}
-                        onPressMuscles={() => setSelectedExerciseMuscleStep(element)}
+                        onPressMuscles={() => openExerciseDetail(element)}
                       />
                     ))}
                   </View>
@@ -8776,69 +8953,8 @@ function GymminApp() {
       .filter((option) => workoutReminders.daysOfWeek.includes(option.value))
       .map((option) => option.shortLabel)
       .join(", ");
-    const accountSection = user ? (
-        <SettingsSection
-          isCollapsed={isPanelCollapsed("settings-account")}
-          title={t("account")}
-          theme={theme}
-        onToggle={() => togglePanel("settings-account")}
-      >
-        <SettingsOption
-          icon="key-outline"
-          label={t("changePassword")}
-          value=""
-          theme={theme}
-          onPress={() => {
-            setAuthError("");
-            setAuthMessage("");
-            setCurrentPassword("");
-            setNewPassword("");
-            setNewPasswordConfirm("");
-            setActiveScreen("changePassword");
-          }}
-        />
-        <SettingsOption
-          icon="phone-portrait-outline"
-          label={t("activeSessions")}
-          value=""
-          theme={theme}
-          onPress={() => {
-            setAuthError("");
-            setAuthMessage("");
-            setActiveScreen("activeSessions");
-            void fetchAuthSessions();
-          }}
-        />
-        <SettingsOption
-          icon="sparkles-outline"
-          label={t("aiCredits")}
-          value={String(aiCreditBalance.balance)}
-          theme={theme}
-          onPress={() => {
-            setActiveScreen("aiCredits");
-            void fetchAiCredits(user);
-          }}
-        />
-      </SettingsSection>
-    ) : null;
-
     return (
       <>
-        {false && <SettingsSection
-          isCollapsed={isPanelCollapsed("settings-account")}
-          title="Konto"
-          theme={theme}
-          onToggle={() => togglePanel("settings-account")}
-        >
-          <SettingsPlaceholder
-            icon="person-circle-outline"
-            label="Konto użytkownika"
-            meta="Puste na razie. Wrócimy tu do profilu, emaila i usunięcia konta."
-            theme={theme}
-          />
-        </SettingsSection>}
-        {accountSection}
-
         <SettingsSection
           isCollapsed={isPanelCollapsed("settings-preferences")}
           title={t("preferences")}
@@ -8910,9 +9026,6 @@ function GymminApp() {
               setActiveSettingsSheet("defaultWorkoutExecutionMode");
             }}
           />
-          <Text style={[styles.settingsHint, { color: theme.muted }]}>
-            {t("defaultWorkoutExecutionModeHint")}
-          </Text>
           <SettingsOption
             icon="star-outline"
             label={t("favoriteExercises")}
@@ -8937,6 +9050,16 @@ function GymminApp() {
             onPress={() => {
               void toggleWorkoutRemindersEnabled();
             }}
+          />
+          <SettingsOption
+            icon="checkmark-done-outline"
+            label={t("reminderOnlyIfNoWorkoutToday")}
+            value={workoutReminders.onlyIfNoWorkoutToday ? t("enabled") : t("disabled")}
+            theme={theme}
+            onPress={() => updateWorkoutReminderSettings({
+              ...workoutReminders,
+              onlyIfNoWorkoutToday: !workoutReminders.onlyIfNoWorkoutToday
+            })}
           />
           <View style={styles.reminderDaysBlock}>
             <Text style={[styles.settingsOptionLabel, { color: theme.text }]}>{t("reminderDays")}</Text>
@@ -8994,16 +9117,18 @@ function GymminApp() {
               onChangeText={updateWorkoutReminderMessage}
             />
           </View>
-          <SettingsOption
-            icon="checkmark-done-outline"
-            label={t("reminderOnlyIfNoWorkoutToday")}
-            value={workoutReminders.onlyIfNoWorkoutToday ? t("enabled") : t("disabled")}
-            theme={theme}
-            onPress={() => updateWorkoutReminderSettings({
-              ...workoutReminders,
-              onlyIfNoWorkoutToday: !workoutReminders.onlyIfNoWorkoutToday
-            })}
-          />
+          <View style={styles.reminderMessageBlock}>
+            <Text style={[styles.settingsOptionLabel, { color: theme.text }]}>{t("reminderDescription")}</Text>
+            <AppTextarea
+              inputStyle={styles.reminderDescriptionInput}
+              numberOfLines={2}
+              placeholder={getDefaultWorkoutReminderSettings(language).description}
+              style={styles.reminderDescriptionTextarea}
+              theme={theme}
+              value={workoutReminders.description ?? ""}
+              onChangeText={updateWorkoutReminderDescription}
+            />
+          </View>
           {reminderSchedulingStatus === "permissionDenied" ? (
             <Text style={[styles.settingsHint, { color: theme.danger }]}>{t("remindersPermissionDenied")}</Text>
           ) : reminderSchedulingStatus === "failed" ? (
@@ -9579,32 +9704,81 @@ function GymminApp() {
     }
 
     return (
-      <LegalPage
-        icon="person-circle-outline"
-        title={t("profileUser")}
-        theme={theme}
-        backLabel={t("backToStart")}
-        onBack={() => setActiveScreen("home")}
-      >
-        <View style={[styles.contactBox, { backgroundColor: theme.secondaryBand }]}>
-          <Text style={[styles.contactLabel, { color: theme.muted }]}>{t("name")}</Text>
-          <Text style={[styles.contactValue, { color: theme.text }]}>{user.name}</Text>
+      <View style={styles.profileScreen}>
+        <View style={styles.profileActionsRow}>
+          <AppButton
+            icon="log-out-outline"
+            style={styles.secondaryButton}
+            textStyle={styles.secondaryButtonText}
+            theme={theme}
+            variant="outline"
+            onPress={logOut}
+          >
+            {t("logout")}
+          </AppButton>
         </View>
-        <View style={[styles.contactBox, { backgroundColor: theme.secondaryBand }]}>
-          <Text style={[styles.contactLabel, { color: theme.muted }]}>Email</Text>
-          <Text style={[styles.contactValue, { color: theme.text }]}>{user.email}</Text>
+
+        <View style={[styles.legalPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.legalContent}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("userData")}</Text>
+            <View style={[styles.contactBox, { backgroundColor: theme.secondaryBand }]}>
+              <Text style={[styles.contactLabel, { color: theme.muted }]}>{t("name")}</Text>
+              <Text style={[styles.contactValue, { color: theme.text }]}>{user.name}</Text>
+            </View>
+            <View style={[styles.contactBox, { backgroundColor: theme.secondaryBand }]}>
+              <Text style={[styles.contactLabel, { color: theme.muted }]}>Email</Text>
+              <Text style={[styles.contactValue, { color: theme.text }]}>{user.email}</Text>
+            </View>
+          </View>
         </View>
-        <AppButton
-          icon="log-out-outline"
-          style={styles.secondaryButton}
-          textStyle={styles.secondaryButtonText}
+
+        <SettingsSection
+          isCollapsed={false}
+          title={t("account")}
           theme={theme}
-          variant="outline"
-          onPress={logOut}
+          onToggle={() => undefined}
         >
-          {t("logout")}
-        </AppButton>
-      </LegalPage>
+          <SettingsOption
+            icon="key-outline"
+            label={t("changePassword")}
+            value=""
+            theme={theme}
+            onPress={() => {
+              setAuthError("");
+              setAuthMessage("");
+              setCurrentPassword("");
+              setNewPassword("");
+              setNewPasswordConfirm("");
+              setIsCurrentPasswordVisible(false);
+              setIsNewPasswordVisible(false);
+              setIsRepeatPasswordVisible(false);
+              setActiveScreen("changePassword");
+            }}
+          />
+          <SettingsOption
+            icon="phone-portrait-outline"
+            label={t("activeSessions")}
+            value=""
+            theme={theme}
+            onPress={() => {
+              setAuthError("");
+              setAuthMessage("");
+              setActiveScreen("activeSessions");
+              void fetchAuthSessions();
+            }}
+          />
+          <SettingsOption
+            icon="sparkles-outline"
+            label={t("aiCredits")}
+            value={String(aiCreditBalance.balance)}
+            theme={theme}
+            onPress={() => {
+              setActiveScreen("aiCredits");
+              void fetchAiCredits(user);
+            }}
+          />
+        </SettingsSection>
+      </View>
     );
   }
 
@@ -9653,9 +9827,9 @@ function GymminApp() {
           <View style={styles.fieldGroup}>
             <Text style={[styles.label, { color: theme.text }]}>{t("repeatNewPassword")}</Text>
             <PasswordInput
-              isVisible={isNewPasswordVisible}
+              isVisible={isRepeatPasswordVisible}
               placeholder={t("repeatNewPassword")}
-              setIsVisible={setIsNewPasswordVisible}
+              setIsVisible={setIsRepeatPasswordVisible}
               theme={theme}
               value={newPasswordConfirm}
               onChangeText={setNewPasswordConfirm}
@@ -9677,8 +9851,8 @@ function GymminApp() {
         icon="key-outline"
         title={t("changePassword")}
         theme={theme}
-        backLabel={t("backToSettings")}
-        onBack={() => setActiveScreen("settings")}
+        backLabel={t("profile")}
+        onBack={() => setActiveScreen("profile")}
       >
         <View style={styles.bugReportForm}>
           <View style={styles.fieldGroup}>
@@ -9706,9 +9880,9 @@ function GymminApp() {
           <View style={styles.fieldGroup}>
             <Text style={[styles.label, { color: theme.text }]}>{t("repeatNewPassword")}</Text>
             <PasswordInput
-              isVisible={isNewPasswordVisible}
+              isVisible={isRepeatPasswordVisible}
               placeholder={t("repeatNewPassword")}
-              setIsVisible={setIsNewPasswordVisible}
+              setIsVisible={setIsRepeatPasswordVisible}
               theme={theme}
               value={newPasswordConfirm}
               onChangeText={setNewPasswordConfirm}
@@ -9730,8 +9904,8 @@ function GymminApp() {
         icon="phone-portrait-outline"
         title={t("activeSessions")}
         theme={theme}
-        backLabel={t("backToSettings")}
-        onBack={() => setActiveScreen("settings")}
+        backLabel={t("profile")}
+        onBack={() => setActiveScreen("profile")}
       >
         <View style={styles.sessionHistoryList}>
           {activeAuthSessions.length === 0 ? (
@@ -10069,6 +10243,16 @@ function GymminApp() {
     return entry.type === "rest" ? t("stageRest") : t("elementWithoutExercise");
   }
 
+  function formatWorkoutStepSummaryTitle(step: WorkoutStep) {
+    if (step.exerciseName) {
+      return getExerciseDisplayName(step.exerciseName, language);
+    }
+
+    return step.stageType
+      ? t(stageTypeTranslationKeys[step.stageType])
+      : t("elementWithoutExercise");
+  }
+
   function formatSessionEntryMeta(entry: WorkoutSessionEntry) {
     const parts = [
       entry.sourceStageName,
@@ -10078,11 +10262,118 @@ function GymminApp() {
     return parts.join(" · ");
   }
 
+  function getSessionEntryIterationLabel(entry: WorkoutSessionEntry) {
+    const iteration = Number.isFinite(entry.setIteration) && entry.setIteration > 0
+      ? entry.setIteration
+      : entry.seriesIndex + 1;
+    return String(iteration || 1);
+  }
+
+  function formatSessionEntryExecutionTitle(entry: WorkoutSessionEntry) {
+    return `[${getSessionEntryIterationLabel(entry)}] ${formatSessionEntryTitle(entry)}`;
+  }
+
+  function formatSessionEntryExecutionMeta(entry: WorkoutSessionEntry) {
+    return [entry.sourceStageName].filter(Boolean).join(" · ");
+  }
+
   function formatPlannedSessionEntry(entry: WorkoutSessionEntry) {
     return [
       entry.plannedTarget ? `${t("goal")}: ${entry.plannedTarget}` : "",
       entry.plannedWeight ? `${t("weight")}: ${entry.plannedWeight} kg` : ""
     ].filter(Boolean).join(" · ");
+  }
+
+  function getSessionEntryPreviewStep(session: WorkoutSession, entry: WorkoutSessionEntry): WorkoutStep {
+    const sourceStep = session.planSnapshot.steps.find(
+      (step) => step.kind === "exercise" && step.id === entry.sourceElementId
+    );
+
+    if (sourceStep) {
+      return sourceStep;
+    }
+
+    return createStep({
+      exerciseId: entry.exerciseId ?? "",
+      exerciseName: entry.exerciseName ?? "",
+      goalType: (entry.plannedTargetType as GoalType | "") || "",
+      id: entry.sourceElementId ?? entry.id,
+      kind: "exercise",
+      loadKg: entry.plannedWeight ?? "",
+      stageType: (entry.type as StageType | "") || "",
+      targetValue: entry.plannedTarget ?? ""
+    });
+  }
+
+  function getSessionEntrySetTarget(entry: WorkoutSessionEntry, setCount = "1") {
+    const previewStep = createStep({
+      exerciseName: entry.exerciseName ?? "",
+      goalType: (entry.plannedTargetType as GoalType | "") || "",
+      kind: "exercise",
+      loadKg: entry.plannedWeight ?? "",
+      stageType: (entry.type as StageType | "") || "",
+      targetValue: entry.plannedTarget ?? "",
+      setCount
+    });
+
+    return formatExerciseSetTarget(previewStep);
+  }
+
+  function getGuidedEntryGroups(session: WorkoutSession) {
+    const exerciseEntries = session.entries.filter((entry) => entry.type !== "rest");
+    const sourceEntries = exerciseEntries.length ? exerciseEntries : session.entries;
+    const groups: Array<{
+      entries: WorkoutSessionEntry[];
+      firstIndex: number;
+      key: string;
+      restEntry?: WorkoutSessionEntry;
+    }> = [];
+    const grouped = new Map<string, { entries: WorkoutSessionEntry[]; firstIndex: number; key: string }>();
+
+    sourceEntries.forEach((entry) => {
+      const key = [entry.sourceStageId, entry.sourceSeriesId, entry.sourceElementId ?? entry.id].filter(Boolean).join(":");
+      const firstIndex = session.entries.findIndex((item) => item.id === entry.id);
+      const existing = grouped.get(key);
+
+      if (existing) {
+        existing.entries.push(entry);
+        return;
+      }
+
+      const group = { entries: [entry], firstIndex, key };
+      grouped.set(key, group);
+      groups.push(group);
+    });
+
+    return groups.map((group) => {
+      const referenceEntry = group.entries[0];
+      const restEntry = session.entries.find(
+        (entry) =>
+          entry.type === "rest" &&
+          entry.sourceSeriesId === referenceEntry.sourceSeriesId &&
+          entry.elementIndex > referenceEntry.elementIndex
+      );
+
+      return {
+        ...group,
+        restEntry
+      };
+    });
+  }
+
+  function getGuidedGroupIndex(
+    groups: Array<{ entries: WorkoutSessionEntry[]; firstIndex: number }>,
+    entryIndex: number,
+    currentEntry?: WorkoutSessionEntry
+  ) {
+    const directIndex = groups.findIndex((group) => group.entries.some((entry) => entry.id === currentEntry?.id));
+
+    if (directIndex >= 0) {
+      return directIndex;
+    }
+
+    const nextIndex = groups.findIndex((group) => group.firstIndex >= entryIndex);
+    return nextIndex >= 0 ? nextIndex : Math.max(0, groups.length - 1);
   }
 
   function renderSessionEntryInputs(entry: WorkoutSessionEntry) {
@@ -10165,6 +10456,182 @@ function GymminApp() {
     );
   }
 
+  function toggleWorkoutSessionEntryCompleted(entry: WorkoutSessionEntry) {
+    if (entry.isCompleted) {
+      updateWorkoutSessionEntry(entry.id, {
+        actualCalories: undefined,
+        actualDuration: undefined,
+        actualHeartRate: undefined,
+        actualReps: undefined,
+        actualTarget: undefined,
+        actualWeight: undefined,
+        completedAt: undefined,
+        isCompleted: false,
+        notes: undefined
+      });
+      return;
+    }
+
+    updateWorkoutSessionEntry(entry.id, {
+      completedAt: new Date().toISOString(),
+      isCompleted: true
+    });
+  }
+
+  function renderGuidedEntryTable(entries: WorkoutSessionEntry[]) {
+    return (
+      <View style={[styles.guidedEntryTable, { borderColor: theme.border }]}>
+        {entries.map((entry, index) => (
+          <View
+            key={entry.id}
+            style={[
+              styles.guidedEntryRow,
+              { borderBottomColor: theme.border },
+              index === entries.length - 1 ? styles.guidedEntryRowLast : null
+            ]}
+          >
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: entry.isCompleted }}
+              style={styles.guidedEntryDone}
+              onPress={() => toggleWorkoutSessionEntryCompleted(entry)}
+            >
+              <View
+                style={[
+                  styles.sessionCheckbox,
+                  {
+                    backgroundColor: entry.isCompleted ? theme.primary : theme.control,
+                    borderColor: entry.isCompleted ? theme.primary : theme.border
+                  }
+                ]}
+              >
+                {entry.isCompleted ? <Ionicons name="checkmark" size={16} color={theme.white} /> : null}
+              </View>
+              <Text style={[styles.sessionCheckboxText, { color: theme.text }]}>
+                {t("set")} {entry.setIteration || index + 1}
+              </Text>
+            </Pressable>
+            {entry.isCompleted ? (
+              <View style={styles.guidedEntryFields}>
+                <View style={[styles.suffixedInput, styles.guidedEntryInput, { backgroundColor: theme.control, borderColor: theme.border }]}>
+                  <TextInput
+                    keyboardType="decimal-pad"
+                    placeholder={t("actualWeight")}
+                    placeholderTextColor={theme.muted}
+                    style={[styles.suffixedTextInput, { color: theme.inputText }]}
+                    value={entry.actualWeight ?? ""}
+                    onChangeText={(actualWeight) => updateWorkoutSessionEntry(entry.id, { actualWeight })}
+                  />
+                  <Text style={[styles.inputSuffix, { color: theme.muted }]}>kg</Text>
+                </View>
+                <AppInput
+                  keyboardType="number-pad"
+                  placeholder={t("actualReps")}
+                  style={styles.guidedEntryInput}
+                  theme={theme}
+                  value={entry.actualReps ?? ""}
+                  onChangeText={(actualReps) => updateWorkoutSessionEntry(entry.id, { actualReps })}
+                />
+              </View>
+            ) : null}
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  function renderRestTimer(entry?: WorkoutSessionEntry) {
+    if (!entry?.plannedTarget) {
+      return null;
+    }
+
+    const plannedSeconds = parseTimerSeconds(entry.plannedTarget);
+    if (plannedSeconds <= 0) {
+      return null;
+    }
+
+    const isCurrentTimer = restTimerEntryId === entry.id;
+    const displayedSeconds = isCurrentTimer ? restTimerRemainingSeconds : plannedSeconds;
+
+    return (
+      <View style={[styles.restTimerCard, { backgroundColor: theme.control, borderColor: theme.border }]}>
+        <View style={styles.restTimerCopy}>
+          <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("restTimer")}</Text>
+          <Text style={[styles.restTimerValue, { color: theme.primary }]}>{formatTimerSeconds(displayedSeconds)}</Text>
+        </View>
+        <View style={styles.restTimerActions}>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.restTimerButton, { borderColor: theme.border }]}
+            onPress={() => {
+              if (!isCurrentTimer || restTimerRemainingSeconds <= 0) {
+                setRestTimerEntryId(entry.id);
+                setRestTimerRemainingSeconds(plannedSeconds);
+              }
+              setIsRestTimerRunning((current) => !current || !isCurrentTimer);
+            }}
+          >
+            <Text style={[styles.restTimerButtonText, { color: theme.primary }]}>
+              {isCurrentTimer && isRestTimerRunning ? t("pauseTimer") : t("startTimer")}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.restTimerButton, { borderColor: theme.border }]}
+            onPress={() => {
+              setRestTimerEntryId(entry.id);
+              setRestTimerRemainingSeconds(plannedSeconds);
+              setIsRestTimerRunning(false);
+            }}
+          >
+            <Text style={[styles.restTimerButtonText, { color: theme.primary }]}>{t("resetTimer")}</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  function renderGuidedPlanPreview(session: WorkoutSession, group: { entries: WorkoutSessionEntry[]; restEntry?: WorkoutSessionEntry }) {
+    const entry = group.entries[0];
+    const setCount = String(group.entries.length || 1);
+    const previewStep = getSessionEntryPreviewStep(session, entry);
+    const restStep = group.restEntry ? getSessionEntryPreviewStep(session, group.restEntry) : null;
+    const targetText = formatExerciseSetTarget({ ...previewStep, setCount });
+
+    return (
+      <View style={[styles.guidedPlanPreview, { borderColor: theme.border }]}>
+        <ExerciseSummaryRow
+          language={language}
+          seriesIndex={entry.seriesIndex + 1}
+          step={previewStep}
+          targetText={targetText}
+          theme={theme}
+          t={t}
+          onPressDetails={() => openExerciseDetail(previewStep)}
+          onPressMuscles={() => openExerciseDetail(previewStep)}
+        />
+        {entry.notes || previewStep.notes ? (
+          <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
+            {entry.notes || previewStep.notes}
+          </Text>
+        ) : null}
+        {restStep && group.restEntry ? (
+          <ExerciseSummaryRow
+            language={language}
+            pairedTargetText={targetText}
+            step={restStep}
+            targetText={getSessionEntrySetTarget(group.restEntry)}
+            theme={theme}
+            t={t}
+            onPressDetails={() => openExerciseDetail(restStep)}
+            onPressMuscles={() => openExerciseDetail(restStep)}
+          />
+        ) : null}
+        {renderRestTimer(group.restEntry)}
+      </View>
+    );
+  }
+
   function renderWorkoutSession() {
     const session = activeWorkoutSession;
 
@@ -10190,47 +10657,69 @@ function GymminApp() {
     const currentEntry = session.entries[Math.min(sessionEntryIndex, session.entries.length - 1)];
 
     if (session.executionMode === "guided") {
+      const guidedGroups = getGuidedEntryGroups(session);
+      const guidedGroupIndex = getGuidedGroupIndex(guidedGroups, sessionEntryIndex, currentEntry);
+      const currentGroup = guidedGroups[guidedGroupIndex] ?? {
+        entries: [currentEntry],
+        firstIndex: Math.min(sessionEntryIndex, session.entries.length - 1),
+        key: currentEntry.id
+      };
+      const canGoBack = guidedGroupIndex > 0;
+      const canGoNext = guidedGroupIndex < guidedGroups.length - 1;
+      const currentStageName = currentGroup.entries[0]?.sourceStageName || t("stage");
+      const shouldShowGuidedEntryTable = currentGroup.entries.some(isWorkoutSessionEntryFillRequired);
+      const elapsedSeconds = Math.max(0, Math.floor((sessionNow - Date.parse(session.startedAt)) / 1000));
+
       return (
         <View style={styles.sessionScreen}>
           <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-              {t("progress")}: {sessionEntryIndex + 1} / {session.entries.length}
-            </Text>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>{formatSessionEntryTitle(currentEntry)}</Text>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatSessionEntryMeta(currentEntry)}</Text>
-            {formatPlannedSessionEntry(currentEntry) ? (
-              <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
-                {formatPlannedSessionEntry(currentEntry)}
+            <View style={styles.sessionProgressRow}>
+              <View style={styles.sessionProgressCopy}>
+                <Text style={[styles.sessionProgressText, { color: theme.text }]}>
+                  {t("exercisePlural")} {guidedGroupIndex + 1}/{guidedGroups.length}
+                </Text>
+              </View>
+              <Text style={[styles.sessionProgressText, styles.sessionProgressStage, { color: theme.primary }]} numberOfLines={1}>
+                {formatTimerSeconds(elapsedSeconds)}
               </Text>
-            ) : null}
-            {renderSessionEntryInputs(currentEntry)}
+            </View>
+            {renderGuidedPlanPreview(session, currentGroup)}
+            {shouldShowGuidedEntryTable ? renderGuidedEntryTable(currentGroup.entries.filter(isWorkoutSessionEntryFillRequired)) : null}
             <View style={styles.sessionActions}>
               <AppButton
-                disabled={sessionEntryIndex === 0}
+                disabled={!canGoBack}
                 style={styles.sessionNavButton}
                 theme={theme}
                 variant="outline"
-                onPress={() => setSessionEntryIndex((current) => Math.max(0, current - 1))}
+                onPress={() => {
+                  const previousGroup = guidedGroups[Math.max(0, guidedGroupIndex - 1)];
+                  setSessionEntryIndex(previousGroup?.firstIndex ?? 0);
+                }}
               >
                 {t("back")}
               </AppButton>
               <AppButton
-                disabled={sessionEntryIndex >= session.entries.length - 1}
+                disabled={!canGoNext}
                 style={styles.sessionNavButton}
                 theme={theme}
                 variant="outline"
-                onPress={() => setSessionEntryIndex((current) => Math.min(session.entries.length - 1, current + 1))}
+                onPress={() => {
+                  const nextGroup = guidedGroups[Math.min(guidedGroups.length - 1, guidedGroupIndex + 1)];
+                  setSessionEntryIndex(nextGroup?.firstIndex ?? sessionEntryIndex);
+                }}
               >
                 {t("next")}
               </AppButton>
             </View>
           </View>
-          <AppButton icon="flag-outline" theme={theme} onPress={finishActiveWorkoutSession}>
-            {t("finishWorkout")}
-          </AppButton>
-          <AppButton icon="close-outline" theme={theme} variant="outline" onPress={abandonActiveWorkoutSession}>
-            {t("cancelWorkout")}
-          </AppButton>
+          <View style={styles.sessionActions}>
+            <AppButton icon="flag-outline" style={styles.sessionNavButton} theme={theme} onPress={requestFinishActiveWorkoutSession}>
+              {t("finish")}
+            </AppButton>
+            <AppButton icon="close-outline" style={styles.sessionNavButton} theme={theme} variant="outline" onPress={abandonActiveWorkoutSession}>
+              {t("cancel")}
+            </AppButton>
+          </View>
         </View>
       );
     }
@@ -10242,8 +10731,10 @@ function GymminApp() {
           <View style={styles.sessionList}>
             {session.entries.map((entry) => (
               <View key={entry.id} style={[styles.sessionEntryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={[styles.workoutName, { color: theme.text }]}>{formatSessionEntryTitle(entry)}</Text>
-                <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatSessionEntryMeta(entry)}</Text>
+                <Text style={[styles.workoutName, { color: theme.text }]}>{formatSessionEntryExecutionTitle(entry)}</Text>
+                {formatSessionEntryExecutionMeta(entry) ? (
+                  <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatSessionEntryExecutionMeta(entry)}</Text>
+                ) : null}
                 {formatPlannedSessionEntry(entry) ? (
                   <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatPlannedSessionEntry(entry)}</Text>
                 ) : null}
@@ -10270,8 +10761,10 @@ function GymminApp() {
             <View key={entry.id} style={[styles.sessionEntryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <View style={styles.sessionEntryHeader}>
                 <View style={styles.workoutInfo}>
-                  <Text style={[styles.workoutName, { color: theme.text }]}>{formatSessionEntryTitle(entry)}</Text>
-                  <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatSessionEntryMeta(entry)}</Text>
+                  <Text style={[styles.workoutName, { color: theme.text }]}>{formatSessionEntryExecutionTitle(entry)}</Text>
+                  {formatSessionEntryExecutionMeta(entry) ? (
+                    <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatSessionEntryExecutionMeta(entry)}</Text>
+                  ) : null}
                 </View>
               </View>
               {formatPlannedSessionEntry(entry) ? (
@@ -10281,12 +10774,14 @@ function GymminApp() {
             </View>
           ))}
         </View>
-        <AppButton icon="flag-outline" theme={theme} onPress={finishActiveWorkoutSession}>
-          {t("finishWorkout")}
-        </AppButton>
-        <AppButton icon="close-outline" theme={theme} variant="outline" onPress={abandonActiveWorkoutSession}>
-          {t("cancelWorkout")}
-        </AppButton>
+        <View style={styles.sessionActions}>
+          <AppButton icon="flag-outline" style={styles.sessionNavButton} theme={theme} onPress={requestFinishActiveWorkoutSession}>
+            {t("finish")}
+          </AppButton>
+          <AppButton icon="close-outline" style={styles.sessionNavButton} theme={theme} variant="outline" onPress={abandonActiveWorkoutSession}>
+            {t("cancel")}
+          </AppButton>
+        </View>
       </View>
     );
   }
@@ -10611,6 +11106,7 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 }
 
 type AppInputProps = TextInputProps & {
+  inputStyle?: object | object[];
   theme: Theme;
 };
 
@@ -10820,18 +11316,22 @@ function ExerciseMuscleModal({ language, onClose, onShowDetails, step, t, theme 
 }
 
 type ExerciseSummaryRowProps = {
+  hideTitle?: boolean;
   language: LanguageCode;
   onPressDetails: () => void;
   onPressMuscles: () => void;
-  setCount: string;
+  pairedTargetText?: string;
+  seriesIndex?: number;
   step: WorkoutStep;
   t: (key: TranslationKey) => string;
   targetText: string;
   theme: Theme;
 };
 
-function ExerciseSummaryRow({ language, onPressDetails, onPressMuscles, setCount, step, t, targetText, theme }: ExerciseSummaryRowProps) {
-  const [sets, target] = targetText.split(" x ");
+function ExerciseSummaryRow({ hideTitle = false, language, onPressDetails, onPressMuscles, pairedTargetText, seriesIndex, step, t, targetText, theme }: ExerciseSummaryRowProps) {
+  const isRestTarget = isRestTargetStep(step);
+  const target = isRestTarget ? targetText : "";
+  const [pairedSets, pairedTarget] = pairedTargetText ? pairedTargetText.split(" x ") : ["", ""];
   const rawExerciseName = typeof step.exerciseName === "string" ? step.exerciseName : "";
   const rawExerciseId = typeof step.exerciseId === "string" ? step.exerciseId : "";
   const exerciseName = rawExerciseName
@@ -10839,42 +11339,65 @@ function ExerciseSummaryRow({ language, onPressDetails, onPressMuscles, setCount
     : step.stageType
       ? t(stageTypeTranslationKeys[step.stageType])
       : t("elementWithoutExercise");
-  const muscleGroups = getWorkoutStepMuscleGroups(step);
-  const primaryMuscles = muscleGroups.primary
-    .map((muscle) => muscleLabels[language][muscle])
-    .slice(0, 2)
-    .join(", ");
-  const meta = [
-    primaryMuscles,
-    step.loadKg ? `${step.loadKg} kg` : ""
-  ].filter(Boolean).join(" · ");
+  const meta = step.loadKg ? `${step.loadKg} kg` : "";
   const canShowMuscleButton = Boolean(rawExerciseId.trim() || rawExerciseName.trim());
+
+  if (isRestTarget) {
+    return (
+      <Pressable accessibilityRole="button" style={styles.exerciseSummaryRow} onPress={onPressDetails}>
+        <View style={styles.exerciseSummaryRestCopy}>
+          <Text style={[styles.workoutDetailExerciseName, { color: theme.text }]} numberOfLines={2}>
+            {exerciseName}
+          </Text>
+          <View style={[styles.exerciseSummaryTile, styles.exerciseSummarySingleTile, { backgroundColor: theme.secondaryBand }]}>
+            <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{target || "-"}</Text>
+          </View>
+        </View>
+        {pairedTargetText ? (
+          <View
+            style={styles.exerciseSummaryTiles}
+            accessibilityLabel={`${pairedSets || "-"} x ${pairedTarget || "-"}`}
+          >
+            <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
+              <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{pairedSets || "-"}</Text>
+            </View>
+            <Text style={[styles.exerciseSummaryTimes, { color: theme.muted }]}>x</Text>
+            <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
+              <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{pairedTarget || "-"}</Text>
+            </View>
+          </View>
+        ) : null}
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable accessibilityRole="button" style={styles.exerciseSummaryRow} onPress={onPressDetails}>
       <View style={styles.exerciseSummaryCopy}>
-        <Text style={[styles.workoutDetailExerciseName, { color: theme.text }]} numberOfLines={2}>
-          {exerciseName}
-        </Text>
+        {hideTitle ? null : (
+          <View style={styles.exerciseSummaryTitleRow}>
+            {typeof seriesIndex === "number" ? (
+              <View style={[styles.workoutDetailSeriesBadge, { backgroundColor: theme.secondaryBand }]}>
+                <Text style={[styles.workoutDetailStageBadgeText, { color: theme.primary }]}>
+                  {seriesIndex}
+                </Text>
+              </View>
+            ) : null}
+            <Text style={[styles.workoutDetailExerciseName, styles.workoutDetailSeriesTitle, { color: theme.text }]} numberOfLines={2}>
+              {exerciseName}
+            </Text>
+          </View>
+        )}
         {meta ? (
           <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={1}>
             {meta}
           </Text>
         ) : null}
       </View>
-      <View style={styles.exerciseSummaryRight}>
-        <View style={styles.exerciseSummaryTiles} accessibilityLabel={`${setCount || "-"} x ${getExerciseTargetDisplay(step)}`}>
-          <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
-            <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{sets || "-"}</Text>
-          </View>
-          <Text style={[styles.exerciseSummaryTimes, { color: theme.muted }]}>x</Text>
-          <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
-            <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{target || "-"}</Text>
-          </View>
-        </View>
-        {canShowMuscleButton ? (
+      {canShowMuscleButton ? (
+        <View style={styles.exerciseSummaryRight}>
           <Pressable
-            accessibilityLabel={t("showWorkedMuscles")}
+            accessibilityLabel={t("showDetails")}
             accessibilityRole="button"
             hitSlop={8}
             style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
@@ -10885,8 +11408,8 @@ function ExerciseSummaryRow({ language, onPressDetails, onPressMuscles, setCount
           >
             <Ionicons name="body-outline" size={20} color={theme.primary} />
           </Pressable>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -10993,7 +11516,7 @@ function PasswordInput({ isVisible, setIsVisible, theme, style, ...props }: Pass
   );
 }
 
-function AppTextarea({ theme, style, ...props }: AppInputProps) {
+function AppTextarea({ inputStyle, theme, style, ...props }: AppInputProps) {
   return (
     <Textarea
       style={[
@@ -11005,7 +11528,7 @@ function AppTextarea({ theme, style, ...props }: AppInputProps) {
       <TextareaInput
         multiline
         placeholderTextColor={theme.muted}
-        style={[styles.gluestackTextareaInput, { color: theme.inputText }]}
+        style={[styles.gluestackTextareaInput, inputStyle, { color: theme.inputText }]}
         {...props}
       />
     </Textarea>
@@ -11568,6 +12091,7 @@ type CollapsiblePanelProps = {
   collapseLabel?: string;
   expandLabel?: string;
   isCollapsed: boolean;
+  leadingAccessory?: ReactNode;
   onToggle: () => void;
   theme: Theme;
   title: string;
@@ -11579,6 +12103,7 @@ function CollapsiblePanel({
   collapseLabel = "Collapse",
   expandLabel = "Expand",
   isCollapsed,
+  leadingAccessory,
   onToggle,
   theme,
   title
@@ -11598,6 +12123,7 @@ function CollapsiblePanel({
             size={20}
             color={theme.primary}
           />
+          {leadingAccessory}
           <Text style={[styles.panelTitle, { color: theme.text }]}>{title}</Text>
         </Pressable>
         {actions}
@@ -11696,11 +12222,11 @@ function parseArticleMarkdown(content: string) {
   return blocks;
 }
 
-function formatArticleDate(value: string) {
+function formatArticleDate(value: string, language: LanguageCode) {
   const [year, month, day] = value.split("-").map(Number);
   const date = new Date(year, month - 1, day);
 
-  return new Intl.DateTimeFormat("pl-PL", {
+  return new Intl.DateTimeFormat(language === "pl" ? "pl-PL" : "en-US", {
     day: "numeric",
     month: "long",
     year: "numeric"
@@ -11730,12 +12256,14 @@ function capitalizeFirstLetter(value: string) {
 type ArticleDetailProps = {
   article: Article;
   backLabel: string;
+  language: LanguageCode;
   onBack: () => void;
   theme: Theme;
 };
 
-function ArticleDetail({ article, backLabel, onBack, theme }: ArticleDetailProps) {
-  const blocks = useMemo(() => parseArticleMarkdown(article.content), [article.content]);
+function ArticleDetail({ article, backLabel, language, onBack, theme }: ArticleDetailProps) {
+  const translation = getArticleTranslation(article, language);
+  const blocks = useMemo(() => parseArticleMarkdown(translation.content), [translation.content]);
 
   return (
     <View style={styles.articleDetail}>
@@ -11751,11 +12279,16 @@ function ArticleDetail({ article, backLabel, onBack, theme }: ArticleDetailProps
       </AppButton>
 
       <View style={[styles.articleDetailPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.articleCategory, { color: theme.primary }]}>{article.category}</Text>
-        <Text style={[styles.articleDetailTitle, { color: theme.text }]}>{article.title}</Text>
+        <Text style={[styles.articleCategory, { color: theme.primary }]}>{translation.category}</Text>
+        <Text style={[styles.articleDetailTitle, { color: theme.text }]}>{translation.title}</Text>
         <Text style={[styles.articleMeta, { color: theme.muted }]}>
-          {formatArticleDate(article.publishedAt)} · {article.readTime}
+          {formatArticleDate(article.publishedAt, language)} · {article.readTime}
         </Text>
+        {translation.summary ? (
+          <Text style={[styles.articleParagraph, { color: theme.muted }]}>
+            {translation.summary}
+          </Text>
+        ) : null}
 
         <View style={[styles.legalDivider, { backgroundColor: theme.border }]} />
 
@@ -14108,8 +14641,22 @@ const styles = StyleSheet.create({
     gap: 8
   },
   workoutDetailSeriesRow: {
-    borderTopWidth: 1,
-    paddingTop: 10
+    borderBottomWidth: 1,
+    paddingBottom: 12,
+    paddingTop: 4
+  },
+  workoutDetailSeriesRowLast: {
+    borderBottomWidth: 0
+  },
+  workoutDetailSeriesBadge: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 34,
+    justifyContent: "center",
+    width: 34
+  },
+  workoutDetailSeriesTitle: {
+    flex: 1
   },
   workoutDetailElementRow: {
     gap: 3,
@@ -14132,6 +14679,20 @@ const styles = StyleSheet.create({
     gap: 3,
     minWidth: 0
   },
+  exerciseSummaryTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    minWidth: 0
+  },
+  exerciseSummaryRestCopy: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "flex-start",
+    minWidth: 0
+  },
   exerciseSummaryRight: {
     alignItems: "center",
     flexDirection: "row",
@@ -14150,6 +14711,9 @@ const styles = StyleSheet.create({
     minHeight: 34,
     minWidth: 36,
     paddingHorizontal: 8
+  },
+  exerciseSummarySingleTile: {
+    minWidth: 52
   },
   exerciseSummaryTileText: {
     fontSize: 13,
@@ -14215,6 +14779,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10
   },
+  sessionProgressRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between"
+  },
+  sessionProgressCopy: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0
+  },
+  sessionProgressStage: {
+    flexShrink: 1,
+    fontWeight: "900",
+    textAlign: "right"
+  },
+  sessionProgressText: {
+    fontSize: 16,
+    fontWeight: "900"
+  },
   sessionNavButton: {
     flex: 1
   },
@@ -14247,6 +14831,71 @@ const styles = StyleSheet.create({
   },
   sessionNoteInput: {
     minHeight: 76
+  },
+  guidedPlanPreview: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    padding: 12
+  },
+  guidedEntryTable: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  guidedEntryRow: {
+    borderBottomWidth: 1,
+    gap: 10,
+    padding: 10
+  },
+  guidedEntryRowLast: {
+    borderBottomWidth: 0
+  },
+  guidedEntryDone: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10
+  },
+  guidedEntryFields: {
+    flexDirection: "row",
+    gap: 10
+  },
+  guidedEntryInput: {
+    flex: 1
+  },
+  restTimerCard: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between",
+    padding: 10
+  },
+  restTimerCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  restTimerValue: {
+    fontSize: 24,
+    fontWeight: "900"
+  },
+  restTimerActions: {
+    flexDirection: "row",
+    gap: 8
+  },
+  restTimerButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    minHeight: 36,
+    minWidth: 62,
+    justifyContent: "center",
+    paddingHorizontal: 10
+  },
+  restTimerButtonText: {
+    fontSize: 12,
+    fontWeight: "900"
   },
   sessionList: {
     gap: 10
@@ -14313,6 +14962,14 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     fontSize: 14,
     fontWeight: "800"
+  },
+  profileScreen: {
+    gap: 14
+  },
+  profileActionsRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "flex-end"
   },
   stepCard: {
     borderRadius: 8,
@@ -14715,6 +15372,13 @@ const styles = StyleSheet.create({
   reminderMessageBlock: {
     gap: 10,
     paddingVertical: 8
+  },
+  reminderDescriptionTextarea: {
+    minHeight: 58
+  },
+  reminderDescriptionInput: {
+    minHeight: 58,
+    paddingBottom: 10
   },
   settingsPlaceholder: {
     alignItems: "center",

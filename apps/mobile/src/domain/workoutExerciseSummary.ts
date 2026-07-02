@@ -70,9 +70,17 @@ export function getExerciseTargetDisplay(step: Pick<WorkoutStep, "goalType"> & {
   return step.goalType === "time" ? formatTimeTarget(target) || "-" : target;
 }
 
-export function formatExerciseSetTarget(step: Pick<WorkoutStep, "goalType"> & { setCount?: unknown; targetValue?: unknown }): string {
+export function isRestTargetStep(step: { stageType?: unknown }): boolean {
+  return safeTrim(step.stageType) === "rest";
+}
+
+export function formatExerciseSetTarget(step: Pick<WorkoutStep, "goalType"> & { setCount?: unknown; stageType?: unknown; targetValue?: unknown }): string {
   const sets = normalizeSetCount(step.setCount);
   const target = getExerciseTargetDisplay(step);
+
+  if (isRestTargetStep(step)) {
+    return target;
+  }
 
   return `${sets} x ${target}`;
 }

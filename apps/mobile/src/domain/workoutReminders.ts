@@ -9,6 +9,7 @@ export type WorkoutReminderSettings = {
   daysOfWeek: number[];
   time: string;
   message: string;
+  description?: string;
   onlyIfNoWorkoutToday: boolean;
   updatedAt?: string;
 };
@@ -46,6 +47,9 @@ async function getNotificationsModule(): Promise<NotificationsModule | null> {
 export function getDefaultWorkoutReminderSettings(language: "pl" | "en" = "en"): WorkoutReminderSettings {
   return {
     daysOfWeek: [1, 3, 5],
+    description: language === "pl"
+      ? "Otwórz Gymmin i wykonaj zaplanowany trening."
+      : "Open Gymmin and complete your planned workout.",
     enabled: false,
     message: language === "pl" ? "Czas na trening" : "Time to train",
     onlyIfNoWorkoutToday: true,
@@ -92,6 +96,9 @@ export function normalizeWorkoutReminderSettings(
 
   return {
     daysOfWeek,
+    description: typeof raw.description === "string" && raw.description.trim()
+      ? raw.description.trim()
+      : defaults.description,
     enabled: raw.enabled === true,
     message: typeof raw.message === "string" && raw.message.trim() ? raw.message.trim() : defaults.message,
     onlyIfNoWorkoutToday: raw.onlyIfNoWorkoutToday !== false,
@@ -210,6 +217,14 @@ export function getUpcomingReminderDates(settings: WorkoutReminderSettings, sess
   return dates;
 }
 
+export function getWorkoutReminderNotificationContent(settings: WorkoutReminderSettings) {
+  return {
+    body: settings.description ?? "",
+    sound: true,
+    title: settings.message
+  };
+}
+
 export async function cancelWorkoutReminders(userId?: string | null) {
   const notifications = await getNotificationsModule();
   const ids = await loadScheduledNotificationIds(userId);
@@ -243,11 +258,7 @@ export async function scheduleWorkoutReminders(
   const ids: string[] = [];
   for (const reminderDate of getUpcomingReminderDates(settings, sessions)) {
     const id = await notifications.scheduleNotificationAsync({
-      content: {
-        body: settings.message,
-        sound: true,
-        title: settings.message
-      },
+      content: getWorkoutReminderNotificationContent(settings),
       trigger: createWorkoutReminderDateTrigger(notifications, reminderDate)
     });
     ids.push(id);

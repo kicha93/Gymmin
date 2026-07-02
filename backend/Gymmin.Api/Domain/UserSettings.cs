@@ -41,6 +41,7 @@ public sealed record WorkoutReminderSettings(
     IReadOnlyList<int> DaysOfWeek,
     string Time,
     string Message,
+    string? Description,
     bool OnlyIfNoWorkoutToday,
     DateTimeOffset? UpdatedAt);
 

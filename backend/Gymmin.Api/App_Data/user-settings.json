@@ -9,9 +9,9 @@
     "defaultWorkoutExecutionMode": "guided",
     "collapsedPanels": {
       "settings-account": false,
-      "settings-info": false,
+      "settings-info": true,
       "settings-integrations": true,
-      "settings-notifications": false,
+      "settings-notifications": true,
       "settings-preferences": false,
       "settings-training": false,
       "home-articles": true
@@ -29,6 +29,6 @@
       "onlyIfNoWorkoutToday": true,
       "updatedAt": "2026-07-02T05:40:31.921+00:00"
     },
-    "updatedAt": "2026-07-02T09:50:40.609+00:00"
+    "updatedAt": "2026-07-02T17:14:57.473+00:00"
   }
 }

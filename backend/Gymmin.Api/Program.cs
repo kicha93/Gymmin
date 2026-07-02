@@ -979,11 +979,6 @@ static string? ValidateWorkout(UpsertWorkoutRequest request)
 
 static string? ValidateBugReport(CreateBugReportRequest request)
 {
-    if (string.IsNullOrWhiteSpace(request.Title))
-    {
-        return "Title is required.";
-    }
-
     if (string.IsNullOrWhiteSpace(request.Description))
     {
         return "Description is required.";

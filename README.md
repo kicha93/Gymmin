@@ -140,6 +140,7 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 ## Current Notes
 
 - The app is local-first for anonymous users. Users can create and keep manual workouts on the phone without logging in.
+- The Profile screen owns account actions: change password, active sessions, AI credits and logout. Settings are kept for app preferences.
 - Registration includes username, email, password, repeated password and password preview in the mobile UI. The backend contract still receives a single password field.
 - Auth hardening is implemented: token expiry, active sessions, single-session revoke, logout-all, change password and password reset by email/token. Reset tokens are stored only as hashes.
 - After login, workouts are synchronized to the user's backend account and kept locally as a cache/offline copy.
@@ -149,13 +150,16 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - Users can delete a single workout history entry. Mobile marks the `WorkoutSession` with `deletedAt`, hides it from history/progress immediately, and syncs the tombstone later when account sync is available.
 - Deleting a workout definition does not delete workout history. If the workout already has active history entries, the mobile app shows a stronger irreversible-action confirmation before soft-deleting the workout definition.
 - The read-only workout view has collapsible sections, and session status labels are localized instead of rendering raw enum values such as `abandoned`.
-- The read-only workout view shows compact exercise rows with set/target tiles such as `[3] x [8]` and a `body-outline` muscle button for catalog exercises.
-- The per-exercise muscle modal reuses the same front/back SVG anatomy map as the workout overview, filtered to one exercise.
+- The read-only workout view shows compact exercise rows with set/target tiles such as `[3] x [8]`; rest elements use a single tile such as `[2m]`.
+- The `body-outline` button on exercise rows opens the same exercise detail page as tapping the row.
+- The per-exercise anatomy view reuses the same front/back SVG anatomy map as the workout overview, filtered to one exercise.
 - Tapping an exercise row opens a dedicated exercise detail page with metadata, animation placeholder, worked muscles, technique placeholders and exercise history/progress when local data exists.
 - Starting a workout no longer asks for execution mode every time. The app uses the workout execution mode saved in Settings for the next session.
 - Mobile account-scoped data uses per-user AsyncStorage keys: `gymmin.account.anonymous.*` for signed-out data and `gymmin.account.{userId}.*` for signed-in cache/sync metadata. Account switching does not silently merge data from the previous account.
 - If signed-out local data exists after login, the app asks whether to merge it into the current account, keep it for later, or delete only the anonymous local data.
-- Workout reminders are local system notifications. They were manually verified in the standalone Android APK / development build. Their settings sync through `/api/settings`, while scheduled notification IDs stay per-user on the device under `gymmin.account.{owner}.workoutReminderNotificationIds`.
+- Workout reminders are local system notifications. They have separate `message` and `description` fields, were manually verified in the standalone Android APK / development build, and sync through `/api/settings`, while scheduled notification IDs stay per-user on the device under `gymmin.account.{owner}.workoutReminderNotificationIds`.
+- The home screen shows at most five workouts in the Workouts section and links to the full workout list when more exist.
+- Local articles are multilingual. Each article stores per-language `translations`, uses `defaultLanguage` fallback, and the current training-plan article has both PL and EN content.
 - Workout list sorting is stored locally with workouts. Default sorting is by creation date descending; the user can switch between creation date/alphabetical and ascending/descending.
 - Login and registration are connected to the backend.
 - The mobile app exposes the AI workout creator only to logged-in users, and backend creator endpoints require bearer tokens.
@@ -166,7 +170,7 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - Android AI credit purchases are prepared through Google Play Billing: mobile sends the Google Play `purchaseToken` to `POST /api/ai-credits/purchases/google-play/verify`, and the backend validates the purchase, appends a `Purchase` ledger transaction, updates `AiCreditPurchases`, and performs server-side consume. `purchaseToken` is hashed and never stored plaintext.
 - Mobile uses `react-native-iap@15.3.4` plus `react-native-nitro-modules` as the native Google Play Billing stack. Android debug APK and release AAB build smoke pass with this stack when `ANDROID_HOME` / `ANDROID_SDK_ROOT` points to an installed Android SDK. The AAB build uses a short temporary build path to avoid Windows CMake path-length failures in Nitro/IAP native sources. Real billing tests still require Play Console one-time products (`ai_tokens_10`, `ai_tokens_30`, `ai_tokens_100`), license testers, a Google Play service account, and installing the app from an Internal Testing track.
 - Workout creator jobs are asynchronous and persisted on both sides: the phone stores the active `jobId`, and the backend stores job state in File or Database storage.
-- Bug reports call the backend and are sent by SMTP when SMTP is configured.
+- Bug reports call the backend and are sent by SMTP when SMTP is configured. Email subjects use the app-prefixed format `[Gymmin][Bug] {Title}` / `[Gymmin][Błąd] {Tytuł}` with safe fallback titles.
 - Every backend response includes `X-Correlation-Id`. Mobile sends `X-Correlation-Id` on API requests and attaches recent correlation ids plus local diagnostic events to bug reports.
 - Backend unexpected errors return a safe JSON error response with `correlationId`; stack traces are logged server-side only.
 - `/api/diagnostics` is available only in development/testing or when explicitly enabled, and does not expose secrets.

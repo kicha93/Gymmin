@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Gymmin.Api.Domain;
+using Gymmin.Api.Services;
 
 namespace Gymmin.Api.Tests;
 
@@ -74,6 +75,30 @@ public sealed class WorkoutCreatorAndBugReportTests : IClassFixture<GymminApiFac
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<BugReportResponse>();
         Assert.Equal("sent", body!.Status);
+    }
+
+    [Fact]
+    public void Bug_report_subject_uses_app_prefix_and_fallback_title()
+    {
+        Assert.Equal(
+            "[Gymmin][Błąd] Nie mogę zapisać treningu",
+            SmtpBugReportEmailSender.BuildSubject(new CreateBugReportRequest(
+                " Nie mogę zapisać treningu ",
+                "Opis",
+                "Android",
+                "Settings",
+                "pl",
+                "1.0")));
+
+        Assert.Equal(
+            "[Gymmin][Bug] Bug report",
+            SmtpBugReportEmailSender.BuildSubject(new CreateBugReportRequest(
+                "",
+                "Description",
+                "Android",
+                "Settings",
+                "en",
+                "1.0")));
     }
 
     [Fact]

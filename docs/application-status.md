@@ -114,6 +114,8 @@ Na stronie głównej są:
 - panel treningów,
 - panel artykułów.
 
+Panel treningów na stronie głównej pokazuje maksymalnie 5 treningów i prowadzi do pełnej listy, jeśli treningów jest więcej.
+
 Panel logowania można zamknąć. Decyzja jest zapamiętywana. Jeżeli panel jest widoczny dla niezalogowanego użytkownika, ikona profilu w headerze jest ukryta.
 
 ### Treningi
@@ -217,6 +219,9 @@ Aktualne zachowanie historii:
 Read-only workout view ma zwijane/rozwijane sekcje, m.in. przeglad, notatki,
 etapy i historie wykonania. Sekcja `Ostatni wynik` zostala usunieta z tego
 widoku.
+Wiersze cwiczen uzywaja kompaktowych kafelkow celu, np. `[3] x [8]`, a odpoczynek
+pokazuje pojedynczy kafelek, np. `[2m]`. Ikona `body-outline` w wierszu cwiczenia
+otwiera strone szczegolow cwiczenia, tak samo jak tapniecie wiersza.
 
 Historia pokazuje:
 
@@ -297,12 +302,12 @@ Dogrywka 12A.1: AiCredits concurrency, idempotency i refund zostaly sprawdzone n
 ### Artykuły
 
 Artykuły są lokalne. Widok artykułu ma datę publikacji, czas czytania, nagłówki, akapity i czytelne karty planu tygodniowego zamiast szerokiej tabeli.
+Model artykulu obsluguje `translations` per jezyk oraz `defaultLanguage`. Lista i szczegoly artykulu wybieraja wersje zgodna z jezykiem aplikacji, a jesli jej brakuje, wracaja do jezyka domyslnego albo pierwszej dostepnej wersji. Aktualny artykul o tworzeniu planu treningowego ma wariant PL i EN.
 
 ### Ustawienia
 
 Sekcje:
 
-- Konto,
 - Preferencje,
 - Trening,
 - Powiadomienia,
@@ -323,6 +328,8 @@ Działa:
 
 Integracje są disabled/placeholder.
 
+Opcje konta są w widoku Profil, nie w Ustawieniach. Profil zawiera dane konta, zmianę hasła, aktywne sesje, skrót do tokenów AI i wylogowanie.
+
 ### Przypomnienia treningowe
 
 Przypomnienia są lokalnymi powiadomieniami systemowymi na telefonie. Zostały ręcznie zweryfikowane w standalone Android APK / dev buildzie. Backend nie wysyła powiadomień z serwera.
@@ -333,6 +340,7 @@ Ustawienia:
 - dni tygodnia,
 - godzina,
 - wiadomość,
+- opis,
 - `onlyIfNoWorkoutToday`.
 
 Ustawienia synchronizują się przez `/api/settings`. Zaplanowane notification IDs są lokalne i per-user. Po logout albo zmianie konta aplikacja przelicza przypomnienia dla aktualnego kontekstu. `onlyIfNoWorkoutToday` działa best-effort na podstawie lokalnych `WorkoutSession`.
@@ -345,7 +353,7 @@ Są ekrany:
 - Kontakt,
 - Zgłoś błąd.
 
-Zgłoszenie błędu idzie do backendu przez `POST /api/bug-reports`. Aplikacja dołącza w tle informacje o urządzeniu, systemie, języku i ekranie. Backend wysyła mail SMTP z tematem `Błąd {GUID}`.
+Zgłoszenie błędu idzie do backendu przez `POST /api/bug-reports`. Aplikacja dołącza w tle informacje o urządzeniu, systemie, języku i ekranie. Backend wysyła mail SMTP z tematem `[Gymmin][Błąd] {Tytuł}` albo `[Gymmin][Bug] {Title}`. Jeśli tytuł jest pusty, backend używa bezpiecznego fallbacku.
 
 ### Diagnostyka i monitoring
 

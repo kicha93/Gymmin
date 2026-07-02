@@ -76,6 +76,7 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
             [1, 3, 5],
             "18:00",
             "Time to train",
+            "Open Gymmin and complete your planned workout.",
             true,
             DateTimeOffset.UtcNow);
         var request = new UpsertUserSettingsRequest(
@@ -103,6 +104,7 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
         Assert.NotNull(settings.WorkoutReminders);
         Assert.True(settings.WorkoutReminders!.Enabled);
         Assert.Equal("18:00", settings.WorkoutReminders.Time);
+        Assert.Equal("Open Gymmin and complete your planned workout.", settings.WorkoutReminders.Description);
         Assert.Equal([1, 3, 5], settings.WorkoutReminders.DaysOfWeek);
     }
 }

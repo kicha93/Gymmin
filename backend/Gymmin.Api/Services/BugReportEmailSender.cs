@@ -35,7 +35,7 @@ public sealed class SmtpBugReportEmailSender(IConfiguration configuration) : IBu
 
         using var message = new MailMessage(from, to)
         {
-            Subject = $"Błąd {reportId}",
+            Subject = BuildSubject(report),
             Body = BuildBody(reportId, report),
             BodyEncoding = Encoding.UTF8,
             SubjectEncoding = Encoding.UTF8
@@ -51,11 +51,25 @@ public sealed class SmtpBugReportEmailSender(IConfiguration configuration) : IBu
         await client.SendMailAsync(message, cancellationToken);
     }
 
+    public static string BuildSubject(CreateBugReportRequest report)
+    {
+        var isPolish = string.Equals(report.Language?.Trim(), "pl", StringComparison.OrdinalIgnoreCase);
+        var title = report.Title?.Trim();
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            title = isPolish ? "Zgłoszenie błędu" : "Bug report";
+        }
+
+        return isPolish
+            ? $"[Gymmin][Błąd] {title}"
+            : $"[Gymmin][Bug] {title}";
+    }
+
     private static string BuildBody(Guid reportId, CreateBugReportRequest report)
     {
         var builder = new StringBuilder();
         builder.AppendLine($"Id zgłoszenia: {reportId}");
-        builder.AppendLine($"Tytuł: {report.Title.Trim()}");
+        builder.AppendLine($"Tytuł: {Normalize(report.Title)}");
         builder.AppendLine($"Ekran: {Normalize(report.Screen)}");
         builder.AppendLine($"Urządzenie i system: {Normalize(report.Device)}");
         builder.AppendLine($"Język aplikacji: {Normalize(report.Language)}");
@@ -66,6 +80,7 @@ public sealed class SmtpBugReportEmailSender(IConfiguration configuration) : IBu
             builder.AppendLine("Diagnostyka:");
             builder.AppendLine(JsonSerializer.Serialize(diagnostics, new JsonSerializerOptions { WriteIndented = true }));
         }
+
         builder.AppendLine();
         builder.AppendLine("Opis:");
         builder.AppendLine(report.Description.Trim());

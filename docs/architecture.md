@@ -101,6 +101,16 @@ Rejestracja ma potwierdzenie hasła i podgląd hasła po stronie UI. Backend nad
 
 Auth hardening obejmuje wygasanie tokenów, `RevokedAt`, listę aktywnych sesji, wylogowanie pojedynczej sesji, logout-all, zmianę hasła i reset hasła przez email/token. Token resetu hasła jest zapisywany wyłącznie jako hash. Po zmianie hasła aktywna zostaje tylko bieżąca sesja; po resecie hasła unieważniane są wszystkie sesje użytkownika.
 
+### Profile avatar
+
+Profile avatar is an account feature. Mobile uses `expo-image-picker` to pick
+an image and uploads it as `multipart/form-data` to `POST /api/profile/avatar`.
+The backend validates MIME type and magic bytes, stores the image file under
+`App_Data/avatars`, and stores only metadata on the user record. `GET
+/api/auth/me` returns optional `avatarUrl` and `avatarUpdatedAt`; mobile uses
+those fields to render the header/profile avatar and to cache-bust the image.
+Anonymous users keep the default profile icon.
+
 ### AI jobs
 
 Aktywny job kreatora jest local-first i account-scoped. Mobile rozróżnia:
@@ -360,3 +370,37 @@ Ngrok i Cloudflare są fallbackiem, ale GitHub Release jest preferowany, bo pobi
 4. UX konfliktów multi-device.
 5. Potwierdzanie emaila, OAuth/social login i 2FA jako osobne przyszłe etapy.
 6. Garmin integration pozostaje placeholderem i jest poza aktualnym zakresem prac.
+
+## Achievements architecture note
+
+Stage 13B keeps achievement definitions mobile-static and adds backend sync for
+unlocked achievement state. Definitions live in
+`apps/mobile/src/domain/achievements.ts`. Unlocked achievements and app usage
+stats are stored with the same account-scoped AsyncStorage convention as other
+local-first data:
+
+```text
+gymmin.account.anonymous.achievements
+gymmin.account.{userId}.achievements
+gymmin.account.anonymous.appUsageStats
+gymmin.account.{userId}.appUsageStats
+gymmin.account.anonymous.achievementsSync
+gymmin.account.{userId}.achievementsSync
+```
+
+Metrics are derived from local `WorkoutSession` data. Only completed,
+non-deleted sessions count for training achievements. Active, abandoned and
+deleted sessions are ignored. Once unlocked, an achievement stays unlocked
+locally even if a history entry is deleted later.
+Weekly achievement metrics use Monday-based local calendar weeks, including
+`longestWeeklyStreak` and `maxCompletedWorkoutsInSingleWeek`.
+
+Signed-in users sync through `GET /api/achievements` and
+`POST /api/sync/achievements`. The backend stores `UserAchievements` and
+`UserAppUsageStats`, unions unlocked achievements by `achievementId`, preserves
+the earliest `unlockedAt`, and merges app usage by max foreground seconds.
+Anonymous achievements can be merged into an account through the existing
+anonymous data merge dialog. Mobile unit tests cover achievements metrics,
+foreground app usage clamping, storage isolation, merge helpers and unlock
+evaluation; backend integration tests cover auth, validation, user scoping and
+sync merge rules.

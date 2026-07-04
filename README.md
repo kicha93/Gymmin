@@ -25,6 +25,7 @@ backend/
   Gymmin.Api/   ASP.NET Core API
 docs/
   architecture.md
+  achievements.md
   application-status.md
   backend-sync.md
   build-android-apk.md
@@ -135,18 +136,21 @@ dotnet build
 
 Backend tests run against an isolated SQLite database in Database provider mode. OpenAI workout generation and SMTP email sending are replaced with fakes, so tests never call the real OpenAI API and never send real email.
 
-Mobile unit tests use Vitest and cover pure helper logic for account-scoped local storage, favorite exercise tombstones, workout session conflict resolution/progress filtering, workout reminder scheduling rules and the diagnostics ring buffer. They do not render React Native UI and do not run native modules.
+Mobile unit tests use Vitest and cover pure helper logic for account-scoped local storage, favorite exercise tombstones, workout session conflict resolution/progress filtering, workout reminder scheduling rules, achievements/app-usage metrics and the diagnostics ring buffer. They do not render React Native UI and do not run native modules.
 
 ## Current Notes
 
 - The app is local-first for anonymous users. Users can create and keep manual workouts on the phone without logging in.
 - The Profile screen owns account actions: change password, active sessions, AI credits and logout. Settings are kept for app preferences.
 - Registration includes username, email, password, repeated password and password preview in the mobile UI. The backend contract still receives a single password field.
+- Signed-in users can upload, replace and delete a profile avatar from the Profile screen. Avatars are uploaded as `multipart/form-data`, stored as files on the backend, exposed through `GET /api/profile/avatar`, and displayed in the mobile header/profile with `avatarUpdatedAt` cache busting. Anonymous users keep the default icon.
+- Installed APKs contain the API base URL used at build time. For GitHub Release phone builds, pass a current backend URL with `npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://..."` or set `GYMMIN_APK_API_BASE_URL`; the wrapper checks `/health` and refuses to build against a stale/dead tunnel.
 - Auth hardening is implemented: token expiry, active sessions, single-session revoke, logout-all, change password and password reset by email/token. Reset tokens are stored only as hashes.
 - After login, workouts are synchronized to the user's backend account and kept locally as a cache/offline copy.
 - After login, app settings are synchronized to the user's backend account and kept locally as a cache/offline copy.
 - After login, catalog-only favorite exercises are synchronized to the user's backend account and remain available locally/offline.
 - After login, workout execution sessions are synchronized to the user's backend account and remain available locally/offline. History and progress are still calculated on-device from the local synchronized session cache.
+- Achievements are visible in Profile and sync for signed-in users. The app ships 30 static achievements, evaluates progress from local `WorkoutSession` data, stores unlocked achievements/app usage per local owner, syncs unlocked state through `/api/sync/achievements`, and keeps unlocked achievements unlocked even if history is later deleted. Weekly achievements use Monday-based calendar weeks. See `docs/achievements.md`.
 - Users can delete a single workout history entry. Mobile marks the `WorkoutSession` with `deletedAt`, hides it from history/progress immediately, and syncs the tombstone later when account sync is available.
 - Deleting a workout definition does not delete workout history. If the workout already has active history entries, the mobile app shows a stronger irreversible-action confirmation before soft-deleting the workout definition.
 - The read-only workout view has collapsible sections, and session status labels are localized instead of rendering raw enum values such as `abandoned`.

@@ -22,6 +22,8 @@ public sealed class GymminDbContext : DbContext
     public DbSet<AiCreditAccountEntity> AiCreditAccounts => Set<AiCreditAccountEntity>();
     public DbSet<AiCreditTransactionEntity> AiCreditTransactions => Set<AiCreditTransactionEntity>();
     public DbSet<AiCreditPurchaseEntity> AiCreditPurchases => Set<AiCreditPurchaseEntity>();
+    public DbSet<UserAchievementEntity> UserAchievements => Set<UserAchievementEntity>();
+    public DbSet<UserAppUsageStatsEntity> UserAppUsageStats => Set<UserAppUsageStatsEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +36,8 @@ public sealed class GymminDbContext : DbContext
             entity.Property(user => user.Name).HasMaxLength(200).IsRequired();
             entity.Property(user => user.PasswordHash).IsRequired();
             entity.Property(user => user.PasswordSalt).IsRequired();
+            entity.Property(user => user.AvatarFileName).HasMaxLength(260);
+            entity.Property(user => user.AvatarContentType).HasMaxLength(80);
             entity.HasIndex(user => user.NormalizedEmail).IsUnique();
         });
 
@@ -217,6 +221,31 @@ public sealed class GymminDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<UserAchievementEntity>(entity =>
+        {
+            entity.ToTable("UserAchievements");
+            entity.HasKey(achievement => achievement.Id);
+            entity.Property(achievement => achievement.AchievementId).HasMaxLength(100).IsRequired();
+            entity.HasIndex(achievement => new { achievement.UserId, achievement.AchievementId }).IsUnique();
+            entity.HasIndex(achievement => achievement.UserId);
+            entity.HasIndex(achievement => achievement.AchievementId);
+            entity.HasIndex(achievement => achievement.UnlockedAt);
+            entity.HasOne(achievement => achievement.User)
+                .WithMany()
+                .HasForeignKey(achievement => achievement.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserAppUsageStatsEntity>(entity =>
+        {
+            entity.ToTable("UserAppUsageStats");
+            entity.HasKey(stats => stats.UserId);
+            entity.HasOne(stats => stats.User)
+                .WithOne()
+                .HasForeignKey<UserAppUsageStatsEntity>(stats => stats.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         ApplyTextCompatibleConverters(modelBuilder);
     }
 
@@ -271,6 +300,9 @@ public sealed class UserEntity
     public string PasswordHash { get; set; } = "";
     public int PasswordIterations { get; set; }
     public string PasswordSalt { get; set; } = "";
+    public string? AvatarFileName { get; set; }
+    public string? AvatarContentType { get; set; }
+    public DateTimeOffset? AvatarUpdatedAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public List<UserSessionEntity> Sessions { get; set; } = [];
@@ -438,6 +470,26 @@ public sealed class AiCreditPurchaseEntity
     public DateTimeOffset? VerifiedAt { get; set; }
     public DateTimeOffset? CreditedAt { get; set; }
     public DateTimeOffset? ConsumedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public UserEntity? User { get; set; }
+}
+
+public sealed class UserAchievementEntity
+{
+    public Guid Id { get; set; }
+    public string UserId { get; set; } = "";
+    public string AchievementId { get; set; } = "";
+    public DateTimeOffset UnlockedAt { get; set; }
+    public double? ProgressAtUnlock { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public UserEntity? User { get; set; }
+}
+
+public sealed class UserAppUsageStatsEntity
+{
+    public string UserId { get; set; } = "";
+    public long TotalForegroundSeconds { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public UserEntity? User { get; set; }
 }

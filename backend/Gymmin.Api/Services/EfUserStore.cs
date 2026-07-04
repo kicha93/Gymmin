@@ -114,6 +114,47 @@ public sealed class EfUserStore : IUserStore
 
     public AuthUserResponse? GetUserByToken(string token) => GetSessionByToken(token)?.User;
 
+    public UserAvatarMetadata? GetAvatarMetadata(string userId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var user = db.Users.FirstOrDefault(item => item.Id == userId);
+        return user is null ? null : ToAvatarMetadata(user);
+    }
+
+    public bool UpdateAvatar(string userId, string fileName, string contentType, DateTimeOffset updatedAt)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var user = db.Users.FirstOrDefault(item => item.Id == userId);
+        if (user is null)
+        {
+            return false;
+        }
+
+        user.AvatarFileName = fileName;
+        user.AvatarContentType = contentType;
+        user.AvatarUpdatedAt = updatedAt;
+        user.UpdatedAt = updatedAt;
+        db.SaveChanges();
+        return true;
+    }
+
+    public bool ClearAvatar(string userId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var user = db.Users.FirstOrDefault(item => item.Id == userId);
+        if (user is null)
+        {
+            return false;
+        }
+
+        user.AvatarFileName = null;
+        user.AvatarContentType = null;
+        user.AvatarUpdatedAt = null;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+        db.SaveChanges();
+        return true;
+    }
+
     public void RevokeSession(string token)
     {
         var tokenHash = AuthSecurity.HashToken(token);
@@ -293,7 +334,25 @@ public sealed class EfUserStore : IUserStore
 
     private static AuthUserResponse ToResponse(UserEntity user)
     {
-        return new AuthUserResponse(user.Id, user.Email, user.Name);
+        var avatar = ToAvatarMetadata(user);
+        return new AuthUserResponse(
+            user.Id,
+            user.Email,
+            user.Name,
+            FileSystemUserAvatarStorage.BuildAvatarUrl(avatar),
+            avatar?.UpdatedAt);
+    }
+
+    private static UserAvatarMetadata? ToAvatarMetadata(UserEntity user)
+    {
+        if (string.IsNullOrWhiteSpace(user.AvatarFileName) ||
+            string.IsNullOrWhiteSpace(user.AvatarContentType) ||
+            user.AvatarUpdatedAt is null)
+        {
+            return null;
+        }
+
+        return new UserAvatarMetadata(user.AvatarFileName, user.AvatarContentType, user.AvatarUpdatedAt.Value);
     }
 
     private string AddSession(UserEntity user, DateTimeOffset now, AuthRequestMetadata? metadata)

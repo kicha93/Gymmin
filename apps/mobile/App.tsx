@@ -29,8 +29,12 @@ import { SvgXml } from "react-native-svg";
 import {
   Alert,
   Animated,
+  AppState,
   BackHandler,
   Dimensions,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
   Linking,
   Modal,
   NativeModules,
@@ -46,8 +50,34 @@ import {
   View
 } from "react-native";
 import type { TextInputProps } from "react-native";
+import type { ImageSourcePropType } from "react-native";
 
 import { BUILD_API_BASE_URL } from "./src/config/buildConfig";
+import { applyAvatarResponse, buildAvatarImageUri, type AvatarResponse } from "./src/domain/avatar";
+import {
+  achievementDefinitions,
+  ACHIEVEMENTS_STORAGE_BASE_KEY,
+  ACHIEVEMENTS_SYNC_STORAGE_BASE_KEY,
+  addForegroundUsageSeconds,
+  APP_USAGE_STATS_STORAGE_BASE_KEY,
+  calculateAchievementMetrics,
+  evaluateAchievements,
+  getAchievementProgress,
+  getDefaultAppUsageStats,
+  getNewUserAchievementUnlocks,
+  loadAppUsageStats,
+  loadAchievementsSyncState,
+  loadUserAchievements,
+  mergeAppUsageStats,
+  mergeUserAchievements,
+  saveAppUsageStats,
+  saveAchievementsSyncState,
+  saveUserAchievements,
+  type AchievementProgress,
+  type AchievementsSyncState,
+  type AppUsageStats,
+  type UserAchievement
+} from "./src/domain/achievements";
 import {
   GoalType,
   StageType,
@@ -59,7 +89,6 @@ import {
   createStep
 } from "./src/domain/workouts";
 import {
-  abandonWorkoutSession,
   calculateEntryVolume,
   calculateSessionVolume,
   completeWorkoutSession,
@@ -242,6 +271,7 @@ const localWorkoutsLegacyStorageKey = "gymmin.localWorkouts.v1";
 const localWorkoutsStorageBaseKey = "localWorkouts.v1";
 const workoutSessionsLegacyStorageKey = "gymmin.workoutSessions";
 // TODO: per-user local storage for account-scoped workout sessions and richer conflict UX.
+const activeWorkoutSessionStorageBaseKey = "activeWorkoutSession.v1";
 const localSettingsLegacyStorageKey = "gymmin.localSettings.v1";
 const localSettingsStorageBaseKey = "localSettings.v1";
 const localCreatorProfilesLegacyStorageKey = "gymmin.localCreatorProfiles.v1";
@@ -250,6 +280,8 @@ const localCreatorJobLegacyStorageKey = "gymmin.localCreatorJob.v1";
 const localCreatorJobStorageBaseKey = "localCreatorJob.v1";
 const anonymousMergeHandledStorageBaseKey = "anonymousMergeHandled.v1";
 const localAuthStorageKey = "gymmin.localAuth.v1";
+const workoutSessionSyncActiveDebounceMs = 1600;
+const workoutSessionSyncIdleDebounceMs = 250;
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
 
@@ -502,6 +534,8 @@ const translations = {
     completedItems: "Wykonano",
     planned: "Plan",
     actual: "Rzeczywiście",
+    repsDone: "Zrobiono",
+    repsPlanned: "Plan",
     bestWeight: "Najlepszy ciężar",
     mostReps: "Najwięcej powtórzeń",
     bestVolume: "Najlepsza objętość",
@@ -518,6 +552,8 @@ const translations = {
     volume: "Objętość",
     sessions: "Sesje",
     executionMode: "Tryb wykonania",
+    sessionStartedAt: "Rozpoczęcie",
+    sessionFinishedAt: "Zakończenie",
     completedStatusLabel: "Ukończony",
     abandonedStatusLabel: "Przerwany",
     activeStatusLabel: "Aktywny",
@@ -558,6 +594,21 @@ const translations = {
     preferences: "Preferencje",
     profile: "Profil",
     profileUser: "Profil użytkownika",
+    achievements: "Osiągnięcia",
+    achievementsUnlocked: "Odblokowane",
+    achievementsLocked: "Zablokowane",
+    achievementsAll: "Wszystkie",
+    achievementsProgress: "Postęp",
+    achievementsLast: "Ostatnio",
+    achievementsEmpty: "Jeszcze brak odblokowanych osiągnięć",
+    achievementsViewAll: "Zobacz wszystkie",
+    achievementUnlockedStatus: "Odblokowane",
+    achievementLockedStatus: "Zablokowane",
+    achievementUnlockedToast: "Osiągnięcie odblokowane",
+    achievementMoreUnlocked: "+{count} więcej",
+    achievementsSavedLocally: "Zapisano lokalnie",
+    achievementsSynced: "Zsynchronizowano",
+    unlockedAt: "Odblokowano",
     register: "Rejestracja",
     registerAction: "Zarejestruj się",
     refresh: "Odśwież",
@@ -658,6 +709,15 @@ const translations = {
     account: "Konto",
     accountPlaceholder: "Puste na razie. Wrócimy tu do profilu, emaila i usunięcia konta.",
     userData: "Dane",
+    changeAvatar: "Zmień avatar",
+    removeAvatar: "Usuń avatar",
+    avatarUpdated: "Avatar został zaktualizowany",
+    avatarRemoved: "Avatar został usunięty",
+    avatarUploadError: "Nie udało się zapisać avatara",
+    avatarNetworkError: "Nie udało się połączyć z backendem. Sprawdź, czy backend działa i czy paczka APK ma aktualny adres API.",
+    avatarRemoveError: "Nie udało się usunąć avatara",
+    avatarPermissionDenied: "Dostęp do zdjęć jest wyłączony. Włącz go, aby ustawić avatar.",
+    loginToSetAvatar: "Zaloguj się, aby ustawić avatar.",
     favoriteExercises: "Ulubione ćwiczenia",
     favoriteExercisesEmptyTitle: "Brak ulubionych ćwiczeń",
     favoriteExercisesEmptyCopy: "Oznacz ćwiczenia gwiazdką, aby mieć do nich szybki dostęp.",
@@ -952,6 +1012,8 @@ const translations = {
     completedItems: "Completed",
     planned: "Plan",
     actual: "Actual",
+    repsDone: "Done",
+    repsPlanned: "Plan",
     bestWeight: "Best weight",
     mostReps: "Most reps",
     bestVolume: "Best volume",
@@ -968,6 +1030,8 @@ const translations = {
     volume: "Volume",
     sessions: "Sessions",
     executionMode: "Execution mode",
+    sessionStartedAt: "Started",
+    sessionFinishedAt: "Finished",
     completedStatusLabel: "Completed",
     abandonedStatusLabel: "Abandoned",
     activeStatusLabel: "Active",
@@ -1008,6 +1072,21 @@ const translations = {
     preferences: "Preferences",
     profile: "Profile",
     profileUser: "User profile",
+    achievements: "Achievements",
+    achievementsUnlocked: "Unlocked",
+    achievementsLocked: "Locked",
+    achievementsAll: "All",
+    achievementsProgress: "Progress",
+    achievementsLast: "Latest",
+    achievementsEmpty: "No achievements unlocked yet",
+    achievementsViewAll: "View all",
+    achievementUnlockedStatus: "Unlocked",
+    achievementLockedStatus: "Locked",
+    achievementUnlockedToast: "Achievement unlocked",
+    achievementMoreUnlocked: "+{count} more",
+    achievementsSavedLocally: "Saved locally",
+    achievementsSynced: "Synced",
+    unlockedAt: "Unlocked",
     register: "Register",
     registerAction: "Create account",
     refresh: "Refresh",
@@ -1108,6 +1187,15 @@ const translations = {
     account: "Account",
     accountPlaceholder: "Empty for now. We will return to profile, email and account removal here.",
     userData: "Data",
+    changeAvatar: "Change avatar",
+    removeAvatar: "Remove avatar",
+    avatarUpdated: "Avatar updated",
+    avatarRemoved: "Avatar removed",
+    avatarUploadError: "Could not save avatar",
+    avatarNetworkError: "Could not connect to the backend. Check that the backend is running and this APK uses the current API URL.",
+    avatarRemoveError: "Could not remove avatar",
+    avatarPermissionDenied: "Photo access is disabled. Enable it to set an avatar.",
+    loginToSetAvatar: "Log in to set an avatar.",
     favoriteExercises: "Favorite exercises",
     favoriteExercisesEmptyTitle: "No favorite exercises yet",
     favoriteExercisesEmptyCopy: "Mark exercises with a star to access them quickly.",
@@ -1388,6 +1476,20 @@ type LocalWorkoutSessionsStorage = {
   updatedAt: string;
   version: 1;
 };
+
+type LocalActiveWorkoutSessionStorage = {
+  entryIndex: number;
+  sessionId: string | null;
+  updatedAt: string;
+  version: 1;
+};
+
+function clampWorkoutSessionEntryIndex(entryIndex: unknown, session?: WorkoutSession | null) {
+  const parsed = typeof entryIndex === "number" ? entryIndex : Number.parseInt(String(entryIndex ?? ""), 10);
+  const safeIndex = Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+  const maxIndex = Math.max(0, (session?.entries.length ?? 1) - 1);
+  return Math.min(safeIndex, maxIndex);
+}
 
 function repairTextEncoding(value: string) {
   if (!/[\u00c2-\u00c5\u00e2]/.test(value)) {
@@ -2586,6 +2688,7 @@ type ScreenKey =
   | "resetPassword"
   | "changePassword"
   | "activeSessions"
+  | "achievements"
   | "aiCredits"
   | "profile"
   | "progress"
@@ -2599,7 +2702,22 @@ type ScreenKey =
   | "workoutDetail"
   | "workoutSession";
 type WorkoutHistoryStatusFilter = "all" | WorkoutSessionStatus;
+type AchievementFilter = "all" | "unlocked" | "locked";
+
+type AppDialogAction = {
+  label: string;
+  onPress?: () => void;
+  variant?: "primary" | "outline" | "destructive";
+};
+
+type AppDialogState = {
+  actions: AppDialogAction[];
+  message: string;
+  title: string;
+};
 type UserSession = {
+  avatarUpdatedAt?: string | null;
+  avatarUrl?: string | null;
   email: string;
   id: string;
   name: string;
@@ -2693,6 +2811,8 @@ type StoredWorkoutCreatorJob = Partial<ActiveWorkoutCreatorJob> & {
 };
 
 type AuthUserResponse = {
+  avatarUpdatedAt?: string | null;
+  avatarUrl?: string | null;
   email: string;
   id: string;
   name: string;
@@ -2985,6 +3105,39 @@ const defaultCollapsedPanels: Record<string, boolean> = {
   "settings-training": true
 };
 
+const achievementImageSources: Record<string, ImageSourcePropType> = {
+  "fifty-training-hours": require("./assets/achievements/fifty-training-hours.png"),
+  "fifty-tons-volume": require("./assets/achievements/fifty-tons-volume.png"),
+  "fifty-two-week-streak": require("./assets/achievements/fifty-two-week-streak.png"),
+  "fifty-unique-exercises": require("./assets/achievements/fifty-unique-exercises.png"),
+  "fifty-workouts": require("./assets/achievements/fifty-workouts.png"),
+  "first-workout": require("./assets/achievements/first-workout.png"),
+  "five-hundred-tons-volume": require("./assets/achievements/five-hundred-tons-volume.png"),
+  "five-hundred-workouts": require("./assets/achievements/five-hundred-workouts.png"),
+  "five-workouts": require("./assets/achievements/five-workouts.png"),
+  "five-workouts-single-week": require("./assets/achievements/five-workouts-single-week.png"),
+  "hundred-training-days": require("./assets/achievements/hundred-training-days.png"),
+  "hundred-training-hours": require("./assets/achievements/hundred-training-hours.png"),
+  "hundred-tons-volume": require("./assets/achievements/hundred-tons-volume.png"),
+  "hundred-unique-exercises": require("./assets/achievements/hundred-unique-exercises.png"),
+  "hundred-workouts": require("./assets/achievements/hundred-workouts.png"),
+  "one-ton-volume": require("./assets/achievements/one-ton-volume.png"),
+  "seven-training-days": require("./assets/achievements/seven-training-days.png"),
+  "ten-app-hours": require("./assets/achievements/ten-app-hours.png"),
+  "ten-training-hours": require("./assets/achievements/ten-training-hours.png"),
+  "ten-tons-volume": require("./assets/achievements/ten-tons-volume.png"),
+  "ten-unique-exercises": require("./assets/achievements/ten-unique-exercises.png"),
+  "ten-workouts": require("./assets/achievements/ten-workouts.png"),
+  "thirty-training-days": require("./assets/achievements/thirty-training-days.png"),
+  "thirty-unique-exercises": require("./assets/achievements/thirty-unique-exercises.png"),
+  "three-week-streak": require("./assets/achievements/three-week-streak.png"),
+  "three-workouts-single-week": require("./assets/achievements/three-workouts-single-week.png"),
+  "twelve-week-streak": require("./assets/achievements/twelve-week-streak.png"),
+  "twenty-five-workouts": require("./assets/achievements/twenty-five-workouts.png"),
+  "two-hundred-fifty-tons-volume": require("./assets/achievements/two-hundred-fifty-tons-volume.png"),
+  "two-hundred-fifty-workouts": require("./assets/achievements/two-hundred-fifty-workouts.png")
+};
+
 export default function App() {
   return (
     <GluestackUIProvider config={gluestackConfig}>
@@ -2999,6 +3152,190 @@ export default function App() {
         </ErrorBoundary>
       </SafeAreaProvider>
     </GluestackUIProvider>
+  );
+}
+
+function formatTimerSecondsValue(totalSeconds: number) {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const seconds = safeSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function parseTimerSecondsValue(value?: string) {
+  if (!value?.trim()) {
+    return 0;
+  }
+
+  const trimmed = value.trim().toLowerCase();
+  const hmsMatch = trimmed.match(/^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/);
+  if (hmsMatch) {
+    const first = Number.parseInt(hmsMatch[1], 10);
+    const second = Number.parseInt(hmsMatch[2], 10);
+    const third = hmsMatch[3] ? Number.parseInt(hmsMatch[3], 10) : 0;
+    if ([first, second, third].every(Number.isFinite)) {
+      return hmsMatch[3] ? first * 3600 + second * 60 + third : first * 60 + second;
+    }
+  }
+
+  const minutesMatch = trimmed.match(/(\d+)\s*m/);
+  const secondsMatch = trimmed.match(/(\d+)\s*s/);
+  const minutes = minutesMatch ? Number.parseInt(minutesMatch[1], 10) : 0;
+  const seconds = secondsMatch ? Number.parseInt(secondsMatch[1], 10) : 0;
+  if (minutes || seconds) {
+    return minutes * 60 + seconds;
+  }
+
+  const numeric = Number.parseInt(trimmed, 10);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function SessionElapsedTimer({ label, startedAt, theme }: { label: string; startedAt: string; theme: Theme }) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const startedAtMs = Date.parse(startedAt);
+  const elapsedSeconds = Number.isFinite(startedAtMs)
+    ? Math.max(0, Math.floor((now - startedAtMs) / 1000))
+    : 0;
+
+  return (
+    <View style={styles.sessionElapsedTimer}>
+      <Text style={[styles.sessionProgressText, styles.sessionElapsedLabel, { color: theme.text }]} numberOfLines={1}>
+        {label}:
+      </Text>
+      <Text style={[styles.sessionProgressText, styles.sessionProgressStage, { color: theme.primary }]} numberOfLines={1}>
+        {formatTimerSecondsValue(elapsedSeconds)}
+      </Text>
+    </View>
+  );
+}
+
+type SessionValueInputProps = {
+  keyboardType: TextInputProps["keyboardType"];
+  onChangeText: (value: string) => void;
+  placeholder: string;
+  suffix?: string;
+  theme: Theme;
+  value?: string;
+};
+
+function SessionValueInput({ keyboardType, onChangeText, placeholder, suffix, theme, value }: SessionValueInputProps) {
+  const [localValue, setLocalValue] = useState(value ?? "");
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused && (value ?? "") !== localValue) {
+      setLocalValue(value ?? "");
+    }
+  }, [isFocused, localValue, value]);
+
+  return (
+    <View style={[styles.suffixedInput, { backgroundColor: theme.control, borderColor: theme.border }]}>
+      <TextInput
+        keyboardType={keyboardType}
+        placeholder={placeholder}
+        placeholderTextColor={theme.muted}
+        style={[styles.suffixedTextInput, { color: theme.inputText }]}
+        value={localValue}
+        onBlur={() => {
+          setIsFocused(false);
+          if ((value ?? "") !== localValue) {
+            onChangeText(localValue);
+          }
+        }}
+        onChangeText={(nextValue) => {
+          setLocalValue(nextValue);
+          onChangeText(nextValue);
+        }}
+        onFocus={() => setIsFocused(true)}
+      />
+      {suffix ? <Text style={[styles.inputSuffix, { color: theme.muted }]}>{suffix}</Text> : null}
+    </View>
+  );
+}
+
+type RestTimerControlProps = {
+  labels: {
+    pause: string;
+    reset: string;
+    restTimer: string;
+    start: string;
+  };
+  plannedSeconds: number;
+  theme: Theme;
+};
+
+function RestTimerControl({ labels, plannedSeconds, theme }: RestTimerControlProps) {
+  const [remainingSeconds, setRemainingSeconds] = useState(plannedSeconds);
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    setRemainingSeconds(plannedSeconds);
+    setIsRunning(false);
+  }, [plannedSeconds]);
+
+  useEffect(() => {
+    if (!isRunning) {
+      return undefined;
+    }
+
+    const intervalId = setInterval(() => {
+      setRemainingSeconds((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isRunning]);
+
+  useEffect(() => {
+    if (remainingSeconds <= 0 && isRunning) {
+      setIsRunning(false);
+    }
+  }, [isRunning, remainingSeconds]);
+
+  return (
+    <View style={[styles.restTimerCard, { backgroundColor: theme.control, borderColor: theme.border }]}>
+      <View style={styles.restTimerCopy}>
+        <Text style={[styles.workoutMeta, { color: theme.muted }]}>{labels.restTimer}</Text>
+        <Text style={[styles.restTimerValue, { color: theme.primary }]}>{formatTimerSecondsValue(remainingSeconds)}</Text>
+      </View>
+      <View style={styles.restTimerActions}>
+        <Pressable
+          accessibilityRole="button"
+          style={[styles.restTimerButton, { borderColor: theme.border }]}
+          onPress={() => {
+            if (remainingSeconds <= 0) {
+              setRemainingSeconds(plannedSeconds);
+            }
+            setIsRunning((current) => !current);
+          }}
+        >
+          <Text style={[styles.restTimerButtonText, { color: theme.primary }]}>
+            {isRunning ? labels.pause : labels.start}
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={[styles.restTimerButton, { borderColor: theme.border }]}
+          onPress={() => {
+            setRemainingSeconds(plannedSeconds);
+            setIsRunning(false);
+          }}
+        >
+          <Text style={[styles.restTimerButtonText, { color: theme.primary }]}>{labels.reset}</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -3056,10 +3393,8 @@ function GymminApp() {
   const [selectedExerciseProgressKey, setSelectedExerciseProgressKey] = useState<string | null>(null);
   const [sessionEntryIndex, setSessionEntryIndex] = useState(0);
   const [isPostWorkoutFillMode, setIsPostWorkoutFillMode] = useState(false);
-  const [sessionNow, setSessionNow] = useState(() => Date.now());
-  const [restTimerEntryId, setRestTimerEntryId] = useState<string | null>(null);
-  const [restTimerRemainingSeconds, setRestTimerRemainingSeconds] = useState(0);
-  const [isRestTimerRunning, setIsRestTimerRunning] = useState(false);
+  const [appDialog, setAppDialog] = useState<AppDialogState | null>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [activeSettingsSheet, setActiveSettingsSheet] = useState<SettingsSheetKey | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -3079,7 +3414,20 @@ function GymminApp() {
   const [aiCreditsPurchaseMessage, setAiCreditsPurchaseMessage] = useState("");
   const [isAiCreditsLoading, setIsAiCreditsLoading] = useState(false);
   const [isAiCreditPurchaseLoading, setIsAiCreditPurchaseLoading] = useState(false);
+  const [userAchievements, setUserAchievements] = useState<UserAchievement[]>([]);
+  const [appUsageStats, setAppUsageStats] = useState<AppUsageStats>(() => getDefaultAppUsageStats());
+  const [achievementsSyncState, setAchievementsSyncState] = useState<AchievementsSyncState>({});
+  const [achievementToast, setAchievementToast] = useState<{ title: string; extraCount: number } | null>(null);
+  const [achievementFilter, setAchievementFilter] = useState<AchievementFilter>("all");
+  const [selectedAchievementPreview, setSelectedAchievementPreview] = useState<{
+    imageSource: ImageSourcePropType;
+    title: string;
+  } | null>(null);
+  const [hasLoadedAchievements, setHasLoadedAchievements] = useState(false);
+  const [loadedAchievementsOwnerId, setLoadedAchievementsOwnerId] = useState<string | null>(null);
   const [isAuthActionSubmitting, setIsAuthActionSubmitting] = useState(false);
+  const [isAvatarSubmitting, setIsAvatarSubmitting] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState("");
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [isRepeatPasswordVisible, setIsRepeatPasswordVisible] = useState(false);
@@ -3104,6 +3452,7 @@ function GymminApp() {
   const [isRewriteSubmitting, setIsRewriteSubmitting] = useState(false);
   const [rewriteSourceWorkoutId, setRewriteSourceWorkoutId] = useState<string | null>(null);
   const [rewriteProposedWorkout, setRewriteProposedWorkout] = useState<SavedWorkout | null>(null);
+  const [showAiRewriteCreditTooltip, setShowAiRewriteCreditTooltip] = useState(false);
   const [creatorCollapsedSections, setCreatorCollapsedSections] = useState<Record<string, boolean>>({});
   const [creatorProfiles, setCreatorProfiles] = useState<WorkoutCreatorProfile[]>([]);
   const [creatorProfileName, setCreatorProfileName] = useState("");
@@ -3127,6 +3476,7 @@ function GymminApp() {
   const theme = themes[themeName];
   const isDarkMode = themeName === "dark";
   const t = (key: TranslationKey) => translate(language, key);
+  const userAvatarUri = buildAvatarImageUri(apiBaseUrl, user);
   const isCreatorJobPending = pendingCreatorJob?.type === "plan";
   const isRewriteJobPending = pendingCreatorJob?.type === "rewrite";
   const pollingCreatorJobIdRef = useRef<string | null>(null);
@@ -3134,8 +3484,16 @@ function GymminApp() {
   const syncedSettingsUserIdRef = useRef<string | null>(null);
   const syncedFavoriteExercisesUserIdRef = useRef<string | null>(null);
   const syncedWorkoutSessionsUserIdRef = useRef<string | null>(null);
+  const syncedAchievementsUserIdRef = useRef<string | null>(null);
+  const workoutSessionsSyncRequestIdRef = useRef(0);
+  const workoutSessionsSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const achievementsSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeWorkoutSessionEntryIndexRef = useRef<Record<string, number>>({});
+  const appUsageStartedAtRef = useRef<number | null>(Date.now());
   const isApplyingAccountFavoriteExercisesRef = useRef(false);
   const isApplyingAccountWorkoutSessionsRef = useRef(false);
+  const isApplyingAccountAchievementsRef = useRef(false);
+  const hasPersistedLocalAchievementsRef = useRef(false);
   const hasPersistedLocalFavoriteExercisesRef = useRef(false);
   const hasPersistedLocalWorkoutSessionsRef = useRef(false);
   const isApplyingAccountSettingsRef = useRef(false);
@@ -3207,6 +3565,8 @@ function GymminApp() {
       localWorkoutsStorageBaseKey,
       FAVORITE_EXERCISES_STORAGE_BASE_KEY,
       WORKOUT_SESSIONS_STORAGE_BASE_KEY,
+      ACHIEVEMENTS_STORAGE_BASE_KEY,
+      APP_USAGE_STATS_STORAGE_BASE_KEY,
       localCreatorProfilesStorageBaseKey,
       localCreatorJobStorageBaseKey
     ];
@@ -3233,6 +3593,14 @@ function GymminApp() {
           }
 
           if (Array.isArray(parsed.favorites) && parsed.favorites.length > 0) {
+            return true;
+          }
+
+          if (Array.isArray(parsed.achievements) && parsed.achievements.length > 0) {
+            return true;
+          }
+
+          if (typeof parsed.totalForegroundSeconds === "number" && parsed.totalForegroundSeconds > 0) {
             return true;
           }
 
@@ -3381,6 +3749,9 @@ function GymminApp() {
       removeAccountJson(FAVORITE_EXERCISES_SYNC_STORAGE_BASE_KEY, ANONYMOUS_LOCAL_OWNER),
       removeAccountJson(WORKOUT_SESSIONS_STORAGE_BASE_KEY, ANONYMOUS_LOCAL_OWNER),
       removeAccountJson(WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY, ANONYMOUS_LOCAL_OWNER),
+      removeAccountJson(ACHIEVEMENTS_STORAGE_BASE_KEY, ANONYMOUS_LOCAL_OWNER),
+      removeAccountJson(APP_USAGE_STATS_STORAGE_BASE_KEY, ANONYMOUS_LOCAL_OWNER),
+      removeAccountJson(ACHIEVEMENTS_SYNC_STORAGE_BASE_KEY, ANONYMOUS_LOCAL_OWNER),
       removeAccountJson(WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY, ANONYMOUS_LOCAL_OWNER),
       removeAccountJson(localCreatorProfilesStorageBaseKey, ANONYMOUS_LOCAL_OWNER),
       removeAccountJson(localCreatorJobStorageBaseKey, ANONYMOUS_LOCAL_OWNER)
@@ -3438,6 +3809,17 @@ function GymminApp() {
       anonymousProfiles.selectedProfileId ||
       null;
 
+    const [anonymousAchievements, accountAchievements] = await Promise.all([
+      loadUserAchievements(ANONYMOUS_LOCAL_OWNER),
+      loadUserAchievements(accountOwnerId)
+    ]);
+    const mergedAchievements = mergeUserAchievements(accountAchievements, anonymousAchievements);
+    const [anonymousUsageStats, accountUsageStats] = await Promise.all([
+      loadAppUsageStats(ANONYMOUS_LOCAL_OWNER),
+      loadAppUsageStats(accountOwnerId)
+    ]);
+    const mergedUsageStats = mergeAppUsageStats(accountUsageStats, anonymousUsageStats);
+
     const mergedWorkoutSort = accountWorkouts.sort ?? anonymousWorkouts.sort ?? defaultWorkoutSort;
 
     await Promise.all([
@@ -3445,8 +3827,11 @@ function GymminApp() {
       saveFavoriteExercises(mergedFavorites, accountOwnerId),
       saveWorkoutSessionsForStorageOwner(accountOwnerId, mergedSessions),
       saveCreatorProfilesForStorageOwner(accountOwnerId, mergedProfiles, selectedProfileAfterMerge),
+      saveUserAchievements(accountOwnerId, mergedAchievements),
+      saveAppUsageStats(accountOwnerId, mergedUsageStats),
       removeAccountJson(FAVORITE_EXERCISES_SYNC_STORAGE_BASE_KEY, accountOwnerId),
-      removeAccountJson(WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY, accountOwnerId)
+      removeAccountJson(WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY, accountOwnerId),
+      removeAccountJson(ACHIEVEMENTS_SYNC_STORAGE_BASE_KEY, accountOwnerId)
     ]);
 
     await markAnonymousMergeHandled(session.id, "merged");
@@ -3461,27 +3846,36 @@ function GymminApp() {
       setActiveWorkoutSessionId(mergedSessions.find((item) => item.status === "active" && !item.deletedAt)?.id ?? null);
       setCreatorProfiles(mergedProfiles);
       setSelectedCreatorProfileId(selectedProfileAfterMerge);
+      setUserAchievements(mergedAchievements);
+      setAppUsageStats(mergedUsageStats);
+      setAchievementsSyncState({});
     }
 
     syncedWorkoutUserIdRef.current = null;
     syncedFavoriteExercisesUserIdRef.current = null;
     syncedWorkoutSessionsUserIdRef.current = null;
+    syncedAchievementsUserIdRef.current = null;
     setFavoriteExercisesSyncStatus("local");
 
     try {
       await synchronizeAccountWorkouts(session, mergedWorkouts);
       const syncedFavorites = await syncAccountFavoriteExercises(session, mergedFavorites, true);
       const syncedSessions = await syncAccountWorkoutSessions(session, mergedSessions, true);
+      const syncedAchievements = await syncAccountAchievements(session, mergedAchievements, mergedUsageStats, true);
 
       if (storageOwnerId === accountOwnerId) {
         isApplyingAccountFavoriteExercisesRef.current = true;
         isApplyingAccountWorkoutSessionsRef.current = true;
+        isApplyingAccountAchievementsRef.current = true;
         setFavoriteExercises(syncedFavorites);
         setWorkoutSessions(syncedSessions);
+        setUserAchievements(syncedAchievements.unlocked);
+        setAppUsageStats(syncedAchievements.appUsageStats);
         setFavoriteExercisesSyncStatus("synced");
         setTimeout(() => {
           isApplyingAccountFavoriteExercisesRef.current = false;
           isApplyingAccountWorkoutSessionsRef.current = false;
+          isApplyingAccountAchievementsRef.current = false;
         }, 0);
       }
     } catch (error) {
@@ -3651,6 +4045,8 @@ function GymminApp() {
         }
 
         const cachedSession: UserSession = {
+          avatarUpdatedAt: typeof storedData.user.avatarUpdatedAt === "string" ? storedData.user.avatarUpdatedAt : null,
+          avatarUrl: typeof storedData.user.avatarUrl === "string" ? storedData.user.avatarUrl : null,
           email: String(storedData.user.email),
           id: String(storedData.user.id),
           name: String(storedData.user.name || storedData.user.email.split("@")[0] || t("defaultUserName")),
@@ -3679,6 +4075,8 @@ function GymminApp() {
         }
 
         setUser({
+          avatarUpdatedAt: responseBody.avatarUpdatedAt ?? null,
+          avatarUrl: responseBody.avatarUrl ?? null,
           email: responseBody.email,
           id: responseBody.id,
           name: responseBody.name || responseBody.email.split("@")[0] || t("defaultUserName"),
@@ -3698,6 +4096,8 @@ function GymminApp() {
             typeof storedData.user.email === "string"
           ) {
             setUser({
+              avatarUpdatedAt: typeof storedData.user.avatarUpdatedAt === "string" ? storedData.user.avatarUpdatedAt : null,
+              avatarUrl: typeof storedData.user.avatarUrl === "string" ? storedData.user.avatarUrl : null,
               email: storedData.user.email,
               id: storedData.user.id,
               name: typeof storedData.user.name === "string" && storedData.user.name
@@ -4012,7 +4412,10 @@ function GymminApp() {
       isApplyingAccountWorkoutSessionsRef.current = false;
 
       try {
-        const rawData = await AsyncStorage.getItem(getAccountStorageKey(WORKOUT_SESSIONS_STORAGE_BASE_KEY, ownerId));
+        const [rawData, rawActiveSessionData] = await Promise.all([
+          AsyncStorage.getItem(getAccountStorageKey(WORKOUT_SESSIONS_STORAGE_BASE_KEY, ownerId)),
+          AsyncStorage.getItem(getAccountStorageKey(activeWorkoutSessionStorageBaseKey, ownerId))
+        ]);
 
         if (!isMounted) {
           return;
@@ -4021,6 +4424,7 @@ function GymminApp() {
         if (!rawData) {
           setWorkoutSessions([]);
           setActiveWorkoutSessionId(null);
+          setSessionEntryIndex(0);
           return;
         }
 
@@ -4034,6 +4438,24 @@ function GymminApp() {
         setWorkoutSessions(normalizedSessions);
         const activeSession = normalizedSessions.find((session) => session.status === "active" && !session.deletedAt);
         setActiveWorkoutSessionId(activeSession?.id ?? null);
+        if (activeSession) {
+          let restoredEntryIndex = 0;
+          if (rawActiveSessionData) {
+            try {
+              const activeSessionData = JSON.parse(rawActiveSessionData) as Partial<LocalActiveWorkoutSessionStorage>;
+              if (activeSessionData.sessionId === activeSession.id) {
+                restoredEntryIndex = clampWorkoutSessionEntryIndex(activeSessionData.entryIndex, activeSession);
+              }
+            } catch (error) {
+              console.error("Failed to load active workout session progress", error);
+            }
+          }
+
+          activeWorkoutSessionEntryIndexRef.current[activeSession.id] = restoredEntryIndex;
+          setSessionEntryIndex(restoredEntryIndex);
+        } else {
+          setSessionEntryIndex(0);
+        }
       } catch (error) {
         console.error("Failed to load workout sessions", error);
       } finally {
@@ -4302,6 +4724,28 @@ function GymminApp() {
   }, [hasLoadedLocalAuth, hasLoadedWorkoutSessions, loadedWorkoutSessionsOwnerId, storageOwnerId, user]);
 
   useEffect(() => {
+    if (!hasLoadedLocalAuth || !hasLoadedAchievements || loadedAchievementsOwnerId !== storageOwnerId || !user) {
+      return;
+    }
+
+    if (
+      syncedAchievementsUserIdRef.current === user.id ||
+      syncedAchievementsUserIdRef.current === `syncing:${user.id}`
+    ) {
+      return;
+    }
+
+    syncedAchievementsUserIdRef.current = `syncing:${user.id}`;
+
+    synchronizeAccountAchievements(user, userAchievements, appUsageStats).then(() => {
+      syncedAchievementsUserIdRef.current = user.id;
+    }).catch((error) => {
+      console.error("Failed to synchronize account achievements", error);
+      syncedAchievementsUserIdRef.current = null;
+    });
+  }, [appUsageStats, hasLoadedAchievements, hasLoadedLocalAuth, loadedAchievementsOwnerId, storageOwnerId, user, userAchievements]);
+
+  useEffect(() => {
     if (!hasLoadedLocalSettings || loadedSettingsOwnerId !== storageOwnerId || !user || syncedSettingsUserIdRef.current !== user.id) {
       return;
     }
@@ -4329,33 +4773,14 @@ function GymminApp() {
   }, []);
 
   useEffect(() => {
-    if (activeScreen !== "workoutSession" && !isRestTimerRunning) {
-      return undefined;
-    }
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => setIsKeyboardVisible(true));
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => setIsKeyboardVisible(false));
 
-    const intervalId = setInterval(() => {
-      setSessionNow(Date.now());
-      setRestTimerRemainingSeconds((current) => {
-        if (!isRestTimerRunning) {
-          return current;
-        }
-
-        return Math.max(0, current - 1);
-      });
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [activeScreen, isRestTimerRunning]);
-
-  useEffect(() => {
-    if (restTimerRemainingSeconds <= 0 && isRestTimerRunning) {
-      setIsRestTimerRunning(false);
-    }
-  }, [isRestTimerRunning, restTimerRemainingSeconds]);
-
-  useEffect(() => {
-    setIsRestTimerRunning(false);
-  }, [activeWorkoutSessionId, sessionEntryIndex]);
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const previousLanguage = previousReminderLanguageRef.current;
@@ -4516,13 +4941,22 @@ function GymminApp() {
       console.error("Failed to save workout sessions", error);
     });
 
+    const clearPendingWorkoutSessionSync = () => {
+      if (workoutSessionsSyncTimeoutRef.current) {
+        clearTimeout(workoutSessionsSyncTimeoutRef.current);
+        workoutSessionsSyncTimeoutRef.current = null;
+      }
+    };
+
     if (isApplyingAccountWorkoutSessionsRef.current) {
       hasPersistedLocalWorkoutSessionsRef.current = true;
+      clearPendingWorkoutSessionSync();
       return;
     }
 
     if (!user || syncedWorkoutSessionsUserIdRef.current !== user.id) {
       hasPersistedLocalWorkoutSessionsRef.current = true;
+      clearPendingWorkoutSessionSync();
       return;
     }
 
@@ -4531,16 +4965,221 @@ function GymminApp() {
       return;
     }
 
-    syncAccountWorkoutSessions(user, normalizedSessions).then((mergedSessions) => {
-      isApplyingAccountWorkoutSessionsRef.current = true;
-      setWorkoutSessions(mergedSessions);
-      setTimeout(() => {
-        isApplyingAccountWorkoutSessionsRef.current = false;
-      }, 0);
-    }).catch((error) => {
-      console.error("Failed to sync workout sessions", error);
+    const requestId = workoutSessionsSyncRequestIdRef.current + 1;
+    workoutSessionsSyncRequestIdRef.current = requestId;
+
+    clearPendingWorkoutSessionSync();
+    const syncDelay = activeScreen === "workoutSession" && activeWorkoutSessionId
+      ? workoutSessionSyncActiveDebounceMs
+      : workoutSessionSyncIdleDebounceMs;
+
+    workoutSessionsSyncTimeoutRef.current = setTimeout(() => {
+      workoutSessionsSyncTimeoutRef.current = null;
+      syncAccountWorkoutSessions(user, normalizedSessions).then((mergedSessions) => {
+        if (workoutSessionsSyncRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        isApplyingAccountWorkoutSessionsRef.current = true;
+        setWorkoutSessions(mergedSessions);
+        setTimeout(() => {
+          isApplyingAccountWorkoutSessionsRef.current = false;
+        }, 0);
+      }).catch((error) => {
+        if (workoutSessionsSyncRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        console.error("Failed to sync workout sessions", error);
+      });
+    }, syncDelay);
+
+    return clearPendingWorkoutSessionSync;
+  }, [activeScreen, activeWorkoutSessionId, hasLoadedWorkoutSessions, loadedWorkoutSessionsOwnerId, storageOwnerId, workoutSessions]);
+
+  useEffect(() => {
+    if (!hasLoadedWorkoutSessions || loadedWorkoutSessionsOwnerId !== storageOwnerId) {
+      return;
+    }
+
+    const storageKey = getAccountStorageKey(activeWorkoutSessionStorageBaseKey, storageOwnerId);
+    const session = activeWorkoutSessionId
+      ? workoutSessions.find((item) => item.id === activeWorkoutSessionId && item.status === "active" && !item.deletedAt)
+      : null;
+
+    if (!session) {
+      AsyncStorage.removeItem(storageKey).catch((error) => {
+        console.error("Failed to clear active workout session progress", error);
+      });
+      return;
+    }
+
+    const entryIndex = clampWorkoutSessionEntryIndex(sessionEntryIndex, session);
+    activeWorkoutSessionEntryIndexRef.current[session.id] = entryIndex;
+
+    const payload: LocalActiveWorkoutSessionStorage = {
+      entryIndex,
+      sessionId: session.id,
+      updatedAt: new Date().toISOString(),
+      version: 1
+    };
+
+    AsyncStorage.setItem(storageKey, JSON.stringify(payload)).catch((error) => {
+      console.error("Failed to save active workout session progress", error);
     });
-  }, [hasLoadedWorkoutSessions, loadedWorkoutSessionsOwnerId, storageOwnerId, workoutSessions]);
+  }, [activeWorkoutSessionId, hasLoadedWorkoutSessions, loadedWorkoutSessionsOwnerId, sessionEntryIndex, storageOwnerId, workoutSessions]);
+
+  useEffect(() => {
+    let isMounted = true;
+    setHasLoadedAchievements(false);
+    setLoadedAchievementsOwnerId(null);
+
+    Promise.all([
+      loadUserAchievements(storageOwnerId),
+      loadAppUsageStats(storageOwnerId),
+      loadAchievementsSyncState(storageOwnerId)
+    ]).then(([loadedAchievements, loadedUsageStats, loadedSyncState]) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setUserAchievements(loadedAchievements);
+      setAppUsageStats(loadedUsageStats);
+      setAchievementsSyncState(loadedSyncState);
+      setLoadedAchievementsOwnerId(storageOwnerId);
+      setHasLoadedAchievements(true);
+      hasPersistedLocalAchievementsRef.current = false;
+      syncedAchievementsUserIdRef.current = null;
+    }).catch((error) => {
+      console.error("Failed to load achievements", error);
+      if (isMounted) {
+        setUserAchievements([]);
+        setAppUsageStats(getDefaultAppUsageStats());
+        setAchievementsSyncState({});
+        setLoadedAchievementsOwnerId(storageOwnerId);
+        setHasLoadedAchievements(true);
+        hasPersistedLocalAchievementsRef.current = false;
+        syncedAchievementsUserIdRef.current = null;
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [storageOwnerId]);
+
+  useEffect(() => {
+    if (!hasLoadedAchievements || loadedAchievementsOwnerId !== storageOwnerId) {
+      return;
+    }
+
+    saveUserAchievements(storageOwnerId, userAchievements).catch((error) => {
+      console.error("Failed to save achievements", error);
+    });
+
+    if (isApplyingAccountAchievementsRef.current) {
+      hasPersistedLocalAchievementsRef.current = true;
+      return;
+    }
+
+    if (!user || syncedAchievementsUserIdRef.current !== user.id) {
+      hasPersistedLocalAchievementsRef.current = true;
+      return;
+    }
+
+    if (!hasPersistedLocalAchievementsRef.current) {
+      hasPersistedLocalAchievementsRef.current = true;
+      return;
+    }
+
+    if (achievementsSyncTimeoutRef.current) {
+      clearTimeout(achievementsSyncTimeoutRef.current);
+    }
+
+    achievementsSyncTimeoutRef.current = setTimeout(() => {
+      syncAccountAchievements(user, userAchievements, appUsageStats).then((merged) => {
+        isApplyingAccountAchievementsRef.current = true;
+        setUserAchievements(merged.unlocked);
+        setAppUsageStats(merged.appUsageStats);
+        setTimeout(() => {
+          isApplyingAccountAchievementsRef.current = false;
+        }, 0);
+      }).catch((error) => {
+        console.error("Failed to sync achievements", error);
+      });
+    }, 1200);
+  }, [hasLoadedAchievements, loadedAchievementsOwnerId, storageOwnerId, userAchievements]);
+
+  useEffect(() => {
+    if (!hasLoadedAchievements || loadedAchievementsOwnerId !== storageOwnerId) {
+      return;
+    }
+
+    saveAppUsageStats(storageOwnerId, appUsageStats).catch((error) => {
+      console.error("Failed to save app usage stats", error);
+    });
+
+    if (isApplyingAccountAchievementsRef.current || !user || syncedAchievementsUserIdRef.current !== user.id) {
+      return;
+    }
+
+    if (!hasPersistedLocalAchievementsRef.current) {
+      return;
+    }
+
+    if (achievementsSyncTimeoutRef.current) {
+      clearTimeout(achievementsSyncTimeoutRef.current);
+    }
+
+    achievementsSyncTimeoutRef.current = setTimeout(() => {
+      syncAccountAchievements(user, userAchievements, appUsageStats).then((merged) => {
+        isApplyingAccountAchievementsRef.current = true;
+        setUserAchievements(merged.unlocked);
+        setAppUsageStats(merged.appUsageStats);
+        setTimeout(() => {
+          isApplyingAccountAchievementsRef.current = false;
+        }, 0);
+      }).catch((error) => {
+        console.error("Failed to sync app usage stats", error);
+      });
+    }, 1800);
+  }, [appUsageStats, hasLoadedAchievements, loadedAchievementsOwnerId, storageOwnerId, user, userAchievements]);
+
+  useEffect(() => {
+    if (!hasLoadedAchievements || loadedAchievementsOwnerId !== storageOwnerId) {
+      return;
+    }
+
+    saveAchievementsSyncState(storageOwnerId, achievementsSyncState).catch((error) => {
+      console.error("Failed to save achievements sync state", error);
+    });
+  }, [achievementsSyncState, hasLoadedAchievements, loadedAchievementsOwnerId, storageOwnerId]);
+
+  useEffect(() => {
+    const finalizeForegroundUsage = () => {
+      const startedAt = appUsageStartedAtRef.current;
+      if (startedAt === null) {
+        return;
+      }
+
+      appUsageStartedAtRef.current = null;
+      setAppUsageStats((current) => addForegroundUsageSeconds(current, startedAt, Date.now()));
+    };
+
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        appUsageStartedAtRef.current = Date.now();
+        return;
+      }
+
+      finalizeForegroundUsage();
+    });
+
+    return () => {
+      finalizeForegroundUsage();
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!hasLoadedLocalCreatorJob || loadedCreatorJobOwnerId !== storageOwnerId || !pendingCreatorJob || !user) {
@@ -4623,6 +5262,62 @@ function GymminApp() {
     () => [...visibleWorkoutSessions].sort((left, right) => getSessionStartedAtTime(right) - getSessionStartedAtTime(left)),
     [visibleWorkoutSessions]
   );
+
+  const achievementMetrics = useMemo(
+    () => calculateAchievementMetrics(workoutSessions, appUsageStats),
+    [appUsageStats, workoutSessions]
+  );
+
+  const achievementProgress = useMemo(
+    () => getAchievementProgress(achievementDefinitions, achievementMetrics, userAchievements),
+    [achievementMetrics, userAchievements]
+  );
+
+  const unlockedAchievementProgress = useMemo(
+    () => achievementProgress.filter((item) => item.unlocked),
+    [achievementProgress]
+  );
+
+  const latestUnlockedAchievement = useMemo(
+    () => [...unlockedAchievementProgress]
+      .filter((item) => item.unlockedAt)
+      .sort((left, right) => Date.parse(right.unlockedAt ?? "") - Date.parse(left.unlockedAt ?? ""))[0] ?? null,
+    [unlockedAchievementProgress]
+  );
+
+  useEffect(() => {
+    if (!hasLoadedAchievements || loadedAchievementsOwnerId !== storageOwnerId) {
+      return;
+    }
+
+    const evaluation = evaluateAchievements(
+      achievementDefinitions,
+      achievementMetrics,
+      userAchievements,
+      new Date().toISOString()
+    );
+
+    if (evaluation.newUnlocks.length > 0) {
+      const newUnlocks = getNewUserAchievementUnlocks(userAchievements, evaluation.unlockedAchievements);
+      const firstDefinition = achievementDefinitions.find((definition) => definition.id === newUnlocks[0]?.achievementId);
+      if (firstDefinition) {
+        setAchievementToast({
+          extraCount: Math.max(0, newUnlocks.length - 1),
+          title: firstDefinition.title[language]
+        });
+      }
+      setUserAchievements(evaluation.unlockedAchievements);
+    }
+  }, [achievementMetrics, hasLoadedAchievements, language, loadedAchievementsOwnerId, storageOwnerId, userAchievements]);
+
+  useEffect(() => {
+    if (!achievementToast) {
+      return undefined;
+    }
+
+    const timeoutId = setTimeout(() => setAchievementToast(null), 4200);
+    return () => clearTimeout(timeoutId);
+  }, [achievementToast]);
 
   const filteredWorkoutHistorySessions = useMemo(() => {
     const phrase = workoutHistorySearch.trim().toLowerCase();
@@ -5291,8 +5986,109 @@ function GymminApp() {
     setWorkoutSessions(mergedSessions);
     const activeSession = mergedSessions.find((item) => item.status === "active" && !item.deletedAt);
     setActiveWorkoutSessionId((current) => current ?? activeSession?.id ?? null);
+    if (activeSession) {
+      setSessionEntryIndex((current) => clampWorkoutSessionEntryIndex(
+        activeWorkoutSessionEntryIndexRef.current[activeSession.id] ?? current,
+        activeSession
+      ));
+    }
     setTimeout(() => {
       isApplyingAccountWorkoutSessionsRef.current = false;
+    }, 0);
+  }
+
+  function normalizeApiAchievementsResponse(value: unknown) {
+    const fallbackNow = new Date().toISOString();
+    if (!isRecord(value)) {
+      return {
+        appUsageStats: getDefaultAppUsageStats(fallbackNow),
+        serverTime: fallbackNow,
+        unlocked: []
+      };
+    }
+
+    const serverTime = typeof value.serverTime === "string" ? value.serverTime : fallbackNow;
+    return {
+      appUsageStats: isRecord(value.appUsageStats)
+        ? {
+            totalForegroundSeconds: typeof value.appUsageStats.totalForegroundSeconds === "number"
+              ? value.appUsageStats.totalForegroundSeconds
+              : 0,
+            updatedAt: typeof value.appUsageStats.updatedAt === "string" ? value.appUsageStats.updatedAt : serverTime
+          }
+        : getDefaultAppUsageStats(serverTime),
+      serverTime,
+      unlocked: Array.isArray(value.unlocked)
+        ? value.unlocked
+          .filter(isRecord)
+          .map((achievement) => ({
+            achievementId: typeof achievement.achievementId === "string" ? achievement.achievementId : "",
+            progressAtUnlock: typeof achievement.progressAtUnlock === "number" ? achievement.progressAtUnlock : undefined,
+            unlockedAt: typeof achievement.unlockedAt === "string" ? achievement.unlockedAt : "",
+            updatedAt: typeof achievement.updatedAt === "string" ? achievement.updatedAt : undefined
+          }))
+        : []
+    };
+  }
+
+  async function syncAccountAchievements(
+    session: UserSession,
+    localAchievements: UserAchievement[],
+    localUsageStats: AppUsageStats,
+    forceFullPull = false
+  ) {
+    const metadata = await loadAchievementsSyncState(session.id);
+    const lastPulledAt = forceFullPull ? null : metadata.lastPulledAt ?? null;
+    const response = await fetch(`${apiBaseUrl}/api/sync/achievements`, {
+      body: JSON.stringify({
+        appUsageStats: localUsageStats,
+        lastPulledAt,
+        unlocked: localAchievements
+      }),
+      headers: {
+        ...getAuthHeaders(session),
+        "Content-Type": "application/json"
+      },
+      method: "POST"
+    });
+
+    if (response.status === 401) {
+      handleUnauthorizedSession();
+      throw new Error("Achievements sync unauthorized");
+    }
+
+    if (!response.ok) {
+      throw await createApiError(response, "/api/sync/achievements", "POST", "Achievements sync failed");
+    }
+
+    const responseBody = normalizeApiAchievementsResponse(await response.json().catch(() => null));
+    const mergedAchievements = mergeUserAchievements(localAchievements, responseBody.unlocked);
+    const mergedUsageStats = mergeAppUsageStats(localUsageStats, responseBody.appUsageStats);
+    const nextSyncState = {
+      lastPulledAt: responseBody.serverTime,
+      lastSyncedAt: new Date().toISOString()
+    };
+
+    await saveAchievementsSyncState(session.id, nextSyncState);
+    setAchievementsSyncState(nextSyncState);
+
+    return {
+      appUsageStats: mergedUsageStats,
+      unlocked: mergedAchievements
+    };
+  }
+
+  async function synchronizeAccountAchievements(
+    session: UserSession,
+    localAchievements: UserAchievement[],
+    localUsageStats: AppUsageStats
+  ) {
+    const merged = await syncAccountAchievements(session, localAchievements, localUsageStats, true);
+    isApplyingAccountAchievementsRef.current = true;
+    setUserAchievements(merged.unlocked);
+    setAppUsageStats(merged.appUsageStats);
+    setTimeout(() => {
+      isApplyingAccountAchievementsRef.current = false;
     }, 0);
   }
 
@@ -5478,6 +6274,7 @@ function GymminApp() {
 
     setWorkoutSessions((current) => [session, ...current]);
     setActiveWorkoutSessionId(session.id);
+    activeWorkoutSessionEntryIndexRef.current[session.id] = 0;
     setSessionEntryIndex(0);
     setIsPostWorkoutFillMode(false);
     setActiveScreen("workoutSession");
@@ -5495,7 +6292,7 @@ function GymminApp() {
     }
 
     setActiveWorkoutSessionId(sessionId);
-    setSessionEntryIndex(0);
+    setSessionEntryIndex(clampWorkoutSessionEntryIndex(activeWorkoutSessionEntryIndexRef.current[sessionId] ?? sessionEntryIndex, session));
     setIsPostWorkoutFillMode(false);
     setActiveScreen("workoutSession");
   }
@@ -5526,7 +6323,9 @@ function GymminApp() {
     const completed = completeWorkoutSession(activeWorkoutSession);
     setWorkoutSessions((current) => current.map((session) => session.id === completed.id ? completed : session));
     setSelectedWorkoutId(activeWorkoutSession.sourceWorkoutId);
+    delete activeWorkoutSessionEntryIndexRef.current[activeWorkoutSession.id];
     setActiveWorkoutSessionId(null);
+    setSessionEntryIndex(0);
     setIsPostWorkoutFillMode(false);
     setActiveScreen("workoutDetail");
     Alert.alert(t("workoutSaved"));
@@ -5571,21 +6370,29 @@ function GymminApp() {
       return;
     }
 
-    Alert.alert(t("abandonWorkout"), t("cancelWorkout"), [
-      { text: t("cancel"), style: "cancel" },
-      {
-        text: t("abandonWorkout"),
-        style: "destructive",
-        onPress: () => {
-          const abandoned = abandonWorkoutSession(activeWorkoutSession);
-          setWorkoutSessions((current) => current.map((session) => session.id === abandoned.id ? abandoned : session));
+    setAppDialog({
+      title: t("abandonWorkout"),
+      message: t("cancelWorkout"),
+      actions: [
+        {
+          label: t("cancel"),
+          variant: "outline"
+        },
+        {
+          label: t("abandonWorkout"),
+          variant: "destructive",
+          onPress: () => {
+          const deleted = markWorkoutSessionDeleted(activeWorkoutSession);
+          setWorkoutSessions((current) => current.map((session) => session.id === deleted.id ? deleted : session));
+          delete activeWorkoutSessionEntryIndexRef.current[activeWorkoutSession.id];
           setActiveWorkoutSessionId(null);
+          setSessionEntryIndex(0);
           setIsPostWorkoutFillMode(false);
           setActiveScreen("home");
-          Alert.alert(t("workoutAbandoned"));
         }
       }
-    ]);
+      ]
+    });
   }
 
   function openWorkoutEditor(workoutId: string) {
@@ -6296,7 +7103,9 @@ function GymminApp() {
           const deletedSession = markWorkoutSessionDeleted(session);
           setWorkoutSessions((current) => current.map((item) => item.id === sessionId ? deletedSession : item));
           if (activeWorkoutSessionId === sessionId) {
+            delete activeWorkoutSessionEntryIndexRef.current[sessionId];
             setActiveWorkoutSessionId(null);
+            setSessionEntryIndex(0);
           }
           if (selectedWorkoutSessionId === sessionId) {
             setSelectedWorkoutSessionId(null);
@@ -6347,6 +7156,8 @@ function GymminApp() {
 
   async function persistAuthSession(authResponse: AuthApiResponse) {
     const session: UserSession = {
+      avatarUpdatedAt: authResponse.user.avatarUpdatedAt ?? null,
+      avatarUrl: authResponse.user.avatarUrl ?? null,
       email: authResponse.user.email,
       id: authResponse.user.id,
       name: authResponse.user.name || authResponse.user.email.split("@")[0] || t("defaultUserName"),
@@ -6459,6 +7270,151 @@ function GymminApp() {
   function handleUnauthorizedSession() {
     setAuthError(t("sessionExpired"));
     logOut();
+  }
+
+  async function updateStoredUserSession(nextUser: UserSession) {
+    setUser(nextUser);
+    try {
+      const rawData = await AsyncStorage.getItem(localAuthStorageKey);
+      const storedData = rawData ? JSON.parse(rawData) as Partial<LocalAuthStorage> : null;
+      if (storedData?.token) {
+        await AsyncStorage.setItem(localAuthStorageKey, JSON.stringify({
+          ...storedData,
+          token: storedData.token,
+          updatedAt: new Date().toISOString(),
+          user: {
+            ...(isRecord(storedData.user) ? storedData.user : {}),
+            avatarUpdatedAt: nextUser.avatarUpdatedAt ?? null,
+            avatarUrl: nextUser.avatarUrl ?? null,
+            email: nextUser.email,
+            id: nextUser.id,
+            name: nextUser.name
+          },
+          version: 1
+        } satisfies LocalAuthStorage));
+      }
+    } catch (error) {
+      console.error("Failed to update cached auth user", error);
+    }
+  }
+
+  async function applyAvatarUpdate(response: AvatarResponse) {
+    if (!user) {
+      return;
+    }
+
+    await updateStoredUserSession(applyAvatarResponse(user, response));
+  }
+
+  async function changeUserAvatar() {
+    if (!user) {
+      Alert.alert(t("profile"), t("loginToSetAvatar"));
+      return;
+    }
+
+    setIsAvatarSubmitting(true);
+    setAvatarMessage("");
+
+    try {
+      const ImagePicker = await import("expo-image-picker");
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        setAvatarMessage(t("avatarPermissionDenied"));
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.85
+      });
+
+      if (result.canceled || !result.assets[0]?.uri) {
+        return;
+      }
+
+      const asset = result.assets[0];
+      const mimeType = asset.mimeType && ["image/jpeg", "image/png", "image/webp"].includes(asset.mimeType)
+        ? asset.mimeType
+        : "image/jpeg";
+      const extension = mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg";
+      const formData = new FormData();
+      formData.append("avatar", {
+        name: `avatar.${extension}`,
+        type: mimeType,
+        uri: asset.uri
+      } as unknown as Blob);
+
+      const response = await fetch(`${apiBaseUrl}/api/profile/avatar`, {
+        body: formData,
+        headers: getAuthHeaders(user),
+        method: "POST"
+      });
+      recordCorrelationId(response.headers.get("X-Correlation-Id"));
+
+      if (response.status === 401) {
+        handleUnauthorizedSession();
+        return;
+      }
+
+      if (!response.ok) {
+        throw await createApiError(response, "/api/profile/avatar", "POST", t("avatarUploadError"));
+      }
+
+      const responseBody = await response.json().catch(() => null) as AvatarResponse | null;
+      await applyAvatarUpdate(responseBody ?? {});
+      setAvatarMessage(t("avatarUpdated"));
+    } catch (error) {
+      const message = error instanceof Error && /network request failed/i.test(error.message)
+        ? t("avatarNetworkError")
+        : error instanceof Error
+          ? error.message
+          : t("avatarUploadError");
+      setAvatarMessage(message);
+    } finally {
+      setIsAvatarSubmitting(false);
+    }
+  }
+
+  async function removeUserAvatar() {
+    if (!user) {
+      Alert.alert(t("profile"), t("loginToSetAvatar"));
+      return;
+    }
+
+    setIsAvatarSubmitting(true);
+    setAvatarMessage("");
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/profile/avatar`, {
+        headers: getAuthHeaders(user),
+        method: "DELETE"
+      });
+      recordCorrelationId(response.headers.get("X-Correlation-Id"));
+
+      if (response.status === 401) {
+        handleUnauthorizedSession();
+        return;
+      }
+
+      if (!response.ok) {
+        throw await createApiError(response, "/api/profile/avatar", "DELETE", t("avatarRemoveError"));
+      }
+
+      const responseBody = await response.json().catch(() => null) as AvatarResponse | null;
+      await applyAvatarUpdate(responseBody ?? { avatarUrl: null, avatarUpdatedAt: null });
+      setAvatarMessage(t("avatarRemoved"));
+    } catch (error) {
+      const message = error instanceof Error && /network request failed/i.test(error.message)
+        ? t("avatarNetworkError")
+        : error instanceof Error
+          ? error.message
+          : t("avatarRemoveError");
+      setAvatarMessage(message);
+    } finally {
+      setIsAvatarSubmitting(false);
+    }
   }
 
   async function requestPasswordReset() {
@@ -6827,6 +7783,11 @@ function GymminApp() {
       return true;
     }
 
+    if (activeScreen === "achievements") {
+      setActiveScreen("profile");
+      return true;
+    }
+
     if (activeScreen === "changePassword" || activeScreen === "activeSessions") {
       setActiveScreen("settings");
       return true;
@@ -7163,47 +8124,6 @@ function GymminApp() {
     return minutes ? `${hours} h ${minutes} min` : `${hours} h`;
   }
 
-  function formatTimerSeconds(totalSeconds: number) {
-    const safeSeconds = Math.max(0, Math.floor(totalSeconds));
-    const hours = Math.floor(safeSeconds / 3600);
-    const minutes = Math.floor((safeSeconds % 3600) / 60);
-    const seconds = safeSeconds % 60;
-
-    if (hours > 0) {
-      return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-    }
-
-    return `${minutes}:${String(seconds).padStart(2, "0")}`;
-  }
-
-  function parseTimerSeconds(value?: string) {
-    if (!value?.trim()) {
-      return 0;
-    }
-
-    const trimmed = value.trim().toLowerCase();
-    const hmsMatch = trimmed.match(/^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/);
-    if (hmsMatch) {
-      const first = Number.parseInt(hmsMatch[1], 10);
-      const second = Number.parseInt(hmsMatch[2], 10);
-      const third = hmsMatch[3] ? Number.parseInt(hmsMatch[3], 10) : 0;
-      if ([first, second, third].every(Number.isFinite)) {
-        return hmsMatch[3] ? first * 3600 + second * 60 + third : first * 60 + second;
-      }
-    }
-
-    const minutesMatch = trimmed.match(/(\d+)\s*m/);
-    const secondsMatch = trimmed.match(/(\d+)\s*s/);
-    const minutes = minutesMatch ? Number.parseInt(minutesMatch[1], 10) : 0;
-    const seconds = secondsMatch ? Number.parseInt(secondsMatch[1], 10) : 0;
-    if (minutes || seconds) {
-      return minutes * 60 + seconds;
-    }
-
-    const numeric = Number.parseInt(trimmed, 10);
-    return Number.isFinite(numeric) ? numeric : 0;
-  }
-
   function formatSessionDuration(session: WorkoutSession) {
     return formatDurationMs(getSessionDurationMs(session));
   }
@@ -7333,10 +8253,187 @@ function GymminApp() {
     setActiveScreen("exerciseProgress");
   }
 
+  function getAchievementIconName(iconKey?: string): keyof typeof Ionicons.glyphMap {
+    const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
+      barbell: "barbell-outline",
+      calendar: "calendar-outline",
+      "calendar-number": "calendar-number-outline",
+      compass: "compass-outline",
+      construct: "construct-outline",
+      cube: "cube-outline",
+      fitness: "fitness-outline",
+      flame: "flame-outline",
+      hammer: "hammer-outline",
+      hourglass: "hourglass-outline",
+      layers: "layers-outline",
+      library: "library-outline",
+      medal: "medal-outline",
+      "phone-portrait": "phone-portrait-outline",
+      pulse: "pulse-outline",
+      ribbon: "ribbon-outline",
+      shield: "shield-checkmark-outline",
+      trophy: "trophy-outline",
+      "trending-up": "trending-up-outline"
+    };
+
+    return iconKey ? icons[iconKey] ?? "trophy-outline" : "trophy-outline";
+  }
+
+  function getAchievementImageSource(imageKey?: string) {
+    return imageKey ? achievementImageSources[imageKey] : undefined;
+  }
+
+  function formatAchievementValue(value: number, unit: AchievementProgress["definition"]["unit"]) {
+    const safeValue = Math.max(0, value);
+    if (unit === "tons") {
+      return safeValue >= 10 ? safeValue.toFixed(0) : safeValue.toFixed(1).replace(/\.0$/, "");
+    }
+
+    if (unit === "hours") {
+      return safeValue >= 10 ? safeValue.toFixed(0) : safeValue.toFixed(1).replace(/\.0$/, "");
+    }
+
+    if (unit === "minutes") {
+      return Math.floor(safeValue).toString();
+    }
+
+    return Math.floor(safeValue).toString();
+  }
+
+  function getAchievementTitle(progress: AchievementProgress) {
+    return progress.definition.title[language];
+  }
+
+  function getAchievementDescription(progress: AchievementProgress) {
+    return progress.definition.description[language];
+  }
+
+  function renderAchievementProgressBar(progress: AchievementProgress) {
+    return (
+      <View style={[styles.achievementProgressTrack, { backgroundColor: theme.secondaryBand }]}>
+        <View
+          style={[
+            styles.achievementProgressFill,
+            {
+              backgroundColor: progress.unlocked ? theme.primary : theme.muted,
+              width: `${Math.max(0, Math.min(100, progress.percent))}%`
+            }
+          ]}
+        />
+      </View>
+    );
+  }
+
+  function renderAchievementCard(progress: AchievementProgress) {
+    const title = getAchievementTitle(progress);
+    const description = getAchievementDescription(progress);
+    const current = formatAchievementValue(progress.current, progress.definition.unit);
+    const target = formatAchievementValue(progress.target, progress.definition.unit);
+    const imageSource = getAchievementImageSource(progress.definition.imageKey);
+
+    return (
+      <View
+        key={progress.definition.id}
+        style={[
+          styles.achievementCard,
+          {
+            backgroundColor: theme.card,
+            borderColor: progress.unlocked ? theme.primary : theme.border
+          }
+        ]}
+      >
+        <View style={imageSource ? styles.achievementImageSlot : [styles.achievementIcon, { backgroundColor: theme.secondaryBand }]}>
+          {imageSource ? (
+            <Pressable
+              accessibilityLabel={title}
+              accessibilityRole="imagebutton"
+              hitSlop={8}
+              onPress={() => setSelectedAchievementPreview({ imageSource, title })}
+            >
+              <Image
+                accessibilityIgnoresInvertColors
+                resizeMode="contain"
+                source={imageSource}
+                style={[
+                  styles.achievementImage,
+                  { opacity: progress.unlocked ? 1 : 0.48 }
+                ]}
+              />
+            </Pressable>
+          ) : (
+            <Ionicons
+              name={getAchievementIconName(progress.definition.iconKey)}
+              size={24}
+              color={progress.unlocked ? theme.primary : theme.muted}
+            />
+          )}
+        </View>
+        <View style={styles.achievementCopy}>
+          <View style={styles.achievementTitleRow}>
+            <Text style={[styles.workoutName, { color: theme.text }]}>{title}</Text>
+            <Text style={[styles.achievementStatus, { color: progress.unlocked ? theme.primary : theme.muted }]}>
+              {progress.unlocked ? t("achievementUnlockedStatus") : t("achievementLockedStatus")}
+            </Text>
+          </View>
+          <Text style={[styles.workoutMeta, { color: theme.muted }]}>{description}</Text>
+          <View style={styles.achievementProgressRow}>
+            <Text style={[styles.workoutMeta, { color: theme.text }]}>
+              {current} / {target}
+            </Text>
+            {progress.unlockedAt ? (
+              <Text style={[styles.workoutMeta, { color: theme.muted }]}>
+                {t("unlockedAt")}: {formatDateTime(progress.unlockedAt)}
+              </Text>
+            ) : null}
+          </View>
+          {renderAchievementProgressBar(progress)}
+        </View>
+      </View>
+    );
+  }
+
   function openExerciseDetail(step: WorkoutStep) {
     setSelectedExerciseDetailStep(step);
     setExerciseDetailReturnScreen(activeScreen);
     setActiveScreen("exerciseDetail");
+  }
+
+  function renderActiveWorkoutSessionCard() {
+    if (!activeWorkoutSession) {
+      return null;
+    }
+
+    return (
+      <View style={[styles.activeSessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={styles.workoutInfo}>
+          <Text style={[styles.workoutName, { color: theme.text }]}>{t("activeWorkoutNotice")}</Text>
+          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
+            {activeWorkoutSession.sourceWorkoutName}
+          </Text>
+        </View>
+        <View style={styles.activeSessionActions}>
+          <AppButton
+            icon="play-outline"
+            style={styles.compactButton}
+            textStyle={styles.compactButtonText}
+            theme={theme}
+            onPress={() => continueActiveWorkoutSession(activeWorkoutSession.id)}
+          >
+            {t("continueWorkout")}
+          </AppButton>
+          <AppButton
+            icon="close-outline"
+            style={styles.compactButton}
+            textStyle={styles.compactButtonText}
+            theme={theme}
+            variant="outline"
+            onPress={abandonActiveWorkoutSession}
+          >
+            {t("abandonWorkout")}
+          </AppButton>
+        </View>
+      </View>
+    );
   }
 
   function renderHome() {
@@ -7380,37 +8477,7 @@ function GymminApp() {
           />
         ) : null}
 
-        {activeWorkoutSession ? (
-          <View style={[styles.activeSessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.workoutName, { color: theme.text }]}>{t("activeWorkoutNotice")}</Text>
-              <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                {activeWorkoutSession.sourceWorkoutName}
-              </Text>
-            </View>
-            <View style={styles.activeSessionActions}>
-              <AppButton
-                icon="play-outline"
-                style={styles.compactButton}
-                textStyle={styles.compactButtonText}
-                theme={theme}
-                onPress={() => continueActiveWorkoutSession(activeWorkoutSession.id)}
-              >
-                {t("continueWorkout")}
-              </AppButton>
-              <AppButton
-                icon="close-outline"
-                style={styles.compactButton}
-                textStyle={styles.compactButtonText}
-                theme={theme}
-                variant="outline"
-                onPress={abandonActiveWorkoutSession}
-              >
-                {t("abandonWorkout")}
-              </AppButton>
-            </View>
-          </View>
-        ) : null}
+        {renderActiveWorkoutSessionCard()}
 
         {renderTrainingFactPill()}
 
@@ -7905,6 +8972,8 @@ function GymminApp() {
   function renderWorkouts() {
     return (
       <>
+        {renderActiveWorkoutSessionCard()}
+
         {renderWorkoutCreatorButton()}
 
         <View style={styles.historyEntryGrid}>
@@ -8141,6 +9210,29 @@ function GymminApp() {
       );
     }
 
+    const visibleSessionEntries = session.entries.filter((entry) => entry.type !== "rest" && entry.type !== "warmup");
+    const groupedSessionEntries = visibleSessionEntries.reduce<
+      { key: string; title: string; entries: WorkoutSessionEntry[] }[]
+    >((groups, entry) => {
+      const title = formatSessionEntryTitle(entry);
+      const normalizedTitle = title.trim().toLowerCase();
+      const key = entry.exerciseId ? `id:${entry.exerciseId}` : `name:${normalizedTitle || entry.id}`;
+      const existingGroup = groups.find((group) => group.key === key);
+
+      if (existingGroup) {
+        existingGroup.entries.push(entry);
+        return groups;
+      }
+
+      groups.push({
+        key,
+        title,
+        entries: [entry]
+      });
+
+      return groups;
+    }, []);
+
     return (
       <View style={styles.historyScreen}>
         <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -8162,45 +9254,159 @@ function GymminApp() {
             {t("duration")}: {formatSessionDuration(session)}
           </Text>
           <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {t("start")}: {formatSessionTime(session.startedAt)} · {t("finishWorkout")}: {formatSessionTime(session.finishedAt)}
-          </Text>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {getSessionStatusLabel(session.status)} · {t("executionMode")}: {getExecutionModeLabel(session.executionMode)}
+            {t("sessionStartedAt")}: {formatSessionTime(session.startedAt)} · {t("sessionFinishedAt")}: {formatSessionTime(session.finishedAt)}
           </Text>
           {session.notes ? (
             <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{session.notes}</Text>
           ) : null}
         </View>
 
-        <View style={styles.sessionList}>
-          {session.entries.map((entry) => {
-            const volume = calculateEntryVolume(entry);
-
-            return (
-              <View key={entry.id} style={[styles.sessionEntryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={[styles.workoutName, { color: theme.text }]}>{formatSessionEntryTitle(entry)}</Text>
-                <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatSessionEntryMeta(entry)}</Text>
-                <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                  {t("planned")}: {formatEntryPlan(entry)}
-                </Text>
-                <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                  {t("actual")}: {formatEntryActual(entry)}
-                </Text>
-                {volume ? (
-                  <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                    {t("volume")}: {formatNumber(volume, "kg")}
-                  </Text>
-                ) : null}
-                <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                  {entry.isCompleted ? t("completedStatusLabel") : t("noData")}
-                </Text>
-                {entry.notes ? (
-                  <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{entry.notes}</Text>
-                ) : null}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator
+          style={styles.workoutSessionDetailTableScroll}
+          contentContainerStyle={styles.workoutSessionDetailTableScrollContent}
+        >
+          <View style={[styles.workoutSessionDetailTable, { borderColor: theme.border }]}>
+            <View
+              style={[
+                styles.workoutSessionDetailTableHeader,
+                { backgroundColor: theme.secondaryBand, borderBottomColor: theme.border }
+              ]}
+            >
+              <View
+                style={[
+                  styles.workoutSessionDetailHeaderCell,
+                  styles.workoutSessionDetailExerciseCell,
+                  { borderRightColor: theme.border }
+                ]}
+              >
+                <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("exercise")}</Text>
               </View>
-            );
-          })}
-        </View>
+              <View
+                style={[
+                  styles.workoutSessionDetailHeaderCell,
+                  styles.workoutSessionDetailSetCell,
+                  { borderRightColor: theme.border }
+                ]}
+              >
+                <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("set")}</Text>
+              </View>
+              <View style={[styles.workoutSessionDetailRepsHeader, { borderRightColor: theme.border }]}>
+                <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("actualReps")}</Text>
+                <View style={[styles.workoutSessionDetailRepsSubHeader, { borderTopColor: theme.border }]}>
+                  <Text
+                    style={[
+                      styles.workoutSessionDetailHeaderText,
+                      styles.workoutSessionDetailRepsCell,
+                      { color: theme.primary, borderRightColor: theme.border }
+                    ]}
+                  >
+                    {t("repsDone")}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.workoutSessionDetailHeaderText,
+                      styles.workoutSessionDetailRepsCell,
+                      { color: theme.primary, borderRightWidth: 0 }
+                    ]}
+                  >
+                    {t("repsPlanned")}
+                  </Text>
+                </View>
+              </View>
+              <View
+                style={[
+                  styles.workoutSessionDetailHeaderCell,
+                  styles.workoutSessionDetailWeightCell,
+                  { borderRightColor: theme.border }
+                ]}
+              >
+                <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("weight")}</Text>
+              </View>
+              <View style={[styles.workoutSessionDetailHeaderCell, styles.workoutSessionDetailVolumeCell]}>
+                <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("volume")}</Text>
+              </View>
+            </View>
+            {groupedSessionEntries.map((group, groupIndex) => (
+              <View
+                key={group.key}
+                style={[
+                  styles.workoutSessionDetailExerciseGroup,
+                  { borderBottomColor: theme.border },
+                  groupIndex === groupedSessionEntries.length - 1 ? styles.workoutSessionDetailExerciseGroupLast : null
+                ]}
+              >
+                <View style={[styles.workoutSessionDetailExerciseCell, { borderRightColor: theme.border }]}>
+                  <Text style={[styles.workoutDetailTableExerciseName, { color: theme.text }]} numberOfLines={3}>
+                    {group.title}
+                  </Text>
+                </View>
+                <View style={styles.workoutSessionDetailSetsCell}>
+                  {group.entries.map((entry, entryIndex) => {
+                    const volume = calculateEntryVolume(entry);
+                    const plannedReps = entry.plannedTargetType === "repetitions" ? entry.plannedTarget : "";
+
+                    return (
+                      <View
+                        key={entry.id}
+                        style={[
+                          styles.workoutSessionDetailSetRow,
+                          { borderBottomColor: theme.border },
+                          entryIndex === group.entries.length - 1 ? styles.workoutSessionDetailSetRowLast : null
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.workoutDetailTableValue,
+                            styles.workoutSessionDetailSetCell,
+                            { color: theme.text, borderRightColor: theme.border }
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {getSessionEntryIterationLabel(entry)}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.workoutDetailTableValue,
+                            styles.workoutSessionDetailRepsCell,
+                            { color: theme.text, borderRightColor: theme.border }
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {entry.actualReps?.trim() || "-"}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.workoutDetailTableValue,
+                            styles.workoutSessionDetailRepsCell,
+                            { color: theme.text, borderRightColor: theme.border }
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {plannedReps?.trim() || "-"}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.workoutDetailTableValue,
+                            styles.workoutSessionDetailWeightCell,
+                            { color: theme.text, borderRightColor: theme.border }
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {entry.actualWeight?.trim() ? `${entry.actualWeight.trim()} kg` : "-"}
+                        </Text>
+                        <Text style={[styles.workoutDetailTableValue, styles.workoutSessionDetailVolumeCell, { color: theme.text }]} numberOfLines={1}>
+                          {volume ? formatNumber(volume, "kg") : "-"}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -8345,6 +9551,9 @@ function GymminApp() {
     const progressSummary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
     const fallbackName = step?.exerciseName ? getExerciseDisplayName(step.exerciseName, language) : t("exerciseDetails");
     const displayName = details?.displayName ?? fallbackName;
+    const exerciseTags = details
+      ? [details.category, ...details.equipment].filter(Boolean)
+      : [];
     const hasMuscleData = Boolean(details && (details.primary.length || details.secondary.length));
     const colors = {
       inactive: "#4a4d4c",
@@ -8370,29 +9579,40 @@ function GymminApp() {
 
     return (
       <View style={styles.historyScreen}>
+        <View style={styles.exerciseDetailTopActions}>
+          <AppButton
+            icon="chevron-back"
+            style={styles.builderBackButton}
+            textStyle={styles.builderBackButtonText}
+            theme={theme}
+            variant="outline"
+            onPress={() => setActiveScreen(exerciseDetailReturnScreen)}
+          >
+            {t("back")}
+          </AppButton>
+        </View>
+
         <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.sessionEntryHeader}>
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>{displayName}</Text>
-              {details ? (
-                <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                  {[details.category, ...details.equipment.slice(0, 3)].filter(Boolean).join(" · ")}
-                </Text>
-              ) : (
-                <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("noExerciseDetails")}</Text>
-              )}
+          <View style={styles.workoutInfo}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{displayName}</Text>
+            {details ? (
+              <View style={styles.exerciseDetailTags}>
+                {exerciseTags.map((tag) => (
+                  <View
+                    key={tag}
+                    style={[
+                      styles.exerciseDetailTag,
+                      { backgroundColor: theme.secondaryBand, borderColor: theme.border }
+                    ]}
+                  >
+                    <Text style={[styles.exerciseDetailTagText, { color: theme.primary }]}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("noExerciseDetails")}</Text>
+            )}
             </View>
-            <AppButton
-              icon="chevron-back"
-              style={styles.builderBackButton}
-              textStyle={styles.builderBackButtonText}
-              theme={theme}
-              variant="outline"
-              onPress={() => setActiveScreen(exerciseDetailReturnScreen)}
-            >
-              {t("back")}
-            </AppButton>
-          </View>
         </View>
 
         <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -8490,7 +9710,7 @@ function GymminApp() {
     }
 
     const stageGroups = selectedWorkout.draft.steps
-      .filter((step) => step.kind === "stage")
+      .filter((step) => step.kind === "stage" && step.stageType !== "warmup")
       .map((stage) => ({
         stage,
         series: selectedWorkout.draft.steps
@@ -8502,6 +9722,7 @@ function GymminApp() {
             )
           }))
       }));
+    const isAiRewriteCreditBlocked = Boolean(user && aiCreditBalance.balance < aiCreditBalance.rewriteCost);
 
     return (
       <>
@@ -8554,26 +9775,30 @@ function GymminApp() {
         >
           {t("startWorkout")}
         </AppButton>
+        {isAiRewriteCreditBlocked && showAiRewriteCreditTooltip ? (
+          <View style={[styles.inlineTooltip, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
+            <Text style={[styles.inlineTooltipText, { color: theme.text }]}>{t("aiCreditsInsufficient")}</Text>
+          </View>
+        ) : null}
         <AppButton
           icon="sparkles-outline"
+          style={isAiRewriteCreditBlocked ? styles.disabledActionButton : undefined}
+          textStyle={isAiRewriteCreditBlocked ? { color: theme.muted } : undefined}
           theme={theme}
           variant="outline"
           onPress={() => {
-            if (user && aiCreditBalance.balance < aiCreditBalance.rewriteCost) {
-              setActiveScreen("aiCredits");
+            if (isAiRewriteCreditBlocked) {
+              setShowAiRewriteCreditTooltip(true);
+              setTimeout(() => setShowAiRewriteCreditTooltip(false), 3000);
               return;
             }
 
+            setShowAiRewriteCreditTooltip(false);
             openWorkoutAiRewrite(selectedWorkout.id);
           }}
         >
           {t("aiRewriteAction")}
         </AppButton>
-        {user && aiCreditBalance.balance < aiCreditBalance.rewriteCost ? (
-          <Text style={[styles.settingsHint, { color: theme.danger }]}>
-            {t("aiCreditsInsufficient")}
-          </Text>
-        ) : null}
 
         <CollapsiblePanel
           collapseLabel={t("collapse")}
@@ -9703,6 +10928,10 @@ function GymminApp() {
       );
     }
 
+    const unlockedCount = unlockedAchievementProgress.length;
+    const totalCount = achievementProgress.length;
+    const achievementPercent = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0;
+
     return (
       <View style={styles.profileScreen}>
         <View style={styles.profileActionsRow}>
@@ -9718,6 +10947,51 @@ function GymminApp() {
           </AppButton>
         </View>
 
+        <View style={[styles.profileAvatarPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={[styles.profileAvatarFrame, { backgroundColor: theme.secondaryBand }]}>
+            {userAvatarUri ? (
+              <Image
+                resizeMode="cover"
+                source={{ uri: userAvatarUri }}
+                style={styles.profileAvatarImage}
+              />
+            ) : (
+              <Ionicons name="person" size={52} color={theme.primary} />
+            )}
+          </View>
+          <View style={styles.profileAvatarActions}>
+            <AppButton
+              disabled={isAvatarSubmitting}
+              icon="image-outline"
+              style={styles.secondaryButton}
+              textStyle={styles.secondaryButtonText}
+              theme={theme}
+              variant="outline"
+              onPress={changeUserAvatar}
+            >
+              {t("changeAvatar")}
+            </AppButton>
+            {user.avatarUrl ? (
+              <AppButton
+                disabled={isAvatarSubmitting}
+                icon="trash-outline"
+                style={styles.secondaryButton}
+                textStyle={styles.secondaryButtonText}
+                theme={theme}
+                variant="outline"
+                onPress={removeUserAvatar}
+              >
+                {t("removeAvatar")}
+              </AppButton>
+            ) : null}
+          </View>
+          {avatarMessage ? (
+            <Text style={[styles.workoutMeta, { color: avatarMessage === t("avatarUpdated") || avatarMessage === t("avatarRemoved") ? theme.primary : theme.danger }]}>
+              {avatarMessage}
+            </Text>
+          ) : null}
+        </View>
+
         <View style={[styles.legalPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.legalContent}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("userData")}</Text>
@@ -9731,6 +11005,37 @@ function GymminApp() {
             </View>
           </View>
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          style={[styles.achievementSummaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+          onPress={() => setActiveScreen("achievements")}
+        >
+          <View style={[styles.achievementIcon, { backgroundColor: theme.secondaryBand }]}>
+            <Ionicons name="trophy-outline" size={24} color={theme.primary} />
+          </View>
+          <View style={styles.achievementCopy}>
+            <View style={styles.achievementTitleRow}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("achievements")}</Text>
+              <Text style={[styles.achievementCount, { color: theme.primary }]}>
+                {unlockedCount}/{totalCount}
+              </Text>
+            </View>
+            {renderAchievementProgressBar({
+              current: unlockedCount,
+              definition: achievementDefinitions[0],
+              percent: achievementPercent,
+              target: totalCount,
+              unlocked: false
+            })}
+            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
+              {latestUnlockedAchievement
+                ? `${t("achievementsLast")}: ${getAchievementTitle(latestUnlockedAchievement)}`
+                : t("achievementsEmpty")}
+            </Text>
+            <Text style={[styles.achievementLink, { color: theme.primary }]}>{t("achievementsViewAll")}</Text>
+          </View>
+        </Pressable>
 
         <SettingsSection
           isCollapsed={false}
@@ -9778,6 +11083,93 @@ function GymminApp() {
             }}
           />
         </SettingsSection>
+      </View>
+    );
+  }
+
+  function renderAchievements() {
+    const filters: Array<{ label: string; value: AchievementFilter }> = [
+      { label: t("achievementsAll"), value: "all" },
+      { label: t("achievementsUnlocked"), value: "unlocked" },
+      { label: t("achievementsLocked"), value: "locked" }
+    ];
+    const filteredAchievements = achievementProgress.filter((item) => {
+      if (achievementFilter === "unlocked") {
+        return item.unlocked;
+      }
+
+      if (achievementFilter === "locked") {
+        return !item.unlocked;
+      }
+
+      return true;
+    }).sort((left, right) => {
+      if (achievementFilter === "all" && left.unlocked !== right.unlocked) {
+        return left.unlocked ? -1 : 1;
+      }
+
+      if (left.unlocked && right.unlocked) {
+        return Date.parse(right.unlockedAt ?? "") - Date.parse(left.unlockedAt ?? "");
+      }
+
+      return left.definition.sortOrder - right.definition.sortOrder;
+    });
+
+    return (
+      <View style={styles.profileScreen}>
+        <AppButton
+          icon="chevron-back"
+          style={styles.builderBackButton}
+          textStyle={styles.builderBackButtonText}
+          theme={theme}
+          variant="outline"
+          onPress={() => setActiveScreen("profile")}
+        >
+          {t("profile")}
+        </AppButton>
+        <View style={[styles.legalPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.legalContent}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("achievements")}</Text>
+            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
+              {unlockedAchievementProgress.length}/{achievementProgress.length} {t("achievementsUnlocked").toLowerCase()}
+            </Text>
+            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
+              {achievementsSyncState.lastSyncedAt ? t("achievementsSynced") : t("achievementsSavedLocally")}
+            </Text>
+            {renderAchievementProgressBar({
+              current: unlockedAchievementProgress.length,
+              definition: achievementDefinitions[0],
+              percent: achievementProgress.length ? (unlockedAchievementProgress.length / achievementProgress.length) * 100 : 0,
+              target: achievementProgress.length,
+              unlocked: false
+            })}
+          </View>
+        </View>
+
+        <View style={styles.segmentedControl}>
+          {filters.map((filter) => {
+            const selected = achievementFilter === filter.value;
+            return (
+              <Pressable
+                key={filter.value}
+                accessibilityRole="button"
+                style={[
+                  styles.segmentButton,
+                  { backgroundColor: selected ? theme.primary : theme.segment }
+                ]}
+                onPress={() => setAchievementFilter(filter.value)}
+              >
+                <Text style={[styles.segmentButtonText, { color: selected ? theme.white : theme.text }]}>
+                  {filter.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.achievementList}>
+          {filteredAchievements.map(renderAchievementCard)}
+        </View>
       </View>
     );
   }
@@ -10423,25 +11815,25 @@ function GymminApp() {
         {entry.isCompleted ? (
           <>
             <View style={styles.sessionInlineFields}>
-              <View style={[styles.suffixedInput, styles.sessionInlineInput, { backgroundColor: theme.control, borderColor: theme.border }]}>
-                <TextInput
+              <View style={styles.sessionInlineInput}>
+                <SessionValueInput
                   keyboardType="decimal-pad"
                   placeholder={t("actualWeight")}
-                  placeholderTextColor={theme.muted}
-                  style={[styles.suffixedTextInput, { color: theme.inputText }]}
+                  suffix="kg"
+                  theme={theme}
                   value={entry.actualWeight ?? ""}
                   onChangeText={(actualWeight) => updateWorkoutSessionEntry(entry.id, { actualWeight })}
                 />
-                <Text style={[styles.inputSuffix, { color: theme.muted }]}>kg</Text>
               </View>
-              <AppInput
-                keyboardType="number-pad"
-                placeholder={t("actualReps")}
-                style={styles.sessionInlineInput}
-                theme={theme}
-                value={entry.actualReps ?? ""}
-                onChangeText={(actualReps) => updateWorkoutSessionEntry(entry.id, { actualReps })}
-              />
+              <View style={styles.sessionInlineInput}>
+                <SessionValueInput
+                  keyboardType="number-pad"
+                  placeholder={t("actualReps")}
+                  theme={theme}
+                  value={entry.actualReps ?? ""}
+                  onChangeText={(actualReps) => updateWorkoutSessionEntry(entry.id, { actualReps })}
+                />
+              </View>
             </View>
             <AppTextarea
               placeholder={t("note")}
@@ -10481,15 +11873,8 @@ function GymminApp() {
   function renderGuidedEntryTable(entries: WorkoutSessionEntry[]) {
     return (
       <View style={[styles.guidedEntryTable, { borderColor: theme.border }]}>
-        {entries.map((entry, index) => (
-          <View
-            key={entry.id}
-            style={[
-              styles.guidedEntryRow,
-              { borderBottomColor: theme.border },
-              index === entries.length - 1 ? styles.guidedEntryRowLast : null
-            ]}
-          >
+        {entries.map((entry) => (
+          <View key={entry.id} style={styles.guidedEntryRow}>
             <Pressable
               accessibilityRole="checkbox"
               accessibilityState={{ checked: entry.isCompleted }}
@@ -10507,31 +11892,28 @@ function GymminApp() {
               >
                 {entry.isCompleted ? <Ionicons name="checkmark" size={16} color={theme.white} /> : null}
               </View>
-              <Text style={[styles.sessionCheckboxText, { color: theme.text }]}>
-                {t("set")} {entry.setIteration || index + 1}
-              </Text>
             </Pressable>
             {entry.isCompleted ? (
               <View style={styles.guidedEntryFields}>
-                <View style={[styles.suffixedInput, styles.guidedEntryInput, { backgroundColor: theme.control, borderColor: theme.border }]}>
-                  <TextInput
+                <View style={styles.guidedEntryInput}>
+                  <SessionValueInput
                     keyboardType="decimal-pad"
                     placeholder={t("actualWeight")}
-                    placeholderTextColor={theme.muted}
-                    style={[styles.suffixedTextInput, { color: theme.inputText }]}
+                    suffix="kg"
+                    theme={theme}
                     value={entry.actualWeight ?? ""}
                     onChangeText={(actualWeight) => updateWorkoutSessionEntry(entry.id, { actualWeight })}
                   />
-                  <Text style={[styles.inputSuffix, { color: theme.muted }]}>kg</Text>
                 </View>
-                <AppInput
-                  keyboardType="number-pad"
-                  placeholder={t("actualReps")}
-                  style={styles.guidedEntryInput}
-                  theme={theme}
-                  value={entry.actualReps ?? ""}
-                  onChangeText={(actualReps) => updateWorkoutSessionEntry(entry.id, { actualReps })}
-                />
+                <View style={styles.guidedEntryInput}>
+                  <SessionValueInput
+                    keyboardType="number-pad"
+                    placeholder={t("actualReps")}
+                    theme={theme}
+                    value={entry.actualReps ?? ""}
+                    onChangeText={(actualReps) => updateWorkoutSessionEntry(entry.id, { actualReps })}
+                  />
+                </View>
               </View>
             ) : null}
           </View>
@@ -10545,49 +11927,23 @@ function GymminApp() {
       return null;
     }
 
-    const plannedSeconds = parseTimerSeconds(entry.plannedTarget);
+    const plannedSeconds = parseTimerSecondsValue(entry.plannedTarget);
     if (plannedSeconds <= 0) {
       return null;
     }
 
-    const isCurrentTimer = restTimerEntryId === entry.id;
-    const displayedSeconds = isCurrentTimer ? restTimerRemainingSeconds : plannedSeconds;
-
     return (
-      <View style={[styles.restTimerCard, { backgroundColor: theme.control, borderColor: theme.border }]}>
-        <View style={styles.restTimerCopy}>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("restTimer")}</Text>
-          <Text style={[styles.restTimerValue, { color: theme.primary }]}>{formatTimerSeconds(displayedSeconds)}</Text>
-        </View>
-        <View style={styles.restTimerActions}>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.restTimerButton, { borderColor: theme.border }]}
-            onPress={() => {
-              if (!isCurrentTimer || restTimerRemainingSeconds <= 0) {
-                setRestTimerEntryId(entry.id);
-                setRestTimerRemainingSeconds(plannedSeconds);
-              }
-              setIsRestTimerRunning((current) => !current || !isCurrentTimer);
-            }}
-          >
-            <Text style={[styles.restTimerButtonText, { color: theme.primary }]}>
-              {isCurrentTimer && isRestTimerRunning ? t("pauseTimer") : t("startTimer")}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.restTimerButton, { borderColor: theme.border }]}
-            onPress={() => {
-              setRestTimerEntryId(entry.id);
-              setRestTimerRemainingSeconds(plannedSeconds);
-              setIsRestTimerRunning(false);
-            }}
-          >
-            <Text style={[styles.restTimerButtonText, { color: theme.primary }]}>{t("resetTimer")}</Text>
-          </Pressable>
-        </View>
-      </View>
+      <RestTimerControl
+        key={entry.id}
+        labels={{
+          pause: t("pauseTimer"),
+          reset: t("resetTimer"),
+          restTimer: t("restTimer"),
+          start: t("startTimer")
+        }}
+        plannedSeconds={plannedSeconds}
+        theme={theme}
+      />
     );
   }
 
@@ -10668,7 +12024,6 @@ function GymminApp() {
       const canGoNext = guidedGroupIndex < guidedGroups.length - 1;
       const currentStageName = currentGroup.entries[0]?.sourceStageName || t("stage");
       const shouldShowGuidedEntryTable = currentGroup.entries.some(isWorkoutSessionEntryFillRequired);
-      const elapsedSeconds = Math.max(0, Math.floor((sessionNow - Date.parse(session.startedAt)) / 1000));
 
       return (
         <View style={styles.sessionScreen}>
@@ -10679,9 +12034,7 @@ function GymminApp() {
                   {t("exercisePlural")} {guidedGroupIndex + 1}/{guidedGroups.length}
                 </Text>
               </View>
-              <Text style={[styles.sessionProgressText, styles.sessionProgressStage, { color: theme.primary }]} numberOfLines={1}>
-                {formatTimerSeconds(elapsedSeconds)}
-              </Text>
+              <SessionElapsedTimer label={t("goalTime")} startedAt={session.startedAt} theme={theme} />
             </View>
             {renderGuidedPlanPreview(session, currentGroup)}
             {shouldShowGuidedEntryTable ? renderGuidedEntryTable(currentGroup.entries.filter(isWorkoutSessionEntryFillRequired)) : null}
@@ -10786,6 +12139,106 @@ function GymminApp() {
     );
   }
 
+  function renderAppDialog() {
+    if (!appDialog) {
+      return null;
+    }
+
+    function closeDialog(action?: AppDialogAction) {
+      setAppDialog(null);
+      action?.onPress?.();
+    }
+
+    return (
+      <Modal
+        animationType="fade"
+        transparent
+        visible={Boolean(appDialog)}
+        onRequestClose={() => setAppDialog(null)}
+      >
+        <View style={styles.appDialogBackdrop}>
+          <View style={[styles.appDialogPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View style={styles.appDialogBody}>
+              <Text style={[styles.appDialogTitle, { color: theme.text }]}>{appDialog.title}</Text>
+              <Text style={[styles.appDialogMessage, { color: theme.muted }]}>{appDialog.message}</Text>
+            </View>
+            <View style={[styles.appDialogFooter, { borderTopColor: theme.border }]}>
+              {appDialog.actions.map((action, index) => {
+                const isDestructive = action.variant === "destructive";
+                const isLast = index === appDialog.actions.length - 1;
+
+                return (
+                  <Pressable
+                    key={`${action.label}-${index}`}
+                    accessibilityRole="button"
+                    style={[
+                      styles.appDialogFooterButton,
+                      !isLast ? { borderRightColor: theme.border, borderRightWidth: 1 } : null
+                    ]}
+                    onPress={() => closeDialog(action)}
+                  >
+                    <Text
+                      style={[
+                        styles.appDialogFooterButtonText,
+                        { color: isDestructive ? theme.danger : theme.primary }
+                      ]}
+                    >
+                      {action.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
+  function renderAchievementPreviewModal() {
+    if (!selectedAchievementPreview) {
+      return null;
+    }
+
+    return (
+      <Modal
+        animationType="fade"
+        transparent
+        visible={Boolean(selectedAchievementPreview)}
+        onRequestClose={() => setSelectedAchievementPreview(null)}
+      >
+        <View style={styles.achievementPreviewBackdrop}>
+          <Pressable
+            accessibilityRole="button"
+            style={StyleSheet.absoluteFill}
+            onPress={() => setSelectedAchievementPreview(null)}
+          />
+          <View style={[styles.achievementPreviewPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View style={styles.achievementPreviewHeader}>
+              <Text style={[styles.achievementPreviewTitle, { color: theme.text }]} numberOfLines={2}>
+                {selectedAchievementPreview.title}
+              </Text>
+              <Pressable
+                accessibilityLabel={t("close")}
+                accessibilityRole="button"
+                style={[styles.achievementPreviewCloseButton, { backgroundColor: theme.secondaryBand }]}
+                onPress={() => setSelectedAchievementPreview(null)}
+              >
+                <Ionicons name="close-outline" size={24} color={theme.primary} />
+              </Pressable>
+            </View>
+            <Image
+              accessibilityIgnoresInvertColors
+              resizeMode="contain"
+              source={selectedAchievementPreview.imageSource}
+              style={styles.achievementPreviewImage}
+            />
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
   if (isAppLoading) {
     return (
       <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]}>
@@ -10831,48 +12284,96 @@ function GymminApp() {
               style={[styles.profileHeaderButton, { backgroundColor: theme.secondaryBand }]}
               onPress={openProfile}
             >
-              <Ionicons name={user ? "person" : "person-outline"} size={24} color={theme.primary} />
+              {userAvatarUri ? (
+                <Image
+                  resizeMode="cover"
+                  source={{ uri: userAvatarUri }}
+                  style={styles.profileHeaderAvatarImage}
+                />
+              ) : (
+                <Ionicons name={user ? "person" : "person-outline"} size={24} color={theme.primary} />
+              )}
             </Pressable>
           ) : null}
         </View>
 
-        <ScrollView
-          contentContainerStyle={[
-            styles.content,
-            {
-              paddingBottom:
-                activeScreen === "builder"
-                  ? stickyActionBottom + 118
-                  : bottomNavHeight + 28
-            }
-          ]}
+        {achievementToast ? (
+          <View
+            accessibilityLiveRegion="polite"
+            style={[
+              styles.achievementToast,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.primary,
+                shadowColor: "#000000"
+              }
+            ]}
+          >
+            <View style={[styles.achievementToastIcon, { backgroundColor: theme.secondaryBand }]}>
+              <Ionicons name="trophy-outline" size={18} color={theme.primary} />
+            </View>
+            <View style={styles.achievementToastCopy}>
+              <Text style={[styles.achievementToastTitle, { color: theme.primary }]}>
+                {t("achievementUnlockedToast")}
+              </Text>
+              <Text style={[styles.achievementToastText, { color: theme.text }]} numberOfLines={2}>
+                {achievementToast.title}
+                {achievementToast.extraCount > 0
+                  ? ` ${t("achievementMoreUnlocked").replace("{count}", String(achievementToast.extraCount))}`
+                  : ""}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? Math.max(insets.top, 20) + 64 : 0}
+          style={styles.keyboardAvoidingContent}
         >
-          {activeScreen === "home" && renderHome()}
-          {activeScreen === "workouts" && renderWorkouts()}
-          {activeScreen === "settings" && renderSettings()}
-          {activeScreen === "articleDetail" && renderArticleDetail()}
-          {activeScreen === "builder" && renderBuilder()}
-          {activeScreen === "workoutCreator" && renderWorkoutCreator()}
-          {activeScreen === "workoutAiRewrite" && renderWorkoutAiRewrite()}
-          {activeScreen === "workoutAiProposal" && renderWorkoutAiProposal()}
-          {activeScreen === "workoutDetail" && renderWorkoutDetail()}
-          {activeScreen === "workoutSession" && renderWorkoutSession()}
-          {activeScreen === "workoutHistory" && renderWorkoutHistoryScreen()}
-          {activeScreen === "workoutSessionDetail" && renderWorkoutSessionDetail()}
-          {activeScreen === "progress" && renderProgressScreen()}
-          {activeScreen === "exerciseDetail" && renderExerciseDetailScreen()}
-          {activeScreen === "exerciseProgress" && renderExerciseProgressScreen()}
-          {activeScreen === "favoriteExercises" && renderFavoriteExercises()}
-          {activeScreen === "aiCredits" && renderAiCredits()}
-          {activeScreen === "terms" && renderTerms()}
-          {activeScreen === "contact" && renderContact()}
-          {activeScreen === "bugReport" && renderBugReport()}
-          {activeScreen === "bugReportSuccess" && renderBugReportSuccess()}
-          {activeScreen === "profile" && renderProfile()}
-          {activeScreen === "forgotPassword" && renderForgotPassword()}
-          {activeScreen === "changePassword" && renderChangePassword()}
-          {activeScreen === "activeSessions" && renderActiveSessions()}
-        </ScrollView>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "none"}
+            contentContainerStyle={[
+              styles.content,
+              {
+                paddingBottom:
+                  activeScreen === "builder"
+                    ? stickyActionBottom + 118
+                    : activeScreen === "workoutSession"
+                      ? bottomNavHeight + (isKeyboardVisible ? 260 : 28)
+                      : bottomNavHeight + 28
+              }
+            ]}
+          >
+            {activeScreen === "home" && renderHome()}
+            {activeScreen === "workouts" && renderWorkouts()}
+            {activeScreen === "settings" && renderSettings()}
+            {activeScreen === "articleDetail" && renderArticleDetail()}
+            {activeScreen === "builder" && renderBuilder()}
+            {activeScreen === "workoutCreator" && renderWorkoutCreator()}
+            {activeScreen === "workoutAiRewrite" && renderWorkoutAiRewrite()}
+            {activeScreen === "workoutAiProposal" && renderWorkoutAiProposal()}
+            {activeScreen === "workoutDetail" && renderWorkoutDetail()}
+            {activeScreen === "workoutSession" && renderWorkoutSession()}
+            {activeScreen === "workoutHistory" && renderWorkoutHistoryScreen()}
+            {activeScreen === "workoutSessionDetail" && renderWorkoutSessionDetail()}
+            {activeScreen === "progress" && renderProgressScreen()}
+            {activeScreen === "exerciseDetail" && renderExerciseDetailScreen()}
+            {activeScreen === "exerciseProgress" && renderExerciseProgressScreen()}
+            {activeScreen === "favoriteExercises" && renderFavoriteExercises()}
+            {activeScreen === "aiCredits" && renderAiCredits()}
+            {activeScreen === "achievements" && renderAchievements()}
+            {activeScreen === "terms" && renderTerms()}
+            {activeScreen === "contact" && renderContact()}
+            {activeScreen === "bugReport" && renderBugReport()}
+            {activeScreen === "bugReportSuccess" && renderBugReportSuccess()}
+            {activeScreen === "profile" && renderProfile()}
+            {activeScreen === "forgotPassword" && renderForgotPassword()}
+            {activeScreen === "changePassword" && renderChangePassword()}
+            {activeScreen === "activeSessions" && renderActiveSessions()}
+          </ScrollView>
+        </KeyboardAvoidingView>
 
         {activeScreen === "builder" && (
           <View
@@ -11010,6 +12511,8 @@ function GymminApp() {
           }}
         />
         {renderWorkoutSortSheet()}
+        {renderAchievementPreviewModal()}
+        {renderAppDialog()}
     </SafeAreaView>
   );
 }
@@ -11029,6 +12532,7 @@ function getScreenTitle(
     contact: t("contact"),
     exerciseDetail: t("exerciseDetails"),
     exerciseProgress: t("exerciseProgress"),
+    achievements: t("achievements"),
     aiCredits: t("aiCredits"),
     favoriteExercises: t("favoriteExercises"),
     forgotPassword: t("resetPassword"),
@@ -11045,7 +12549,7 @@ function getScreenTitle(
     workoutCreator: t("aiCreator"),
     workoutDetail: t("workout"),
     workoutHistory: t("workoutHistoryTitle"),
-    workoutSession: t("startWorkout"),
+    workoutSession: t("workout"),
     workoutSessionDetail: t("workoutDetails"),
     workouts: t("workouts")
   };
@@ -13757,9 +15261,16 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     width: 38
   },
+  profileHeaderAvatarImage: {
+    height: "100%",
+    width: "100%"
+  },
   content: {
     gap: 18,
     padding: 20
+  },
+  keyboardAvoidingContent: {
+    flex: 1
   },
   loginPanel: {
     alignItems: "stretch",
@@ -14251,6 +15762,25 @@ const styles = StyleSheet.create({
   historyScreen: {
     gap: 14
   },
+  exerciseDetailTopActions: {
+    alignItems: "flex-end"
+  },
+  exerciseDetailTags: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 6
+  },
+  exerciseDetailTag: {
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5
+  },
+  exerciseDetailTagText: {
+    fontSize: 12,
+    fontWeight: "800"
+  },
   segmentedControl: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -14637,6 +16167,200 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     lineHeight: 19
   },
+  workoutDetailTable: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  workoutDetailTableHeader: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 38,
+    paddingHorizontal: 8,
+    paddingVertical: 7
+  },
+  workoutDetailTableHeaderText: {
+    fontSize: 11,
+    fontWeight: "900",
+    textTransform: "uppercase"
+  },
+  workoutDetailTableRow: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 50,
+    paddingHorizontal: 8,
+    paddingVertical: 7
+  },
+  workoutDetailTableRowLast: {
+    borderBottomWidth: 0
+  },
+  workoutDetailTableIndexCell: {
+    alignItems: "center",
+    flexShrink: 0,
+    width: 34
+  },
+  workoutDetailTableExerciseCell: {
+    flex: 1,
+    minWidth: 0
+  },
+  workoutDetailTableSmallCell: {
+    flexShrink: 0,
+    textAlign: "center",
+    width: 42
+  },
+  workoutDetailTableRestCell: {
+    flexShrink: 0,
+    textAlign: "center",
+    width: 58
+  },
+  workoutDetailTableResultCell: {
+    flexShrink: 0,
+    textAlign: "center",
+    width: 72
+  },
+  workoutDetailTableActionCell: {
+    flexShrink: 0,
+    height: 34,
+    width: 34
+  },
+  workoutDetailTableBadge: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 30,
+    justifyContent: "center",
+    width: 30
+  },
+  workoutDetailTableExerciseName: {
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  workoutDetailTableNote: {
+    fontSize: 11,
+    fontWeight: "700",
+    marginTop: 2
+  },
+  workoutDetailTableValue: {
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  workoutSessionDetailTableScroll: {
+    marginHorizontal: -2
+  },
+  workoutSessionDetailTableScrollContent: {
+    paddingHorizontal: 2
+  },
+  workoutSessionDetailTable: {
+    borderRadius: 8,
+    borderWidth: 1,
+    minWidth: 552,
+    overflow: "hidden"
+  },
+  workoutSessionDetailTableHeader: {
+    alignItems: "stretch",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    minHeight: 54
+  },
+  workoutSessionDetailHeaderText: {
+    fontSize: 11,
+    fontWeight: "900",
+    textAlign: "center",
+    textTransform: "uppercase"
+  },
+  workoutSessionDetailHeaderCell: {
+    alignItems: "center",
+    borderRightWidth: 1,
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    paddingVertical: 7
+  },
+  workoutSessionDetailExerciseGroup: {
+    borderBottomWidth: 2,
+    flexDirection: "row"
+  },
+  workoutSessionDetailExerciseGroupLast: {
+    borderBottomWidth: 0
+  },
+  workoutSessionDetailExerciseCell: {
+    borderRightWidth: 1,
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    width: 204
+  },
+  workoutSessionDetailSetsCell: {
+    flex: 1
+  },
+  workoutSessionDetailSetRow: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    minHeight: 46,
+    paddingHorizontal: 8,
+    paddingVertical: 6
+  },
+  workoutSessionDetailSetRowLast: {
+    borderBottomWidth: 0
+  },
+  workoutSessionDetailSetCell: {
+    borderRightWidth: 1,
+    flexShrink: 0,
+    textAlign: "center",
+    width: 48
+  },
+  workoutSessionDetailRepsHeader: {
+    alignItems: "center",
+    borderRightWidth: 1,
+    justifyContent: "center",
+    paddingTop: 7,
+    width: 112
+  },
+  workoutSessionDetailRepsSubHeader: {
+    borderTopWidth: 1,
+    flexDirection: "row",
+    marginTop: 5,
+    width: "100%"
+  },
+  workoutSessionDetailRepsCell: {
+    borderRightWidth: 1,
+    flexShrink: 0,
+    paddingHorizontal: 4,
+    paddingVertical: 5,
+    textAlign: "center",
+    width: 56
+  },
+  workoutSessionDetailWeightCell: {
+    borderRightWidth: 1,
+    flexShrink: 0,
+    paddingHorizontal: 4,
+    textAlign: "center",
+    width: 80
+  },
+  workoutSessionDetailVolumeCell: {
+    flexShrink: 0,
+    paddingHorizontal: 4,
+    textAlign: "center",
+    width: 90
+  },
+  inlineTooltip: {
+    alignSelf: "stretch",
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10
+  },
+  inlineTooltipText: {
+    fontSize: 12,
+    fontWeight: "800",
+    textAlign: "center"
+  },
+  disabledActionButton: {
+    opacity: 0.58
+  },
   workoutDetailSeriesList: {
     gap: 8
   },
@@ -14738,6 +16462,52 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 18
   },
+  appDialogBackdrop: {
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.52)",
+    flex: 1,
+    justifyContent: "center",
+    padding: 24
+  },
+  appDialogPanel: {
+    borderRadius: 8,
+    borderWidth: 1,
+    maxWidth: 420,
+    overflow: "hidden",
+    width: "100%"
+  },
+  appDialogBody: {
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 22
+  },
+  appDialogTitle: {
+    fontSize: 20,
+    fontWeight: "900",
+    lineHeight: 26
+  },
+  appDialogMessage: {
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 22
+  },
+  appDialogFooter: {
+    borderTopWidth: 1,
+    flexDirection: "row",
+    minHeight: 54
+  },
+  appDialogFooterButton: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 12
+  },
+  appDialogFooterButtonText: {
+    fontSize: 13,
+    fontWeight: "900",
+    textAlign: "center",
+    textTransform: "uppercase"
+  },
   exerciseMuscleModal: {
     borderRadius: 8,
     borderWidth: 1,
@@ -14790,6 +16560,15 @@ const styles = StyleSheet.create({
     gap: 2,
     minWidth: 0
   },
+  sessionElapsedTimer: {
+    alignItems: "baseline",
+    flexDirection: "row",
+    flexShrink: 0,
+    gap: 6
+  },
+  sessionElapsedLabel: {
+    flexShrink: 0
+  },
   sessionProgressStage: {
     flexShrink: 1,
     fontWeight: "900",
@@ -14841,22 +16620,23 @@ const styles = StyleSheet.create({
   guidedEntryTable: {
     borderRadius: 8,
     borderWidth: 1,
-    overflow: "hidden"
+    gap: 8,
+    padding: 8
   },
   guidedEntryRow: {
-    borderBottomWidth: 1,
-    gap: 10,
-    padding: 10
-  },
-  guidedEntryRowLast: {
-    borderBottomWidth: 0
-  },
-  guidedEntryDone: {
     alignItems: "center",
     flexDirection: "row",
     gap: 10
   },
+  guidedEntryDone: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    minHeight: 46,
+    width: 34
+  },
   guidedEntryFields: {
+    flex: 1,
     flexDirection: "row",
     gap: 10
   },
@@ -14970,6 +16750,184 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "flex-end"
+  },
+  profileAvatarPanel: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 12,
+    padding: 18
+  },
+  profileAvatarFrame: {
+    alignItems: "center",
+    borderRadius: 48,
+    height: 96,
+    justifyContent: "center",
+    overflow: "hidden",
+    width: 96
+  },
+  profileAvatarImage: {
+    height: "100%",
+    width: "100%"
+  },
+  profileAvatarActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    justifyContent: "center"
+  },
+  achievementSummaryCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    padding: 14
+  },
+  achievementList: {
+    gap: 10
+  },
+  achievementCard: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 14,
+    padding: 12
+  },
+  achievementIcon: {
+    alignItems: "center",
+    borderRadius: 10,
+    height: 82,
+    justifyContent: "center",
+    overflow: "hidden",
+    width: 82
+  },
+  achievementImage: {
+    height: 82,
+    width: 82
+  },
+  achievementImageSlot: {
+    alignItems: "center",
+    height: 82,
+    justifyContent: "center",
+    width: 82
+  },
+  achievementPreviewBackdrop: {
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.72)",
+    flex: 1,
+    justifyContent: "center",
+    padding: 20
+  },
+  achievementPreviewPanel: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 16,
+    maxWidth: 420,
+    padding: 16,
+    width: "100%"
+  },
+  achievementPreviewHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "space-between"
+  },
+  achievementPreviewTitle: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: "900"
+  },
+  achievementPreviewCloseButton: {
+    alignItems: "center",
+    borderRadius: 18,
+    height: 36,
+    justifyContent: "center",
+    width: 36
+  },
+  achievementPreviewImage: {
+    alignSelf: "center",
+    aspectRatio: 1,
+    maxHeight: 330,
+    width: "100%"
+  },
+  achievementCopy: {
+    flex: 1,
+    gap: 8,
+    minWidth: 0
+  },
+  achievementTitleRow: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between"
+  },
+  achievementStatus: {
+    flexShrink: 0,
+    fontSize: 11,
+    fontWeight: "900",
+    textTransform: "uppercase"
+  },
+  achievementCount: {
+    fontSize: 17,
+    fontWeight: "900"
+  },
+  achievementLink: {
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  achievementProgressTrack: {
+    borderRadius: 8,
+    height: 8,
+    overflow: "hidden"
+  },
+  achievementProgressFill: {
+    borderRadius: 8,
+    height: "100%"
+  },
+  achievementProgressRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    justifyContent: "space-between"
+  },
+  achievementToast: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    elevation: 4,
+    flexDirection: "row",
+    gap: 10,
+    left: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    position: "absolute",
+    right: 18,
+    top: 94,
+    zIndex: 20
+  },
+  achievementToastIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 34,
+    justifyContent: "center",
+    width: 34
+  },
+  achievementToastCopy: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0
+  },
+  achievementToastTitle: {
+    fontSize: 12,
+    fontWeight: "900",
+    textTransform: "uppercase"
+  },
+  achievementToastText: {
+    fontSize: 14,
+    fontWeight: "800"
   },
   stepCard: {
     borderRadius: 8,

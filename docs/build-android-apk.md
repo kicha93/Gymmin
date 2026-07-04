@@ -195,7 +195,34 @@ If needed:
 gh auth login --hostname github.com --git-protocol https --web --scopes repo
 ```
 
-5. Build and publish:
+5. Build and publish with the one-command wrapper:
+
+```powershell
+npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://your-current-backend-url.example.com"
+```
+
+This wrapper:
+
+- loads the local signing env file from `C:\secure\gymmin-upload-key-codex-20260701.env.ps1` when it exists,
+- stops existing Gradle daemons for the main and short-path Android projects,
+- requires an explicit backend URL through `-ApiBaseUrl` or `GYMMIN_APK_API_BASE_URL`,
+- checks `GET /health` before building, so a stale ngrok/tunnel URL cannot be embedded silently,
+- builds the `arm64-v8a` release APK,
+- uploads it to `kicha93/gymmin-apk` release `v1.0`.
+
+Alternative with an environment variable:
+
+```powershell
+$env:GYMMIN_APK_API_BASE_URL = "https://your-current-backend-url.example.com"
+npm run mobile:github:apk:oneclick
+```
+
+If `/health` does not return `{"status":"ok"}`, the wrapper fails before the
+APK build. Start the backend/tunnel again, copy the fresh public backend URL,
+and rerun the command. This matters for account features such as login, avatar
+upload and AI credits because the API URL is baked into the installed APK.
+
+The lower-level command is still available when you want to pass every option manually:
 
 ```powershell
 npm run mobile:github:apk -- -ApiBaseUrl "https://your-backend-url.example.com"

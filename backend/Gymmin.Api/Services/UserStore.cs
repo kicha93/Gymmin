@@ -12,6 +12,9 @@ public interface IUserStore
     AuthResult Login(LoginRequest request, AuthRequestMetadata? metadata = null);
     AuthSessionContext? GetSessionByToken(string token);
     AuthUserResponse? GetUserByToken(string token);
+    UserAvatarMetadata? GetAvatarMetadata(string userId);
+    bool UpdateAvatar(string userId, string fileName, string contentType, DateTimeOffset updatedAt);
+    bool ClearAvatar(string userId);
     void RevokeSession(string token);
     IReadOnlyList<AuthSessionResponse> ListSessions(string userId, string? currentSessionId);
     bool RevokeSession(string userId, string sessionId, string reason);
@@ -438,7 +441,70 @@ public sealed class FileBackedUserStore : IUserStore
 
     private static AuthUserResponse ToResponse(PersistedUser user)
     {
-        return new AuthUserResponse(user.Id, user.Email, user.Name);
+        var avatar = ToAvatarMetadata(user);
+        return new AuthUserResponse(
+            user.Id,
+            user.Email,
+            user.Name,
+            FileSystemUserAvatarStorage.BuildAvatarUrl(avatar),
+            avatar?.UpdatedAt);
+    }
+
+    public UserAvatarMetadata? GetAvatarMetadata(string userId)
+    {
+        lock (_fileLock)
+        {
+            return _usersById.TryGetValue(userId, out var user) ? ToAvatarMetadata(user) : null;
+        }
+    }
+
+    public bool UpdateAvatar(string userId, string fileName, string contentType, DateTimeOffset updatedAt)
+    {
+        lock (_fileLock)
+        {
+            if (!_usersById.TryGetValue(userId, out var user))
+            {
+                return false;
+            }
+
+            user.AvatarFileName = fileName;
+            user.AvatarContentType = contentType;
+            user.AvatarUpdatedAt = updatedAt;
+            user.UpdatedAt = updatedAt;
+            SaveUsers();
+            return true;
+        }
+    }
+
+    public bool ClearAvatar(string userId)
+    {
+        lock (_fileLock)
+        {
+            if (!_usersById.TryGetValue(userId, out var user))
+            {
+                return false;
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            user.AvatarFileName = null;
+            user.AvatarContentType = null;
+            user.AvatarUpdatedAt = null;
+            user.UpdatedAt = now;
+            SaveUsers();
+            return true;
+        }
+    }
+
+    private static UserAvatarMetadata? ToAvatarMetadata(PersistedUser user)
+    {
+        if (string.IsNullOrWhiteSpace(user.AvatarFileName) ||
+            string.IsNullOrWhiteSpace(user.AvatarContentType) ||
+            user.AvatarUpdatedAt is null)
+        {
+            return null;
+        }
+
+        return new UserAvatarMetadata(user.AvatarFileName, user.AvatarContentType, user.AvatarUpdatedAt.Value);
     }
 
     private string AddSession(PersistedUser user, DateTimeOffset now, AuthRequestMetadata? metadata)
@@ -641,6 +707,9 @@ public sealed class FileBackedUserStore : IUserStore
         public string Email { get; set; } = "";
         public string Name { get; set; } = "";
         public PersistedPassword Password { get; set; } = new("", AuthSecurity.PasswordHashIterations, "");
+        public string? AvatarFileName { get; set; }
+        public string? AvatarContentType { get; set; }
+        public DateTimeOffset? AvatarUpdatedAt { get; set; }
         public List<PersistedUserSession> Sessions { get; set; } = [];
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }

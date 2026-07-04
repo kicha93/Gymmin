@@ -23,6 +23,7 @@ if (useDatabaseStorage)
     builder.Services.AddSingleton<IWorkoutPlanJobStore, EfWorkoutPlanJobStore>();
     builder.Services.AddSingleton<IFavoriteExerciseStore, EfFavoriteExerciseStore>();
     builder.Services.AddSingleton<IWorkoutSessionStore, EfWorkoutSessionStore>();
+    builder.Services.AddSingleton<IAchievementStore, EfAchievementStore>();
     builder.Services.AddSingleton<IAiCreditService, EfAiCreditService>();
     builder.Services.AddSingleton<IAiCreditPurchaseService, EfAiCreditPurchaseService>();
 }
@@ -34,6 +35,7 @@ else
     builder.Services.AddSingleton<IWorkoutPlanJobStore, FileBackedWorkoutPlanJobStore>();
     builder.Services.AddSingleton<IFavoriteExerciseStore, FileBackedFavoriteExerciseStore>();
     builder.Services.AddSingleton<IWorkoutSessionStore, FileBackedWorkoutSessionStore>();
+    builder.Services.AddSingleton<IAchievementStore, FileBackedAchievementStore>();
     builder.Services.AddSingleton<IAiCreditService, FileBackedAiCreditService>();
     builder.Services.AddSingleton<IAiCreditPurchaseService, FileBackedAiCreditPurchaseService>();
 }
@@ -44,6 +46,7 @@ builder.Services.AddHttpClient<IWorkoutPlanGenerator, OpenAiWorkoutPlanGenerator
 builder.Services.AddHttpClient<IGooglePlayPurchaseValidator, GooglePlayPurchaseValidator>();
 builder.Services.AddSingleton<IBugReportEmailSender, SmtpBugReportEmailSender>();
 builder.Services.AddSingleton<IPasswordResetEmailSender, SmtpPasswordResetEmailSender>();
+builder.Services.AddSingleton<IUserAvatarStorage, FileSystemUserAvatarStorage>();
 builder.Services.AddSingleton<AuthRateLimiter>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -186,6 +189,78 @@ app.MapGet("/api/auth/me", (HttpRequest request, IUserStore users) =>
     var token = GetBearerToken(request);
     var user = token is null ? null : users.GetUserByToken(token);
     return user is null ? Results.Unauthorized() : Results.Ok(user);
+});
+
+app.MapGet("/api/profile/avatar", (HttpRequest request, IUserStore users, IUserAvatarStorage avatars) =>
+{
+    var context = GetBearerSession(request, users);
+    if (context is null)
+    {
+        return Results.Unauthorized();
+    }
+
+    var avatar = users.GetAvatarMetadata(context.User.Id);
+    if (avatar is null)
+    {
+        return Results.NotFound();
+    }
+
+    var path = avatars.GetPath(context.User.Id, avatar.FileName);
+    if (path is null)
+    {
+        return Results.NotFound();
+    }
+
+    request.HttpContext.Response.Headers.CacheControl = "private, no-cache, max-age=0";
+    return Results.File(path, avatar.ContentType, enableRangeProcessing: false);
+});
+
+app.MapPost("/api/profile/avatar", async (
+    HttpRequest request,
+    IUserStore users,
+    IUserAvatarStorage avatars,
+    CancellationToken cancellationToken) =>
+{
+    var context = GetBearerSession(request, users);
+    if (context is null)
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!request.HasFormContentType)
+    {
+        return Results.BadRequest(new { error = "Avatar upload must use multipart/form-data." });
+    }
+
+    var form = await request.ReadFormAsync(cancellationToken);
+    var file = form.Files.GetFile("avatar");
+    var validation = avatars.Validate(file);
+    if (!validation.IsValid)
+    {
+        return Results.Json(new { error = validation.Error }, statusCode: validation.StatusCode);
+    }
+
+    var stored = await avatars.SaveAsync(context.User.Id, file!, cancellationToken);
+    users.UpdateAvatar(context.User.Id, stored.FileName, stored.ContentType, stored.UpdatedAt);
+
+    return Results.Ok(new
+    {
+        avatarUrl = FileSystemUserAvatarStorage.BuildAvatarUrl(new UserAvatarMetadata(stored.FileName, stored.ContentType, stored.UpdatedAt)),
+        avatarUpdatedAt = stored.UpdatedAt
+    });
+});
+
+app.MapDelete("/api/profile/avatar", (HttpRequest request, IUserStore users, IUserAvatarStorage avatars) =>
+{
+    var context = GetBearerSession(request, users);
+    if (context is null)
+    {
+        return Results.Unauthorized();
+    }
+
+    avatars.Delete(context.User.Id);
+    users.ClearAvatar(context.User.Id);
+    return Results.Ok(new { avatarUrl = (string?)null, avatarUpdatedAt = (DateTimeOffset?)null });
 });
 
 app.MapPost("/api/auth/logout", (HttpRequest request, IUserStore users) =>
@@ -567,6 +642,38 @@ app.MapPost("/api/sync/workout-sessions", (
     }
 
     var validationError = ValidateWorkoutSessionSync(body);
+    if (validationError is not null)
+    {
+        return Results.BadRequest(new { error = validationError });
+    }
+
+    return Results.Ok(store.Sync(userId, body));
+});
+
+app.MapGet("/api/achievements", (HttpRequest request, IAchievementStore store, IUserStore users) =>
+{
+    var userId = GetBearerUserId(request, users);
+    if (userId is null)
+    {
+        return Results.Unauthorized();
+    }
+
+    return Results.Ok(store.Get(userId));
+});
+
+app.MapPost("/api/sync/achievements", (
+    SyncAchievementsRequest body,
+    HttpRequest request,
+    IAchievementStore store,
+    IUserStore users) =>
+{
+    var userId = GetBearerUserId(request, users);
+    if (userId is null)
+    {
+        return Results.Unauthorized();
+    }
+
+    var validationError = ValidateAchievementsSync(body);
     if (validationError is not null)
     {
         return Results.BadRequest(new { error = validationError });
@@ -1053,6 +1160,61 @@ static string? ValidateWorkoutSession(UpsertWorkoutSessionRequest request)
         executionMode is not ("guided" or "readonly-post-workout" or "inline-table"))
     {
         return "Invalid workout execution mode.";
+    }
+
+    return null;
+}
+
+static string? ValidateAchievementsSync(SyncAchievementsRequest request)
+{
+    const int maxAchievements = 500;
+    const int maxAchievementIdLength = 100;
+    const long maxForegroundSeconds = 10_000_000_000;
+
+    if ((request.Unlocked?.Count ?? 0) > maxAchievements)
+    {
+        return "Too many achievements.";
+    }
+
+    foreach (var achievement in request.Unlocked ?? [])
+    {
+        if (string.IsNullOrWhiteSpace(achievement.AchievementId))
+        {
+            return "AchievementId is required.";
+        }
+
+        if (achievement.AchievementId.Trim().Length > maxAchievementIdLength)
+        {
+            return "AchievementId is too long.";
+        }
+
+        if (achievement.UnlockedAt == default)
+        {
+            return "UnlockedAt is required.";
+        }
+
+        if (achievement.ProgressAtUnlock is < 0)
+        {
+            return "ProgressAtUnlock cannot be negative.";
+        }
+    }
+
+    if (request.AppUsageStats is { } usage)
+    {
+        if (usage.TotalForegroundSeconds < 0)
+        {
+            return "TotalForegroundSeconds cannot be negative.";
+        }
+
+        if (usage.TotalForegroundSeconds > maxForegroundSeconds)
+        {
+            return "TotalForegroundSeconds is too large.";
+        }
+
+        if (usage.UpdatedAt == default)
+        {
+            return "App usage UpdatedAt is required.";
+        }
     }
 
     return null;

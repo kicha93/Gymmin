@@ -26,7 +26,9 @@ public sealed record LogoutAllRequest(
 public sealed record AuthUserResponse(
     string Id,
     string Email,
-    string Name);
+    string Name,
+    string? AvatarUrl = null,
+    DateTimeOffset? AvatarUpdatedAt = null);
 
 public sealed record AuthResponse(
     string Token,

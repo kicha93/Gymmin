@@ -97,6 +97,12 @@ Działa:
 - unieważnianie innych sesji po zmianie hasła,
 - unieważnianie wszystkich sesji po resecie hasła.
 
+Avatar uzytkownika jest obslugiwany w Profilu. Zalogowany uzytkownik moze
+zmienic albo usunac avatar. Mobile wysyla obraz przez `multipart/form-data`,
+backend zapisuje go jako plik w `App_Data/avatars`, a `GET /api/auth/me`
+zwraca `avatarUrl` i `avatarUpdatedAt`. Header aplikacji pokazuje avatar, jesli
+jest ustawiony; anonymous user widzi domyslna ikone.
+
 Brakuje jeszcze:
 
 - potwierdzania emaila,
@@ -496,6 +502,35 @@ Aktualny tor produkcyjny dla backendu: PostgreSQL provider, jawne migracje i dep
 4. Dopracować UX konfliktów synchronizacji i scenariusze multi-device.
 5. Potwierdzanie emaila, OAuth/social login i 2FA zostają osobnymi przyszłymi etapami.
 6. Garmin integration pozostaje placeholderem i jest poza aktualnym zakresem prac.
+
+## Osiagniecia / achievements
+
+Stage 13B completes achievements end-to-end. Achievements are still evaluated
+on-device from local `WorkoutSession` history and foreground app usage stats,
+but signed-in users now sync unlocked achievement state and app usage stats with
+the backend. Unlocked achievements remain unlocked even if the user later
+deletes a workout history entry.
+
+Current scope:
+
+- 30 static achievement definitions with PL/EN title and description fields.
+- PNG achievement images bundled under `apps/mobile/assets/achievements`.
+- Profile summary card with unlocked count, progress bar and latest unlock.
+- Full Achievements screen with all/unlocked/locked filters.
+- App usage tracking through React Native `AppState`.
+- Weekly metrics include Monday-based weekly streaks and
+  `maxCompletedWorkoutsInSingleWeek`.
+- Backend `UserAchievements` and `UserAppUsageStats` storage for File and
+  Database providers.
+- `GET /api/achievements` and `POST /api/sync/achievements`.
+- Anonymous achievements can be merged into an account through the existing
+  anonymous data dialog.
+- Lightweight unlock banner for newly unlocked local achievements.
+- Unit/integration tests for metrics, unlock evaluation, storage isolation,
+  backend validation, user scoping and sync merge rules.
+
+Out of scope for this stage: leaderboards, public profiles, sharing,
+backend-side definition versioning and anti-cheat.
 
 ## APK poza Expo Go
 

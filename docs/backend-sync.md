@@ -28,7 +28,7 @@ Token jest zwracany po logowaniu lub rejestracji. Mobile zapisuje token i odtwar
 GET /api/auth/me
 ```
 
-Endpointy kontowe wymagają bearer tokena. Dotyczy to settings, workouts, favorite exercises, workout sessions i AI creator jobs.
+Endpointy kontowe wymagają bearer tokena. Dotyczy to settings, workouts, favorite exercises, workout sessions, achievements, AI credits i AI creator jobs.
 
 ## Storage backendu
 
@@ -47,7 +47,10 @@ Dane są w `backend/Gymmin.Api/App_Data`:
 - `workouts.json`
 - `favorite-exercises.json`
 - `workout-sessions.json`
+- `user-achievements.json`
+- `user-app-usage-stats.json`
 - `workout-creator-jobs.json`
+- `avatars/` for profile avatar image files
 
 ### Database provider
 
@@ -134,6 +137,42 @@ Request:
 GET /api/auth/me
 Authorization: Bearer {token}
 ```
+
+Response includes basic account data and optional avatar metadata:
+
+```json
+{
+  "id": "user-id",
+  "email": "user@example.com",
+  "name": "Jan",
+  "avatarUrl": "/api/profile/avatar?v=...",
+  "avatarUpdatedAt": "2026-07-04T10:00:00Z"
+}
+```
+
+### Profile avatar
+
+```http
+GET /api/profile/avatar
+POST /api/profile/avatar
+DELETE /api/profile/avatar
+Authorization: Bearer {token}
+```
+
+`POST /api/profile/avatar` accepts `multipart/form-data` with field `avatar`.
+Allowed image types are JPEG, PNG and WebP. The backend validates content type
+and file magic bytes, rejects empty files, unsupported formats and files larger
+than 2 MB. Images are stored as backend files under `App_Data/avatars`, while
+the user record stores only `AvatarFileName`, `AvatarContentType` and
+`AvatarUpdatedAt`. `GET /api/profile/avatar` returns only the current user's
+avatar with private/no-cache headers. `DELETE` is idempotent and clears avatar
+metadata. Mobile uses `avatarUpdatedAt` as a cache buster and does not store
+base64 image data in AsyncStorage.
+
+Troubleshooting: avatar upload depends on the same `ApiBaseUrl` as auth and
+sync. Standalone APKs embed this URL at build time. If `/health` for that URL
+returns `404` or does not respond, upload may show a network error. Rebuild the
+APK with the current backend URL.
 
 ### Logout
 
@@ -328,6 +367,47 @@ przez `deletedAt`. Taki tombstone jest zachowywany lokalnie, znika z UI
 historii/progresu i jest wysylany przez `POST /api/sync/workout-sessions`.
 Usuniecie definicji treningu nie usuwa powiazanych sesji historii; historia
 korzysta z `sourceWorkoutName` i snapshotu planu jako fallbacku display.
+
+## Achievements sync
+
+Endpointy:
+
+```http
+GET /api/achievements
+POST /api/sync/achievements
+```
+
+Achievement definitions pozostają statyczne w mobile. Backend przechowuje tylko
+stan użytkownika:
+
+- odblokowane `achievementId`,
+- `unlockedAt`,
+- `progressAtUnlock`,
+- `updatedAt`,
+- `appUsageStats.totalForegroundSeconds`.
+
+Merge rules:
+
+- unlocked achievements są scalane jako union po `achievementId`,
+- duplikat zachowuje najwcześniejsze `unlockedAt`,
+- `progressAtUnlock` zachowuje większą wartość,
+- achievementy nie mają tombstone i nie są cofane,
+- app usage stats scalają się przez `max(totalForegroundSeconds)`, żeby nie
+  podwajać czasu z wielu urządzeń,
+- backend waliduje puste ID, limit requestu i ujemne wartości.
+
+Mobile storage:
+
+```text
+gymmin.account.{owner}.achievements
+gymmin.account.{owner}.appUsageStats
+gymmin.account.{owner}.achievementsSync
+```
+
+Anonymous achievements biorą udział w istniejącym flow anonymous merge. Po
+`Połącz` lokalne odblokowania i app usage trafiają do konta i są syncowane do
+backendu. `Nie teraz` zostawia je w przestrzeni anonymous, a `Usuń dane lokalne`
+usuwa je razem z innymi anonymous account-scoped danymi.
 
 ## Per-user local storage
 

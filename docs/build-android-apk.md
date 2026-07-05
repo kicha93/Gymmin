@@ -367,7 +367,7 @@ npm run mobile:build:android-apk -- -ApiBaseUrl "https://your-backend-url.exampl
 - The `preview-apk` profile creates an `.apk` for direct installation on Android.
 - The `production` profile is configured for an Android App Bundle (`.aab`) for future store distribution.
 - Local notifications should be tested in a standalone Android APK or development build, because Expo Go can behave differently from an installed Android app.
-- Google Play Billing cannot be tested in Expo Go. AI credit purchases require a native Android build with the billing module, package name `com.gymmin.app`, Play Console one-time products (`ai_tokens_10`, `ai_tokens_30`, `ai_tokens_100`) and license testers/internal testing.
+- Google Play Billing cannot be tested in Expo Go. AI credit purchases require a native Android build with the billing module, package name `com.gymmin.app`, Play Console one-time products (`ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10`) and license testers/internal testing.
 - Direct APK sideload is useful for app QA, but real Google Play purchase lifecycle should be verified through Play Console internal testing or another Google-supported test track.
 - `react-native-iap` and its peer dependency `react-native-nitro-modules` are the native Google Play Billing stack. After changing either dependency, rebuild Android; Expo Go will only show the controlled billing-unavailable fallback.
 - Local Android build smoke requires `ANDROID_HOME` or `ANDROID_SDK_ROOT`. On this machine Android SDK command-line tools were installed under `%LOCALAPPDATA%\Android\Sdk`, and Android APK plus release AAB build smoke were verified after adding the Billing/Nitro stack.

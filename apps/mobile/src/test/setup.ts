@@ -29,6 +29,7 @@ vi.mock("expo-notifications", () => ({
   AndroidImportance: { DEFAULT: 3 },
   SchedulableTriggerInputTypes: { DATE: "date" },
   cancelScheduledNotificationAsync: vi.fn(async () => undefined),
+  getAllScheduledNotificationsAsync: vi.fn(async () => []),
   getPermissionsAsync: vi.fn(async () => ({ granted: true, status: "granted" })),
   requestPermissionsAsync: vi.fn(async () => ({ granted: true, status: "granted" })),
   scheduleNotificationAsync: vi.fn(async () => "notification-id"),

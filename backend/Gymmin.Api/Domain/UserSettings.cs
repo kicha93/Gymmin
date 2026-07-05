@@ -8,6 +8,7 @@ public sealed record UserSettings(
     string DefaultWeight,
     StageType? DefaultStageType,
     string DefaultWorkoutExecutionMode,
+    string DefaultWorkoutTableOrientation,
     IReadOnlyDictionary<string, bool> CollapsedPanels,
     bool IsAuthPanelDismissed,
     WorkoutReminderSettings? WorkoutReminders,
@@ -23,6 +24,7 @@ public sealed record UserSettings(
             request.DefaultWeight?.Trim() ?? string.Empty,
             request.DefaultStageType,
             NormalizeOption(request.DefaultWorkoutExecutionMode, existing?.DefaultWorkoutExecutionMode ?? "guided"),
+            NormalizeWorkoutTableOrientation(request.DefaultWorkoutTableOrientation, existing?.DefaultWorkoutTableOrientation ?? "vertical"),
             request.CollapsedPanels ?? new Dictionary<string, bool>(),
             request.IsAuthPanelDismissed,
             request.WorkoutReminders ?? existing?.WorkoutReminders,
@@ -34,16 +36,28 @@ public sealed record UserSettings(
         var normalized = value?.Trim();
         return string.IsNullOrWhiteSpace(normalized) ? fallback : normalized;
     }
+
+    private static string NormalizeWorkoutTableOrientation(string? value, string fallback)
+    {
+        var normalized = value?.Trim();
+        return normalized is "vertical" or "horizontal" ? normalized : fallback;
+    }
 }
 
 public sealed record WorkoutReminderSettings(
     bool Enabled,
-    IReadOnlyList<int> DaysOfWeek,
-    string Time,
+    IReadOnlyList<int>? DaysOfWeek,
+    string? Time,
+    IReadOnlyList<ReminderDaySchedule>? WeeklySchedule,
     string Message,
     string? Description,
     bool OnlyIfNoWorkoutToday,
     DateTimeOffset? UpdatedAt);
+
+public sealed record ReminderDaySchedule(
+    string Day,
+    bool Enabled,
+    string Time);
 
 public sealed record UpsertUserSettingsRequest(
     string? Language,
@@ -52,6 +66,7 @@ public sealed record UpsertUserSettingsRequest(
     string? DefaultWeight,
     StageType? DefaultStageType,
     string? DefaultWorkoutExecutionMode,
+    string? DefaultWorkoutTableOrientation,
     IReadOnlyDictionary<string, bool>? CollapsedPanels,
     bool IsAuthPanelDismissed,
     WorkoutReminderSettings? WorkoutReminders,

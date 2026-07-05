@@ -447,7 +447,9 @@ public sealed class FileBackedUserStore : IUserStore
             user.Email,
             user.Name,
             FileSystemUserAvatarStorage.BuildAvatarUrl(avatar),
-            avatar?.UpdatedAt);
+            avatar?.UpdatedAt,
+            user.CreatedAt,
+            user.UpdatedAt);
     }
 
     public UserAvatarMetadata? GetAvatarMetadata(string userId)

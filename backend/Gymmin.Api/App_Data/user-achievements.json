@@ -1,0 +1,16 @@
+{
+  "dc8fda5cc05b4c04ac6e6307b67b6529": [
+    {
+      "achievementId": "first_workout",
+      "unlockedAt": "2026-07-04T10:44:39.282+00:00",
+      "progressAtUnlock": 1,
+      "updatedAt": "2026-07-05T15:46:12.3801855+00:00"
+    },
+    {
+      "achievementId": "one_ton_volume",
+      "unlockedAt": "2026-07-04T10:44:39.282+00:00",
+      "progressAtUnlock": 5.983,
+      "updatedAt": "2026-07-05T15:46:12.3801855+00:00"
+    }
+  ]
+}

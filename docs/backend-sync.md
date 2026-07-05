@@ -231,6 +231,11 @@ PUT /api/settings
 
 Jeśli ustawień brak, backend zwraca `204 No Content`.
 
+Settings include the workout execution defaults used by mobile, including
+`defaultWorkoutExecutionMode` and `defaultWorkoutTableOrientation`. The table
+orientation value is `vertical` or `horizontal`; missing legacy values fall back
+to `vertical`.
+
 Synchronizowane pola obejmują:
 
 - `language`
@@ -249,14 +254,22 @@ Przykład `workoutReminders`:
 ```json
 {
   "enabled": true,
-  "daysOfWeek": [1, 3, 5],
-  "time": "18:00",
+  "weeklySchedule": [
+    { "day": "monday", "enabled": true, "time": "18:00" },
+    { "day": "tuesday", "enabled": false, "time": "18:00" },
+    { "day": "wednesday", "enabled": true, "time": "19:30" },
+    { "day": "thursday", "enabled": false, "time": "18:00" },
+    { "day": "friday", "enabled": true, "time": "17:00" },
+    { "day": "saturday", "enabled": false, "time": "18:00" },
+    { "day": "sunday", "enabled": false, "time": "18:00" }
+  ],
   "message": "Czas na trening",
+  "description": "Otwórz Gymmin i wykonaj zaplanowany trening.",
   "onlyIfNoWorkoutToday": true
 }
 ```
 
-Konwencja dni tygodnia: `1 = Monday`, `7 = Sunday`.
+Nowe ustawienia używają nazw dni `monday` ... `sunday`. Stare ustawienia `daysOfWeek + time` są nadal normalizowane po stronie mobile do `weeklySchedule`; konwencja legacy to `1 = Monday`, `7 = Sunday`.
 
 Notification IDs nie są synchronizowane. Zostają lokalnie pod:
 
@@ -434,7 +447,7 @@ Anonymous -> logged in:
 
 ## AI credits
 
-AI credits, czyli tokeny AI w UI, sa przypisane do konta uzytkownika. Backend jest jedynym zrodlem prawdy dla salda.
+AI credits, czyli `Kredyty` w UI, sa przypisane do konta uzytkownika. Backend jest jedynym zrodlem prawdy dla salda.
 
 Zasady:
 
@@ -448,7 +461,7 @@ Zasady:
 - idempotency key jest scoped po `UserId + operation type + IdempotencyKey`,
 - retry tego samego startu joba nie pobiera drugiego tokena,
 - refund jest idempotentny i w Database provider zapisuje ledger oraz metadata joba w jednej transakcji,
-- File provider jest tylko dev fallbackiem; produkcyjne tokeny powinny dzialac na Database/PostgreSQL.
+- File provider jest tylko dev fallbackiem; produkcyjne kredyty powinny dzialac na Database/PostgreSQL.
 
 Smoke test PostgreSQL:
 
@@ -479,14 +492,14 @@ Konfiguracja:
 {
   "Gymmin": {
     "AiCredits": {
-      "InitialGrant": 3,
+      "InitialGrant": 1,
       "PlanCost": 1,
       "RewriteCost": 1,
       "DevGrantEnabled": true,
       "Packs": [
-        { "ProductId": "ai_tokens_10", "Credits": 10, "DisplayName": "10 tokenow AI", "Active": true },
-        { "ProductId": "ai_tokens_30", "Credits": 30, "DisplayName": "30 tokenow AI", "Active": true },
-        { "ProductId": "ai_tokens_100", "Credits": 100, "DisplayName": "100 tokenow AI", "Active": true }
+        { "ProductId": "ai_tokens_1", "Credits": 1, "DisplayName": "1 kredyt", "Active": true },
+        { "ProductId": "ai_tokens_3", "Credits": 3, "DisplayName": "3 kredyty", "Active": true },
+        { "ProductId": "ai_tokens_10", "Credits": 10, "DisplayName": "10 kredytow", "Active": true }
       ]
     },
     "GooglePlay": {
@@ -515,7 +528,7 @@ Brak tokenow dla AI zwraca `402`:
 
 ### Google Play Billing purchase validation
 
-Tokeny AI sa produktami jednorazowymi/consumable w Google Play. Mobile uruchamia zakup i wysyla `productId` oraz `purchaseToken` do backendu. Mobile nigdy nie dodaje tokenow lokalnie.
+Kredyty sa produktami jednorazowymi/consumable w Google Play. Mobile uruchamia zakup i wysyla `productId` oraz `purchaseToken` do backendu. Mobile nigdy nie dodaje kredytow lokalnie.
 
 Backendowy endpoint:
 
@@ -546,7 +559,7 @@ Backend:
 - retry tego samego `purchaseToken` nie nalicza tokenow drugi raz,
 - ten sam `purchaseToken` u innego usera zwraca konflikt.
 
-Mobile uzywa `react-native-iap` oraz `react-native-nitro-modules` jako natywnego stacka Google Play Billing. Jezeli Billing/Play Store nie jest dostepny w danym buildzie lub na urzadzeniu, ekran `Tokeny AI` pokazuje kontrolowany fallback i nie crashuje aplikacji.
+Mobile uzywa `react-native-iap` oraz `react-native-nitro-modules` jako natywnego stacka Google Play Billing. Jezeli Billing/Play Store nie jest dostepny w danym buildzie lub na urzadzeniu, ekran `Kredyty` pokazuje kontrolowany fallback i nie crashuje aplikacji.
 
 Success:
 

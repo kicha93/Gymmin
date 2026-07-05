@@ -4234,7 +4234,7 @@
     "sport": 0,
     "steps": [
       {
-        "id": "2857972d-8511-4883-80c8-f78799d52513",
+        "id": "36033cf4-1f89-4c5d-9dea-e812669fceea",
         "clientStepId": "ai-workout-1782677311170-1-stage-warmup",
         "kind": 0,
         "label": "Rozgrzewka",
@@ -4250,7 +4250,7 @@
         "notes": ""
       },
       {
-        "id": "21f426b0-ca35-4e5a-958d-89f966530937",
+        "id": "2b7089c2-e7f4-4ec7-b255-c00205fa3255",
         "clientStepId": "ai-workout-1782677311170-1-set-warmup",
         "kind": 1,
         "label": "",
@@ -4266,7 +4266,7 @@
         "notes": ""
       },
       {
-        "id": "586de27d-2fa9-4495-87fb-98cd5fe9cb53",
+        "id": "545cf040-e471-4107-a3db-39f754464236",
         "clientStepId": "ai-workout-1782677311170-1-warmup-button-press",
         "kind": 2,
         "label": "",
@@ -4282,7 +4282,7 @@
         "notes": ""
       },
       {
-        "id": "2dbead51-6cc4-42dd-acaa-54c0234f41e5",
+        "id": "17b34de7-2363-4e7b-93f1-155b6f819352",
         "clientStepId": "ai-workout-1782677311170-1-stage-main",
         "kind": 0,
         "label": "\u0106wiczenia",
@@ -4298,7 +4298,7 @@
         "notes": ""
       },
       {
-        "id": "7775099d-a64c-4ce9-8c23-a47111afa5c8",
+        "id": "4fe2c1ab-ad77-4c93-bf28-a1addfefd20a",
         "clientStepId": "ai-workout-1782677311170-1-set-0",
         "kind": 1,
         "label": "",
@@ -4314,7 +4314,7 @@
         "notes": "Traktuj jako ci\u0119\u017Cki, techniczny bodziec; nie wykonuj serii do upadku. Zachowaj napi\u0119cie brzucha i neutralny kr\u0119gos\u0142up."
       },
       {
-        "id": "1915f66f-8cdc-478a-96eb-61acac43dd2e",
+        "id": "ad54b315-3bd3-45af-80ef-1ec5743b0e3b",
         "clientStepId": "ai-workout-1782677311170-1-element-0",
         "kind": 2,
         "label": "",
@@ -4330,7 +4330,7 @@
         "notes": "Traktuj jako ci\u0119\u017Cki, techniczny bodziec; nie wykonuj serii do upadku. Zachowaj napi\u0119cie brzucha i neutralny kr\u0119gos\u0142up."
       },
       {
-        "id": "44b604bd-84c1-4576-ada6-01445c4fde7d",
+        "id": "3db66954-6faa-403d-a98f-9d9dfecaaaab",
         "clientStepId": "ai-workout-1782677311170-1-rest-0",
         "kind": 2,
         "label": "",
@@ -4346,7 +4346,7 @@
         "notes": ""
       },
       {
-        "id": "14e2ea70-084a-48b7-8b9a-1c390ddc2770",
+        "id": "36dbb64f-91c4-4858-93ec-88467bead040",
         "clientStepId": "ai-workout-1782677311170-1-set-1",
         "kind": 1,
         "label": "",
@@ -4362,7 +4362,7 @@
         "notes": "Kontrolowany zakres ruchu, \u0142opatki ustabilizowane, nie zderzaj hantli u g\u00F3ry."
       },
       {
-        "id": "5b214d59-eff2-4e31-bd7c-a052b2a982d4",
+        "id": "c5555491-b5e5-4cb1-905c-6b19b3599d7f",
         "clientStepId": "ai-workout-1782677311170-1-element-1",
         "kind": 2,
         "label": "",
@@ -4378,7 +4378,7 @@
         "notes": "Kontrolowany zakres ruchu, \u0142opatki ustabilizowane, nie zderzaj hantli u g\u00F3ry."
       },
       {
-        "id": "a86ad4b0-92f6-4ff5-87c4-10abb25a2b4d",
+        "id": "c915cf8e-b489-4a8d-b16a-58983b1c2855",
         "clientStepId": "ai-workout-1782677311170-1-rest-1",
         "kind": 2,
         "label": "",
@@ -4394,7 +4394,7 @@
         "notes": ""
       },
       {
-        "id": "96fc9ea2-1bde-41ff-a511-628495e2bbcc",
+        "id": "6538783d-74df-4a72-a41f-ae528b88ac24",
         "clientStepId": "ai-workout-1782677311170-1-set-2",
         "kind": 1,
         "label": "",
@@ -4410,7 +4410,7 @@
         "notes": "Je\u015Bli wykonujesz znacznie wi\u0119cej ni\u017C za\u0142o\u017Cone powt\u00F3rzenia, dodaj obci\u0105\u017Cenie; je\u015Bli mniej, u\u017Cyj wariantu z kontrolowanym zakresem lub wsparciem."
       },
       {
-        "id": "a73f30d2-98aa-41d1-93c8-0a123989a730",
+        "id": "48b25d6f-871e-4a1f-8349-ea19ec8334b3",
         "clientStepId": "ai-workout-1782677311170-1-element-2",
         "kind": 2,
         "label": "",
@@ -4426,7 +4426,7 @@
         "notes": "Je\u015Bli wykonujesz znacznie wi\u0119cej ni\u017C za\u0142o\u017Cone powt\u00F3rzenia, dodaj obci\u0105\u017Cenie; je\u015Bli mniej, u\u017Cyj wariantu z kontrolowanym zakresem lub wsparciem."
       },
       {
-        "id": "cc5cd41b-42b9-4fd9-94ef-0ceed0b1e2bb",
+        "id": "96c96d7f-bca1-45e5-8fa2-9dfae224de1e",
         "clientStepId": "ai-workout-1782677311170-1-rest-2",
         "kind": 2,
         "label": "",
@@ -4442,7 +4442,7 @@
         "notes": ""
       },
       {
-        "id": "b97d8dbb-48b4-4bcd-9c09-b69eab0ef796",
+        "id": "bb33dab8-5bb0-4776-b9c4-23a8cdca7826",
         "clientStepId": "ai-workout-1782677311170-1-set-3",
         "kind": 1,
         "label": "",
@@ -4458,7 +4458,7 @@
         "notes": "Nie odrywaj miednicy od oparcia; prowad\u017A kolana zgodnie z kierunkiem st\u00F3p."
       },
       {
-        "id": "3e4aa293-e03d-4c8e-904f-6cd88c9db232",
+        "id": "ec006908-883f-4383-9941-b1ab7f90c732",
         "clientStepId": "ai-workout-1782677311170-1-element-3",
         "kind": 2,
         "label": "",
@@ -4474,7 +4474,7 @@
         "notes": "Nie odrywaj miednicy od oparcia; prowad\u017A kolana zgodnie z kierunkiem st\u00F3p."
       },
       {
-        "id": "9d502248-4112-4e53-b1e2-2508af104fd5",
+        "id": "37b362ff-7081-415c-b633-dfb9ac612d5e",
         "clientStepId": "ai-workout-1782677311170-1-rest-3",
         "kind": 2,
         "label": "",
@@ -4490,7 +4490,7 @@
         "notes": ""
       },
       {
-        "id": "58b2baa1-9bd5-4dcb-a945-7d4cbd90a92e",
+        "id": "99949311-328f-4246-a9f2-6d7089806d52",
         "clientStepId": "ai-workout-1782677311170-1-set-4",
         "kind": 1,
         "label": "",
@@ -4506,7 +4506,7 @@
         "notes": "Nie przeprostowuj odcinka l\u0119d\u017Awiowego; prowad\u017A hantle stabilnie."
       },
       {
-        "id": "56b9b04c-4846-4c18-969a-dd6d7d3dbc5e",
+        "id": "5d026f96-c7e7-4e52-81b2-3dfbbb483e96",
         "clientStepId": "ai-workout-1782677311170-1-element-4",
         "kind": 2,
         "label": "",
@@ -4522,7 +4522,7 @@
         "notes": "Nie przeprostowuj odcinka l\u0119d\u017Awiowego; prowad\u017A hantle stabilnie."
       },
       {
-        "id": "4cd75c38-13af-4a94-8d6e-1f92d457e811",
+        "id": "be0d55ca-2504-471a-beb1-ec12c4ce991d",
         "clientStepId": "ai-workout-1782677311170-1-rest-4",
         "kind": 2,
         "label": "",
@@ -4538,7 +4538,7 @@
         "notes": ""
       },
       {
-        "id": "4a546111-192f-49b1-add4-ef4880d5dd03",
+        "id": "b769ccf2-1b77-4cf8-a393-904eadf223d3",
         "clientStepId": "ai-workout-1782677311170-1-set-5",
         "kind": 1,
         "label": "",
@@ -4554,7 +4554,7 @@
         "notes": "Zatrzymaj na kr\u00F3tko w ko\u0144cowej fazie zgi\u0119cia i kontroluj opuszczanie."
       },
       {
-        "id": "08e48030-50a9-4492-b3e0-64ba86ac0cf8",
+        "id": "cbd2063f-4108-4ae0-9297-9f52898a6e90",
         "clientStepId": "ai-workout-1782677311170-1-element-5",
         "kind": 2,
         "label": "",
@@ -4570,7 +4570,7 @@
         "notes": "Zatrzymaj na kr\u00F3tko w ko\u0144cowej fazie zgi\u0119cia i kontroluj opuszczanie."
       },
       {
-        "id": "fa7a9814-0fc1-468a-b546-f70fa2a897d4",
+        "id": "e4b06fd4-a982-409c-abe6-0f890577127c",
         "clientStepId": "ai-workout-1782677311170-1-rest-5",
         "kind": 2,
         "label": "",
@@ -4586,7 +4586,7 @@
         "notes": ""
       },
       {
-        "id": "f4d73e14-00a7-428d-b81c-bb0b07d11cc8",
+        "id": "1cd55db1-008b-40ea-8673-af021c2f2d7e",
         "clientStepId": "ai-workout-1782677311170-1-set-6",
         "kind": 1,
         "label": "",
@@ -4602,7 +4602,7 @@
         "notes": "Unikaj bujania; inicjuj ruch prac\u0105 mi\u0119\u015Bni brzucha i ustawieniem miednicy."
       },
       {
-        "id": "84bac19b-9f7b-4f14-af6d-c4ce14c72972",
+        "id": "b95dc487-6b09-4b8a-b50b-1da24f4bd3e8",
         "clientStepId": "ai-workout-1782677311170-1-element-6",
         "kind": 2,
         "label": "",
@@ -4618,7 +4618,7 @@
         "notes": "Unikaj bujania; inicjuj ruch prac\u0105 mi\u0119\u015Bni brzucha i ustawieniem miednicy."
       },
       {
-        "id": "cf591a55-bdd6-4593-8f72-00e94b086f85",
+        "id": "00980300-87bf-45ed-90d8-13978e64a653",
         "clientStepId": "ai-workout-1782677311170-1-rest-6",
         "kind": 2,
         "label": "",
@@ -4635,7 +4635,7 @@
       }
     ],
     "createdAt": "2026-06-28T20:08:23.8209816+00:00",
-    "updatedAt": "2026-07-03T17:25:32.9907708+00:00",
+    "updatedAt": "2026-07-05T15:45:54.2276256+00:00",
     "deletedAt": null
   },
   {
@@ -4647,7 +4647,7 @@
     "sport": 0,
     "steps": [
       {
-        "id": "75e3fa0c-e578-483d-a59c-7c2afaee5ed3",
+        "id": "d101d429-f55d-49a2-9326-2132ac06fad2",
         "clientStepId": "ai-workout-1782677311170-0-stage-warmup",
         "kind": 0,
         "label": "Rozgrzewka",
@@ -4663,7 +4663,7 @@
         "notes": ""
       },
       {
-        "id": "d17bf4c2-668b-4f2e-94b7-86d3d8da0a31",
+        "id": "244fc7db-b0cc-41ce-b3fe-135b7e4159ac",
         "clientStepId": "ai-workout-1782677311170-0-set-warmup",
         "kind": 1,
         "label": "",
@@ -4679,7 +4679,7 @@
         "notes": ""
       },
       {
-        "id": "ef6c5ed8-4cf0-4d8c-9503-ae36721bc322",
+        "id": "74bfdb80-a142-473f-8f51-a26fae148bf9",
         "clientStepId": "ai-workout-1782677311170-0-warmup-button-press",
         "kind": 2,
         "label": "",
@@ -4695,7 +4695,7 @@
         "notes": ""
       },
       {
-        "id": "116183e1-edb2-45cd-a65e-a56913f9f936",
+        "id": "d0abb4b0-173b-4421-9951-965e47fae0cc",
         "clientStepId": "ai-workout-1782677311170-0-stage-main",
         "kind": 0,
         "label": "\u0106wiczenia",
@@ -4711,7 +4711,7 @@
         "notes": ""
       },
       {
-        "id": "ebd1479e-bd7b-4118-931c-9cb0896effc5",
+        "id": "fb47717f-d0dd-4de7-a9ed-859f76f33f0a",
         "clientStepId": "ai-workout-1782677311170-0-set-0",
         "kind": 1,
         "label": "",
@@ -4727,7 +4727,7 @@
         "notes": "Ci\u0119\u017Car dobrany tak, aby zachowa\u0107 stabilny tu\u0142\u00F3w i pe\u0142n\u0105 kontrol\u0119 zej\u015Bcia; nie doprowadzaj do za\u0142amania techniki."
       },
       {
-        "id": "7d52a203-0eea-4d54-a4f9-6955ca683e56",
+        "id": "b2a0c0c9-a8d6-47f6-bacc-a371d865b668",
         "clientStepId": "ai-workout-1782677311170-0-element-0",
         "kind": 2,
         "label": "",
@@ -4743,7 +4743,7 @@
         "notes": "Ci\u0119\u017Car dobrany tak, aby zachowa\u0107 stabilny tu\u0142\u00F3w i pe\u0142n\u0105 kontrol\u0119 zej\u015Bcia; nie doprowadzaj do za\u0142amania techniki."
       },
       {
-        "id": "462dfc31-6306-4f6c-a477-34873d461e96",
+        "id": "1157f41a-1b4a-4162-a96d-4a99b1f44cc2",
         "clientStepId": "ai-workout-1782677311170-0-rest-0",
         "kind": 2,
         "label": "",
@@ -4759,7 +4759,7 @@
         "notes": ""
       },
       {
-        "id": "1cc31801-bc83-4958-b832-5560da6c4ec7",
+        "id": "fd7bea98-c6d4-4701-998f-faa4060e5f39",
         "clientStepId": "ai-workout-1782677311170-0-set-1",
         "kind": 1,
         "label": "",
@@ -4775,7 +4775,7 @@
         "notes": "\u0141opatki cofni\u0119te i ustabilizowane, stopy mocno oparte; prowad\u017A sztang\u0119 powtarzalnym torem."
       },
       {
-        "id": "a3ae4fa9-d77f-4863-9e26-df3f22169106",
+        "id": "a8a983d5-b0ea-4237-bcb5-cfd891adb698",
         "clientStepId": "ai-workout-1782677311170-0-element-1",
         "kind": 2,
         "label": "",
@@ -4791,7 +4791,7 @@
         "notes": "\u0141opatki cofni\u0119te i ustabilizowane, stopy mocno oparte; prowad\u017A sztang\u0119 powtarzalnym torem."
       },
       {
-        "id": "c9555097-f38f-42bd-a571-bb8fc2c8877f",
+        "id": "9a53da8f-a7e9-422e-93e1-9eb0c3e4162c",
         "clientStepId": "ai-workout-1782677311170-0-rest-1",
         "kind": 2,
         "label": "",
@@ -4807,7 +4807,7 @@
         "notes": ""
       },
       {
-        "id": "013a59d3-7a9f-4964-9286-14b9b1e93422",
+        "id": "5c0c77ea-6dfb-4c45-9c30-e043a1ea388e",
         "clientStepId": "ai-workout-1782677311170-0-set-2",
         "kind": 1,
         "label": "",
@@ -4823,7 +4823,7 @@
         "notes": "Utrzymuj neutralny kr\u0119gos\u0142up i kontroluj faz\u0119 opuszczania; unikaj szarpania tu\u0142owiem."
       },
       {
-        "id": "1e881042-adcd-4904-88a3-0ec1650d4475",
+        "id": "ae300d1e-2783-4171-95f4-31ede238c0aa",
         "clientStepId": "ai-workout-1782677311170-0-element-2",
         "kind": 2,
         "label": "",
@@ -4839,7 +4839,7 @@
         "notes": "Utrzymuj neutralny kr\u0119gos\u0142up i kontroluj faz\u0119 opuszczania; unikaj szarpania tu\u0142owiem."
       },
       {
-        "id": "372c91ae-a342-4f57-8884-4c9fe0e0dbc6",
+        "id": "c46ae138-b43d-4466-9633-7c3da696971b",
         "clientStepId": "ai-workout-1782677311170-0-rest-2",
         "kind": 2,
         "label": "",
@@ -4855,7 +4855,7 @@
         "notes": ""
       },
       {
-        "id": "c245574f-4177-4c72-9ab1-9c917bf9ca65",
+        "id": "025e0ba0-5c75-44b7-8ec8-9e4f15ccc714",
         "clientStepId": "ai-workout-1782677311170-0-set-3",
         "kind": 1,
         "label": "",
@@ -4871,7 +4871,7 @@
         "notes": "Ruch z biodra, lekko ugi\u0119te kolana, mocne rozci\u0105gni\u0119cie ty\u0142u uda bez utraty pozycji plec\u00F3w."
       },
       {
-        "id": "3a83288f-58ef-45ab-9f0b-35289fdaf9de",
+        "id": "f763a41a-76ba-4efd-a00b-495ab5a950f5",
         "clientStepId": "ai-workout-1782677311170-0-element-3",
         "kind": 2,
         "label": "",
@@ -4887,7 +4887,7 @@
         "notes": "Ruch z biodra, lekko ugi\u0119te kolana, mocne rozci\u0105gni\u0119cie ty\u0142u uda bez utraty pozycji plec\u00F3w."
       },
       {
-        "id": "f6b8825f-e1fa-4d9e-8805-33367e867dbf",
+        "id": "0db00b57-011e-4dc3-aa77-b92eb6ce6b99",
         "clientStepId": "ai-workout-1782677311170-0-rest-3",
         "kind": 2,
         "label": "",
@@ -4903,7 +4903,7 @@
         "notes": ""
       },
       {
-        "id": "164cedfe-b26a-436f-b565-a2f0b5862624",
+        "id": "56d125b7-77a2-480a-bf54-76194f7a1cbf",
         "clientStepId": "ai-workout-1782677311170-0-set-4",
         "kind": 1,
         "label": "",
@@ -4919,7 +4919,7 @@
         "notes": "Kontroluj ci\u0119\u017Car, prowad\u017A ruch \u0142okciami, nie bujaj tu\u0142owiem."
       },
       {
-        "id": "3d6e0974-0c09-4b3e-84cc-d51c9c43eb40",
+        "id": "d173f486-4de9-42cb-8bfa-02f4df3e7772",
         "clientStepId": "ai-workout-1782677311170-0-element-4",
         "kind": 2,
         "label": "",
@@ -4935,7 +4935,7 @@
         "notes": "Kontroluj ci\u0119\u017Car, prowad\u017A ruch \u0142okciami, nie bujaj tu\u0142owiem."
       },
       {
-        "id": "a8a83df3-f23a-4991-a2b6-e3e174601cee",
+        "id": "8ad42d54-2a1f-4130-a9be-74020b2982ae",
         "clientStepId": "ai-workout-1782677311170-0-rest-4",
         "kind": 2,
         "label": "",
@@ -4951,7 +4951,7 @@
         "notes": ""
       },
       {
-        "id": "9cfafb5c-1992-4e40-8a97-eef90ecef36a",
+        "id": "1eabdc8d-e4d1-453a-bb79-4ce68543081b",
         "clientStepId": "ai-workout-1782677311170-0-set-5",
         "kind": 1,
         "label": "",
@@ -4967,7 +4967,7 @@
         "notes": "Utrzymuj \u0142okcie wzgl\u0119dnie nieruchomo i skup si\u0119 na pe\u0142nym wypro\u015Bcie."
       },
       {
-        "id": "46f66c80-632e-4f97-84cb-af0484365b42",
+        "id": "4d59427e-e725-47e3-aeef-f63008a0629a",
         "clientStepId": "ai-workout-1782677311170-0-element-5",
         "kind": 2,
         "label": "",
@@ -4983,7 +4983,7 @@
         "notes": "Utrzymuj \u0142okcie wzgl\u0119dnie nieruchomo i skup si\u0119 na pe\u0142nym wypro\u015Bcie."
       },
       {
-        "id": "7939a5a2-e64c-443e-8804-206a29db42c7",
+        "id": "29691b2e-be1e-4f19-9278-19fdbd8a5c7a",
         "clientStepId": "ai-workout-1782677311170-0-rest-5",
         "kind": 2,
         "label": "",
@@ -4999,7 +4999,7 @@
         "notes": ""
       },
       {
-        "id": "26d97912-0e56-4f3b-86c2-ea203fa83093",
+        "id": "33becd68-ff87-4642-822a-46ac540cdb00",
         "clientStepId": "ai-workout-1782677311170-0-set-6",
         "kind": 1,
         "label": "",
@@ -5015,7 +5015,7 @@
         "notes": "Nie odchylaj tu\u0142owia; kontroluj opuszczanie."
       },
       {
-        "id": "86d082de-b63d-4b58-855f-1415720f4fae",
+        "id": "ef6bd81c-91f2-4d08-837b-4e34d6f3662f",
         "clientStepId": "ai-workout-1782677311170-0-element-6",
         "kind": 2,
         "label": "",
@@ -5031,7 +5031,7 @@
         "notes": "Nie odchylaj tu\u0142owia; kontroluj opuszczanie."
       },
       {
-        "id": "76815feb-09df-42f8-9ec6-220970002135",
+        "id": "ff2eb602-300c-4c80-a0fd-b23406478d54",
         "clientStepId": "ai-workout-1782677311170-0-rest-6",
         "kind": 2,
         "label": "",
@@ -5048,7 +5048,7 @@
       }
     ],
     "createdAt": "2026-06-28T20:08:23.8263861+00:00",
-    "updatedAt": "2026-07-03T17:25:32.9916507+00:00",
+    "updatedAt": "2026-07-05T15:45:54.2244168+00:00",
     "deletedAt": null
   },
   {
@@ -5060,7 +5060,7 @@
     "sport": 0,
     "steps": [
       {
-        "id": "edf22cf5-7b71-4eaa-b238-0280f20b4ec6",
+        "id": "6d7102c8-dad4-4510-a987-6dcc2956b77b",
         "clientStepId": "ai-workout-1782677311170-2-stage-warmup",
         "kind": 0,
         "label": "Rozgrzewka",
@@ -5076,7 +5076,7 @@
         "notes": ""
       },
       {
-        "id": "43277927-67dd-4f1a-aa25-82909216e6cb",
+        "id": "470da6fe-a24a-4f57-acf5-edf805d787e6",
         "clientStepId": "ai-workout-1782677311170-2-set-warmup",
         "kind": 1,
         "label": "",
@@ -5092,7 +5092,7 @@
         "notes": ""
       },
       {
-        "id": "2e51e5c4-6443-4a0f-8ce8-bb810b2ed4b9",
+        "id": "a3ce170f-418f-420d-a479-549175c23c07",
         "clientStepId": "ai-workout-1782677311170-2-warmup-button-press",
         "kind": 2,
         "label": "",
@@ -5108,7 +5108,7 @@
         "notes": ""
       },
       {
-        "id": "1548f730-9079-4ebf-a6e9-249d290a628f",
+        "id": "dba9e0cc-35b0-4c70-b44a-bba9a320b4dd",
         "clientStepId": "ai-workout-1782677311170-2-stage-main",
         "kind": 0,
         "label": "\u0106wiczenia",
@@ -5124,7 +5124,7 @@
         "notes": ""
       },
       {
-        "id": "a4e01afc-5168-414d-9822-b400b21d3feb",
+        "id": "86eac858-b8ab-4bf0-841d-2cada110e918",
         "clientStepId": "ai-workout-1782677311170-2-set-0",
         "kind": 1,
         "label": "",
@@ -5140,7 +5140,7 @@
         "notes": "Utrzymuj wysoki \u0142okie\u0107 i pionowy tu\u0142\u00F3w; wybierz ci\u0119\u017Car pozwalaj\u0105cy zachowa\u0107 stabiln\u0105 pozycj\u0119."
       },
       {
-        "id": "f8a80cc4-9c24-4e73-b0c4-1c6fec6664c2",
+        "id": "3c5a3814-8822-45eb-a006-c5af1270751e",
         "clientStepId": "ai-workout-1782677311170-2-element-0",
         "kind": 2,
         "label": "",
@@ -5156,7 +5156,7 @@
         "notes": "Utrzymuj wysoki \u0142okie\u0107 i pionowy tu\u0142\u00F3w; wybierz ci\u0119\u017Car pozwalaj\u0105cy zachowa\u0107 stabiln\u0105 pozycj\u0119."
       },
       {
-        "id": "4d8f7a0d-5cf9-4e5e-87c0-f609b90a511f",
+        "id": "93a79d25-fea8-40bb-b38a-b53280d1d2b6",
         "clientStepId": "ai-workout-1782677311170-2-rest-0",
         "kind": 2,
         "label": "",
@@ -5172,7 +5172,7 @@
         "notes": ""
       },
       {
-        "id": "519f8d94-6203-49dd-8a22-8745f9997c79",
+        "id": "aa37c6c2-9cbc-4342-93ed-bd2e41773c5c",
         "clientStepId": "ai-workout-1782677311170-2-set-1",
         "kind": 1,
         "label": "",
@@ -5188,7 +5188,7 @@
         "notes": "Pe\u0142na kontrola opuszczania, bez nadmiernego rozci\u0105gania bark\u00F3w na dole."
       },
       {
-        "id": "964dfc81-a7be-4a80-b4f1-ac3cd85e836b",
+        "id": "229b8b56-7c30-4179-bcaf-74a9d9367b90",
         "clientStepId": "ai-workout-1782677311170-2-element-1",
         "kind": 2,
         "label": "",
@@ -5204,7 +5204,7 @@
         "notes": "Pe\u0142na kontrola opuszczania, bez nadmiernego rozci\u0105gania bark\u00F3w na dole."
       },
       {
-        "id": "e68e6c6c-29ad-4b56-9ea0-e140832cef2f",
+        "id": "61b5c62d-cfae-4161-8897-9a42196483ab",
         "clientStepId": "ai-workout-1782677311170-2-rest-1",
         "kind": 2,
         "label": "",
@@ -5220,7 +5220,7 @@
         "notes": ""
       },
       {
-        "id": "61283933-6fe9-444b-9a9c-b1801118b899",
+        "id": "26f32da6-a270-4f1a-b088-f45f4249bb0c",
         "clientStepId": "ai-workout-1782677311170-2-set-2",
         "kind": 1,
         "label": "",
@@ -5236,7 +5236,7 @@
         "notes": "\u015Aci\u0105gaj \u0142opatki, nie odchylaj mocno tu\u0142owia, utrzymuj sta\u0142e napi\u0119cie."
       },
       {
-        "id": "bcb57f52-802a-411a-b8b5-683c9ce40e61",
+        "id": "7c093bf8-542f-42eb-8315-5a78201ba688",
         "clientStepId": "ai-workout-1782677311170-2-element-2",
         "kind": 2,
         "label": "",
@@ -5252,7 +5252,7 @@
         "notes": "\u015Aci\u0105gaj \u0142opatki, nie odchylaj mocno tu\u0142owia, utrzymuj sta\u0142e napi\u0119cie."
       },
       {
-        "id": "86eb2d1c-374d-4a1b-867b-799ed7c7a7c3",
+        "id": "dc94ef75-64b2-46db-ad59-864fb21428a3",
         "clientStepId": "ai-workout-1782677311170-2-rest-2",
         "kind": 2,
         "label": "",
@@ -5268,7 +5268,7 @@
         "notes": ""
       },
       {
-        "id": "266654f6-a329-4380-85ab-9026d37ef0f5",
+        "id": "444fc740-ffeb-437f-9047-7bdf218011a4",
         "clientStepId": "ai-workout-1782677311170-2-set-3",
         "kind": 1,
         "label": "",
@@ -5284,7 +5284,7 @@
         "notes": "Liczba powt\u00F3rze\u0144 na ka\u017Cd\u0105 nog\u0119; zachowaj kontrol\u0119 kolana i stabiln\u0105 pozycj\u0119 miednicy."
       },
       {
-        "id": "f9302cee-368f-4317-92ae-9485da6a2010",
+        "id": "4dea94aa-3b8a-4fef-9c6a-5cb0c10a7060",
         "clientStepId": "ai-workout-1782677311170-2-element-3",
         "kind": 2,
         "label": "",
@@ -5300,7 +5300,7 @@
         "notes": "Liczba powt\u00F3rze\u0144 na ka\u017Cd\u0105 nog\u0119; zachowaj kontrol\u0119 kolana i stabiln\u0105 pozycj\u0119 miednicy."
       },
       {
-        "id": "5c619ae8-eed0-47d7-af49-3c573129bb5f",
+        "id": "31f54195-11fe-45d5-842e-caa7a5613344",
         "clientStepId": "ai-workout-1782677311170-2-rest-3",
         "kind": 2,
         "label": "",
@@ -5316,7 +5316,7 @@
         "notes": ""
       },
       {
-        "id": "f53ceb98-da11-4371-a507-97b9dc69fccb",
+        "id": "1553ad40-90e1-40e3-8cc0-2c7212585160",
         "clientStepId": "ai-workout-1782677311170-2-set-4",
         "kind": 1,
         "label": "",
@@ -5332,7 +5332,7 @@
         "notes": "Prowad\u017A \u0142okcie w d\u00F3\u0142, nie ci\u0105gnij wy\u0142\u0105cznie ramionami; kontroluj powr\u00F3t ci\u0119\u017Caru."
       },
       {
-        "id": "283b44fe-1b5e-4be2-b10c-df1f31448222",
+        "id": "d7a89b4d-64bd-498b-aa73-8ec502d0db7e",
         "clientStepId": "ai-workout-1782677311170-2-element-4",
         "kind": 2,
         "label": "",
@@ -5348,7 +5348,7 @@
         "notes": "Prowad\u017A \u0142okcie w d\u00F3\u0142, nie ci\u0105gnij wy\u0142\u0105cznie ramionami; kontroluj powr\u00F3t ci\u0119\u017Caru."
       },
       {
-        "id": "782bc8c3-04c6-4721-b633-c22b16a7743e",
+        "id": "95307423-caa4-453d-9d9b-cae285b407e3",
         "clientStepId": "ai-workout-1782677311170-2-rest-4",
         "kind": 2,
         "label": "",
@@ -5364,7 +5364,7 @@
         "notes": ""
       },
       {
-        "id": "c28c1ae3-046a-43d9-819c-49a9d6826f1f",
+        "id": "9be1168f-b610-435f-bb19-d382047550ba",
         "clientStepId": "ai-workout-1782677311170-2-set-5",
         "kind": 1,
         "label": "",
@@ -5380,7 +5380,7 @@
         "notes": "Utrzymuj ruch kontrolowany, akcentuj ty\u0142 barku i prac\u0119 \u0142opatek."
       },
       {
-        "id": "4d2028a3-10df-420f-af68-f794e8cfc4b8",
+        "id": "518d3430-1506-4cc5-8628-f3ed5397fe62",
         "clientStepId": "ai-workout-1782677311170-2-element-5",
         "kind": 2,
         "label": "",
@@ -5396,7 +5396,7 @@
         "notes": "Utrzymuj ruch kontrolowany, akcentuj ty\u0142 barku i prac\u0119 \u0142opatek."
       },
       {
-        "id": "eac3985c-8b87-4115-951b-d9faf0ccc9b7",
+        "id": "cbd4e35d-ff5f-4b33-8985-0dbaca37479c",
         "clientStepId": "ai-workout-1782677311170-2-rest-5",
         "kind": 2,
         "label": "",
@@ -5412,7 +5412,7 @@
         "notes": ""
       },
       {
-        "id": "4a399f3f-9ec9-4a9d-9120-da29feb74e6a",
+        "id": "76d818f9-8172-47aa-9e16-f4d7d5727aa1",
         "clientStepId": "ai-workout-1782677311170-2-set-6",
         "kind": 1,
         "label": "",
@@ -5428,7 +5428,7 @@
         "notes": "Pe\u0142ne rozci\u0105gni\u0119cie na dole i mocne wspi\u0119cie na g\u00F3rze bez odbijania."
       },
       {
-        "id": "3dfdcefb-3491-4b0d-9c4c-77384c0576b3",
+        "id": "958521a5-e471-4084-85a4-9fc1d5b59412",
         "clientStepId": "ai-workout-1782677311170-2-element-6",
         "kind": 2,
         "label": "",
@@ -5444,7 +5444,7 @@
         "notes": "Pe\u0142ne rozci\u0105gni\u0119cie na dole i mocne wspi\u0119cie na g\u00F3rze bez odbijania."
       },
       {
-        "id": "1fab24f3-8e09-4ba8-8ca3-3630ae129a05",
+        "id": "bccad70e-bc54-4646-9498-230924013001",
         "clientStepId": "ai-workout-1782677311170-2-rest-6",
         "kind": 2,
         "label": "",
@@ -5461,7 +5461,7 @@
       }
     ],
     "createdAt": "2026-06-28T20:08:23.8282036+00:00",
-    "updatedAt": "2026-07-03T17:25:32.9977405+00:00",
+    "updatedAt": "2026-07-05T15:45:54.2213749+00:00",
     "deletedAt": null
   }
 ]

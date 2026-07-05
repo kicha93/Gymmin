@@ -54,6 +54,9 @@ public sealed class ProfileAvatarApiTests : IClassFixture<GymminApiFactory>
         Assert.NotNull(me);
         Assert.Equal(uploadBody.AvatarUrl, me!.AvatarUrl);
         Assert.Equal(uploadBody.AvatarUpdatedAt, me.AvatarUpdatedAt);
+        Assert.NotNull(me.CreatedOn);
+        Assert.NotNull(me.ModifiedOn);
+        Assert.True(me.ModifiedOn >= me.CreatedOn);
 
         var delete = await client.DeleteAsync("/api/profile/avatar");
         Assert.Equal(HttpStatusCode.OK, delete.StatusCode);
@@ -64,6 +67,10 @@ public sealed class ProfileAvatarApiTests : IClassFixture<GymminApiFactory>
         var meAfterDelete = await client.GetFromJsonAsync<AuthUserResponse>("/api/auth/me");
         Assert.Null(meAfterDelete!.AvatarUrl);
         Assert.Null(meAfterDelete.AvatarUpdatedAt);
+        Assert.NotNull(meAfterDelete.CreatedOn);
+        Assert.NotNull(meAfterDelete.ModifiedOn);
+        Assert.Equal(me.CreatedOn, meAfterDelete.CreatedOn);
+        Assert.True(meAfterDelete.ModifiedOn >= me.ModifiedOn);
     }
 
     [Theory]

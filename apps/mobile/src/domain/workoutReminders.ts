@@ -4,10 +4,24 @@ import { NativeModules, Platform } from "react-native";
 import { getAccountStorageKey } from "./accountStorage";
 import type { WorkoutSession } from "./workoutSessions";
 
+export type ReminderWeekday =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
+
+export type ReminderDaySchedule = {
+  day: ReminderWeekday;
+  enabled: boolean;
+  time: string;
+};
+
 export type WorkoutReminderSettings = {
   enabled: boolean;
-  daysOfWeek: number[];
-  time: string;
+  weeklySchedule: ReminderDaySchedule[];
   message: string;
   description?: string;
   onlyIfNoWorkoutToday: boolean;
@@ -16,8 +30,20 @@ export type WorkoutReminderSettings = {
 
 export const WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY = "workoutReminderNotificationIds";
 
+export const reminderWeekdays: Array<{ day: ReminderWeekday; number: number }> = [
+  { day: "monday", number: 1 },
+  { day: "tuesday", number: 2 },
+  { day: "wednesday", number: 3 },
+  { day: "thursday", number: 4 },
+  { day: "friday", number: 5 },
+  { day: "saturday", number: 6 },
+  { day: "sunday", number: 7 }
+];
+
 const reminderChannelId = "workout-reminders";
+const reminderNotificationType = "workout-reminder";
 const scheduleHorizonDays = 14;
+const defaultReminderTime = "18:00";
 
 type NotificationsModule = typeof import("expo-notifications");
 
@@ -44,40 +70,132 @@ async function getNotificationsModule(): Promise<NotificationsModule | null> {
   }
 }
 
+export function isValidReminderDay(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 7;
+}
+
+export function normalizeWorkoutReminderTime(value: unknown) {
+  if (typeof value !== "string") {
+    return defaultReminderTime;
+  }
+
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!match) {
+    return defaultReminderTime;
+  }
+
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return defaultReminderTime;
+  }
+
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+export function createDefaultWeeklySchedule(enabledDays: number[] = [1, 3, 5], time = defaultReminderTime): ReminderDaySchedule[] {
+  const enabledDaySet = new Set(enabledDays.filter(isValidReminderDay));
+  const normalizedTime = normalizeWorkoutReminderTime(time);
+
+  return reminderWeekdays.map((item) => ({
+    day: item.day,
+    enabled: enabledDaySet.has(item.number),
+    time: normalizedTime
+  }));
+}
+
 export function getDefaultWorkoutReminderSettings(language: "pl" | "en" = "en"): WorkoutReminderSettings {
   return {
-    daysOfWeek: [1, 3, 5],
     description: language === "pl"
       ? "Otwórz Gymmin i wykonaj zaplanowany trening."
       : "Open Gymmin and complete your planned workout.",
     enabled: false,
     message: language === "pl" ? "Czas na trening" : "Time to train",
     onlyIfNoWorkoutToday: true,
-    time: "18:00"
+    weeklySchedule: createDefaultWeeklySchedule([1, 3, 5], defaultReminderTime)
   };
 }
 
-function isValidReminderDay(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 7;
+function getReminderDayNumber(day: ReminderWeekday) {
+  return reminderWeekdays.find((item) => item.day === day)?.number ?? 1;
 }
 
-export function normalizeWorkoutReminderTime(value: unknown) {
-  if (typeof value !== "string") {
-    return "18:00";
+function getReminderWeekday(dayNumber: number): ReminderWeekday {
+  return reminderWeekdays.find((item) => item.number === dayNumber)?.day ?? "monday";
+}
+
+function normalizeLegacyReminderDays(value: unknown, fallback: number[]) {
+  if (!Array.isArray(value)) {
+    return fallback;
   }
 
-  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
-  if (!match) {
-    return "18:00";
+  return Array.from(new Set(value.filter(isValidReminderDay))).sort((left, right) => left - right);
+}
+
+export function normalizeWeeklySchedule(value: unknown, legacyDays: number[], legacyTime: string): ReminderDaySchedule[] {
+  const byDay = new Map<ReminderWeekday, ReminderDaySchedule>();
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        return;
+      }
+
+      const raw = item as Partial<ReminderDaySchedule>;
+      if (!raw.day || !reminderWeekdays.some((weekday) => weekday.day === raw.day)) {
+        return;
+      }
+
+      byDay.set(raw.day, {
+        day: raw.day,
+        enabled: raw.enabled === true,
+        time: normalizeWorkoutReminderTime(raw.time)
+      });
+    });
   }
 
-  const hour = Number(match[1]);
-  const minute = Number(match[2]);
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-    return "18:00";
-  }
+  const legacySchedule = createDefaultWeeklySchedule(legacyDays, legacyTime);
+  return reminderWeekdays.map((item) => byDay.get(item.day) ?? legacySchedule.find((schedule) => schedule.day === item.day)!);
+}
 
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+export function getReminderScheduleForDay(settings: WorkoutReminderSettings, dayNumber: number) {
+  const weekday = getReminderWeekday(dayNumber);
+  return settings.weeklySchedule.find((schedule) => schedule.day === weekday) ?? createDefaultWeeklySchedule([], defaultReminderTime)[dayNumber - 1];
+}
+
+export function getEnabledReminderDayNumbers(settings: WorkoutReminderSettings) {
+  return settings.weeklySchedule
+    .filter((schedule) => schedule.enabled)
+    .map((schedule) => getReminderDayNumber(schedule.day));
+}
+
+export function formatReminderDayTime(schedule: ReminderDaySchedule) {
+  return schedule.enabled ? schedule.time : "—";
+}
+
+export function updateReminderDaySchedule(
+  settings: WorkoutReminderSettings,
+  day: ReminderWeekday,
+  patch: Partial<Omit<ReminderDaySchedule, "day">>
+): WorkoutReminderSettings {
+  return {
+    ...settings,
+    weeklySchedule: reminderWeekdays.map((item) => {
+      const current = settings.weeklySchedule.find((schedule) => schedule.day === item.day) ?? {
+        day: item.day,
+        enabled: false,
+        time: defaultReminderTime
+      };
+
+      return item.day === day
+        ? {
+            ...current,
+            ...patch,
+            time: patch.time === undefined ? current.time : normalizeWorkoutReminderTime(patch.time)
+          }
+        : current;
+    })
+  };
 }
 
 export function normalizeWorkoutReminderSettings(
@@ -89,20 +207,18 @@ export function normalizeWorkoutReminderSettings(
     return defaults;
   }
 
-  const raw = value as Partial<WorkoutReminderSettings>;
-  const daysOfWeek = Array.isArray(raw.daysOfWeek)
-    ? Array.from(new Set(raw.daysOfWeek.filter(isValidReminderDay))).sort((left, right) => left - right)
-    : defaults.daysOfWeek;
+  const raw = value as Partial<WorkoutReminderSettings> & { daysOfWeek?: unknown; time?: unknown };
+  const legacyTime = normalizeWorkoutReminderTime(raw.time);
+  const legacyDays = normalizeLegacyReminderDays(raw.daysOfWeek, getEnabledReminderDayNumbers(defaults));
 
   return {
-    daysOfWeek,
     description: typeof raw.description === "string" && raw.description.trim()
       ? raw.description.trim()
       : defaults.description,
     enabled: raw.enabled === true,
     message: typeof raw.message === "string" && raw.message.trim() ? raw.message.trim() : defaults.message,
     onlyIfNoWorkoutToday: raw.onlyIfNoWorkoutToday !== false,
-    time: normalizeWorkoutReminderTime(raw.time),
+    weeklySchedule: normalizeWeeklySchedule(raw.weeklySchedule, legacyDays, legacyTime),
     updatedAt: typeof raw.updatedAt === "string" ? raw.updatedAt : undefined
   };
 }
@@ -185,7 +301,8 @@ export function shouldScheduleReminderForDay(
   sessions: WorkoutSession[],
   currentDate = new Date()
 ) {
-  if (!settings.enabled || !settings.daysOfWeek.includes(toReminderDay(date))) {
+  const daySchedule = getReminderScheduleForDay(settings, toReminderDay(date));
+  if (!settings.enabled || !daySchedule.enabled) {
     return false;
   }
 
@@ -197,15 +314,15 @@ export function shouldScheduleReminderForDay(
 }
 
 export function getUpcomingReminderDates(settings: WorkoutReminderSettings, sessions: WorkoutSession[], now = new Date()) {
-  const [hourText, minuteText] = settings.time.split(":");
-  const hour = Number(hourText);
-  const minute = Number(minuteText);
   const dates: Date[] = [];
 
   for (let dayOffset = 0; dayOffset < scheduleHorizonDays; dayOffset += 1) {
     const reminderDate = new Date(now);
     reminderDate.setDate(now.getDate() + dayOffset);
-    reminderDate.setHours(hour, minute, 0, 0);
+
+    const daySchedule = getReminderScheduleForDay(settings, toReminderDay(reminderDate));
+    const [hourText, minuteText] = daySchedule.time.split(":");
+    reminderDate.setHours(Number(hourText), Number(minuteText), 0, 0);
 
     if (reminderDate <= now || !shouldScheduleReminderForDay(settings, reminderDate, sessions, now)) {
       continue;
@@ -220,17 +337,61 @@ export function getUpcomingReminderDates(settings: WorkoutReminderSettings, sess
 export function getWorkoutReminderNotificationContent(settings: WorkoutReminderSettings) {
   return {
     body: settings.description ?? "",
+    data: {
+      gymminType: reminderNotificationType
+    },
     sound: true,
     title: settings.message
   };
 }
 
+function isWorkoutReminderScheduledNotification(notification: unknown) {
+  if (!notification || typeof notification !== "object") {
+    return false;
+  }
+
+  const record = notification as Record<string, unknown>;
+  const content = record.content && typeof record.content === "object"
+    ? record.content as Record<string, unknown>
+    : {};
+  const data = content.data && typeof content.data === "object"
+    ? content.data as Record<string, unknown>
+    : {};
+  const trigger = record.trigger && typeof record.trigger === "object"
+    ? record.trigger as Record<string, unknown>
+    : {};
+
+  return data.gymminType === reminderNotificationType || trigger.channelId === reminderChannelId;
+}
+
+async function cancelOrphanedWorkoutReminderNotifications(notifications: NotificationsModule, knownIds: Set<string>) {
+  const getAllScheduledNotificationsAsync = (
+    notifications as NotificationsModule & {
+      getAllScheduledNotificationsAsync?: () => Promise<Array<{ identifier?: string }>>;
+    }
+  ).getAllScheduledNotificationsAsync;
+
+  if (!getAllScheduledNotificationsAsync) {
+    return;
+  }
+
+  const scheduledNotifications = await getAllScheduledNotificationsAsync().catch(() => []);
+  await Promise.all(scheduledNotifications
+    .filter((notification) => {
+      const identifier = typeof notification.identifier === "string" ? notification.identifier : "";
+      return identifier && !knownIds.has(identifier) && isWorkoutReminderScheduledNotification(notification);
+    })
+    .map((notification) => notifications.cancelScheduledNotificationAsync(notification.identifier!).catch(() => undefined)));
+}
+
 export async function cancelWorkoutReminders(userId?: string | null) {
   const notifications = await getNotificationsModule();
   const ids = await loadScheduledNotificationIds(userId);
+  const knownIds = new Set(ids);
 
   if (notifications) {
     await Promise.all(ids.map((id) => notifications.cancelScheduledNotificationAsync(id).catch(() => undefined)));
+    await cancelOrphanedWorkoutReminderNotifications(notifications, knownIds);
   }
 
   await saveScheduledNotificationIds(userId, []);
@@ -242,7 +403,7 @@ export async function scheduleWorkoutReminders(
   userId?: string | null
 ) {
   const notifications = await getNotificationsModule();
-  if (!notifications || !settings.enabled || settings.daysOfWeek.length === 0) {
+  if (!notifications || !settings.enabled || getEnabledReminderDayNumbers(settings).length === 0) {
     await cancelWorkoutReminders(userId);
     return { scheduledCount: 0 };
   }

@@ -4,15 +4,15 @@ namespace Gymmin.Api.Services;
 
 public sealed class AiCreditsOptions
 {
-    public int InitialGrant { get; set; } = 3;
+    public int InitialGrant { get; set; } = 1;
     public int PlanCost { get; set; } = 1;
     public int RewriteCost { get; set; } = 1;
     public bool DevGrantEnabled { get; set; } = true;
     public List<AiCreditPackOptions> Packs { get; set; } =
     [
-        new AiCreditPackOptions("ai_tokens_10", 10, "10 tokenów AI", true),
-        new AiCreditPackOptions("ai_tokens_30", 30, "30 tokenów AI", true),
-        new AiCreditPackOptions("ai_tokens_100", 100, "100 tokenów AI", true)
+        new AiCreditPackOptions("ai_tokens_1", 1, "1 kredyt", true),
+        new AiCreditPackOptions("ai_tokens_3", 3, "3 kredyty", true),
+        new AiCreditPackOptions("ai_tokens_10", 10, "10 kredytów", true)
     ];
 
     public AiCreditBalanceResponse ToBalanceResponse(int balance) =>

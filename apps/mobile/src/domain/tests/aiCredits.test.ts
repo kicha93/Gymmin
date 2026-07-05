@@ -1,7 +1,10 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 
 import {
   emptyAiCreditBalance,
+  formatAiCreditPackName,
+  getAiCreditPackDescription,
+  getRecentAiCreditTransactions,
   isGooglePlayPurchaseError,
   isInsufficientAiCreditsError,
   normalizeAiCreditBalance,
@@ -59,7 +62,7 @@ describe("aiCredits", () => {
   it("normalizes active credit packs", () => {
     const packs = normalizeAiCreditPacks({
       packs: [
-        { active: true, credits: 10, displayName: "10 tokenow AI", localizedPrice: "9,99 zl", productId: " ai_tokens_10 " },
+        { active: true, credits: 10, displayName: "10 kredytow", localizedPrice: "9,99 zl", productId: " ai_tokens_10 " },
         { active: true, credits: 0, displayName: "Broken", productId: "broken" },
         { active: true, credits: 5, displayName: "Missing id" }
       ]
@@ -69,11 +72,36 @@ describe("aiCredits", () => {
       {
         active: true,
         credits: 10,
-        displayName: "10 tokenow AI",
+        displayName: "10 kredytow",
         localizedPrice: "9,99 zl",
         productId: "ai_tokens_10"
       }
     ]);
+  });
+
+  it("formats user-facing credit pack copy with credit wording", () => {
+    expect(formatAiCreditPackName(1, "pl")).toBe("1 kredyt");
+    expect(formatAiCreditPackName(1, "en")).toBe("1 credit");
+    expect(formatAiCreditPackName(3, "pl")).toBe("3 kredyty");
+    expect(formatAiCreditPackName(10, "pl")).toBe("10 kredytów");
+    expect(formatAiCreditPackName(10, "en")).toBe("10 credits");
+    expect(getAiCreditPackDescription(1, "pl")).toBe("Idealne na start.");
+    expect(getAiCreditPackDescription(3, "en")).toBe("Good for regular plan changes.");
+    expect(getAiCreditPackDescription(10, "pl")).toBe("Najlepsze dla częstego korzystania.");
+  });
+
+  it("limits recent credit transactions preview", () => {
+    const transactions = normalizeAiCreditTransactions({
+      transactions: [
+        { amount: -1, balanceAfter: 2, createdAt: "2026-06-30T10:00:00Z", id: "tx-1", type: "Consume" },
+        { amount: 10, balanceAfter: 12, createdAt: "2026-06-30T11:00:00Z", id: "tx-2", type: "Purchase" },
+        { amount: -1, balanceAfter: 11, createdAt: "2026-06-30T12:00:00Z", id: "tx-3", type: "Consume" },
+        { amount: -1, balanceAfter: 10, createdAt: "2026-06-30T13:00:00Z", id: "tx-4", type: "Consume" }
+      ]
+    });
+
+    expect(getRecentAiCreditTransactions(transactions)).toHaveLength(3);
+    expect(getRecentAiCreditTransactions(transactions).map((transaction) => transaction.id)).toEqual(["tx-1", "tx-2", "tx-3"]);
   });
 
   it("normalizes Google Play purchase verification responses", () => {

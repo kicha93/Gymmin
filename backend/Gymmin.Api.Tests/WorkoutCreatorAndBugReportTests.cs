@@ -27,6 +27,8 @@ public sealed class WorkoutCreatorAndBugReportTests : IClassFixture<GymminApiFac
             null))).StatusCode);
 
         client.Authorize(userA.Token);
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/ai-credits/dev/grant", new DevGrantAiCreditsRequest(1, "test top-up"))).StatusCode);
+
         var planStart = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
             "en",

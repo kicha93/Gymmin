@@ -111,6 +111,11 @@ The backend validates MIME type and magic bytes, stores the image file under
 those fields to render the header/profile avatar and to cache-bust the image.
 Anonymous users keep the default profile icon.
 
+The Profile screen uses a compact account-dashboard layout. A single profile
+card combines avatar, name, email and avatar actions; achievements are surfaced
+directly below it; quick actions link to credits, password change, active
+sessions and bug reports; logout lives at the bottom of the Account section.
+
 ### AI jobs
 
 Aktywny job kreatora jest local-first i account-scoped. Mobile rozróżnia:
@@ -122,7 +127,7 @@ Po restarcie aplikacja może kontynuować polling, jeżeli ma aktywny job i toke
 
 ### AI credits
 
-AI credits sa kontowym limitem uzycia AI creator/rewrite. W UI nazywamy je tokenami AI, ale w kodzie backend/mobile uzywamy nazwy `AiCredits`, zeby nie mylic ich z bearer/auth tokens.
+AI credits sa kontowym limitem uzycia AI creator/rewrite. W UI nazywamy je `Kredyty`, ale w kodzie backend/mobile uzywamy nazwy `AiCredits`, zeby nie mylic ich z bearer/auth tokens.
 
 Backend trzyma:
 
@@ -137,7 +142,7 @@ Backend trzyma:
 - Google Play purchase records w `AiCreditPurchases`,
 - server-side Google Play purchase validation i consume dla produktow consumable.
 
-Mobile tylko wyswietla saldo i koszt. Backend zawsze decyduje, czy konto ma wystarczajace saldo. Brak salda zwraca `402 insufficient_ai_credits`. Przy zakupie mobile uruchamia Google Play Billing i wysyla `purchaseToken` do backendu; tokeny AI sa naliczane dopiero po pozytywnej walidacji backendowej. `purchaseToken` nie jest przechowywany plaintext ani zwracany w API.
+Mobile tylko wyswietla saldo i koszt. Backend zawsze decyduje, czy konto ma wystarczajace saldo. Brak salda zwraca `402 insufficient_ai_credits`. Przy zakupie mobile uruchamia Google Play Billing i wysyla `purchaseToken` do backendu; kredyty sa naliczane dopiero po pozytywnej walidacji backendowej. `purchaseToken` nie jest przechowywany plaintext ani zwracany w API.
 
 File provider zachowuje poprawne zachowanie dev w pojedynczym procesie, ale produkcyjne kredyty AI powinny uzywac Database/PostgreSQL. In-memory lock nie jest glownym zabezpieczeniem salda.
 
@@ -153,7 +158,7 @@ Articles are local mobile content, not CMS-backed. The article model stores per-
 
 ### Przypomnienia
 
-Przypomnienia są lokalnymi powiadomieniami systemowymi. Działają w standalone Android APK / dev buildzie. Backend synchronizuje tylko ustawienia `workoutReminders`. Identyfikatory zaplanowanych powiadomień są lokalne i per-user. Po logout albo zmianie konta mobile anuluje/przelicza przypomnienia dla aktualnego ownera. `onlyIfNoWorkoutToday` działa best-effort na podstawie lokalnych `WorkoutSession`.
+Przypomnienia są lokalnymi powiadomieniami systemowymi. Działają w standalone Android APK / dev buildzie. Backend synchronizuje tylko ustawienia `workoutReminders`. Model mobile używa `weeklySchedule`: każdy dzień tygodnia ma własne `enabled` i `time`, a `message`/`description` są wspólne. Stare `daysOfWeek + time` są normalizowane do nowego modelu. Identyfikatory zaplanowanych powiadomień są lokalne i per-user. Po logout albo zmianie konta mobile anuluje/przelicza przypomnienia dla aktualnego ownera. `onlyIfNoWorkoutToday` działa best-effort na podstawie lokalnych `WorkoutSession`.
 
 ## Backend
 
@@ -162,6 +167,7 @@ Backend odpowiada za:
 - rejestrację i logowanie,
 - bearer token validation,
 - settings sync,
+- per-user workout table orientation in settings,
 - workouts CRUD i sync,
 - favorite exercises sync,
 - workout sessions sync,

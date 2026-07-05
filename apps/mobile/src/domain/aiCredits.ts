@@ -1,4 +1,4 @@
-export type AiCreditBalance = {
+﻿export type AiCreditBalance = {
   balance: number;
   planCost: number;
   rewriteCost: number;
@@ -29,6 +29,8 @@ export type AiCreditPurchaseVerifyResponse = {
   transactionId?: string | null;
   purchaseId: string;
 };
+
+export type AiCreditDisplayLanguage = "pl" | "en";
 
 export const emptyAiCreditBalance: AiCreditBalance = {
   balance: 0,
@@ -81,6 +83,40 @@ export function normalizeAiCreditPacks(value: unknown): AiCreditPack[] {
       productId: item.productId.trim()
     }];
   }).filter((pack) => pack.credits > 0);
+}
+
+export function formatAiCreditPackName(credits: number, language: AiCreditDisplayLanguage) {
+  if (language === "pl") {
+    if (credits === 1) {
+      return "1 kredyt";
+    }
+
+    const lastTwoDigits = credits % 100;
+    const lastDigit = credits % 10;
+    const suffix = lastDigit >= 2 && lastDigit <= 4 && !(lastTwoDigits >= 12 && lastTwoDigits <= 14)
+      ? "kredyty"
+      : "kredytów";
+
+    return `${credits} ${suffix}`;
+  }
+
+  return credits === 1 ? "1 credit" : `${credits} credits`;
+}
+
+export function getAiCreditPackDescription(credits: number, language: AiCreditDisplayLanguage) {
+  if (credits >= 10) {
+    return language === "pl" ? "Najlepsze dla częstego korzystania." : "Best for frequent use.";
+  }
+
+  if (credits >= 3) {
+    return language === "pl" ? "Dobre do regularnych zmian planu." : "Good for regular plan changes.";
+  }
+
+  return language === "pl" ? "Idealne na start." : "Great to start.";
+}
+
+export function getRecentAiCreditTransactions(transactions: AiCreditTransaction[], limit = 3) {
+  return transactions.slice(0, Math.max(0, limit));
 }
 
 export function normalizeAiCreditPurchaseVerifyResponse(value: unknown): AiCreditPurchaseVerifyResponse | null {

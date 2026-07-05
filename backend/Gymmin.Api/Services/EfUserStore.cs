@@ -340,7 +340,9 @@ public sealed class EfUserStore : IUserStore
             user.Email,
             user.Name,
             FileSystemUserAvatarStorage.BuildAvatarUrl(avatar),
-            avatar?.UpdatedAt);
+            avatar?.UpdatedAt,
+            user.CreatedAt,
+            user.UpdatedAt);
     }
 
     private static UserAvatarMetadata? ToAvatarMetadata(UserEntity user)

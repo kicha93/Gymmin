@@ -11,24 +11,26 @@
       "settings-account": false,
       "settings-info": false,
       "settings-integrations": false,
-      "settings-notifications": false,
+      "settings-notifications": true,
       "settings-preferences": false,
       "settings-training": false,
-      "home-articles": true
+      "home-articles": false
     },
     "isAuthPanelDismissed": false,
     "workoutReminders": {
-      "enabled": false,
+      "enabled": true,
       "daysOfWeek": [
         1,
         3,
-        5
+        5,
+        7
       ],
-      "time": "18:00",
+      "time": "10:00",
       "message": "Czas na trening",
+      "description": "Otw\u00F3rz Gymmin i wykonaj zaplanowany trening.",
       "onlyIfNoWorkoutToday": true,
-      "updatedAt": "2026-07-02T05:40:31.921+00:00"
+      "updatedAt": "2026-07-05T00:15:27.176+00:00"
     },
-    "updatedAt": "2026-07-03T17:37:55.14+00:00"
+    "updatedAt": "2026-07-05T13:12:07.392+00:00"
   }
 }

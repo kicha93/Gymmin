@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using Gymmin.Api.Domain;
 using Gymmin.Api.Services;
@@ -28,15 +28,15 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var first = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
         var second = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
 
-        Assert.Equal(3, first!.Balance);
+        Assert.Equal(1, first!.Balance);
         Assert.Equal(1, first.PlanCost);
         Assert.Equal(1, first.RewriteCost);
-        Assert.Equal(3, second!.Balance);
+        Assert.Equal(1, second!.Balance);
 
         var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions");
         Assert.Single(transactions!.Transactions);
         Assert.Equal(AiCreditTransactionTypes.InitialGrant, transactions.Transactions[0].Type);
-        Assert.Equal(3, transactions.Transactions[0].Amount);
+        Assert.Equal(1, transactions.Transactions[0].Amount);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var response = await client.PostAsJsonAsync("/api/ai-credits/dev/grant", new DevGrantAiCreditsRequest(10, "test top-up"));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var balance = await response.Content.ReadFromJsonAsync<AiCreditBalanceResponse>();
-        Assert.Equal(13, balance!.Balance);
+        Assert.Equal(11, balance!.Balance);
 
         var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions?limit=10");
         Assert.Contains(transactions!.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.DevGrant && transaction.Amount == 10);
@@ -64,6 +64,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         using var client = _factory.CreateClient();
         var auth = await TestPayloads.RegisterAsync(client, "ai-consume");
         client.Authorize(auth.Token);
+        await GrantDevCreditsAsync(client, 2);
 
         var plan = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
@@ -119,7 +120,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         Assert.Equal(firstJob!.JobId, secondJob!.JobId);
 
         var balance = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
-        Assert.Equal(2, balance!.Balance);
+        Assert.Equal(0, balance!.Balance);
     }
 
     [Fact]
@@ -128,6 +129,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         using var client = _factory.CreateClient();
         var auth = await TestPayloads.RegisterAsync(client, "ai-parallel");
         client.Authorize(auth.Token);
+        await GrantDevCreditsAsync(client, 2);
 
         var request = new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
@@ -175,8 +177,8 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         Assert.Equal(HttpStatusCode.Accepted, second.StatusCode);
         var firstBalance = await firstClient.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
         var secondBalance = await secondClient.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
-        Assert.Equal(2, firstBalance!.Balance);
-        Assert.Equal(2, secondBalance!.Balance);
+        Assert.Equal(0, firstBalance!.Balance);
+        Assert.Equal(0, secondBalance!.Balance);
     }
 
     [Fact]
@@ -196,7 +198,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
         Assert.Equal("invalid_idempotency_key", error!.Error.Code);
         var balance = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
-        Assert.Equal(3, balance!.Balance);
+        Assert.Equal(1, balance!.Balance);
     }
 
     [Fact]
@@ -222,7 +224,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
             Assert.Equal("failed", body!.Status);
 
             var balance = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
-            Assert.Equal(3, balance!.Balance);
+            Assert.Equal(1, balance!.Balance);
 
             var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions?limit=10");
             Assert.Contains(transactions!.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.Consume && transaction.Amount == -1);
@@ -233,7 +235,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
             var credits = scope.ServiceProvider.GetRequiredService<IAiCreditService>();
             Assert.False(credits.RefundForJob(auth.User.Id, job.JobId, AiCreditReasons.TechnicalFailureRefund));
             var afterSecondRefundAttempt = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
-            Assert.Equal(3, afterSecondRefundAttempt!.Balance);
+            Assert.Equal(1, afterSecondRefundAttempt!.Balance);
         }
         finally
         {
@@ -251,8 +253,9 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         client.Authorize(auth.Token);
 
         var response = await client.GetFromJsonAsync<AiCreditPacksResponse>("/api/ai-credits/packs");
-        Assert.Contains(response!.Packs, pack => pack.ProductId == "ai_tokens_10" && pack.Credits == 10);
-        Assert.Contains(response.Packs, pack => pack.ProductId == "ai_tokens_100" && pack.Credits == 100);
+        Assert.Contains(response!.Packs, pack => pack.ProductId == "ai_tokens_1" && pack.Credits == 1);
+        Assert.Contains(response.Packs, pack => pack.ProductId == "ai_tokens_3" && pack.Credits == 3);
+        Assert.Contains(response.Packs, pack => pack.ProductId == "ai_tokens_10" && pack.Credits == 10);
     }
 
     [Fact]
@@ -272,7 +275,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var body = await response.Content.ReadFromJsonAsync<VerifyGooglePlayPurchaseResponse>();
         Assert.Equal("credited", body!.Status);
         Assert.Equal(10, body.CreditsAdded);
-        Assert.Equal(13, body.Balance);
+        Assert.Equal(11, body.Balance);
         Assert.False(string.IsNullOrWhiteSpace(body.TransactionId));
         Assert.False(string.IsNullOrWhiteSpace(body.PurchaseId));
 
@@ -284,7 +287,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var duplicateBody = await duplicate.Content.ReadFromJsonAsync<VerifyGooglePlayPurchaseResponse>();
         Assert.Equal("already_processed", duplicateBody!.Status);
         Assert.Equal(0, duplicateBody.CreditsAdded);
-        Assert.Equal(13, duplicateBody.Balance);
+        Assert.Equal(11, duplicateBody.Balance);
 
         var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions?limit=20");
         Assert.Single(transactions!.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.Purchase);
@@ -328,7 +331,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var balance = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
-        Assert.Equal(3, balance!.Balance);
+        Assert.Equal(1, balance!.Balance);
         var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions?limit=20");
         Assert.DoesNotContain(transactions!.Transactions, transaction => transaction.Type == AiCreditTransactionTypes.Purchase);
     }
@@ -342,7 +345,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var auth = await TestPayloads.RegisterAsync(client, "ai-google-consume-retry");
         client.Authorize(auth.Token);
 
-        var request = new VerifyGooglePlayPurchaseRequest("ai_tokens_30", "consume-retry-token", null);
+        var request = new VerifyGooglePlayPurchaseRequest("ai_tokens_3", "consume-retry-token", null);
         var first = await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", request);
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
         var firstBody = await first.Content.ReadFromJsonAsync<VerifyGooglePlayPurchaseResponse>();
@@ -354,7 +357,7 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var secondBody = await second.Content.ReadFromJsonAsync<VerifyGooglePlayPurchaseResponse>();
         Assert.Equal("already_processed", secondBody!.Status);
         Assert.Equal(0, secondBody.CreditsAdded);
-        Assert.Equal(33, secondBody.Balance);
+        Assert.Equal(4, secondBody.Balance);
         Assert.True(_factory.GooglePlayPurchaseValidator.ConsumeCalls >= 2);
 
         var transactions = await client.GetFromJsonAsync<AiCreditTransactionsResponse>("/api/ai-credits/transactions?limit=20");
@@ -382,6 +385,12 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         Assert.Single(history!.Purchases);
         var transactionBody = await (await client.GetAsync("/api/ai-credits/transactions?limit=20")).Content.ReadAsStringAsync();
         Assert.DoesNotContain("secret-purchase-token", transactionBody);
+    }
+
+    private static async Task GrantDevCreditsAsync(HttpClient client, int amount)
+    {
+        var response = await client.PostAsJsonAsync("/api/ai-credits/dev/grant", new DevGrantAiCreditsRequest(amount, "test top-up"));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     private static async Task<HttpResponseMessage> WaitForJobAsync(HttpClient client, string path)

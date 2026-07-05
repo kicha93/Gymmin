@@ -73,8 +73,17 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
 
         var reminder = new WorkoutReminderSettings(
             true,
-            [1, 3, 5],
-            "18:00",
+            null,
+            null,
+            [
+                new ReminderDaySchedule("monday", true, "18:00"),
+                new ReminderDaySchedule("tuesday", false, "18:00"),
+                new ReminderDaySchedule("wednesday", true, "19:30"),
+                new ReminderDaySchedule("thursday", false, "18:00"),
+                new ReminderDaySchedule("friday", true, "17:00"),
+                new ReminderDaySchedule("saturday", false, "18:00"),
+                new ReminderDaySchedule("sunday", false, "18:00")
+            ],
             "Time to train",
             "Open Gymmin and complete your planned workout.",
             true,
@@ -86,6 +95,7 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
             "80",
             StageType.Exercise,
             "guided",
+            "vertical",
             new Dictionary<string, bool> { ["settings"] = true },
             true,
             reminder,
@@ -101,10 +111,13 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
         Assert.NotNull(settings);
         Assert.Equal("dark", settings!.ThemeName);
         Assert.Equal("guided", settings.DefaultWorkoutExecutionMode);
+        Assert.Equal("vertical", settings.DefaultWorkoutTableOrientation);
         Assert.NotNull(settings.WorkoutReminders);
         Assert.True(settings.WorkoutReminders!.Enabled);
-        Assert.Equal("18:00", settings.WorkoutReminders.Time);
         Assert.Equal("Open Gymmin and complete your planned workout.", settings.WorkoutReminders.Description);
-        Assert.Equal([1, 3, 5], settings.WorkoutReminders.DaysOfWeek);
+        Assert.NotNull(settings.WorkoutReminders.WeeklySchedule);
+        Assert.Contains(settings.WorkoutReminders.WeeklySchedule!, item => item.Day == "monday" && item.Enabled && item.Time == "18:00");
+        Assert.Contains(settings.WorkoutReminders.WeeklySchedule!, item => item.Day == "wednesday" && item.Enabled && item.Time == "19:30");
+        Assert.Contains(settings.WorkoutReminders.WeeklySchedule!, item => item.Day == "friday" && item.Enabled && item.Time == "17:00");
     }
 }

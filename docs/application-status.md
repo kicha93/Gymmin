@@ -197,6 +197,8 @@ Dostępne tryby:
 - `guided` / Krok po kroku,
 - `readonly-post-workout` / Tylko podgląd, uzupełnię po treningu,
 - `inline-table` / Tabela do uzupełniania na bieżąco.
+- Inline table mode has a top-left rotate control and a synced per-user default
+  orientation setting (`vertical` / `horizontal`) in Settings.
 
 Sesja wykonania jest osobnym obiektem od planu treningowego. Plan nie jest nadpisywany wynikami. Sesja zapisuje snapshot treningu i entries do wykonania.
 
@@ -275,13 +277,14 @@ Użytkownik może:
 
 Znane ryzyko przed releasem: warto rozważyć ostrzejszą politykę dla niedopasowanych ćwiczeń z AI. Opcje: wymagać od użytkownika ręcznego przeglądu i zamiany ćwiczeń przed zapisem albo bardzo jasno pokazywać w UI, że część ćwiczeń nie ma dopasowania katalogowego.
 
-### Tokeny AI
+### Kredyty
 
 Kreator AI i modyfikowanie treningu z AI korzystaja z kontowych `AiCredits`.
+W UI nazywamy je `Kredyty`; nazwa techniczna `AiCredits` zostaje w kodzie i API.
 
 Aktualnie dziala:
 
-- saldo tokenow AI przypisane do konta,
+- saldo kredytow przypisane do konta,
 - initial grant dla nowych lub istniejacych kont bez konta kredytow,
 - append-only ledger transakcji,
 - koszt `plan` i `rewrite` konfigurowany backendowo,
@@ -289,7 +292,7 @@ Aktualnie dziala:
 - techniczny refund tokena, jesli job AI nie dostarczy uzywalnej propozycji,
 - production-grade safety dla Database provider: atomowy consume tokena na poziomie bazy i idempotentny refund,
 - unikalny constraint dla `UserId + operation type + IdempotencyKey`, zeby retry nie pobieral drugiego tokena,
-- Google Play purchase validation po stronie backendu dla paczek `ai_tokens_10`, `ai_tokens_30`, `ai_tokens_100`,
+- Google Play purchase validation po stronie backendu dla paczek `ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10`,
 - tabela `AiCreditPurchases` z hashem purchase tokena, statusem przetwarzania i powiazaniem do ledger transaction,
 - endpoint `POST /api/ai-credits/purchases/google-play/verify`,
 - idempotentne naliczanie zakupow: ponowne wyslanie tego samego purchase tokena nie dodaje tokenow drugi raz,
@@ -298,10 +301,10 @@ Aktualnie dziala:
 - Android debug APK build smoke przechodzi z natywnym Google Play Billing stackiem,
 - release AAB build smoke przechodzi przez skrypt `mobile:store:aab`, ktory buduje z krotkiej sciezki roboczej dla Windows/CMake,
 - build smoke wymaga Android SDK (`ANDROID_HOME` / `ANDROID_SDK_ROOT`); bez podlaczonego emulatora lub telefonu potwierdza linkowanie natywne, ale nie runtime UI,
-- widok mobile `Tokeny AI` z saldem, kosztami, historia transakcji, paczkami i akcja zakupu/restore pending purchases,
+- widok mobile `Kredyty` z saldem, kosztami, kompaktowymi kartami pakietow, ostatnimi transakcjami, informacjami i akcja zakupu/restore pending purchases,
 - dev/test grant poza Production.
 
-File provider nadal dziala jako dev fallback, ale produkcyjna sciezka dla tokenow AI to Database/PostgreSQL. Realne testy zakupow nie sa jeszcze zakonczone: wymagaja aplikacji w Play Console, aktywnych produktow, license testers, skonfigurowanego service account i instalacji builda z Internal Testing.
+File provider nadal dziala jako dev fallback, ale produkcyjna sciezka dla kredytow to Database/PostgreSQL. Realne testy zakupow nie sa jeszcze zakonczone: wymagaja aplikacji w Play Console, aktywnych produktow, license testers, skonfigurowanego service account i instalacji builda z Internal Testing.
 
 Dogrywka 12A.1: AiCredits concurrency, idempotency i refund zostaly sprawdzone na realnym lokalnym PostgreSQL bez Dockera. Migracja `HardenAiCreditsConcurrency` przeszla, `GET /api/health` potwierdzil `Database/PostgreSQL`, rownolegle requesty przy saldzie `1` zakonczyly sie jako jeden zaakceptowany job i jeden `402`, idempotency key nie pobral drugiego tokena, a techniczny failure joba utworzyl pojedynczy `Refund`.
 
@@ -334,17 +337,22 @@ Działa:
 
 Integracje są disabled/placeholder.
 
-Opcje konta są w widoku Profil, nie w Ustawieniach. Profil zawiera dane konta, zmianę hasła, aktywne sesje, skrót do tokenów AI i wylogowanie.
+Opcje konta są w widoku Profil, nie w Ustawieniach. Profil ma dashboardowy układ:
+jedna karta z avatarem, nazwą, emailem i akcjami avatara, karta osiągnięć
+bezpośrednio pod profilem, grid `Szybkie akcje` dla kredytów, zmiany hasła,
+sesji i zgłaszania błędów oraz dolną sekcję `Konto`. Wylogowanie jest ostatnią
+akcją w sekcji Konto, a nie dominującym przyciskiem na górze.
 
 ### Przypomnienia treningowe
 
 Przypomnienia są lokalnymi powiadomieniami systemowymi na telefonie. Zostały ręcznie zweryfikowane w standalone Android APK / dev buildzie. Backend nie wysyła powiadomień z serwera.
 
+Aktualny model używa `weeklySchedule`: każdy dzień tygodnia ma osobne `enabled` i `time`, a `message` oraz `description` są wspólne dla wszystkich dni. Stare ustawienia `daysOfWeek + time` są migrowane lokalnie do nowego modelu.
+
 Ustawienia:
 
 - enabled,
-- dni tygodnia,
-- godzina,
+- `weeklySchedule`,
 - wiadomość,
 - opis,
 - `onlyIfNoWorkoutToday`.

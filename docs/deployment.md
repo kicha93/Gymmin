@@ -34,7 +34,7 @@ $env:Gymmin__Storage__ImportAppDataOnStartup = "false"
 $env:Gymmin__Diagnostics__Enabled = "false"
 $env:ConnectionStrings__DefaultConnection = "Host=...;Database=...;Username=...;Password=..."
 $env:OPENAI_API_KEY = "..."
-$env:Gymmin__AiCredits__InitialGrant = "3"
+$env:Gymmin__AiCredits__InitialGrant = "1"
 $env:Gymmin__AiCredits__PlanCost = "1"
 $env:Gymmin__AiCredits__RewriteCost = "1"
 $env:Gymmin__AiCredits__DevGrantEnabled = "false"
@@ -170,7 +170,7 @@ Missing SMTP or OpenAI configuration does not block startup. Affected features f
 - OpenAI API key configured if AI creator should work.
 - AI credits configured: initial grant, plan/rewrite cost and `DevGrantEnabled=false` in Production.
 - AI credits running on `Provider=Database` with PostgreSQL for production paid-credit safety. File provider is a dev fallback only.
-- Google Play one-time products created and active: `ai_tokens_10`, `ai_tokens_30`, `ai_tokens_100`.
+- Google Play one-time products created and active: `ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10`.
 - Google Play service account configured through environment variables or a secret manager.
 - Google Play Billing tested with internal testing/license testers before public release.
 - Diagnostics disabled or protected.
@@ -259,9 +259,9 @@ Play Console checklist:
 
 - app exists in Google Play Console with package name `com.gymmin.app`,
 - one-time products are created and active:
+  - `ai_tokens_1`,
+  - `ai_tokens_3`,
   - `ai_tokens_10`,
-  - `ai_tokens_30`,
-  - `ai_tokens_100`,
 - prices are configured in Play Console,
 - license testers are configured,
 - a service account has Google Play Developer API access,

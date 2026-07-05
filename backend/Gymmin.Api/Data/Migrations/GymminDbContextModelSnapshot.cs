@@ -482,6 +482,11 @@ namespace Gymmin.Api.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DefaultWorkoutTableOrientation")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("IsAuthPanelDismissed")
                         .HasColumnType("INTEGER");
 

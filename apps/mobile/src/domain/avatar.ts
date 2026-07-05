@@ -8,6 +8,11 @@ export type AvatarResponse = {
   avatarUpdatedAt?: string | null;
 };
 
+export type AvatarImageSource = {
+  headers?: Record<string, string>;
+  uri: string;
+};
+
 export function buildAvatarImageUri(apiBaseUrl: string, user?: AvatarUser | null) {
   const avatarUrl = user?.avatarUrl?.trim();
   if (!avatarUrl) {
@@ -25,6 +30,25 @@ export function buildAvatarImageUri(apiBaseUrl: string, user?: AvatarUser | null
 
   const separator = resolvedUrl.includes("?") ? "&" : "?";
   return `${resolvedUrl}${separator}v=${encodeURIComponent(user.avatarUpdatedAt)}`;
+}
+
+export function buildAvatarImageSource(apiBaseUrl: string, user?: (AvatarUser & { token?: string | null }) | null): AvatarImageSource | null {
+  const uri = buildAvatarImageUri(apiBaseUrl, user);
+  if (!uri) {
+    return null;
+  }
+
+  const token = user?.token?.trim();
+  if (!token) {
+    return { uri };
+  }
+
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    uri
+  };
 }
 
 export function applyAvatarResponse<TUser extends AvatarUser>(user: TUser, response: AvatarResponse): TUser {

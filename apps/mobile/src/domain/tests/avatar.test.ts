@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { applyAvatarResponse, buildAvatarImageUri } from "../avatar";
+import { applyAvatarResponse, buildAvatarImageSource, buildAvatarImageUri } from "../avatar";
 
 describe("avatar", () => {
   it("builds absolute URLs for relative backend avatar paths", () => {
@@ -22,6 +22,25 @@ describe("avatar", () => {
       avatarUrl: "https://cdn.example.com/avatar.jpg"
     })).toBe("https://cdn.example.com/avatar.jpg");
     expect(buildAvatarImageUri("https://api.gymmin.app", null)).toBeNull();
+  });
+
+  it("adds bearer auth headers for protected backend avatar images", () => {
+    expect(buildAvatarImageSource("https://api.gymmin.app", {
+      avatarUpdatedAt: "2026-07-04T10:00:00Z",
+      avatarUrl: "/api/profile/avatar",
+      token: "auth-token"
+    })).toEqual({
+      headers: {
+        Authorization: "Bearer auth-token"
+      },
+      uri: "https://api.gymmin.app/api/profile/avatar?v=2026-07-04T10%3A00%3A00Z"
+    });
+
+    expect(buildAvatarImageSource("https://api.gymmin.app", {
+      avatarUrl: "/api/profile/avatar"
+    })).toEqual({
+      uri: "https://api.gymmin.app/api/profile/avatar"
+    });
   });
 
   it("applies upload and delete responses to the current user", () => {

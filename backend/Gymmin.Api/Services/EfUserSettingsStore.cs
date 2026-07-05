@@ -57,6 +57,7 @@ public sealed class EfUserSettingsStore : IUserSettingsStore
             entity.DefaultWeight,
             string.IsNullOrWhiteSpace(entity.DefaultStageType) ? null : stageType,
             string.IsNullOrWhiteSpace(entity.DefaultWorkoutExecutionMode) ? "guided" : entity.DefaultWorkoutExecutionMode,
+            string.IsNullOrWhiteSpace(entity.DefaultWorkoutTableOrientation) ? "vertical" : entity.DefaultWorkoutTableOrientation,
             collapsedPanels,
             entity.IsAuthPanelDismissed,
             DeserializeWorkoutReminders(entity.WorkoutRemindersJson),
@@ -71,6 +72,7 @@ public sealed class EfUserSettingsStore : IUserSettingsStore
         entity.DefaultWeight = settings.DefaultWeight;
         entity.DefaultStageType = settings.DefaultStageType?.ToString();
         entity.DefaultWorkoutExecutionMode = settings.DefaultWorkoutExecutionMode;
+        entity.DefaultWorkoutTableOrientation = settings.DefaultWorkoutTableOrientation;
         entity.CollapsedPanelsJson = JsonSerializer.Serialize(settings.CollapsedPanels, JsonOptions);
         entity.WorkoutRemindersJson = settings.WorkoutReminders is null
             ? ""

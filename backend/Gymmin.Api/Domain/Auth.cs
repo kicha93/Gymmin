@@ -28,7 +28,9 @@ public sealed record AuthUserResponse(
     string Email,
     string Name,
     string? AvatarUrl = null,
-    DateTimeOffset? AvatarUpdatedAt = null);
+    DateTimeOffset? AvatarUpdatedAt = null,
+    DateTimeOffset? CreatedOn = null,
+    DateTimeOffset? ModifiedOn = null);
 
 public sealed record AuthResponse(
     string Token,

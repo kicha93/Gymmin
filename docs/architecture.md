@@ -187,7 +187,7 @@ Backend odpowiada za:
 - rejestrację i logowanie,
 - bearer token validation,
 - settings sync,
-- per-user workout table orientation in settings,
+- per-user workout table orientation in settings; `horizontal` widens workout tables for landscape use while screen rotation is handled by the device/system auto-rotate setting,
 - workouts CRUD i sync,
 - favorite exercises sync,
 - workout sessions sync,
@@ -228,6 +228,7 @@ Zakres mobile unit tests:
 - per-user AsyncStorage key helpers i legacy migration,
 - favorite exercises normalization, tombstones i merge,
 - workout sessions merge, deletedAt filtering, progress filtering i stable updatedAt fallback,
+- Progress dashboard helpers for tracked exercises, current-month volume, strength/volume sorting and local SVG sparkline data,
 - workout reminders pure scheduling logic,
 - diagnostics ring buffer, correlation ids i sanitization.
 

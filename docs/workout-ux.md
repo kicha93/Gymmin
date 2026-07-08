@@ -11,7 +11,7 @@ This note tracks the current workout-view UX decisions.
 - Long exercise names can wrap to two lines while the set/target tiles keep stable dimensions.
 - Repeated textual set-count labels are intentionally hidden when the same value is already represented in the target tiles.
 
-## Per-exercise muscles
+## Per-Exercise Muscles
 
 - Catalog exercises show a `body-outline` button on the right side of the row.
 - The button opens the exercise detail page, matching the row tap action.
@@ -20,20 +20,21 @@ This note tracks the current workout-view UX decisions.
 - The modal builds muscle highlights from the selected exercise only.
 - Exercises without catalog muscle data show a safe empty state.
 
-## Exercise detail page
+## Exercise Detail Page
 
 - Tapping an exercise row opens a dedicated exercise detail page.
+- Opening the exercise detail page resets the screen scroll to the top.
 - The page is backed by the catalog exercise id when available, with best-effort fallback by exercise name.
-- The page now uses a compact panel layout: hero, animation/media, worked muscles, technique steps, tips, common mistakes and exercise history/progress.
-- The hero panel shows the exercise name, category/equipment tags and primary muscle summary.
-- The animation/media panel is intentionally compact. It can show mapped local exercise images; otherwise it shows a small video placeholder until licensed animation assets are available.
-- The worked-muscles panel reuses the same SVG anatomy map as the workout overview and muscle modal, but shows one body side at a time with a Front/Back segmented toggle.
+- The page uses a compact panel layout: hero, media, worked muscles, technique steps, tips, common mistakes and exercise history/progress.
+- The hero panel shows the exercise name, category/equipment tags and primary muscle summary with an icon.
+- The animation/media panel is hidden when an exercise has no mapped local images yet.
+- The worked-muscles panel reuses the same SVG anatomy map as the workout overview and muscle modal, shows one body side at a time with a Front/Back segmented toggle below the panel title, and defaults to Front.
 - Technique instructions are rendered as numbered steps. Tips, common mistakes and exercise history are collapsible panels.
 - Exercise history is collapsed by default when no data exists and shows a clear empty state.
 - Unknown or unmapped exercises show a safe empty state instead of crashing.
-- TODO: map `exerciseId` to animation assets, add local video/GIF support, cache animation assets and define the licensed animation source.
+- TODO: add broader local image/video coverage for catalog exercises and define the licensed animation source.
 
-## Progress dashboard
+## Progress Dashboard
 
 - The Progress screen uses a dashboard layout.
 - A search input stays at the top of the screen.
@@ -43,10 +44,11 @@ This note tracks the current workout-view UX decisions.
 - Missing metric values are rendered as `—` instead of long empty-state text inside each card.
 - A lightweight SVG sparkline is shown when an exercise has enough local history data.
 
-## Starting a workout
+## Starting A Workout
 
 - Starting a workout no longer opens an execution-mode picker.
 - New sessions use `defaultWorkoutExecutionMode` from Settings.
 - Existing active sessions keep their own stored `executionMode` when resumed.
 - Users can still change the default mode in Settings before starting the next workout.
 - Execution entries use compact headers like `[2] Squat` or `[2] Rest` instead of repeating a separate `Set N` label.
+- Workout tables use the device/system orientation instead of a manual `rotate(90deg)` transform. The `horizontal` table mode widens the table for landscape use, while Android/iOS auto-rotation handles the actual screen rotation.

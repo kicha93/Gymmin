@@ -11,7 +11,7 @@ Gymmin is a mobile-first workout builder for strength training.
 - Backend: ASP.NET Core Web API
 - Auth: backend email/password auth with bearer tokens
 - AI creator: OpenAI Responses API through the backend
-- Workout UX: compact Exercise Detail Page with hero summary, media placeholder, worked-muscle anatomy toggle and collapsible technique panels; Progress uses a dashboard with summary cards, filters and compact exercise metric cards
+- Workout UX: compact Exercise Detail Page with hero summary, optional local media, worked-muscle anatomy toggle and collapsible technique panels; Progress uses a dashboard with summary cards, filters and compact exercise metric cards
 - Bug reports: backend SMTP sender
 - Diagnostics: backend correlation id, structured request/error logs, safe global 500 responses, mobile diagnostics ring buffer
 - Current durable backend storage: selectable File JSON store or EF Core database store
@@ -161,9 +161,9 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - The read-only workout view shows compact exercise rows with set/target tiles such as `[3] x [8]`; rest elements use a single tile such as `[2m]`.
 - The `body-outline` button on exercise rows opens the same exercise detail page as tapping the row.
 - The per-exercise anatomy view reuses the same front/back SVG anatomy map as the workout overview, filtered to one exercise.
-- Tapping an exercise row opens a dedicated exercise detail page with metadata, animation placeholder, worked muscles, technique placeholders and exercise history/progress when local data exists.
+- Tapping an exercise row opens a dedicated exercise detail page with metadata, optional exercise images, worked muscles, technique placeholders and exercise history/progress when local data exists. The media panel is hidden when no exercise images are mapped yet.
 - Starting a workout no longer asks for execution mode every time. The app uses the workout execution mode saved in Settings for the next session.
-- Inline workout table execution supports a per-user default table orientation: vertical or horizontal/rotated. The user can also rotate the active table from the top-left table control. This setting syncs through `/api/settings`.
+- Inline workout table execution supports a per-user default table orientation: vertical or horizontal. Horizontal mode widens the table for landscape use; actual screen rotation is handled by the device/system auto-rotate setting. This setting syncs through `/api/settings`.
 - Mobile account-scoped data uses per-user AsyncStorage keys: `gymmin.account.anonymous.*` for signed-out data and `gymmin.account.{userId}.*` for signed-in cache/sync metadata. Account switching does not silently merge data from the previous account.
 - If signed-out local data exists after login, the app asks whether to merge it into the current account, keep it for later, or delete only the anonymous local data.
 - Workout reminders are local system notifications. They have a per-weekday schedule (`weeklySchedule`) where each day has its own enabled state and `HH:mm` time, while `message` and `description` remain shared. Old `daysOfWeek + time` settings are normalized into the new shape. Reminders were manually verified in the standalone Android APK / development build and sync through `/api/settings`, while scheduled notification IDs stay per-user on the device under `gymmin.account.{owner}.workoutReminderNotificationIds`.

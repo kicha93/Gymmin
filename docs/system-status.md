@@ -58,3 +58,7 @@ The homepage shows a calm inline callout only when status is not `ok`.
 The offline copy explicitly tells the user that local workouts are still safe on
 the device. The callout does not block local-first usage. The CTA refreshes the
 status manually, while automatic checks are cached briefly to avoid request spam.
+
+Online-only actions are disabled while the status is not `ok`. This includes
+AI creator/rewrite actions and Credits/Google Play purchase flows. Mobile shows
+a calm app dialog instead of raw network errors such as `Network request failed`.

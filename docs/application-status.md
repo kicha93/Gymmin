@@ -204,8 +204,10 @@ Dostępne tryby:
 - `guided` / Krok po kroku,
 - `readonly-post-workout` / Tylko podgląd, uzupełnię po treningu,
 - `inline-table` / Tabela do uzupełniania na bieżąco.
-- Inline table mode has a top-left rotate control and a synced per-user default
-  orientation setting (`vertical` / `horizontal`) in Settings.
+- Inline table mode has a top-left orientation control and a synced per-user
+  default orientation setting (`vertical` / `horizontal`) in Settings. Horizontal
+  mode widens the table for landscape use; screen rotation is handled by the
+  device/system auto-rotate setting, not by a manual CSS transform.
 
 Sesja wykonania jest osobnym obiektem od planu treningowego. Plan nie jest nadpisywany wynikami. Sesja zapisuje snapshot treningu i entries do wykonania.
 
@@ -553,8 +555,8 @@ backend-side definition versioning and anti-cheat.
 Widok szczegolow cwiczenia ma kompaktowy, panelowy layout:
 
 - hero panel z nazwa, tagami i glownymi miesniami,
-- kompaktowy panel animacji/obrazow z placeholderem,
-- panel pracujacych miesni z przelacznikiem Przod / Tyl,
+- opcjonalny panel animacji/obrazow, ukrywany gdy cwiczenie nie ma mapowanych obrazow,
+- panel pracujacych miesni z przelacznikiem Przod / Tyl pod tytulem i domyslnym Przod,
 - collapsible panele dla instrukcji, wskazowek, typowych bledow i historii,
 - instrukcje renderowane jako numerowane kroki.
 

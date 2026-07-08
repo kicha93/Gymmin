@@ -112,7 +112,7 @@ export function getDefaultWorkoutReminderSettings(language: "pl" | "en" = "en"):
     enabled: false,
     message: language === "pl" ? "Czas na trening" : "Time to train",
     onlyIfNoWorkoutToday: true,
-    weeklySchedule: createDefaultWeeklySchedule([1, 3, 5], defaultReminderTime)
+    weeklySchedule: createDefaultWeeklySchedule([], defaultReminderTime)
   };
 }
 

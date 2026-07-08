@@ -4,7 +4,7 @@
     "slug": "gymmin",
     "version": "1.0",
     "icon": "./assets/gymmin-app-icon.png",
-    "orientation": "portrait",
+    "orientation": "default",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {

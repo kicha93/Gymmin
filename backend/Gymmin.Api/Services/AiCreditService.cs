@@ -402,7 +402,7 @@ public sealed class EfAiCreditService : IAiCreditService
     }
 }
 
-public sealed class FileBackedAiCreditService : IAiCreditService
+public sealed class FileBackedAiCreditService : IAiCreditService, IUserScopedDataStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -566,6 +566,26 @@ public sealed class FileBackedAiCreditService : IAiCreditService
             AddTransaction(account, Math.Abs(consume.Amount), AiCreditTransactionTypes.Refund, reason, jobId, null, null, null);
             Save();
             return true;
+        }
+    }
+
+    public bool DeleteUserData(string userId)
+    {
+        lock (_gate)
+        {
+            var removedAccount = _state.Accounts.Remove(userId);
+            var before = _state.Transactions.Count;
+            _state = _state with
+            {
+                Transactions = _state.Transactions.Where(transaction => transaction.UserId != userId).ToList()
+            };
+            var removedTransactions = before != _state.Transactions.Count;
+            if (removedAccount || removedTransactions)
+            {
+                Save();
+            }
+
+            return removedAccount || removedTransactions;
         }
     }
 

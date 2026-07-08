@@ -8,14 +8,9 @@ import {
 } from "../profile";
 
 const labels: ProfileAccountLabels = {
-  accountAvatar: "Avatar",
-  accountAvatarNotSet: "Nie ustawiono",
-  accountAvatarSet: "Ustawiony",
-  accountAvatarUpdatedAt: "Aktualizacja avatara",
-  accountCreatedOn: "CreatedOn",
+  accountCreatedOn: "Utworzono",
   accountEmail: "Email",
   accountId: "ID konta",
-  accountModifiedOn: "ModifiedOn",
   accountName: "Nazwa",
   defaultUserName: "Użytkownik"
 };
@@ -28,7 +23,7 @@ describe("profile helpers", () => {
     expect(getProfileDisplayEmail({ email: " user@example.com " })).toBe("user@example.com");
   });
 
-  it("builds account details from user data without exposing auth token", () => {
+  it("builds account details from user data without exposing auth token or technical profile fields", () => {
     const rows = buildProfileAccountDetails({
       avatarUpdatedAt: "2026-07-05T10:00:00Z",
       avatarUrl: "/api/profile/avatar/user-1",
@@ -44,15 +39,15 @@ describe("profile helpers", () => {
       { key: "name", label: "Nazwa", value: "User One" },
       { key: "email", label: "Email", value: "user@example.com" },
       { key: "accountId", label: "ID konta", value: "user-1" },
-      { key: "createdOn", label: "CreatedOn", value: "formatted:2026-07-01T08:00:00Z" },
-      { key: "modifiedOn", label: "ModifiedOn", value: "formatted:2026-07-05T11:00:00Z" },
-      { key: "avatar", label: "Avatar", value: "Ustawiony" },
-      { key: "avatarUpdatedAt", label: "Aktualizacja avatara", value: "formatted:2026-07-05T10:00:00Z" }
+      { key: "createdOn", label: "Utworzono", value: "formatted:2026-07-01T08:00:00Z" }
     ]);
     expect(JSON.stringify(rows)).not.toContain("secret-auth-token");
+    expect(rows.map((row) => row.key)).not.toContain("modifiedOn");
+    expect(rows.map((row) => row.key)).not.toContain("avatar");
+    expect(rows.map((row) => row.key)).not.toContain("avatarUpdatedAt");
   });
 
-  it("uses date fallbacks and does not include avatar update row when avatar timestamp is missing", () => {
+  it("uses date fallbacks and keeps technical profile fields hidden", () => {
     const rows = buildProfileAccountDetails({
       avatarUrl: null,
       email: null,
@@ -60,11 +55,9 @@ describe("profile helpers", () => {
       name: null
     }, labels, (value) => value);
 
-    expect(rows.map((row) => row.key)).toEqual(["name", "email", "accountId", "createdOn", "modifiedOn", "avatar"]);
+    expect(rows.map((row) => row.key)).toEqual(["name", "email", "accountId", "createdOn"]);
     expect(rows.find((row) => row.key === "name")?.value).toBe("Użytkownik");
     expect(rows.find((row) => row.key === "email")?.value).toBe("-");
     expect(rows.find((row) => row.key === "createdOn")?.value).toBe("-");
-    expect(rows.find((row) => row.key === "modifiedOn")?.value).toBe("-");
-    expect(rows.find((row) => row.key === "avatar")?.value).toBe("Nie ustawiono");
   });
 });

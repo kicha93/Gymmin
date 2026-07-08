@@ -11,7 +11,7 @@ public interface IAchievementStore
     AchievementsResponse Sync(string userId, SyncAchievementsRequest request);
 }
 
-public sealed class FileBackedAchievementStore : IAchievementStore
+public sealed class FileBackedAchievementStore : IAchievementStore, IUserScopedDataStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -74,6 +74,26 @@ public sealed class FileBackedAchievementStore : IAchievementStore
                 .ToList();
 
             return new AchievementsResponse(responseAchievements, GetUserUsage(userId), now);
+        }
+    }
+
+    public bool DeleteUserData(string userId)
+    {
+        lock (_gate)
+        {
+            var removedAchievements = _achievementsByUserId.Remove(userId);
+            var removedUsage = _usageByUserId.Remove(userId);
+            if (removedAchievements)
+            {
+                Save(_achievementsPath, _achievementsByUserId);
+            }
+
+            if (removedUsage)
+            {
+                Save(_usagePath, _usageByUserId);
+            }
+
+            return removedAchievements || removedUsage;
         }
     }
 

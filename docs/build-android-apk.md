@@ -205,8 +205,12 @@ This wrapper:
 
 - loads the local signing env file from `C:\secure\gymmin-upload-key-codex-20260701.env.ps1` when it exists,
 - stops existing Gradle daemons for the main and short-path Android projects,
-- requires an explicit backend URL through `-ApiBaseUrl` or `GYMMIN_APK_API_BASE_URL`,
-- checks `GET /health` before building, so a stale ngrok/tunnel URL cannot be embedded silently,
+- accepts an explicit backend URL through `-ApiBaseUrl` or `GYMMIN_APK_API_BASE_URL`,
+- checks `GET /health` before building, so a stale tunnel URL cannot be embedded silently,
+- automatically starts or attaches a backend tunnel when the provided URL is missing or unhealthy,
+- reuses an already running local backend on `http://127.0.0.1:5198` and only attaches a fresh tunnel to it,
+- starts the local backend only when it is not already running,
+- uses Cloudflare Tunnel by default for the automatic backend tunnel; pass `-BackendTunnelProvider Ngrok` only when you intentionally want ngrok,
 - builds the `arm64-v8a` release APK,
 - uploads it to `kicha93/gymmin-apk` release `v1.0`.
 
@@ -218,9 +222,28 @@ npm run mobile:github:apk:oneclick
 ```
 
 If `/health` does not return `{"status":"ok"}`, the wrapper fails before the
-APK build. Start the backend/tunnel again, copy the fresh public backend URL,
-and rerun the command. This matters for account features such as login, avatar
-upload and AI credits because the API URL is baked into the installed APK.
+APK build only when it cannot create a fresh backend tunnel either. In the
+normal flow it starts or attaches the backend tunnel for you and writes the
+current URL to:
+
+```text
+.artifacts/backend-url.txt
+```
+
+This matters for account features such as login, avatar upload and credits
+because the API URL is baked into the installed APK.
+
+To only start or attach the backend tunnel without building an APK:
+
+```powershell
+.\scripts\start-backend-tunnel.ps1
+```
+
+To force the build to use only the URL you supplied and never start a tunnel:
+
+```powershell
+npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://your-backend-url.example.com" -NoEnsureBackendTunnel
+```
 
 The lower-level command is still available when you want to pass every option manually:
 

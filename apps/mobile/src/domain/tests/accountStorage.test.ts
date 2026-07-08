@@ -7,7 +7,8 @@ import {
   detectAccountSwitch,
   getAccountStorageKey,
   getAccountStorageOwnerId,
-  migrateLegacyAccountStorage
+  migrateLegacyAccountStorage,
+  removeAccountStorageKeys
 } from "../accountStorage";
 
 describe("accountStorage", () => {
@@ -41,5 +42,19 @@ describe("accountStorage", () => {
     expect(await AsyncStorage.getItem(getAccountStorageKey("workouts", null))).toBe("{broken json is still preserved");
     expect(await AsyncStorage.getItem("gymmin.workouts")).toBe("{broken json is still preserved");
     expect(await AsyncStorage.getItem(ACCOUNT_STORAGE_MIGRATION_KEY)).toContain("\"version\":1");
+  });
+
+  it("removes only the requested account-scoped keys", async () => {
+    await AsyncStorage.setItem(getAccountStorageKey("workouts", "user-a"), "a-workouts");
+    await AsyncStorage.setItem(getAccountStorageKey("settings", "user-a"), "a-settings");
+    await AsyncStorage.setItem(getAccountStorageKey("workouts", "user-b"), "b-workouts");
+    await AsyncStorage.setItem(getAccountStorageKey("workouts", null), "anonymous-workouts");
+
+    await removeAccountStorageKeys(["workouts", "settings", "workouts"], "user-a");
+
+    expect(await AsyncStorage.getItem(getAccountStorageKey("workouts", "user-a"))).toBeNull();
+    expect(await AsyncStorage.getItem(getAccountStorageKey("settings", "user-a"))).toBeNull();
+    expect(await AsyncStorage.getItem(getAccountStorageKey("workouts", "user-b"))).toBe("b-workouts");
+    expect(await AsyncStorage.getItem(getAccountStorageKey("workouts", null))).toBe("anonymous-workouts");
   });
 });

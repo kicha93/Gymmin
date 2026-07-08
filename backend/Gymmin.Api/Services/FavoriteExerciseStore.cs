@@ -10,7 +10,7 @@ public interface IFavoriteExerciseStore
     FavoriteExercisesResponse Sync(string userId, SyncFavoriteExercisesRequest request);
 }
 
-public sealed class FileBackedFavoriteExerciseStore : IFavoriteExerciseStore
+public sealed class FileBackedFavoriteExerciseStore : IFavoriteExerciseStore, IUserScopedDataStore
 {
     private const int MaxFavorites = 1_000;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -92,6 +92,20 @@ public sealed class FileBackedFavoriteExerciseStore : IFavoriteExerciseStore
                 .ToList();
 
             return new FavoriteExercisesResponse(responseFavorites, now);
+        }
+    }
+
+    public bool DeleteUserData(string userId)
+    {
+        lock (_gate)
+        {
+            var removed = _favoritesByUserId.Remove(userId);
+            if (removed)
+            {
+                Save();
+            }
+
+            return removed;
         }
     }
 

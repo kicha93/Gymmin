@@ -26,6 +26,7 @@ if (useDatabaseStorage)
     builder.Services.AddSingleton<IAchievementStore, EfAchievementStore>();
     builder.Services.AddSingleton<IAiCreditService, EfAiCreditService>();
     builder.Services.AddSingleton<IAiCreditPurchaseService, EfAiCreditPurchaseService>();
+    builder.Services.AddSingleton<IAccountDeletionService, EfAccountDeletionService>();
 }
 else
 {
@@ -38,6 +39,7 @@ else
     builder.Services.AddSingleton<IAchievementStore, FileBackedAchievementStore>();
     builder.Services.AddSingleton<IAiCreditService, FileBackedAiCreditService>();
     builder.Services.AddSingleton<IAiCreditPurchaseService, FileBackedAiCreditPurchaseService>();
+    builder.Services.AddSingleton<IAccountDeletionService, FileBackedAccountDeletionService>();
 }
 
 builder.Services.Configure<AiCreditsOptions>(builder.Configuration.GetSection("Gymmin:AiCredits"));
@@ -113,6 +115,20 @@ app.UseMiddleware<ApiExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestDiagnosticsLoggingMiddleware>();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/api/system/status", (IConfiguration configuration) =>
+{
+    var kind = SystemStatusKinds.Normalize(configuration["SystemStatus:Kind"]);
+    var messagePl = configuration["SystemStatus:MessagePl"];
+    var messageEn = configuration["SystemStatus:MessageEn"];
+    var hasMessage = !string.IsNullOrWhiteSpace(messagePl) || !string.IsNullOrWhiteSpace(messageEn);
+
+    return Results.Ok(new SystemStatusResponse(
+        kind,
+        hasMessage ? new LocalizedSystemStatusMessage(
+            string.IsNullOrWhiteSpace(messagePl) ? null : messagePl,
+            string.IsNullOrWhiteSpace(messageEn) ? null : messageEn) : null,
+        DateTimeOffset.UtcNow));
+});
 app.MapGet("/api/health", async (IServiceProvider services, ILogger<Program> logger) => Results.Ok(new
 {
     status = "ok",
@@ -261,6 +277,19 @@ app.MapDelete("/api/profile/avatar", (HttpRequest request, IUserStore users, IUs
     avatars.Delete(context.User.Id);
     users.ClearAvatar(context.User.Id);
     return Results.Ok(new { avatarUrl = (string?)null, avatarUpdatedAt = (DateTimeOffset?)null });
+});
+
+app.MapDelete("/api/account", (HttpRequest request, IUserStore users, IAccountDeletionService accountDeletion) =>
+{
+    var context = GetBearerSession(request, users);
+    if (context is null)
+    {
+        return Results.Unauthorized();
+    }
+
+    return accountDeletion.DeleteAccount(context.User.Id)
+        ? Results.NoContent()
+        : Results.NotFound();
 });
 
 app.MapPost("/api/auth/logout", (HttpRequest request, IUserStore users) =>

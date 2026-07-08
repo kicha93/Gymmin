@@ -4,13 +4,25 @@
       "achievementId": "first_workout",
       "unlockedAt": "2026-07-04T10:44:39.282+00:00",
       "progressAtUnlock": 1,
-      "updatedAt": "2026-07-05T15:46:12.3801855+00:00"
+      "updatedAt": "2026-07-08T15:15:27.5053127+00:00"
     },
     {
       "achievementId": "one_ton_volume",
       "unlockedAt": "2026-07-04T10:44:39.282+00:00",
       "progressAtUnlock": 5.983,
-      "updatedAt": "2026-07-05T15:46:12.3801855+00:00"
+      "updatedAt": "2026-07-08T15:15:27.5053127+00:00"
+    },
+    {
+      "achievementId": "ten_tons_volume",
+      "unlockedAt": "2026-07-08T14:27:46.65+00:00",
+      "progressAtUnlock": 13.715800000000002,
+      "updatedAt": "2026-07-08T15:15:27.5053127+00:00"
+    },
+    {
+      "achievementId": "ten_unique_exercises",
+      "unlockedAt": "2026-07-08T14:27:46.65+00:00",
+      "progressAtUnlock": 14,
+      "updatedAt": "2026-07-08T15:15:27.5053127+00:00"
     }
   ]
 }

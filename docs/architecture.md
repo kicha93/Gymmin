@@ -116,6 +116,26 @@ card combines avatar, name, email and avatar actions; achievements are surfaced
 directly below it; quick actions link to credits, password change, active
 sessions and bug reports; logout lives at the bottom of the Account section.
 
+Account deletion is an authenticated destructive action in `Profile -> Account`.
+Mobile requires the localized confirmation phrase (`USUŃ` / `DELETE`) before
+calling `DELETE /api/account`. On success it clears bearer auth and removes only
+the deleted account namespace (`gymmin.account.{userId}.*`) from AsyncStorage.
+The backend deletes the user, sessions, avatar file and private user-owned data.
+Anonymous local data and other cached accounts are intentionally preserved.
+
+### System status
+
+Backend exposes public `GET /api/system/status` for user-facing operational
+status. It returns only `kind`, optional localized message and `updatedAt`; it
+does not expose infrastructure details. The configured backend kinds are `ok`,
+`degraded`, `maintenance` and `update`, set through `SystemStatus:Kind`,
+`SystemStatus:MessagePl` and `SystemStatus:MessageEn`.
+
+Mobile checks this endpoint on the homepage with a short in-memory cache. `ok`
+renders nothing. Non-OK statuses render an inline callout above the main home
+cards. If the request fails, mobile creates a local `offline` status and keeps
+the app local-first.
+
 ### AI jobs
 
 Aktywny job kreatora jest local-first i account-scoped. Mobile rozróżnia:

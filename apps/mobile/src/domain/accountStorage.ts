@@ -35,6 +35,23 @@ export async function removeAccountJson(baseKey: string, userId?: string | null)
   await AsyncStorage.removeItem(getAccountStorageKey(baseKey, userId));
 }
 
+export async function removeAccountStorageKeys(baseKeys: string[], userId?: string | null) {
+  const keys = [...new Set(baseKeys)]
+    .filter((baseKey) => baseKey.trim().length > 0)
+    .map((baseKey) => getAccountStorageKey(baseKey, userId));
+
+  if (keys.length === 0) {
+    return;
+  }
+
+  if (typeof AsyncStorage.multiRemove === "function") {
+    await AsyncStorage.multiRemove(keys);
+    return;
+  }
+
+  await Promise.all(keys.map((key) => AsyncStorage.removeItem(key)));
+}
+
 export async function migrateLegacyAccountStorage(mappings: LegacyAccountStorageMapping[]) {
   try {
     for (const mapping of mappings) {

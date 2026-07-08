@@ -425,7 +425,7 @@ public sealed class EfAiCreditPurchaseService : IAiCreditPurchaseService
         new(false, false, false, code, message, null);
 }
 
-public sealed class FileBackedAiCreditPurchaseService : IAiCreditPurchaseService
+public sealed class FileBackedAiCreditPurchaseService : IAiCreditPurchaseService, IUserScopedDataStore
 {
     private readonly IAiCreditService _credits;
     private readonly IGooglePlayPurchaseValidator _validator;
@@ -516,6 +516,22 @@ public sealed class FileBackedAiCreditPurchaseService : IAiCreditPurchaseService
         }
         await _validator.ConsumeOneTimeProductAsync(request.ProductId.Trim(), request.PurchaseToken.Trim(), cancellationToken);
         return new VerifyGooglePlayPurchaseResult(true, false, false, null, null, new VerifyGooglePlayPurchaseResponse("credited", pack.Credits, credit.Balance, credit.TransactionId, purchaseId));
+    }
+
+    public bool DeleteUserData(string userId)
+    {
+        lock (_gate)
+        {
+            var before = _purchases.Count;
+            _purchases = _purchases.Where(purchase => purchase.UserId != userId).ToList();
+            var removed = before != _purchases.Count;
+            if (removed)
+            {
+                Save();
+            }
+
+            return removed;
+        }
     }
 
     private List<PersistedAiCreditPurchase> Load()

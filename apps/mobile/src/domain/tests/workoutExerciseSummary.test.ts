@@ -78,7 +78,30 @@ describe("workoutExerciseSummary", () => {
     expect(details?.secondary).toEqual(muscleGroups.secondary);
     expect(details?.hasAnimation).toBe(false);
     expect(details?.animationUrl).toBeNull();
+    expect(details?.instructions.length).toBeGreaterThan(0);
+    expect(details?.techniqueTips.length).toBeGreaterThan(0);
+    expect(details?.commonMistakes.length).toBeGreaterThan(0);
     expect(getExerciseProgressKeyForDetails(details)).toBe(`id:${details?.exercise?.id.toLowerCase()}`);
+  });
+
+  it("localizes imported exercise technique content", () => {
+    const plDetails = getExerciseDetails({ exerciseName: "Skręty mięśni brzucha (z gumą oporową)" }, "pl");
+    const enDetails = getExerciseDetails({ exerciseName: "Banded Ab Twist" }, "en");
+
+    expect(plDetails?.instructions[0]).toContain("pozycję startową");
+    expect(enDetails?.instructions[0]).toContain("starting position");
+    expect(plDetails?.techniqueTips[0]).toContain("żebra");
+    expect(enDetails?.commonMistakes[0]).toContain("Twisting");
+  });
+
+  it("returns exercise image asset keys for mapped exercise details", () => {
+    const details = getExerciseDetails({ exerciseId: "banded-exercises-ab-twist-1" }, "pl");
+
+    expect(details?.hasAnimation).toBe(true);
+    expect(details?.imageAssetKeys).toEqual([
+      "banded-exercises-ab-twist-1/start",
+      "banded-exercises-ab-twist-1/end"
+    ]);
   });
 
   it("returns null exercise details for missing or unknown catalog mapping", () => {

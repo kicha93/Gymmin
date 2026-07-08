@@ -96,6 +96,42 @@ dotnet tool run dotnet-ef database update
 
 ## Auth
 
+## System status
+
+```http
+GET /api/system/status
+```
+
+Public endpoint used by mobile to show a homepage system callout. It does not
+require bearer auth and must not expose stack traces, infrastructure details or
+secrets.
+
+Response:
+
+```json
+{
+  "kind": "ok",
+  "message": null,
+  "updatedAt": "2026-07-06T10:00:00Z"
+}
+```
+
+Allowed configured values are `ok`, `degraded`, `maintenance` and `update`.
+Invalid values fall back to `ok`. Mobile uses local `offline` when the request
+fails.
+
+Configuration:
+
+```json
+{
+  "SystemStatus": {
+    "Kind": "maintenance",
+    "MessagePl": "Przerwa techniczna potrwa kilka minut.",
+    "MessageEn": "Maintenance should take a few minutes."
+  }
+}
+```
+
 ### Register
 
 ```http
@@ -173,6 +209,26 @@ Troubleshooting: avatar upload depends on the same `ApiBaseUrl` as auth and
 sync. Standalone APKs embed this URL at build time. If `/health` for that URL
 returns `404` or does not respond, upload may show a network error. Rebuild the
 APK with the current backend URL.
+
+### Account deletion
+
+```http
+DELETE /api/account
+Authorization: Bearer {token}
+```
+
+The endpoint deletes the currently authenticated account and invalidates its
+sessions by removing the user record. Database mode relies on user-scoped
+cascade deletes for settings, workouts, workout sessions, favorite exercises,
+achievements/app usage, AI credit records and creator jobs. File mode removes
+the same user-scoped data from the JSON stores. The avatar file under
+`App_Data/avatars/{userId}` is deleted as part of the operation.
+
+Mobile exposes this as `Profile -> Account -> Delete account`. The user must
+type `USUŃ` in PL or `DELETE` in EN before the final destructive action is
+enabled. After a successful backend delete, mobile clears bearer auth and only
+the deleted account namespace in AsyncStorage; anonymous data and other local
+accounts remain untouched.
 
 ### Logout
 

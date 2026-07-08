@@ -6,6 +6,10 @@ param(
   [string]$ReleaseTag = "v1.0",
   [string]$ReleaseTitle = "Gymmin 1.0",
   [string]$SigningEnvFile = "C:\secure\gymmin-upload-key-codex-20260701.env.ps1",
+  [int]$BackendPort = 5198,
+  [ValidateSet("Cloudflare", "Ngrok")]
+  [string]$BackendTunnelProvider = "Cloudflare",
+  [switch]$NoEnsureBackendTunnel,
   [switch]$SkipTypecheck,
   [switch]$SkipPublish
 )
@@ -19,6 +23,41 @@ $shortAndroidRoot = Join-Path $ShortBuildRoot "repo\apps\mobile\android"
 function Write-Step {
   param([string]$Message)
   Write-Host "[github-apk-oneclick] $Message"
+}
+
+function Test-LocalNgrokTunnelFallback {
+  param([string]$NormalizedUrl)
+
+  if (-not ($NormalizedUrl -match "\.ngrok-free\.dev$")) {
+    return $false
+  }
+
+  try {
+    $tunnels = Invoke-RestMethod -Uri "http://127.0.0.1:4040/api/tunnels" -TimeoutSec 5
+    $matchingTunnel = $tunnels.tunnels |
+      Where-Object { $_.public_url -eq $NormalizedUrl } |
+      Select-Object -First 1
+
+    if (-not $matchingTunnel) {
+      return $false
+    }
+
+    $localHealthUrl = "$($matchingTunnel.config.addr.TrimEnd('/'))/health"
+    Write-Step "Public ngrok health check failed, verifying local tunnel target instead: $localHealthUrl"
+    $localResponse = Invoke-WebRequest `
+      -Uri $localHealthUrl `
+      -UseBasicParsing `
+      -TimeoutSec 10
+
+    if ($localResponse.StatusCode -ge 200 -and $localResponse.StatusCode -le 299 -and $localResponse.Content -match '"status"\s*:\s*"ok"') {
+      Write-Step "Local ngrok tunnel target is healthy. Continuing with public URL: $NormalizedUrl"
+      return $true
+    }
+  } catch {
+    Write-Step "Local ngrok fallback check failed: $($_.Exception.Message)"
+  }
+
+  return $false
 }
 
 function Test-BackendUrl {
@@ -52,6 +91,31 @@ function Test-BackendUrl {
   return $normalized
 }
 
+function Start-BackendTunnelForBuild {
+  $backendTunnelScript = Join-Path $PSScriptRoot "start-backend-tunnel.ps1"
+  $backendUrlFile = Join-Path $repoRoot ".artifacts\backend-url.txt"
+
+  if (-not (Test-Path $backendTunnelScript)) {
+    throw "Backend tunnel helper is missing: $backendTunnelScript"
+  }
+
+  Write-Step "Starting or attaching backend tunnel for APK build..."
+  $tunnelOutput = & $backendTunnelScript -BackendPort $BackendPort -TunnelProvider $BackendTunnelProvider -KeepExisting
+  $detectedBackendUrl = $tunnelOutput |
+    Where-Object { $_ -match "^https?://" } |
+    Select-Object -Last 1
+
+  if (-not $detectedBackendUrl -and (Test-Path $backendUrlFile)) {
+    $detectedBackendUrl = (Get-Content $backendUrlFile -ErrorAction SilentlyContinue | Select-Object -First 1)
+  }
+
+  if ([string]::IsNullOrWhiteSpace($detectedBackendUrl)) {
+    throw "Backend tunnel started, but no public backend URL was produced."
+  }
+
+  return $detectedBackendUrl.Trim().TrimEnd("/")
+}
+
 function Stop-GradleIfPresent {
   param([string]$AndroidRoot)
 
@@ -80,7 +144,19 @@ if (Test-Path $SigningEnvFile) {
 Stop-GradleIfPresent -AndroidRoot $shortAndroidRoot
 Stop-GradleIfPresent -AndroidRoot $mainAndroidRoot
 
-$ApiBaseUrl = Test-BackendUrl -Url $ApiBaseUrl
+try {
+  $ApiBaseUrl = Test-BackendUrl -Url $ApiBaseUrl
+} catch {
+  if ($NoEnsureBackendTunnel) {
+    throw
+  }
+
+  Write-Step "Provided backend URL is unavailable or missing. Falling back to a fresh backend tunnel."
+  Write-Step "Health check details: $($_.Exception.Message)"
+  $ApiBaseUrl = Start-BackendTunnelForBuild
+  $ApiBaseUrl = Test-BackendUrl -Url $ApiBaseUrl
+}
+
 $buildScript = Join-Path $PSScriptRoot "build-github-apk.ps1"
 
 Write-Step "Building and publishing APK to GitHub Release $GitHubRepo@$ReleaseTag"

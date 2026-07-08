@@ -1,0 +1,12 @@
+{
+  "englishName": "Banded Curl",
+  "exerciseType": "BANDED_EXERCISES",
+  "generatedAt": "2026-07-06T21:07:50.195Z",
+  "id": "banded-exercises-curl-6",
+  "model": "gpt-image-1",
+  "polishName": "Uginanie ramion (z gumą oporową)",
+  "requiredEquipment": [
+    "band"
+  ],
+  "size": "1024x1536"
+}

@@ -7,30 +7,63 @@
     "defaultWeight": "",
     "defaultStageType": null,
     "defaultWorkoutExecutionMode": "guided",
+    "defaultWorkoutTableOrientation": "vertical",
     "collapsedPanels": {
       "settings-account": false,
-      "settings-info": false,
-      "settings-integrations": false,
-      "settings-notifications": true,
-      "settings-preferences": false,
+      "settings-info": true,
+      "settings-integrations": true,
+      "settings-notifications": false,
+      "settings-preferences": true,
       "settings-training": false,
       "home-articles": false
     },
     "isAuthPanelDismissed": false,
     "workoutReminders": {
-      "enabled": true,
-      "daysOfWeek": [
-        1,
-        3,
-        5,
-        7
+      "enabled": false,
+      "daysOfWeek": null,
+      "time": null,
+      "weeklySchedule": [
+        {
+          "day": "monday",
+          "enabled": false,
+          "time": "10:00"
+        },
+        {
+          "day": "tuesday",
+          "enabled": false,
+          "time": "10:00"
+        },
+        {
+          "day": "wednesday",
+          "enabled": false,
+          "time": "10:00"
+        },
+        {
+          "day": "thursday",
+          "enabled": false,
+          "time": "10:00"
+        },
+        {
+          "day": "friday",
+          "enabled": false,
+          "time": "10:00"
+        },
+        {
+          "day": "saturday",
+          "enabled": false,
+          "time": "10:00"
+        },
+        {
+          "day": "sunday",
+          "enabled": false,
+          "time": "10:00"
+        }
       ],
-      "time": "10:00",
       "message": "Czas na trening",
       "description": "Otw\u00F3rz Gymmin i wykonaj zaplanowany trening.",
       "onlyIfNoWorkoutToday": true,
-      "updatedAt": "2026-07-05T00:15:27.176+00:00"
+      "updatedAt": "2026-07-07T20:34:55.088+00:00"
     },
-    "updatedAt": "2026-07-05T13:12:07.392+00:00"
+    "updatedAt": "2026-07-08T13:30:07.323+00:00"
   }
 }

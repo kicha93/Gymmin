@@ -3,7 +3,7 @@ using Gymmin.Api.Domain;
 
 namespace Gymmin.Api.Services;
 
-public sealed class FileBackedWorkoutStore : IWorkoutStore
+public sealed class FileBackedWorkoutStore : IWorkoutStore, IUserScopedDataStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -120,6 +120,22 @@ public sealed class FileBackedWorkoutStore : IWorkoutStore
             return new SyncWorkoutsResponse(
                 ListChangedSince(userId, request.LastPulledAt),
                 DateTimeOffset.UtcNow);
+        }
+    }
+
+    public bool DeleteUserData(string userId)
+    {
+        lock (_gate)
+        {
+            var before = _workouts.Count;
+            _workouts = _workouts.Where(workout => workout.UserId != userId).ToList();
+            var removed = _workouts.Count != before;
+            if (removed)
+            {
+                Save();
+            }
+
+            return removed;
         }
     }
 

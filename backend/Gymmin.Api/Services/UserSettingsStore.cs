@@ -9,7 +9,7 @@ public interface IUserSettingsStore
     UserSettings Upsert(string userId, UpsertUserSettingsRequest request);
 }
 
-public sealed class FileBackedUserSettingsStore : IUserSettingsStore
+public sealed class FileBackedUserSettingsStore : IUserSettingsStore, IUserScopedDataStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -47,6 +47,20 @@ public sealed class FileBackedUserSettingsStore : IUserSettingsStore
             _settingsByUserId[userId] = settings;
             Save();
             return settings;
+        }
+    }
+
+    public bool DeleteUserData(string userId)
+    {
+        lock (_gate)
+        {
+            var removed = _settingsByUserId.Remove(userId);
+            if (removed)
+            {
+                Save();
+            }
+
+            return removed;
         }
     }
 

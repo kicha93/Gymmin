@@ -8,6 +8,8 @@ import {
   type ExerciseLanguage,
   type MuscleKey
 } from "./exercises";
+import { getExerciseImageAssetKeys, type ExerciseImageAssetKey } from "./exerciseImageAssets";
+import { getExerciseTechniqueContent } from "./exerciseTechniqueContent";
 import type { WorkoutExecutionMode } from "./workoutSessions";
 import type { WorkoutStep } from "./workouts";
 
@@ -23,6 +25,10 @@ export type ExerciseDetails = ExerciseMuscleGroups & {
   displayName: string;
   equipment: string[];
   hasAnimation: boolean;
+  imageAssetKeys: ExerciseImageAssetKey[];
+  commonMistakes: string[];
+  instructions: string[];
+  techniqueTips: string[];
 };
 
 function safeTrim(value: unknown): string {
@@ -135,13 +141,24 @@ export function getExerciseDetails(
     return null;
   }
 
+  const techniqueContent = getExerciseTechniqueContent(exercise.id);
+  const imageAssetKeys = getExerciseImageAssetKeys(exercise.id);
+  const localizeList = (items: readonly { en: string; pl: string }[] | undefined) =>
+    (items ?? [])
+      .map((item) => item[language]?.trim() || item.en?.trim() || item.pl?.trim() || "")
+      .filter(Boolean);
+
   return {
     ...muscleGroups,
     animationUrl: null,
     category: formatCodeLabel(exercise.garminCategory),
+    commonMistakes: localizeList(techniqueContent?.commonMistakes),
     displayName: language === "pl" ? exercise.polishName : exercise.name,
     equipment: getRequiredEquipment(exercise).map(formatCodeLabel),
-    hasAnimation: false
+    hasAnimation: imageAssetKeys.length > 0,
+    imageAssetKeys,
+    instructions: localizeList(techniqueContent?.instructions),
+    techniqueTips: localizeList(techniqueContent?.techniqueTips)
   };
 }
 

@@ -103,6 +103,13 @@ backend zapisuje go jako plik w `App_Data/avatars`, a `GET /api/auth/me`
 zwraca `avatarUrl` i `avatarUpdatedAt`. Header aplikacji pokazuje avatar, jesli
 jest ustawiony; anonymous user widzi domyslna ikone.
 
+Profil obsluguje tez trwale usuniecie konta. Opcja `Usun konto` znajduje sie w
+sekcji Konto nad `Wyloguj` i wymaga mocnego potwierdzenia przez wpisanie `USUŃ`
+albo `DELETE`. Backend udostepnia `DELETE /api/account`, usuwa konto, sesje,
+avatar oraz prywatne dane usera. Mobile po sukcesie czysci tylko lokalny
+namespace usuwanego konta, bez kasowania danych anonymous ani innych kont na
+urzadzeniu.
+
 Brakuje jeszcze:
 
 - potwierdzania emaila,
@@ -478,6 +485,7 @@ Pokrycie mobile unit tests:
 - account-scoped AsyncStorage keys i legacy migration,
 - favorite exercises tombstones/merge,
 - workout sessions conflict resolution, deletedAt filtering i progress filtering,
+- Progress screen dashboard: top summary cards, all/strength/volume filters, compact exercise metric cards and optional local SVG sparkline,
 - workout reminders pure scheduling rules,
 - app diagnostics ring buffer i sanitization.
 
@@ -540,6 +548,16 @@ Current scope:
 Out of scope for this stage: leaderboards, public profiles, sharing,
 backend-side definition versioning and anti-cheat.
 
+## Exercise Detail Page UX
+
+Widok szczegolow cwiczenia ma kompaktowy, panelowy layout:
+
+- hero panel z nazwa, tagami i glownymi miesniami,
+- kompaktowy panel animacji/obrazow z placeholderem,
+- panel pracujacych miesni z przelacznikiem Przod / Tyl,
+- collapsible panele dla instrukcji, wskazowek, typowych bledow i historii,
+- instrukcje renderowane jako numerowane kroki.
+
 ## APK poza Expo Go
 
 Aktualny, sprawdzony sposob przygotowania paczki na telefon:
@@ -564,3 +582,12 @@ npm run mobile:store:aab -- -ApiBaseUrl "https://your-backend-url.example.com"
 ```
 
 Tunele ngrok/Cloudflare zostaja tylko jako fallback, bo pobieranie APK przez tymczasowe tunele potrafilo zatrzymywac sie na 100% na Androidzie.
+
+## System status callout
+
+Homepage pokazuje spokojny komunikat systemowy, gdy publiczny
+`GET /api/system/status` zwraca `degraded`, `maintenance` albo `update`, lub gdy
+mobile lokalnie wykryje `offline`. Status `ok` nie pokazuje callouta. Komunikat
+nie blokuje local-first uzycia aplikacji; dla `offline` informuje, ze lokalne
+treningi zostaja bezpieczne na urzadzeniu. Szczegoly konfiguracji sa w
+`docs/system-status.md`.

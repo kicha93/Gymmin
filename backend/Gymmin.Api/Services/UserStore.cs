@@ -117,7 +117,7 @@ public sealed record PersistedPassword(
     int Iterations,
     string Salt);
 
-public sealed class FileBackedUserStore : IUserStore
+public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
 {
     private static readonly TimeSpan LastSeenAtWriteInterval = TimeSpan.FromMinutes(5);
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -431,6 +431,23 @@ public sealed class FileBackedUserStore : IUserStore
             SaveUsers();
             SavePasswordResetTokens();
             return new AuthResult(true, null, null, StatusCodes.Status204NoContent);
+        }
+    }
+
+    public bool DeleteUserData(string userId)
+    {
+        lock (_fileLock)
+        {
+            if (!_usersById.TryRemove(userId, out var user))
+            {
+                return false;
+            }
+
+            _userIdsByEmail.TryRemove(user.Email, out _);
+            _passwordResetTokens.RemoveAll(token => token.UserId == userId);
+            SaveUsers();
+            SavePasswordResetTokens();
+            return true;
         }
     }
 

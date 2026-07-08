@@ -1,0 +1,12 @@
+{
+  "englishName": "Banded Calf Raises",
+  "exerciseType": "BANDED_EXERCISES",
+  "generatedAt": "2026-07-06T21:05:49.298Z",
+  "id": "banded-exercises-calf-raises-4",
+  "model": "gpt-image-1",
+  "polishName": "Wznosy łydek (z gumą oporową)",
+  "requiredEquipment": [
+    "band"
+  ],
+  "size": "1024x1536"
+}

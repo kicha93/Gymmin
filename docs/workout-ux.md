@@ -24,11 +24,24 @@ This note tracks the current workout-view UX decisions.
 
 - Tapping an exercise row opens a dedicated exercise detail page.
 - The page is backed by the catalog exercise id when available, with best-effort fallback by exercise name.
-- Sections currently include header metadata, animation placeholder, worked muscles, technique description, tips, common mistakes and exercise history/progress.
-- The animation area is a placeholder until licensed local GIF/video assets are mapped by `exerciseId`.
-- The worked-muscles section reuses the same SVG anatomy map as the workout overview and muscle modal.
+- The page now uses a compact panel layout: hero, animation/media, worked muscles, technique steps, tips, common mistakes and exercise history/progress.
+- The hero panel shows the exercise name, category/equipment tags and primary muscle summary.
+- The animation/media panel is intentionally compact. It can show mapped local exercise images; otherwise it shows a small video placeholder until licensed animation assets are available.
+- The worked-muscles panel reuses the same SVG anatomy map as the workout overview and muscle modal, but shows one body side at a time with a Front/Back segmented toggle.
+- Technique instructions are rendered as numbered steps. Tips, common mistakes and exercise history are collapsible panels.
+- Exercise history is collapsed by default when no data exists and shows a clear empty state.
 - Unknown or unmapped exercises show a safe empty state instead of crashing.
 - TODO: map `exerciseId` to animation assets, add local video/GIF support, cache animation assets and define the licensed animation source.
+
+## Progress dashboard
+
+- The Progress screen uses a dashboard layout.
+- A search input stays at the top of the screen.
+- Three compact summary cards show tracked exercises, record/best-result count and current-month completed workout volume.
+- Filter chips allow switching between all exercises, strength-oriented sorting and volume-oriented sorting.
+- Exercise progress cards show the exercise name, workout count, latest result, best weight and best volume in compact metric columns.
+- Missing metric values are rendered as `—` instead of long empty-state text inside each card.
+- A lightweight SVG sparkline is shown when an exercise has enough local history data.
 
 ## Starting a workout
 

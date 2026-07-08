@@ -11,6 +11,7 @@ Gymmin is a mobile-first workout builder for strength training.
 - Backend: ASP.NET Core Web API
 - Auth: backend email/password auth with bearer tokens
 - AI creator: OpenAI Responses API through the backend
+- Workout UX: compact Exercise Detail Page with hero summary, media placeholder, worked-muscle anatomy toggle and collapsible technique panels; Progress uses a dashboard with summary cards, filters and compact exercise metric cards
 - Bug reports: backend SMTP sender
 - Diagnostics: backend correlation id, structured request/error logs, safe global 500 responses, mobile diagnostics ring buffer
 - Current durable backend storage: selectable File JSON store or EF Core database store
@@ -31,6 +32,7 @@ docs/
   build-android-apk.md
   deployment.md
   run-mobile-tunnel.md
+  system-status.md
   workout-ux.md
 scripts/
   start-expo-tunnel.ps1
@@ -141,15 +143,17 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 ## Current Notes
 
 - The app is local-first for anonymous users. Users can create and keep manual workouts on the phone without logging in.
-- The Profile screen uses a dashboard layout: avatar, name/email and avatar actions live in one profile card, achievements sit directly below it, quick actions link to Credits/change password/sessions/bug reports, and logout is the final action in the Account section. Settings are kept for app preferences.
+- The Profile screen uses a dashboard layout: avatar, name/email and avatar actions live in one profile card, achievements sit directly below it, quick actions link to Credits/change password/sessions/bug reports, and the Account section contains account details, active sessions, delete account and logout. Settings are kept for app preferences.
 - Registration includes username, email, password, repeated password and password preview in the mobile UI. The backend contract still receives a single password field.
 - Signed-in users can upload, replace and delete a profile avatar from the Profile screen. Avatars are uploaded as `multipart/form-data`, stored as files on the backend, exposed through `GET /api/profile/avatar`, and displayed in the mobile header/profile with `avatarUpdatedAt` cache busting. Anonymous users keep the default icon.
-- Installed APKs contain the API base URL used at build time. For GitHub Release phone builds, pass a current backend URL with `npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://..."` or set `GYMMIN_APK_API_BASE_URL`; the wrapper checks `/health` and refuses to build against a stale/dead tunnel.
+- Signed-in users can permanently delete their account from Profile -> Account. Mobile requires typing `USUŃ` / `DELETE`, calls `DELETE /api/account`, clears only that account's local cache, removes local auth, and leaves anonymous/other-user data untouched. The backend deletes the user, sessions, avatar file and private user-owned data.
+- Installed APKs contain the API base URL used at build time. For GitHub Release phone builds, run `npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://..."` or set `GYMMIN_APK_API_BASE_URL`; the wrapper checks `/health` and, if the URL is missing or stale, starts or attaches a backend tunnel automatically. A running local backend on `http://127.0.0.1:5198` is reused instead of restarted. The current tunnel URL is written to `.artifacts/backend-url.txt`.
 - Auth hardening is implemented: token expiry, active sessions, single-session revoke, logout-all, change password and password reset by email/token. Reset tokens are stored only as hashes.
 - After login, workouts are synchronized to the user's backend account and kept locally as a cache/offline copy.
 - After login, app settings are synchronized to the user's backend account and kept locally as a cache/offline copy.
 - After login, catalog-only favorite exercises are synchronized to the user's backend account and remain available locally/offline.
 - After login, workout execution sessions are synchronized to the user's backend account and remain available locally/offline. History and progress are still calculated on-device from the local synchronized session cache.
+- The Progress screen is local-first and dashboard-style: it shows tracked exercises, best-result count, current-month volume, filters for all/strength/volume and compact exercise cards with latest result, best weight, best volume and optional SVG sparkline.
 - Achievements are visible in Profile and sync for signed-in users. The app ships 30 static achievements, evaluates progress from local `WorkoutSession` data, stores unlocked achievements/app usage per local owner, syncs unlocked state through `/api/sync/achievements`, and keeps unlocked achievements unlocked even if history is later deleted. Weekly achievements use Monday-based calendar weeks. See `docs/achievements.md`.
 - Users can delete a single workout history entry. Mobile marks the `WorkoutSession` with `deletedAt`, hides it from history/progress immediately, and syncs the tombstone later when account sync is available.
 - Deleting a workout definition does not delete workout history. If the workout already has active history entries, the mobile app shows a stronger irreversible-action confirmation before soft-deleting the workout definition.
@@ -179,6 +183,7 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - Every backend response includes `X-Correlation-Id`. Mobile sends `X-Correlation-Id` on API requests and attaches recent correlation ids plus local diagnostic events to bug reports.
 - Backend unexpected errors return a safe JSON error response with `correlationId`; stack traces are logged server-side only.
 - `/api/diagnostics` is available only in development/testing or when explicitly enabled, and does not expose secrets.
+- `/api/system/status` is a public, user-safe status endpoint. Mobile checks it on the homepage and shows a calm callout for `degraded`, `maintenance`, `update`, or local `offline`; `ok` shows nothing. Configure it with `SystemStatus:Kind`, `SystemStatus:MessagePl`, and `SystemStatus:MessageEn`. See `docs/system-status.md`.
 - Conflict resolution and multi-device sync polish are not finished yet.
 - Garmin integration is currently a placeholder and is out of scope for the current development track.
 - Backend API has integration smoke tests for auth hardening, settings, workouts, favorite exercises, workout sessions, AI creator auth/owner checks and bug reports.

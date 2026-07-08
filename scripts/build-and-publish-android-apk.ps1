@@ -59,6 +59,47 @@ function Assert-Command {
   }
 }
 
+function Copy-ArtifactWithRetry {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SourcePath,
+    [Parameter(Mandatory = $true)]
+    [string]$DestinationPath,
+    [int]$Attempts = 8,
+    [int]$DelayMilliseconds = 750
+  )
+
+  $destinationDirectory = Split-Path -Parent $DestinationPath
+  if (-not (Test-Path $destinationDirectory)) {
+    New-Item -ItemType Directory -Force -Path $destinationDirectory | Out-Null
+  }
+
+  $temporaryDestinationPath = Join-Path $destinationDirectory (
+    "{0}.{1}.tmp" -f ([System.IO.Path]::GetFileName($DestinationPath)), ([System.Guid]::NewGuid().ToString("N"))
+  )
+
+  Copy-Item -LiteralPath $SourcePath -Destination $temporaryDestinationPath -Force
+
+  for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
+    try {
+      if (Test-Path $DestinationPath) {
+        Remove-Item -LiteralPath $DestinationPath -Force
+      }
+
+      Move-Item -LiteralPath $temporaryDestinationPath -Destination $DestinationPath -Force
+      return
+    } catch {
+      if ($attempt -ge $Attempts) {
+        Remove-Item -LiteralPath $temporaryDestinationPath -Force -ErrorAction SilentlyContinue
+        throw "Could not replace APK artifact '$DestinationPath'. Close any app that may have this file open (Explorer preview, browser download, antivirus scan, previous upload/download server) and run the build again. Details: $($_.Exception.Message)"
+      }
+
+      Write-Step "APK artifact is locked, retrying copy ($attempt/$Attempts)..."
+      Start-Sleep -Milliseconds $DelayMilliseconds
+    }
+  }
+}
+
 function Get-GitHubCliPath {
   $command = Get-Command gh -ErrorAction SilentlyContinue
   if ($command) {
@@ -244,7 +285,7 @@ if (-not $safeArchitectureName) {
 }
 
 $artifactPath = Join-Path $artifactsRoot "Gymmin-$safeArchitectureName-release-latest.apk"
-Copy-Item -Path $apkPath -Destination $artifactPath -Force
+Copy-ArtifactWithRetry -SourcePath $apkPath -DestinationPath $artifactPath
 
 $artifact = Get-Item $artifactPath
 Write-Step "APK ready: $($artifact.FullName)"

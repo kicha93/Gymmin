@@ -12,7 +12,7 @@ public interface IWorkoutSessionStore
     WorkoutSessionsResponse Sync(string userId, SyncWorkoutSessionsRequest request);
 }
 
-public sealed class FileBackedWorkoutSessionStore : IWorkoutSessionStore
+public sealed class FileBackedWorkoutSessionStore : IWorkoutSessionStore, IUserScopedDataStore
 {
     private const int MaxSessionsPerRequest = 1_000;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -130,6 +130,20 @@ public sealed class FileBackedWorkoutSessionStore : IWorkoutSessionStore
                 .ToList();
 
             return new WorkoutSessionsResponse(changed, now);
+        }
+    }
+
+    public bool DeleteUserData(string userId)
+    {
+        lock (_gate)
+        {
+            var removed = _sessionsByUserId.Remove(userId);
+            if (removed)
+            {
+                Save();
+            }
+
+            return removed;
         }
     }
 

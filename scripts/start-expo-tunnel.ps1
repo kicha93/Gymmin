@@ -184,7 +184,7 @@ Stop-OldDevProcesses
 Start-Sleep -Seconds 2
 
 Write-RunnerLog "Starting backend on http://localhost:$BackendPort ..."
-$backendCommand = "Set-Location '$backendRoot'; `$env:ASPNETCORE_ENVIRONMENT='Development'; `$env:DOTNET_ENVIRONMENT='Development'; dotnet run --urls http://localhost:$BackendPort *> '$backendLog'"
+$backendCommand = "Set-Location '$backendRoot'; `$env:ASPNETCORE_ENVIRONMENT='Development'; `$env:DOTNET_ENVIRONMENT='Development'; `$env:Logging__EventLog__LogLevel__Default='None'; dotnet run --urls http://localhost:$BackendPort *> '$backendLog'"
 Start-Process -FilePath "powershell.exe" `
   -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $backendCommand) `
   -WorkingDirectory $backendRoot `

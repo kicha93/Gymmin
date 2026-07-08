@@ -10,14 +10,9 @@ export type ProfileAccountUser = {
 };
 
 export type ProfileAccountLabels = {
-  accountAvatar: string;
-  accountAvatarNotSet: string;
-  accountAvatarSet: string;
-  accountAvatarUpdatedAt: string;
   accountEmail: string;
   accountId: string;
   accountCreatedOn: string;
-  accountModifiedOn: string;
   accountName: string;
   defaultUserName: string;
 };
@@ -26,10 +21,7 @@ export type ProfileAccountDetailKey =
   | "name"
   | "email"
   | "accountId"
-  | "createdOn"
-  | "modifiedOn"
-  | "avatar"
-  | "avatarUpdatedAt";
+  | "createdOn";
 
 export type ProfileAccountDetail = {
   key: ProfileAccountDetailKey;
@@ -70,26 +62,8 @@ export function buildProfileAccountDetails(
       key: "createdOn",
       label: labels.accountCreatedOn,
       value: user.createdOn ? formatDate(user.createdOn) : "-"
-    },
-    {
-      key: "modifiedOn",
-      label: labels.accountModifiedOn,
-      value: user.modifiedOn ? formatDate(user.modifiedOn) : "-"
-    },
-    {
-      key: "avatar",
-      label: labels.accountAvatar,
-      value: user.avatarUrl ? labels.accountAvatarSet : labels.accountAvatarNotSet
     }
   ];
-
-  if (user.avatarUpdatedAt) {
-    details.push({
-      key: "avatarUpdatedAt",
-      label: labels.accountAvatarUpdatedAt,
-      value: formatDate(user.avatarUpdatedAt)
-    });
-  }
 
   return details;
 }

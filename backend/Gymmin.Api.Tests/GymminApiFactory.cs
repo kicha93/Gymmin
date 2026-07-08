@@ -54,6 +54,7 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IAchievementStore>();
             services.RemoveAll<IWorkoutPlanJobStore>();
             services.RemoveAll<IAiCreditService>();
+            services.RemoveAll<IAccountDeletionService>();
             services.AddDbContextFactory<GymminDbContext>(options => options.UseSqlite($"Data Source={_databasePath}"));
             services.AddSingleton<IUserStore, EfUserStore>();
             services.AddSingleton<IUserSettingsStore, EfUserSettingsStore>();
@@ -63,6 +64,7 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IAchievementStore, EfAchievementStore>();
             services.AddSingleton<IWorkoutPlanJobStore, EfWorkoutPlanJobStore>();
             services.AddSingleton<IAiCreditService, EfAiCreditService>();
+            services.AddSingleton<IAccountDeletionService, EfAccountDeletionService>();
             services.RemoveAll<IAiCreditPurchaseService>();
             services.AddSingleton<IAiCreditPurchaseService, EfAiCreditPurchaseService>();
             services.RemoveAll<IGooglePlayPurchaseValidator>();

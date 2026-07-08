@@ -9,6 +9,7 @@ import {
   createDefaultWeeklySchedule,
   formatReminderDayTime,
   getReminderScheduleForDay,
+  getEnabledReminderDayNumbers,
   getUpcomingReminderDates,
   getWorkoutReminderNotificationContent,
   hasCompletedWorkoutOnDate,
@@ -47,6 +48,13 @@ function completedOn(date: string): WorkoutSession {
 }
 
 describe("workoutReminders", () => {
+  it("starts new accounts with reminders disabled and no enabled reminder days", () => {
+    const defaults = normalizeWorkoutReminderSettings(undefined, "en");
+
+    expect(defaults.enabled).toBe(false);
+    expect(getEnabledReminderDayNumbers(defaults)).toEqual([]);
+  });
+
   it("normalizes settings, migrates legacy days/time and keeps seven weekdays", () => {
     expect(normalizeWorkoutReminderTime("7:05")).toBe("07:05");
     expect(normalizeWorkoutReminderTime("24:00")).toBe("18:00");
@@ -75,7 +83,8 @@ describe("workoutReminders", () => {
       enabled: true,
       message: "Time to train"
     }, "en")).toMatchObject({
-      description: "Open Gymmin and complete your planned workout."
+      description: "Open Gymmin and complete your planned workout.",
+      weeklySchedule: createDefaultWeeklySchedule([], "18:00")
     });
   });
 

@@ -11,7 +11,7 @@ public interface IWorkoutPlanJobStore
     WorkoutPlanJobStatusResponse? Get(string jobId, string userId);
 }
 
-public sealed class FileBackedWorkoutPlanJobStore : IWorkoutPlanJobStore
+public sealed class FileBackedWorkoutPlanJobStore : IWorkoutPlanJobStore, IUserScopedDataStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -122,6 +122,22 @@ public sealed class FileBackedWorkoutPlanJobStore : IWorkoutPlanJobStore
         }
 
         return new WorkoutPlanJobStatusResponse(job.Status, job.Result, job.Error);
+    }
+
+    public bool DeleteUserData(string userId)
+    {
+        var removed = false;
+        foreach (var job in _jobs.Values.Where(job => job.UserId == userId).ToList())
+        {
+            removed = _jobs.TryRemove(job.JobId, out _) || removed;
+        }
+
+        if (removed)
+        {
+            SaveJobs();
+        }
+
+        return removed;
     }
 
     private void ResumeProcessingJobs()

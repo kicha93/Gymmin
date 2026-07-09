@@ -487,6 +487,7 @@ Pokrycie mobile unit tests:
 - account-scoped AsyncStorage keys i legacy migration,
 - favorite exercises tombstones/merge,
 - workout sessions conflict resolution, deletedAt filtering i progress filtering,
+- active workout UI helpers for elapsed time, exercise progress percentage and rest-duration formatting,
 - Progress screen dashboard: top summary cards, all/strength/volume filters, compact exercise metric cards and optional local SVG sparkline,
 - workout reminders pure scheduling rules,
 - app diagnostics ring buffer i sanitization.

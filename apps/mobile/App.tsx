@@ -46,6 +46,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  Vibration,
   View
 } from "react-native";
 import type { ImageSourcePropType, SectionListData, SectionListRenderItemInfo, StyleProp, TextInputProps, ViewStyle } from "react-native";
@@ -111,6 +112,12 @@ import {
   WORKOUT_SESSIONS_STORAGE_BASE_KEY,
   WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY
 } from "./src/domain/workoutSessions";
+import {
+  formatRestDuration,
+  formatWorkoutElapsedTime,
+  formatWorkoutProgressPercent,
+  getWorkoutProgress
+} from "./src/domain/workoutSessionUi";
 import type {
   ExerciseProgressItem,
   ExerciseProgressResult,
@@ -537,6 +544,9 @@ const translations = {
     startTimer: "Start",
     pauseTimer: "Pauza",
     resetTimer: "Reset",
+    previousResults: "Poprzednie wyniki",
+    previousReps: "Powt.",
+    previousWeight: "Ciężar",
     finishIncompleteWorkoutTitle: "Zakończyć mimo braków?",
     finishIncompleteWorkoutCopy: "Niektóre elementy nie zostały uzupełnione. Czy na pewno chcesz zapisać trening?",
     activeWorkoutNotice: "Masz aktywny trening",
@@ -1070,6 +1080,9 @@ const translations = {
     startTimer: "Start",
     pauseTimer: "Pause",
     resetTimer: "Reset",
+    previousResults: "Previous results",
+    previousReps: "Reps",
+    previousWeight: "Weight",
     finishIncompleteWorkoutTitle: "Finish with missing data?",
     finishIncompleteWorkoutCopy: "Some items have not been filled in. Are you sure you want to save this workout?",
     activeWorkoutNotice: "You have an active workout",
@@ -3360,16 +3373,7 @@ export default function App() {
 }
 
 function formatTimerSecondsValue(totalSeconds: number) {
-  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
-  const hours = Math.floor(safeSeconds / 3600);
-  const minutes = Math.floor((safeSeconds % 3600) / 60);
-  const seconds = safeSeconds % 60;
-
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  }
-
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  return formatWorkoutElapsedTime(totalSeconds);
 }
 
 function parseTimerSecondsValue(value?: string) {
@@ -3400,12 +3404,30 @@ function parseTimerSecondsValue(value?: string) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
-function WorkoutHeaderElapsedTime({ label, startedAt, theme }: { label: string; startedAt: string; theme: Theme }) {
+function vibrateWorkoutTimerComplete() {
+  if (Platform.OS === "web") {
+    return;
+  }
+
+  Vibration.vibrate([0, 350, 120, 350]);
+}
+
+function WorkoutHeaderElapsedTime({ startedAt, theme }: { startedAt: string; theme: Theme }) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const intervalId = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        setNow(Date.now());
+      }
+    });
+
+    return () => subscription.remove();
   }, []);
 
   const startedAtMs = Date.parse(startedAt);
@@ -3414,10 +3436,12 @@ function WorkoutHeaderElapsedTime({ label, startedAt, theme }: { label: string; 
     : 0;
 
   return (
-    <Text style={[styles.headerElapsedTime, { color: theme.text }]} numberOfLines={1}>
-      {" "}
-      {label}: {formatTimerSecondsValue(elapsedSeconds)}
-    </Text>
+    <View style={styles.headerElapsedTimeRow}>
+      <Ionicons name="time-outline" size={17} color={theme.primary} />
+      <Text style={[styles.headerElapsedTime, { color: theme.primary }]} numberOfLines={1}>
+        {formatWorkoutElapsedTime(elapsedSeconds)}
+      </Text>
+    </View>
   );
 }
 
@@ -3479,23 +3503,48 @@ type RestTimerControlProps = {
 function RestTimerControl({ labels, plannedSeconds, theme }: RestTimerControlProps) {
   const [remainingSeconds, setRemainingSeconds] = useState(plannedSeconds);
   const [isRunning, setIsRunning] = useState(false);
+  const [endsAtMs, setEndsAtMs] = useState<number | null>(null);
+  const hasVibratedRef = useRef(false);
 
   useEffect(() => {
     setRemainingSeconds(plannedSeconds);
     setIsRunning(false);
+    setEndsAtMs(null);
+    hasVibratedRef.current = false;
   }, [plannedSeconds]);
 
   useEffect(() => {
-    if (!isRunning) {
+    if (!isRunning || !endsAtMs) {
       return undefined;
     }
 
-    const intervalId = setInterval(() => {
-      setRemainingSeconds((current) => Math.max(0, current - 1));
-    }, 1000);
+    const updateRemaining = () => {
+      const nextRemaining = Math.max(0, Math.ceil((endsAtMs - Date.now()) / 1000));
+      setRemainingSeconds(nextRemaining);
 
-    return () => clearInterval(intervalId);
-  }, [isRunning]);
+      if (nextRemaining <= 0) {
+        setIsRunning(false);
+        setEndsAtMs(null);
+        if (!hasVibratedRef.current) {
+          hasVibratedRef.current = true;
+          vibrateWorkoutTimerComplete();
+        }
+      }
+    };
+
+    updateRemaining();
+    const intervalId = setInterval(updateRemaining, 500);
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        updateRemaining();
+      }
+    });
+
+    return () => {
+      clearInterval(intervalId);
+      subscription.remove();
+    };
+  }, [endsAtMs, isRunning]);
 
   useEffect(() => {
     if (remainingSeconds <= 0 && isRunning) {
@@ -3514,10 +3563,20 @@ function RestTimerControl({ labels, plannedSeconds, theme }: RestTimerControlPro
           accessibilityRole="button"
           style={[styles.restTimerButton, { borderColor: theme.border }]}
           onPress={() => {
+            if (isRunning) {
+              setRemainingSeconds(Math.max(0, Math.ceil(((endsAtMs ?? Date.now()) - Date.now()) / 1000)));
+              setEndsAtMs(null);
+              setIsRunning(false);
+              return;
+            }
+
+            const secondsToRun = remainingSeconds <= 0 ? plannedSeconds : remainingSeconds;
             if (remainingSeconds <= 0) {
               setRemainingSeconds(plannedSeconds);
             }
-            setIsRunning((current) => !current);
+            hasVibratedRef.current = false;
+            setEndsAtMs(Date.now() + secondsToRun * 1000);
+            setIsRunning(true);
           }}
         >
           <Text style={[styles.restTimerButtonText, { color: theme.primary }]}>
@@ -3530,6 +3589,8 @@ function RestTimerControl({ labels, plannedSeconds, theme }: RestTimerControlPro
           onPress={() => {
             setRemainingSeconds(plannedSeconds);
             setIsRunning(false);
+            setEndsAtMs(null);
+            hasVibratedRef.current = false;
           }}
         >
           <Text style={[styles.restTimerButtonText, { color: theme.primary }]}>{labels.reset}</Text>
@@ -13031,9 +13092,120 @@ function GymminApp() {
     });
   }
 
+  function getWorkoutSessionEntryProgressKey(entry?: WorkoutSessionEntry) {
+    if (!entry) {
+      return null;
+    }
+
+    if (entry.exerciseId?.trim()) {
+      return `id:${entry.exerciseId.trim().toLowerCase()}`;
+    }
+
+    if (entry.exerciseName?.trim()) {
+      return `name:${entry.exerciseName.trim().toLowerCase()}`;
+    }
+
+    return null;
+  }
+
+  function getPreviousExerciseValues(entries: WorkoutSessionEntry[]) {
+    const referenceEntry = entries.find((entry) => entry.exerciseId?.trim() || entry.exerciseName?.trim());
+    const progressKey = getWorkoutSessionEntryProgressKey(referenceEntry);
+    const summary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
+    const previousEntry = summary?.lastResult.entry;
+
+    return {
+      reps: previousEntry?.actualReps?.trim() || "",
+      weight: previousEntry?.actualWeight?.trim() || ""
+    };
+  }
+
+  function applyPreviousExerciseValue(
+    entries: WorkoutSessionEntry[],
+    field: "actualReps" | "actualWeight",
+    value: string
+  ) {
+    if (!activeWorkoutSessionId || !value.trim()) {
+      return;
+    }
+
+    const entryIds = new Set(entries.map((entry) => entry.id));
+    const updatedAt = new Date().toISOString();
+
+    setWorkoutSessions((current) =>
+      current.map((session) => {
+        if (session.id !== activeWorkoutSessionId) {
+          return session;
+        }
+
+        let hasChanged = false;
+        const nextEntries = session.entries.map((entry) => {
+          if (!entryIds.has(entry.id) || entry[field]?.trim()) {
+            return entry;
+          }
+
+          hasChanged = true;
+          const nextEntry = { ...entry, [field]: value } as WorkoutSessionEntry;
+          const hasAnyValue = Boolean(nextEntry.actualReps?.trim() || nextEntry.actualWeight?.trim());
+
+          return {
+            ...nextEntry,
+            completedAt: hasAnyValue ? nextEntry.completedAt ?? updatedAt : undefined,
+            isCompleted: hasAnyValue
+          };
+        });
+
+        return hasChanged
+          ? {
+              ...session,
+              entries: nextEntries,
+              updatedAt
+            }
+          : session;
+      })
+    );
+  }
+
+  function renderPreviousExerciseValueButtons(entries: WorkoutSessionEntry[], compact = false) {
+    const previousValues = getPreviousExerciseValues(entries);
+
+    if (!previousValues.reps && !previousValues.weight) {
+      return null;
+    }
+
+    return (
+      <View style={[styles.sessionQuickFillRow, compact ? styles.sessionQuickFillRowCompact : null]}>
+        <Text style={[styles.sessionQuickFillLabel, { color: theme.muted }]}>{t("previousResults")}</Text>
+        {previousValues.reps ? (
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.sessionQuickFillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+            onPress={() => applyPreviousExerciseValue(entries, "actualReps", previousValues.reps)}
+          >
+            <Text style={[styles.sessionQuickFillButtonText, { color: theme.primary }]}>
+              {t("previousReps")}: {previousValues.reps}
+            </Text>
+          </Pressable>
+        ) : null}
+        {previousValues.weight ? (
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.sessionQuickFillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+            onPress={() => applyPreviousExerciseValue(entries, "actualWeight", previousValues.weight)}
+          >
+            <Text style={[styles.sessionQuickFillButtonText, { color: theme.primary }]}>
+              {t("previousWeight")}: {previousValues.weight} kg
+            </Text>
+          </Pressable>
+        ) : null}
+      </View>
+    );
+  }
+
   function renderGuidedEntryTable(entries: WorkoutSessionEntry[]) {
     return (
       <View style={[styles.guidedEntryTable, { borderColor: theme.border }]}>
+        {renderPreviousExerciseValueButtons(entries)}
         {entries.map((entry) => (
           <View key={entry.id} style={styles.guidedEntryRow}>
             <Pressable
@@ -13265,6 +13437,7 @@ function GymminApp() {
                     </Text>
                   ) : null}
                 </Pressable>
+                {renderPreviousExerciseValueButtons(group.entries, true)}
               </View>
               <View style={styles.workoutSessionDetailSetsCell}>
                 {group.entries.map((entry, entryIndex) => {
@@ -13361,42 +13534,83 @@ function GymminApp() {
     );
   }
 
-  function renderGuidedPlanPreview(session: WorkoutSession, group: { entries: WorkoutSessionEntry[]; restEntry?: WorkoutSessionEntry }) {
+  function renderWorkoutSessionProgressCard(current: number, total: number) {
+    const progress = getWorkoutProgress(current, total);
+
+    return (
+      <View style={[styles.sessionProgressCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.sessionProgressIcon, { backgroundColor: theme.secondaryBand }]}>
+          <Ionicons name="barbell-outline" size={20} color={theme.primary} />
+        </View>
+        <Text style={[styles.sessionProgressCardText, { color: theme.text }]} numberOfLines={1}>
+          {t("exercisePlural")} {progress.current}/{progress.total}
+        </Text>
+        <View style={[styles.sessionProgressTrack, { backgroundColor: theme.secondaryBand }]}>
+          <View style={[styles.sessionProgressFill, { backgroundColor: theme.primary, width: `${progress.percent}%` }]} />
+        </View>
+        <Text style={[styles.sessionProgressPercent, { color: theme.primary }]} numberOfLines={1}>
+          {formatWorkoutProgressPercent(progress.current, progress.total)}
+        </Text>
+      </View>
+    );
+  }
+
+  function renderGuidedPlanPreview(
+    session: WorkoutSession,
+    group: { entries: WorkoutSessionEntry[]; restEntry?: WorkoutSessionEntry },
+    exerciseNumber: number
+  ) {
     const entry = group.entries[0];
     const setCount = String(group.entries.length || 1);
     const previewStep = getSessionEntryPreviewStep(session, entry);
-    const restStep = group.restEntry ? getSessionEntryPreviewStep(session, group.restEntry) : null;
-    const targetText = formatExerciseSetTarget({ ...previewStep, setCount });
+    const plannedTarget = entry.plannedTargetType === "repetitions"
+      ? entry.plannedTarget?.trim()
+      : entry.plannedTarget?.trim() || getSessionEntrySetTarget(entry);
+    const restSeconds = group.restEntry?.plannedTarget ? parseTimerSecondsValue(group.restEntry.plannedTarget) : 0;
+    const restText = formatRestDuration(restSeconds);
 
     return (
       <View style={[styles.guidedPlanPreview, { borderColor: theme.border }]}>
-        <ExerciseSummaryRow
-          language={language}
-          seriesIndex={entry.seriesIndex + 1}
-          step={previewStep}
-          targetText={targetText}
-          theme={theme}
-          t={t}
-          onPressDetails={() => openExerciseDetail(previewStep)}
-          onPressMuscles={() => openExerciseDetail(previewStep)}
-        />
+        <View style={styles.guidedExerciseHeader}>
+          <View style={[styles.guidedExerciseNumber, { backgroundColor: theme.secondaryBand }]}>
+            <Text style={[styles.guidedExerciseNumberText, { color: theme.primary }]}>{exerciseNumber}</Text>
+          </View>
+          <Text style={[styles.guidedExerciseTitle, { color: theme.text }]} numberOfLines={3}>
+            {getExerciseDisplayName(previewStep.exerciseName, language)}
+          </Text>
+          <Pressable
+            accessibilityLabel={t("showDetails")}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+            onPress={() => openExerciseDetail(previewStep)}
+          >
+            <Ionicons name="body-outline" size={20} color={theme.primary} />
+          </Pressable>
+        </View>
         {entry.notes || previewStep.notes ? (
-          <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
+          <Text style={[styles.guidedExerciseNotes, { color: theme.muted }]} numberOfLines={5}>
             {entry.notes || previewStep.notes}
           </Text>
         ) : null}
-        {restStep && group.restEntry ? (
-          <ExerciseSummaryRow
-            language={language}
-            pairedTargetText={targetText}
-            step={restStep}
-            targetText={getSessionEntrySetTarget(group.restEntry)}
-            theme={theme}
-            t={t}
-            onPressDetails={() => openExerciseDetail(restStep)}
-            onPressMuscles={() => openExerciseDetail(restStep)}
-          />
-        ) : null}
+        <View style={styles.guidedExerciseMetaRow}>
+          <View style={styles.guidedRestGroup}>
+            <Text style={[styles.guidedRestLabel, { color: theme.text }]}>{t("stageRest")}</Text>
+            <View style={[styles.guidedRestPill, { backgroundColor: theme.secondaryBand }]}>
+              <Ionicons name="time-outline" size={16} color={theme.text} />
+              <Text style={[styles.guidedRestPillText, { color: theme.primary }]}>{restText}</Text>
+            </View>
+          </View>
+          <View style={styles.guidedTargetGroup}>
+            <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
+              <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{setCount}</Text>
+            </View>
+            <Text style={[styles.guidedTargetSeparator, { color: theme.text }]}>x</Text>
+            <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
+              <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{plannedTarget || "-"}</Text>
+            </View>
+          </View>
+        </View>
         {renderRestTimer(group.restEntry)}
       </View>
     );
@@ -13572,42 +13786,38 @@ function GymminApp() {
 
       return (
         <View style={styles.sessionScreen}>
+          {renderWorkoutSessionProgressCard(guidedGroupIndex + 1, guidedGroups.length)}
           <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={styles.sessionProgressRow}>
-              <View style={styles.sessionProgressCopy}>
-                <Text style={[styles.sessionProgressText, { color: theme.text }]}>
-                  {t("exercisePlural")} {guidedGroupIndex + 1}/{guidedGroups.length}
-                </Text>
-              </View>
-            </View>
-            {renderGuidedPlanPreview(session, currentGroup)}
+            {renderGuidedPlanPreview(session, currentGroup, guidedGroupIndex + 1)}
             {shouldShowGuidedEntryTable ? renderGuidedEntryTable(currentGroup.entries.filter(isWorkoutSessionEntryFillRequired)) : null}
-            <View style={styles.sessionActions}>
-              <AppButton
-                disabled={!canGoBack}
-                style={styles.sessionNavButton}
-                theme={theme}
-                variant="outline"
-                onPress={() => {
-                  const previousGroup = guidedGroups[Math.max(0, guidedGroupIndex - 1)];
-                  setSessionEntryIndex(previousGroup?.firstIndex ?? 0);
-                }}
-              >
-                {t("back")}
-              </AppButton>
-              <AppButton
-                disabled={!canGoNext}
-                style={styles.sessionNavButton}
-                theme={theme}
-                variant="outline"
-                onPress={() => {
-                  const nextGroup = guidedGroups[Math.min(guidedGroups.length - 1, guidedGroupIndex + 1)];
-                  setSessionEntryIndex(nextGroup?.firstIndex ?? sessionEntryIndex);
-                }}
-              >
-                {t("next")}
-              </AppButton>
-            </View>
+          </View>
+          <View style={styles.sessionActions}>
+            <AppButton
+              disabled={!canGoBack}
+              icon="chevron-back-outline"
+              style={styles.sessionNavButton}
+              theme={theme}
+              variant="outline"
+              onPress={() => {
+                const previousGroup = guidedGroups[Math.max(0, guidedGroupIndex - 1)];
+                setSessionEntryIndex(previousGroup?.firstIndex ?? 0);
+              }}
+            >
+              {t("back")}
+            </AppButton>
+            <AppButton
+              disabled={!canGoNext}
+              icon="chevron-forward-outline"
+              style={styles.sessionNavButton}
+              theme={theme}
+              variant="outline"
+              onPress={() => {
+                const nextGroup = guidedGroups[Math.min(guidedGroups.length - 1, guidedGroupIndex + 1)];
+                setSessionEntryIndex(nextGroup?.firstIndex ?? sessionEntryIndex);
+              }}
+            >
+              {t("next")}
+            </AppButton>
           </View>
           <View style={styles.sessionActions}>
             <AppButton icon="flag-outline" style={styles.sessionNavButton} theme={theme} onPress={requestFinishActiveWorkoutSession}>
@@ -13783,12 +13993,19 @@ function GymminApp() {
             ) : (
               <GymminMark color={theme.primary} height={34} width={40} />
             )}
-            <Text numberOfLines={1} style={[styles.headerTitle, { color: theme.text }]}>
-              {screenTitle}
-              {shouldShowWorkoutHeaderTime && activeWorkoutSession ? (
-                <WorkoutHeaderElapsedTime label={t("goalTime")} startedAt={activeWorkoutSession.startedAt} theme={theme} />
-              ) : null}
-            </Text>
+            {shouldShowWorkoutHeaderTime && activeWorkoutSession ? (
+              <View style={styles.headerWorkoutTitleRow}>
+                <Text numberOfLines={1} style={[styles.headerTitle, styles.headerWorkoutTitle, { color: theme.text }]}>
+                  {screenTitle}
+                </Text>
+                <View style={[styles.headerWorkoutTitleSeparator, { backgroundColor: theme.border }]} />
+                <WorkoutHeaderElapsedTime startedAt={activeWorkoutSession.startedAt} theme={theme} />
+              </View>
+            ) : (
+              <Text numberOfLines={1} style={[styles.headerTitle, { color: theme.text }]}>
+                {screenTitle}
+              </Text>
+            )}
           </View>
           {shouldShowProfileHeaderButton ? (
             <Pressable
@@ -16811,6 +17028,27 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     minWidth: 0
   },
+  headerWorkoutTitleRow: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
+    gap: 10,
+    minWidth: 0
+  },
+  headerWorkoutTitle: {
+    flex: 0,
+    maxWidth: "56%"
+  },
+  headerWorkoutTitleSeparator: {
+    height: 24,
+    width: 1
+  },
+  headerElapsedTimeRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 6,
+    minWidth: 0
+  },
   headerElapsedTime: {
     fontSize: 16,
     fontWeight: "900"
@@ -18545,6 +18783,46 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10
   },
+  sessionProgressCard: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    minHeight: 64,
+    paddingHorizontal: 14,
+    paddingVertical: 10
+  },
+  sessionProgressIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 40,
+    justifyContent: "center",
+    width: 40
+  },
+  sessionProgressCardText: {
+    flexShrink: 0,
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  sessionProgressTrack: {
+    borderRadius: 999,
+    flex: 1,
+    height: 8,
+    minWidth: 70,
+    overflow: "hidden"
+  },
+  sessionProgressFill: {
+    borderRadius: 999,
+    height: "100%"
+  },
+  sessionProgressPercent: {
+    flexShrink: 0,
+    fontSize: 13,
+    fontWeight: "900",
+    minWidth: 38,
+    textAlign: "right"
+  },
   sessionProgressRow: {
     alignItems: "center",
     flexDirection: "row",
@@ -18593,11 +18871,114 @@ const styles = StyleSheet.create({
   sessionNoteInput: {
     minHeight: 76
   },
+  sessionQuickFillRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  sessionQuickFillRowCompact: {
+    marginTop: 2
+  },
+  sessionQuickFillLabel: {
+    fontSize: 11,
+    fontWeight: "900",
+    textTransform: "uppercase"
+  },
+  sessionQuickFillButton: {
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 7
+  },
+  sessionQuickFillButtonText: {
+    fontSize: 12,
+    fontWeight: "900"
+  },
   guidedPlanPreview: {
     borderRadius: 8,
     borderWidth: 1,
-    gap: 8,
-    padding: 12
+    gap: 18,
+    padding: 18
+  },
+  guidedExerciseHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12
+  },
+  guidedExerciseNumber: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 44,
+    justifyContent: "center",
+    width: 44
+  },
+  guidedExerciseNumberText: {
+    fontSize: 16,
+    fontWeight: "900"
+  },
+  guidedExerciseTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "900",
+    lineHeight: 23,
+    minWidth: 0
+  },
+  guidedExerciseNotes: {
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 22
+  },
+  guidedExerciseMetaRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "space-between"
+  },
+  guidedRestGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 1,
+    gap: 10,
+    minWidth: 0
+  },
+  guidedRestLabel: {
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  guidedRestPill: {
+    alignItems: "center",
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 36,
+    paddingHorizontal: 10
+  },
+  guidedRestPillText: {
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  guidedTargetGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 0,
+    gap: 8
+  },
+  guidedTargetPill: {
+    alignItems: "center",
+    borderRadius: 8,
+    minHeight: 36,
+    minWidth: 44,
+    justifyContent: "center",
+    paddingHorizontal: 10
+  },
+  guidedTargetText: {
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  guidedTargetSeparator: {
+    fontSize: 13,
+    fontWeight: "900"
   },
   guidedEntryTable: {
     borderRadius: 8,

@@ -50,5 +50,9 @@ This note tracks the current workout-view UX decisions.
 - New sessions use `defaultWorkoutExecutionMode` from Settings.
 - Existing active sessions keep their own stored `executionMode` when resumed.
 - Users can still change the default mode in Settings before starting the next workout.
+- Guided active workout sessions use a compact header time display: the page title stays `Workout` / `Trening`, followed by a clock icon and elapsed time without a `Time:` / `Czas:` prefix.
+- Guided active workout sessions show a compact exercise progress card with `Exercises X/Y`, a progress bar and a percentage.
+- The current exercise card shows the exercise number, name, details/anatomy action, technical notes, rest duration as a clock pill and set/target tiles such as `[4] x [6]`.
+- The rest timer remains a separate lightweight card and uses the same elapsed-time formatting helpers as the header.
 - Execution entries use compact headers like `[2] Squat` or `[2] Rest` instead of repeating a separate `Set N` label.
 - Workout tables use the device/system orientation instead of a manual `rotate(90deg)` transform. The `horizontal` table mode widens the table for landscape use, while Android/iOS auto-rotation handles the actual screen rotation.

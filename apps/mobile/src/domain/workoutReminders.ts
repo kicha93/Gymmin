@@ -245,8 +245,10 @@ export async function ensureWorkoutReminderNotificationChannel(notifications: No
   }
 
   await notifications.setNotificationChannelAsync(reminderChannelId, {
+    enableVibrate: true,
     importance: notifications.AndroidImportance.DEFAULT,
-    name: "Workout reminders"
+    name: "Workout reminders",
+    vibrationPattern: [0, 300, 180, 300]
   });
 }
 

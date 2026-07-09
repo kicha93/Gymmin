@@ -7,6 +7,7 @@ import {
   WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY,
   cancelWorkoutReminders,
   createDefaultWeeklySchedule,
+  ensureWorkoutReminderNotificationChannel,
   formatReminderDayTime,
   getReminderScheduleForDay,
   getEnabledReminderDayNumbers,
@@ -136,6 +137,15 @@ describe("workoutReminders", () => {
       },
       title: "Time to train"
     });
+  });
+
+  it("configures Android reminder channel with vibration", async () => {
+    await ensureWorkoutReminderNotificationChannel(Notifications);
+
+    expect(Notifications.setNotificationChannelAsync).toHaveBeenCalledWith("workout-reminders", expect.objectContaining({
+      enableVibrate: true,
+      vibrationPattern: [0, 300, 180, 300]
+    }));
   });
 
   it("cancels saved and orphaned workout reminder notifications", async () => {

@@ -163,6 +163,7 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - The per-exercise anatomy view reuses the same front/back SVG anatomy map as the workout overview, filtered to one exercise.
 - Tapping an exercise row opens a dedicated exercise detail page with metadata, optional exercise images, worked muscles, technique placeholders and exercise history/progress when local data exists. The media panel is hidden when no exercise images are mapped yet.
 - Starting a workout no longer asks for execution mode every time. The app uses the workout execution mode saved in Settings for the next session.
+- The guided active workout screen now uses a compact workout header with a clock icon and elapsed time, an `Exercises X/Y` progress card, a clearer current-exercise card, rest duration pills and set/target tiles.
 - Inline workout table execution supports a per-user default table orientation: vertical or horizontal. Horizontal mode widens the table for landscape use; actual screen rotation is handled by the device/system auto-rotate setting. This setting syncs through `/api/settings`.
 - Mobile account-scoped data uses per-user AsyncStorage keys: `gymmin.account.anonymous.*` for signed-out data and `gymmin.account.{userId}.*` for signed-in cache/sync metadata. Account switching does not silently merge data from the previous account.
 - If signed-out local data exists after login, the app asks whether to merge it into the current account, keep it for later, or delete only the anonymous local data.

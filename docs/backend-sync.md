@@ -570,6 +570,10 @@ Konfiguracja:
 }
 ```
 
+Current product IDs intentionally match the visible package sizes: `ai_tokens_1`
+adds 1 credit, `ai_tokens_3` adds 3 credits and `ai_tokens_10` adds 10 credits.
+Older 10/30/100 package examples are obsolete for the current UI/configuration.
+
 Brak tokenow dla AI zwraca `402`:
 
 ```json

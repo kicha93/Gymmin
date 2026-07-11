@@ -61,7 +61,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-bench-dip-1399",
@@ -123,7 +124,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-body-weight-dip-1400",
@@ -185,69 +187,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "triceps-extension-cable-kickback-1401",
-    "name": "Cable Tricep Kick-back",
-    "polishName": "Prostowanie tricepsa na wyciągu",
-    "garminCategory": "TRICEPS_EXTENSION",
-    "garminName": "CABLE_KICKBACK",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 1
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 1,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-cable-lying-triceps-extension-1402",
@@ -309,7 +250,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-cable-overhead-triceps-extension-1403",
@@ -371,19 +313,20 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
-    "id": "triceps-extension-dumbbell-kickback-1404",
-    "name": "Dumbbell Kick-back",
-    "polishName": "Wiosłowanie hantlem w opadzie tułowia",
+    "id": "triceps-extension-cable-kickback-1401",
+    "name": "Cable Tricep Kick-back",
+    "polishName": "Prostowanie tricepsa na wyciągu",
     "garminCategory": "TRICEPS_EXTENSION",
-    "garminName": "DUMBBELL_KICKBACK",
-    "foundInGarmin": true,
+    "garminName": "CABLE_KICKBACK",
+    "foundInGarmin": false,
     "image": "",
-    "url": "https://connect.garmin.com/modern/exercises/TRICEPS_EXTENSION/DUMBBELL_KICKBACK",
-    "difficulty": "Beginner",
-    "description": "This is a single-joint isolating exercise that targets the back of the upper arm while developing stability throughout the hand and wrist region.",
+    "url": "",
+    "difficulty": "",
+    "description": "",
     "muscleImpact": {
       "abductors": 0,
       "abs": 0,
@@ -412,8 +355,8 @@ export const tricepsExtension = [
       "bike": 0,
       "bosuBall": 0,
       "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
+      "cableMachine": 1,
+      "dumbbell": 0,
       "ezBar": 0,
       "foamRoller": 0,
       "jumpRope": 0,
@@ -433,7 +376,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-dumbbell-lying-triceps-extension-1405",
@@ -495,7 +439,71 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "triceps-extension-dumbbell-kickback-1404",
+    "name": "Dumbbell Triceps Kickback",
+    "polishName": "Prostowanie ramienia z hantlem w opadzie tułowia",
+    "garminCategory": "TRICEPS_EXTENSION",
+    "garminName": "DUMBBELL_KICKBACK",
+    "foundInGarmin": true,
+    "image": "",
+    "url": "https://connect.garmin.com/modern/exercises/TRICEPS_EXTENSION/DUMBBELL_KICKBACK",
+    "difficulty": "Beginner",
+    "description": "This is a single-joint isolating exercise that targets the back of the upper arm while developing stability throughout the hand and wrist region.",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 0,
+      "adductors": 0,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 0,
+      "forearm": 0,
+      "glutes": 0,
+      "hamstrings": 0,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 0,
+      "shoulders": 0,
+      "traps": 0,
+      "triceps": 1
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 1,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-ez-bar-overhead-triceps-extension-1406",
@@ -557,7 +565,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-incline-dip-1407",
@@ -619,7 +628,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-incline-ez-bar-lying-triceps-extension-1408",
@@ -681,7 +691,71 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "lateral-raise-ring-dip-kipping-555",
+    "name": "Kipping Ring Dip",
+    "polishName": "Dipy na kółkach gimnastycznych z kippingiem",
+    "garminCategory": "TRICEPS_EXTENSION",
+    "garminName": "RING_DIP_KIPPING",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 0,
+      "adductors": 0,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 2,
+      "forearm": 0,
+      "glutes": 0,
+      "hamstrings": 0,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 0,
+      "shoulders": 2,
+      "traps": 0,
+      "triceps": 1
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 1,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "triceps-extension-lying-dumbbell-pullover-to-extension-1409",
@@ -743,7 +817,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-lying-ez-bar-triceps-extension-1410",
@@ -805,7 +880,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-lying-triceps-extension-to-close-grip-bench-press-1411",
@@ -867,7 +943,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-overhead-dumbbell-triceps-extension-1412",
@@ -929,7 +1006,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-reclining-triceps-press-1413",
@@ -991,74 +1069,13 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "triceps-extension-reverse-grip-pressdown-1414",
-    "name": "Reverse-grip Press-down",
-    "polishName": "Wyciskanie z linką wyciągu górnego podchwytem",
-    "garminCategory": "TRICEPS_EXTENSION",
-    "garminName": "REVERSE_GRIP_PRESSDOWN",
-    "foundInGarmin": true,
-    "image": "",
-    "url": "https://connect.garmin.com/modern/exercises/TRICEPS_EXTENSION/REVERSE_GRIP_PRESSDOWN",
-    "difficulty": "Intermediate",
-    "description": "The reverse-grip pressdown is a single-joint exercise that targets your triceps while strengthening your upper back and rear shoulder muscles.",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 1
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 1,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-reverse-grip-triceps-pressdown-1415",
     "name": "Reverse-grip Triceps Press-down",
-    "polishName": "Wyciskanie tricepsów z linką wyciągu górnego podchwytem",
+    "polishName": "Prostowanie ramion na wyciągu podchwytem",
     "garminCategory": "TRICEPS_EXTENSION",
     "garminName": "REVERSE_GRIP_TRICEPS_PRESSDOWN",
     "foundInGarmin": false,
@@ -1115,7 +1132,71 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "lateral-raise-ring-dip-554",
+    "name": "Ring Dip",
+    "polishName": "Dipy na kółkach gimnastycznych",
+    "garminCategory": "TRICEPS_EXTENSION",
+    "garminName": "RING_DIP",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 0,
+      "adductors": 0,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 2,
+      "forearm": 0,
+      "glutes": 0,
+      "hamstrings": 0,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 0,
+      "shoulders": 2,
+      "traps": 0,
+      "triceps": 1
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 1,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-rope-pressdown-1416",
@@ -1177,7 +1258,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-seated-barbell-overhead-triceps-extension-1417",
@@ -1239,7 +1321,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-seated-dumbbell-overhead-triceps-extension-1418",
@@ -1301,7 +1384,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-seated-ez-bar-overhead-triceps-extension-1419",
@@ -1363,7 +1447,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-seated-single-arm-overhead-dumbbell-extension-1420",
@@ -1425,7 +1510,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-single-arm-dumbbell-overhead-triceps-extension-1421",
@@ -1487,7 +1573,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-single-dumbbell-seated-overhead-triceps-extension-1422",
@@ -1549,7 +1636,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-single-leg-bench-dip-and-kick-1423",
@@ -1611,7 +1699,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-single-leg-dip-1424",
@@ -1673,7 +1762,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-static-lying-triceps-extension-1425",
@@ -1735,7 +1825,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-suspended-dip-1426",
@@ -1797,7 +1888,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 1,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-swiss-ball-dumbbell-lying-triceps-extension-1427",
@@ -1859,7 +1951,71 @@ export const tricepsExtension = [
       "swissBall": 1,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
+  },
+  {
+    "id": "curl-swiss-ball-dumbbell-overhead-triceps-extension-367",
+    "name": "Swiss Ball Dumbbell Overhead Triceps Extension",
+    "polishName": "Wyprost tricepsów z hantlami nad głowę na piłce gimnastycznej",
+    "garminCategory": "TRICEPS_EXTENSION",
+    "garminName": "SWISS_BALL_DUMBBELL_OVERHEAD_TRICEPS_EXTENSION",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 0,
+      "adductors": 0,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 0,
+      "forearm": 0,
+      "glutes": 0,
+      "hamstrings": 0,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 0,
+      "shoulders": 0,
+      "traps": 0,
+      "triceps": 1
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 1,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 1,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "triceps-extension-swiss-ball-ez-bar-lying-triceps-extension-1428",
@@ -1921,7 +2077,8 @@ export const tricepsExtension = [
       "swissBall": 1,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "triceps-extension-swiss-ball-ez-bar-overhead-triceps-extension-1429",
@@ -1983,7 +2140,8 @@ export const tricepsExtension = [
       "swissBall": 1,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "triceps-extension-tabletop-dip-1430",
@@ -2045,7 +2203,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-triceps-extension-on-floor-1431",
@@ -2107,7 +2266,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-triceps-press-1432",
@@ -2169,7 +2329,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-triceps-pressdown-1433",
@@ -2231,69 +2392,8 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "triceps-extension-weighted-bench-dip-1434",
-    "name": "Weighted Bench Dip",
-    "polishName": "Dipy na ławce (z obciążeniem)",
-    "garminCategory": "TRICEPS_EXTENSION",
-    "garminName": "WEIGHTED_BENCH_DIP",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 2,
-      "traps": 0,
-      "triceps": 1
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 1,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 1,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "triceps-extension-weighted-dip-1435",
@@ -2355,316 +2455,7 @@ export const tricepsExtension = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "triceps-extension-weighted-incline-dip-1436",
-    "name": "Weighted Incline Dip",
-    "polishName": "Dipy na poręczach (z obciążeniem)",
-    "garminCategory": "TRICEPS_EXTENSION",
-    "garminName": "WEIGHTED_INCLINE_DIP",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 1,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 2,
-      "traps": 0,
-      "triceps": 2
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 1,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 1,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "triceps-extension-weighted-single-leg-bench-dip-and-kick-1437",
-    "name": "Weighted Single-leg Bench Dip and Kick",
-    "polishName": "Dipy na ławce jednonóż z kopnięciem (z obciążeniem)",
-    "garminCategory": "TRICEPS_EXTENSION",
-    "garminName": "WEIGHTED_SINGLE_LEG_BENCH_DIP_AND_KICK",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 2,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 2,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 2,
-      "shoulders": 2,
-      "traps": 0,
-      "triceps": 1
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 1,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 1,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "triceps-extension-weighted-single-leg-dip-1438",
-    "name": "Weighted Single-leg Dip",
-    "polishName": "Dipy jednonóż (z obciążeniem)",
-    "garminCategory": "TRICEPS_EXTENSION",
-    "garminName": "WEIGHTED_SINGLE_LEG_DIP",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 2,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 2,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 2,
-      "shoulders": 2,
-      "traps": 0,
-      "triceps": 1
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 1,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 1,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "triceps-extension-weighted-suspended-dip-1439",
-    "name": "Weighted Suspended Dip",
-    "polishName": "Dipy na poręczach w zawieszeniu (z obciążeniem)",
-    "garminCategory": "TRICEPS_EXTENSION",
-    "garminName": "WEIGHTED_SUSPENDED_DIP",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 2,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 2,
-      "traps": 0,
-      "triceps": 1
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 1,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 1,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "triceps-extension-weighted-tabletop-dip-1440",
-    "name": "Weighted Tabletop Dip",
-    "polishName": "Pompki tyłem w pozycji stołu (z obciążeniem)",
-    "garminCategory": "TRICEPS_EXTENSION",
-    "garminName": "WEIGHTED_TABLETOP_DIP",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 2,
-      "traps": 0,
-      "triceps": 1
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 1,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 1,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

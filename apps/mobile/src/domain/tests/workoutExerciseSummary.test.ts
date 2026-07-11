@@ -59,7 +59,7 @@ describe("workoutExerciseSummary", () => {
   it("returns muscle groups for catalog exercises and empty data for unknown exercises", () => {
     const known = getWorkoutStepMuscleGroups(step({ exerciseName: "Bench Press" }));
 
-    expect(known.exercise?.name).toBe("Bench Press");
+    expect(known.exercise?.name).toBe("Barbell Bench Press");
     expect(known.primary.length + known.secondary.length).toBeGreaterThan(0);
 
     const unknown = getWorkoutStepMuscleGroups(step({ exerciseId: "", exerciseName: "Unknown Movement" }));
@@ -72,11 +72,11 @@ describe("workoutExerciseSummary", () => {
     const details = getExerciseDetails(step({ exerciseName: "Bench Press" }), "en");
     const muscleGroups = getWorkoutStepMuscleGroups(step({ exerciseName: "Bench Press" }));
 
-    expect(details?.displayName).toBe("Bench Press");
+    expect(details?.displayName).toBe("Barbell Bench Press");
     expect(details?.exercise?.id).toBeTruthy();
     expect(details?.primary).toEqual(muscleGroups.primary);
     expect(details?.secondary).toEqual(muscleGroups.secondary);
-    expect(details?.hasAnimation).toBe(false);
+    expect(details?.hasAnimation).toBe(true);
     expect(details?.animationUrl).toBeNull();
     expect(details?.instructions.length).toBeGreaterThan(0);
     expect(details?.techniqueTips.length).toBeGreaterThan(0);

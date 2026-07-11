@@ -60,4 +60,12 @@ describe("favoriteExercises", () => {
 
     expect(getValidFavoriteExerciseIds(merged)).toEqual(new Set([firstExercise.id, secondExercise.id]));
   });
+
+  it("migrates favorite entries that use a merged exercise id", () => {
+    const normalized = normalizeFavoriteExercises([
+      { exerciseId: "squat-back-squats-1249", createdAt: oldDate, updatedAt: oldDate }
+    ]);
+
+    expect(normalized[0]?.exerciseId).toBe("squat-barbell-back-squat-1251");
+  });
 });

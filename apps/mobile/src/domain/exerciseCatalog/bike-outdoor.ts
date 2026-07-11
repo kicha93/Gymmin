@@ -61,6 +61,7 @@ export const bikeOutdoor = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

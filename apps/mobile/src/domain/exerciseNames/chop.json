@@ -2,7 +2,6 @@
   "Cable Pull-through",
   "Cable Rotational Lift",
   "Cable Woodchop",
-  "Chop",
   "Cross Chop to Knee",
   "Dumbbell Chop",
   "Half-kneeling Rotation",
@@ -19,8 +18,5 @@
   "Standing Rotational Chop",
   "Standing Split Rotational Chop",
   "Standing Split Rotational Reverse Chop",
-  "Standing Stability Reverse Chop",
-  "Weighted Cross Chop to Knee",
-  "Weighted Half-kneeling Rotation",
-  "Weighted Power Squat Chops"
+  "Standing Stability Reverse Chop"
 ]

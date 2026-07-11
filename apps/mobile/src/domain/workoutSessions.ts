@@ -1,4 +1,5 @@
 import type { WorkoutDraft, WorkoutStep } from "./workouts";
+import { resolveExerciseId } from "./exercises";
 
 export type WorkoutExecutionMode =
   | "guided"
@@ -383,7 +384,7 @@ export function getExerciseKey(entry: WorkoutSessionEntry): string | null {
   }
 
   if (entry.exerciseId?.trim()) {
-    return `id:${entry.exerciseId.trim().toLowerCase()}`;
+    return `id:${resolveExerciseId(entry.exerciseId.trim()).toLowerCase()}`;
   }
 
   return `name:${entry.exerciseName.trim().toLowerCase()}`;

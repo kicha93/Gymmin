@@ -2,6 +2,69 @@ import type { Exercise } from "../exercises";
 
 export const hipSwing = [
   {
+    "id": "squat-squat-american-swing-1300",
+    "name": "American Swing",
+    "polishName": "Amerykańskie wymachy odważnikiem",
+    "garminCategory": "HIP_SWING",
+    "garminName": "SQUAT_AMERICAN_SWING",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 2,
+      "adductors": 2,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 0,
+      "forearm": 0,
+      "glutes": 1,
+      "hamstrings": 2,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 1,
+      "shoulders": 1,
+      "traps": 1,
+      "triceps": 2
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 1,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
+  },
+  {
     "id": "hip-swing-hip-swing-487",
     "name": "Hip Swing",
     "polishName": "Wymachy biodrami",
@@ -61,7 +124,71 @@ export const hipSwing = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "squat-kettlebell-swing-overhead-1282",
+    "name": "Kettlebell Swing Overhead",
+    "polishName": "Wymachy odważnikiem nad głowę",
+    "garminCategory": "HIP_SWING",
+    "garminName": "KETTLEBELL_SWING_OVERHEAD",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 2,
+      "adductors": 1,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 0,
+      "forearm": 2,
+      "glutes": 1,
+      "hamstrings": 2,
+      "hips": 0,
+      "lats": 2,
+      "lowerBack": 2,
+      "obliques": 0,
+      "quads": 1,
+      "shoulders": 2,
+      "traps": 2,
+      "triceps": 0
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 1,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
   },
   {
     "id": "hip-swing-one-arm-swing-488",
@@ -123,7 +250,8 @@ export const hipSwing = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "hip-swing-single-arm-dumbbell-swing-489",
@@ -185,7 +313,8 @@ export const hipSwing = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "hip-swing-single-arm-kettlebell-swing-490",
@@ -247,7 +376,8 @@ export const hipSwing = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "hip-swing-step-out-swing-491",
@@ -309,6 +439,7 @@ export const hipSwing = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

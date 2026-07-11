@@ -1,0 +1,280 @@
+{
+  "generatedAt": "2026-07-11T11:09:51.575Z",
+  "exerciseCount": 978,
+  "duplicateIds": [],
+  "duplicateEnglishNames": [],
+  "duplicatePolishNames": [
+    [
+      {
+        "id": "plank-rolling-side-plank-763",
+        "name": "Rolling Side Plank",
+        "polishName": "Deska boczna z rotacją"
+      },
+      {
+        "id": "plank-side-plank-to-plank-with-reach-under-768",
+        "name": "Side Plank to Plank with Reach Under",
+        "polishName": "Deska boczna z rotacją"
+      },
+      {
+        "id": "plank-side-plank-with-reach-under-774",
+        "name": "Side Plank with Reach Under",
+        "polishName": "Deska boczna z rotacją"
+      }
+    ],
+    [
+      {
+        "id": "pull-up-band-assisted-chin-up-898",
+        "name": "Band-assisted Chin-up",
+        "polishName": "Podciąganie na drążku (z gumą oporową)"
+      },
+      {
+        "id": "pull-up-band-assisted-pull-up-899",
+        "name": "Band-assisted Pull-up",
+        "polishName": "Podciąganie na drążku (z gumą oporową)"
+      }
+    ],
+    [
+      {
+        "id": "pull-up-chin-up-902",
+        "name": "Chin-up",
+        "polishName": "Podciąganie na drążku"
+      },
+      {
+        "id": "pull-up-pull-up-918",
+        "name": "Pull-up",
+        "polishName": "Podciąganie na drążku"
+      }
+    ]
+  ],
+  "emptyNames": [],
+  "suspiciousEquipment": [
+    {
+      "id": "banded-exercises-hamstring-curls-16",
+      "name": "Banded Hamstring Curls",
+      "expected": "rings",
+      "actual": [
+        "band"
+      ]
+    },
+    {
+      "id": "bench-press-decline-dumbbell-bench-press-81",
+      "name": "Decline Dumbbell Bench Press",
+      "expected": "dumbbell",
+      "actual": [
+        "barbell",
+        "bench"
+      ]
+    },
+    {
+      "id": "calf-raise-standing-dumbbell-calf-raise-119",
+      "name": "Standing Dumbbell Calf Raise",
+      "expected": "dumbbell",
+      "actual": []
+    },
+    {
+      "id": "hip-stability-standing-cable-hip-abduction-468",
+      "name": "Standing Cable Hip Abduction",
+      "expected": "cableMachine",
+      "actual": []
+    },
+    {
+      "id": "leg-raise-leg-lowering-drill-590",
+      "name": "Leg Lowering Drill",
+      "expected": "rings",
+      "actual": []
+    },
+    {
+      "id": "leg-raise-single-leg-lowering-drill-597",
+      "name": "Single-leg Lowering Drill",
+      "expected": "rings",
+      "actual": []
+    },
+    {
+      "id": "plank-ring-plank-sprawls-762",
+      "name": "Ring Plank Sprawls",
+      "expected": "rings",
+      "actual": []
+    },
+    {
+      "id": "plank-swiss-ball-plank-with-feet-on-bench-784",
+      "name": "Swiss Ball Plank with Feet on Bench",
+      "expected": "bench",
+      "actual": [
+        "swissBall"
+      ]
+    },
+    {
+      "id": "sandbag-shouldering-1105",
+      "name": "Sandbag Shouldering",
+      "expected": "rings",
+      "actual": [
+        "sandbag"
+      ]
+    },
+    {
+      "id": "shrug-overhead-dumbbell-shrug-1185",
+      "name": "Overhead Dumbbell Shrug",
+      "expected": "dumbbell",
+      "actual": [
+        "barbell"
+      ]
+    },
+    {
+      "id": "sit-up-hovering-sit-up-1203",
+      "name": "Hovering Sit-up",
+      "expected": "rings",
+      "actual": []
+    },
+    {
+      "id": "squat-dumbbell-stepover-1276",
+      "name": "Dumbbell Step-over",
+      "expected": "dumbbell",
+      "actual": [
+        "barbell",
+        "box"
+      ]
+    },
+    {
+      "id": "suspension-hamstring-curl-1352",
+      "name": "Suspension Hamstring Curl",
+      "expected": "rings",
+      "actual": [
+        "trx"
+      ]
+    },
+    {
+      "id": "warm-up-stretch-hamstring-1451",
+      "name": "Hamstring Stretch",
+      "expected": "rings",
+      "actual": []
+    },
+    {
+      "id": "warm-up-inverted-hamstring-stretch-1491",
+      "name": "Inverted Hamstring Stretch",
+      "expected": "rings",
+      "actual": []
+    },
+    {
+      "id": "warm-up-standing-hamstring-stretch-1479",
+      "name": "Standing Hamstring Stretch",
+      "expected": "rings",
+      "actual": []
+    },
+    {
+      "id": "warm-up-swiss-ball-hip-crossover-1501",
+      "name": "Swiss Ball Hip Crossover",
+      "expected": "swissBall",
+      "actual": []
+    },
+    {
+      "id": "warm-up-swiss-ball-reach-roll-and-lift-1502",
+      "name": "Swiss Ball Reach, Roll, and Lift",
+      "expected": "swissBall",
+      "actual": []
+    },
+    {
+      "id": "warm-up-swiss-ball-windshield-wipers-1503",
+      "name": "Swiss Ball Windshield Wipers",
+      "expected": "swissBall",
+      "actual": []
+    }
+  ],
+  "progressionOrModifier": [
+    {
+      "id": "bench-press-isometric-barbell-bench-press-87",
+      "name": "Isometric Barbell Bench Press",
+      "polishName": "Izometryczne wyciskanie sztangi na ławce płaskiej",
+      "garminCategory": "BENCH_PRESS"
+    },
+    {
+      "id": "bench-press-partial-lockout-92",
+      "name": "Partial Lockout",
+      "polishName": "Partial lockout",
+      "garminCategory": "BENCH_PRESS"
+    },
+    {
+      "id": "bench-press-triple-stop-barbell-bench-press-99",
+      "name": "Triple-stop Barbell Bench Press",
+      "polishName": "Wyciskanie sztangi na ławce z potrójnym zatrzymaniem",
+      "garminCategory": "BENCH_PRESS"
+    },
+    {
+      "id": "curl-dumbbell-biceps-curl-with-static-hold-340",
+      "name": "Dumbbell Biceps Curl with Static Hold",
+      "polishName": "Uginanie ramion z hantlami z przytrzymaniem",
+      "garminCategory": "CURL"
+    },
+    {
+      "id": "deadlift-single-leg-rdl-circuit-388",
+      "name": "Single-leg RDL Circuit",
+      "polishName": "Trening obwodowy jednonóż z rumuńskim martwym ciągiem",
+      "garminCategory": "DEADLIFT"
+    },
+    {
+      "id": "lateral-raise-alternating-lateral-raise-with-static-hold-537",
+      "name": "Alternating Lateral Raise with Static Hold",
+      "polishName": "Naprzemienne unoszenie hantli z przytrzymaniem",
+      "garminCategory": "LATERAL_RAISE"
+    },
+    {
+      "id": "plank-90-degree-static-hold-729",
+      "name": "90-degree Static Hold",
+      "polishName": "Odpychanie nóg zgiętych pod kątem 90 stopni w leżeniu na plecach",
+      "garminCategory": "PLANK"
+    },
+    {
+      "id": "pull-up-banded-pull-ups-900",
+      "name": "Banded Pull-ups (Progression)",
+      "polishName": "Podciąganie na drążku — progresywne (z gumą oporową)",
+      "garminCategory": "PULL_UP"
+    },
+    {
+      "id": "pull-up-jumping-pull-ups-908",
+      "name": "Jumping Pull-ups",
+      "polishName": "Podciąganie na drążku z podskoku",
+      "garminCategory": "PULL_UP"
+    },
+    {
+      "id": "pull-up-kipping-pull-up-909",
+      "name": "Kipping Pull-up",
+      "polishName": "Podciąganie na drążku z kippingiem",
+      "garminCategory": "PULL_UP"
+    },
+    {
+      "id": "lateral-raise-muscle-up-550",
+      "name": "Muscle-up (progression)",
+      "polishName": "Wejście siłowe (sekwencja)",
+      "garminCategory": "PULL_UP"
+    },
+    {
+      "id": "push-up-isometric-explosive-push-up-961",
+      "name": "Isometric-explosive Push-up",
+      "polishName": "Izometryczne pompki z wybiciem",
+      "garminCategory": "PUSH_UP"
+    },
+    {
+      "id": "push-up-kipping-handstand-push-up-963",
+      "name": "Kipping Handstand Push-up",
+      "polishName": "Pompki w staniu na rękach z kippingiem",
+      "garminCategory": "PUSH_UP"
+    },
+    {
+      "id": "push-up-kipping-parallette-handstand-push-up-964",
+      "name": "Kipping Parallette Handstand Push-up",
+      "polishName": "Pompki w staniu na rękach na poręczach z kippingiem",
+      "garminCategory": "PUSH_UP"
+    },
+    {
+      "id": "push-up-triple-stop-push-up-988",
+      "name": "Triple-stop Push-up",
+      "polishName": "Pompki z potrójnym zatrzymaniem",
+      "garminCategory": "PUSH_UP"
+    },
+    {
+      "id": "lateral-raise-ring-dip-kipping-555",
+      "name": "Kipping Ring Dip",
+      "polishName": "Dipy na kółkach gimnastycznych z kippingiem",
+      "garminCategory": "TRICEPS_EXTENSION"
+    }
+  ]
+}

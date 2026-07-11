@@ -1,6 +1,7 @@
 export type ExerciseImageAssetKey = string;
 
 const exerciseImageAssetKeysById: Record<string, ExerciseImageAssetKey[]> = {
+  "assisted-pull-up-machine": ["assisted-pull-up-machine/start", "assisted-pull-up-machine/end"],
   "banded-exercises-ab-twist-1": ["banded-exercises-ab-twist-1/start", "banded-exercises-ab-twist-1/end"],
   "banded-exercises-back-extension-2": ["banded-exercises-back-extension-2/start", "banded-exercises-back-extension-2/end"],
   "banded-exercises-bicycle-crunch-3": ["banded-exercises-bicycle-crunch-3/start", "banded-exercises-bicycle-crunch-3/end"],
@@ -27,10 +28,33 @@ const exerciseImageAssetKeysById: Record<string, ExerciseImageAssetKey[]> = {
   "bench-press-single-arm-dumbbell-bench-press-96": ["bench-press-single-arm-dumbbell-bench-press-96/start", "bench-press-single-arm-dumbbell-bench-press-96/end"],
   "bench-press-smith-machine-bench-press-97": ["bench-press-smith-machine-bench-press-97/start", "bench-press-smith-machine-bench-press-97/end"],
   "bench-press-swiss-ball-dumbbell-chest-press-98": ["bench-press-swiss-ball-dumbbell-chest-press-98/start", "bench-press-swiss-ball-dumbbell-chest-press-98/end"],
+  "cable-glute-kickback": ["cable-glute-kickback/start", "cable-glute-kickback/end"],
+  "chest-supported-machine-row": ["chest-supported-machine-row/start", "chest-supported-machine-row/end"],
   "curl-alternating-dumbbell-biceps-curl-323": ["curl-alternating-dumbbell-biceps-curl-323/start", "curl-alternating-dumbbell-biceps-curl-323/end"],
   "curl-alternating-dumbbell-biceps-curl-on-swiss-ball-324": ["curl-alternating-dumbbell-biceps-curl-on-swiss-ball-324/start", "curl-alternating-dumbbell-biceps-curl-on-swiss-ball-324/end"],
   "curl-alternating-incline-dumbbell-biceps-curl-325": ["curl-alternating-incline-dumbbell-biceps-curl-325/start", "curl-alternating-incline-dumbbell-biceps-curl-325/end"],
-  "curl-barbell-biceps-curl-326": ["curl-barbell-biceps-curl-326/start", "curl-barbell-biceps-curl-326/end"]
+  "curl-barbell-biceps-curl-326": ["curl-barbell-biceps-curl-326/start", "curl-barbell-biceps-curl-326/end"],
+  "machine-chest-press": ["machine-chest-press/start", "machine-chest-press/end"],
+  "machine-hack-squat": ["machine-hack-squat/start", "machine-hack-squat/end"],
+  "machine-hip-abduction": ["machine-hip-abduction/start", "machine-hip-abduction/end"],
+  "machine-hip-adduction": ["machine-hip-adduction/start", "machine-hip-adduction/end"],
+  "machine-hip-thrust": ["machine-hip-thrust/start", "machine-hip-thrust/end"],
+  "machine-row": ["machine-row/start", "machine-row/end"],
+  "machine-shoulder-press": ["machine-shoulder-press/start", "machine-shoulder-press/end"],
+  "pec-deck": ["pec-deck/start", "pec-deck/end"],
+  "rear-delt-machine": ["rear-delt-machine/start", "rear-delt-machine/end"],
+  "seated-leg-curl": ["seated-leg-curl/start", "seated-leg-curl/end"],
+  "smith-machine-squat": ["smith-machine-squat/start", "smith-machine-squat/end"],
+  "deadlift-barbell-deadlift-371": ["deadlift-barbell-deadlift-371/start", "deadlift-barbell-deadlift-371/end"],
+  "deadlift-romanian-deadlift-374": ["deadlift-romanian-deadlift-374/start", "deadlift-romanian-deadlift-374/end"],
+  "pull-up-lat-pulldown-913": ["pull-up-lat-pulldown-913/start", "pull-up-lat-pulldown-913/end"],
+  "pull-up-pull-up-918": ["pull-up-pull-up-918/start", "pull-up-pull-up-918/end"],
+  "row-barbell-row-1034": ["row-barbell-row-1034/start", "row-barbell-row-1034/end"],
+  "row-seated-cable-row-1059": ["row-seated-cable-row-1059/start", "row-seated-cable-row-1059/end"],
+  "row-single-arm-neutral-grip-dumbbell-row-1065": ["row-single-arm-neutral-grip-dumbbell-row-1065/start", "row-single-arm-neutral-grip-dumbbell-row-1065/end"],
+  "shoulder-press-overhead-barbell-press-1125": ["shoulder-press-overhead-barbell-press-1125/start", "shoulder-press-overhead-barbell-press-1125/end"],
+  "shoulder-press-overhead-dumbbell-press-1126": ["shoulder-press-overhead-dumbbell-press-1126/start", "shoulder-press-overhead-dumbbell-press-1126/end"],
+  "squat-barbell-back-squat-1251": ["squat-barbell-back-squat-1251/start", "squat-barbell-back-squat-1251/end"]
 };
 
 export function getExerciseImageAssetKeys(exerciseId: string): ExerciseImageAssetKey[] {

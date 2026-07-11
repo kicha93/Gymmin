@@ -1,4 +1,6 @@
 import { exercises } from "./exerciseCatalog";
+import { exerciseAliasMap } from "./exerciseAliases";
+import { exerciseIdAliasMap } from "./exerciseIdAliases";
 import { stageExerciseCategories } from "./stageExerciseCategories";
 import type { GarminCategory } from "./stageExerciseCategories";
 import type { StageType } from "./workouts";
@@ -61,6 +63,7 @@ export type MuscleKey = (typeof muscleKeys)[number];
 export type EquipmentKey = (typeof equipmentKeys)[number];
 export type InfluenceScore = 0 | 1 | 2;
 export type EquipmentScore = 0 | 1;
+export type ExerciseLibraryTier = "main" | "advanced" | "sportSpecific" | "rehab" | "variation" | "progression" | "deprecated";
 
 export type Exercise = {
   id: string;
@@ -75,6 +78,7 @@ export type Exercise = {
   description: string;
   muscleImpact: Record<MuscleKey, InfluenceScore>;
   equipment: Record<EquipmentKey, EquipmentScore>;
+  libraryTier?: ExerciseLibraryTier;
 };
 
 export type ExerciseOption = {
@@ -145,6 +149,7 @@ export function getExerciseDisplayName(name: string, language: ExerciseLanguage)
 
 export function getExerciseOptions(language: ExerciseLanguage) {
   return exercises
+    .filter(isExerciseVisibleInDefaultLibrary)
     .map((exercise) => ({
       exerciseId: exercise.id,
       garminCategory: exercise.garminCategory,
@@ -166,7 +171,7 @@ export function getExerciseOptionsForStageType(language: ExerciseLanguage, stage
   }
 
   return exercises
-    .filter((exercise) => allowedCategories.has(exercise.garminCategory))
+    .filter((exercise) => allowedCategories.has(exercise.garminCategory) && isExerciseVisibleInDefaultLibrary(exercise))
     .map((exercise) => ({
       exerciseId: exercise.id,
       garminCategory: exercise.garminCategory,
@@ -324,11 +329,30 @@ export function getMuscleOptions(language: ExerciseLanguage) {
 }
 
 export function findExerciseByName(name: string) {
-  return exercises.find((exercise) => exercise.name === name || exercise.polishName === name);
+  const resolvedName = resolveExerciseAliasName(name);
+  return exercises.find((exercise) => exercise.name === resolvedName || exercise.polishName === resolvedName);
 }
 
 export function findExerciseById(exerciseId: string) {
-  return exercises.find((exercise) => exercise.id === exerciseId);
+  const resolvedId = resolveExerciseId(exerciseId);
+  return exercises.find((exercise) => exercise.id === resolvedId);
+}
+
+export function resolveExerciseId(exerciseId: string) {
+  let current = exerciseId;
+  const visited = new Set<string>();
+  const aliases = exerciseIdAliasMap as Record<string, string>;
+
+  while (aliases[current] && !visited.has(current)) {
+    visited.add(current);
+    current = aliases[current];
+  }
+
+  return current;
+}
+
+export function isExerciseVisibleInDefaultLibrary(exercise: Exercise) {
+  return (exercise.libraryTier ?? "main") === "main";
 }
 
 function normalizeExerciseLookupValue(value: string) {
@@ -341,8 +365,39 @@ function normalizeExerciseLookupValue(value: string) {
     .replace(/\s+/g, " ");
 }
 
+const normalizedExerciseAliasMap = new Map(
+  Object.entries(exerciseAliasMap).map(([sourceName, targetName]) => [
+    normalizeExerciseLookupValue(sourceName),
+    targetName
+  ])
+);
+
+export function resolveExerciseAliasName(name: string) {
+  const directAliases = exerciseAliasMap as Record<string, string>;
+  const visited = new Set<string>();
+  let current = name;
+
+  while (!visited.has(normalizeExerciseLookupValue(current))) {
+    visited.add(normalizeExerciseLookupValue(current));
+    const next = directAliases[current]
+      ?? normalizedExerciseAliasMap.get(normalizeExerciseLookupValue(current));
+    if (!next) {
+      break;
+    }
+    current = next;
+  }
+
+  return current;
+}
+
 export function findCatalogExerciseBestEffort(name: string): Exercise | undefined {
-  const normalizedName = normalizeExerciseLookupValue(name);
+  const byId = findExerciseById(name);
+  if (byId) {
+    return byId;
+  }
+
+  const resolvedName = resolveExerciseAliasName(name);
+  const normalizedName = normalizeExerciseLookupValue(resolvedName);
 
   if (!normalizedName) {
     return undefined;

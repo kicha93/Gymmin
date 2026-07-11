@@ -4,7 +4,6 @@
   "Barbell Bench Press",
   "Barbell Board Bench Press",
   "Barbell Floor Press",
-  "Bench Press",
   "Close-grip Barbell Bench Press",
   "Decline Dumbbell Bench Press",
   "Dumbbell Bench Press",
@@ -14,6 +13,7 @@
   "Incline Smith Machine Bench Press",
   "Isometric Barbell Bench Press",
   "Kettlebell Chest Press",
+  "Machine Chest Press",
   "Neutral-grip Dumbbell Bench Press",
   "Neutral-grip Dumbbell Incline Bench Press",
   "One-arm Floor Press",
@@ -25,6 +25,5 @@
   "Smith Machine Bench Press",
   "Swiss Ball Dumbbell Chest Press",
   "Triple-stop Barbell Bench Press",
-  "Weighted One-arm Floor Press",
   "Wide-grip Barbell Bench Press"
 ]

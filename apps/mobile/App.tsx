@@ -53,6 +53,7 @@ import type { ImageSourcePropType, SectionListData, SectionListRenderItemInfo, S
 
 import { BUILD_API_BASE_URL } from "./src/config/buildConfig";
 import { exerciseImageSources } from "./src/exerciseImageSources";
+import { buildContactMailUrl, GYMMIN_CONTACT_EMAIL } from "./src/domain/contact";
 import { applyAvatarResponse, buildAvatarImageSource, type AvatarResponse } from "./src/domain/avatar";
 import {
   achievementDefinitions,
@@ -86,7 +87,8 @@ import {
   WorkoutStep,
   WorkoutStepKind,
   createDefaultWorkout,
-  createStep
+  createStep,
+  hasUserDefinedWorkouts
 } from "./src/domain/workouts";
 import {
   calculateEntryVolume,
@@ -183,6 +185,19 @@ import {
   setLastAccountUserId
 } from "./src/domain/accountStorage";
 import {
+  WEEKLY_PLAN_STORAGE_BASE_KEY,
+  formatWeekRange,
+  getCurrentWeekRange,
+  getWeeklyPlanDay,
+  getWeeklyPlanSummary,
+  loadWeeklyPlan,
+  removeWeeklyPlanItem,
+  saveWeeklyPlan,
+  upsertWeeklyPlanItem,
+  weeklyPlanDays,
+  type WeeklyPlanSettings
+} from "./src/domain/weeklyPlan";
+import {
   getDeleteAccountConfirmationPhrase,
   isDeleteAccountConfirmationValid
 } from "./src/domain/accountDeletion";
@@ -224,6 +239,14 @@ import {
   getSparklinePolylinePoints,
   type ProgressDashboardFilter
 } from "./src/domain/progressDashboard";
+import {
+  filterExerciseProgressHistoryGroups,
+  formatExerciseProgressSeriesValue,
+  formatExerciseProgressSetCount,
+  getExerciseProgressHistoryGroups,
+  type ExerciseProgressHistoryGroup,
+  type ExerciseProgressHistoryRange
+} from "./src/domain/exerciseProgressHistory";
 import { buildProfileAccountDetails, getProfileDisplayEmail, getProfileDisplayName } from "./src/domain/profile";
 import {
   getAiCreditProducts,
@@ -310,6 +333,7 @@ const localCreatorProfilesLegacyStorageKey = "gymmin.localCreatorProfiles.v1";
 const localCreatorProfilesStorageBaseKey = "localCreatorProfiles.v1";
 const localCreatorJobLegacyStorageKey = "gymmin.localCreatorJob.v1";
 const localCreatorJobStorageBaseKey = "localCreatorJob.v1";
+const localWeeklyPlanStorageBaseKey = WEEKLY_PLAN_STORAGE_BASE_KEY;
 const anonymousMergeHandledStorageBaseKey = "anonymousMergeHandled.v1";
 const localAuthStorageKey = "gymmin.localAuth.v1";
 const workoutSessionSyncActiveDebounceMs = 1600;
@@ -354,6 +378,7 @@ type SettingsSheetKey =
   | "defaultStageType"
   | "defaultWorkoutExecutionMode"
   | "defaultWorkoutTableOrientation"
+  | "showRestTimer"
   | "workoutReminderDay";
 
 const translations = {
@@ -485,9 +510,14 @@ const translations = {
     bugSuccessOk: "OK",
     bugValidation: "Podaj opis problemu.",
     contact: "Kontakt",
-    contactIntro: "Masz pytanie albo sugestię? Skontaktuj się z nami mailowo. Błędy w aplikacji najlepiej zgłaszać przez formularz „Zgłoś błąd” w sekcji Informacje.",
-    contactResponseTime: "Odpowiadamy na wiadomości tak szybko, jak to możliwe - zwykle w ciągu kilku dni roboczych.",
-    contactBugInfo: "Jeśli chcesz zgłosić błąd, użyj formularza „Zgłoś błąd”. Formularz przekaże zgłoszenie z opisem problemu oraz informacją o urządzeniu i systemie.",
+    contactIntro: "Masz pytanie albo sugestię?",
+    contactEmailIntro: "Skontaktuj się z nami mailowo.",
+    contactEmailLabel: "EMAIL",
+    contactEmailCta: "Napisz do nas",
+    contactEmailOpenError: "Nie udało się otworzyć aplikacji pocztowej. Napisz na",
+    contactResponseTime: "Odpowiadamy zwykle w ciągu kilku dni roboczych.",
+    contactBugInfo: "Błędy w aplikacji najlepiej zgłaszać przez formularz „Zgłoś błąd” w sekcji Informacje.",
+    contactBugAction: "Przejdź do formularza",
     contactFaqBugQuestion: "Jak zgłosić błąd w aplikacji?",
     contactFaqBugAnswer: "Wejdź w Ustawienia, otwórz sekcję Informacje i wybierz „Zgłoś błąd”. Wypełnij formularz, a zgłoszenie zostanie przekazane do zespołu Gymmin.",
     contactFaqIdeaQuestion: "Czy mogę zgłosić pomysł na nową funkcję?",
@@ -502,6 +532,22 @@ const translations = {
     defaultWeight: "Domyślny ciężar",
     defaultWorkoutExecutionMode: "Tryb wykonywania treningu",
     defaultWorkoutTableOrientation: "Domyślna orientacja tabeli",
+    showRestTimer: "Pokaż timer odpoczynku",
+    week: "Tydzień",
+    weeklyPlan: "Plan tygodnia",
+    planYourWeek: "Zaplanuj swój tydzień",
+    weeklyPlanEmptyCopy: "Wybierz treningi, które chcesz wykonać w tym tygodniu.",
+    setPlan: "Ustaw plan",
+    completed: "Wykonany",
+    toDo: "Do wykonania",
+    weeklyPlanCompleted: "{completed} z {total} treningów wykonanych",
+    today: "Dzisiaj",
+    todayNoWorkout: "Dzisiaj: brak treningu",
+    addToWeeklyPlan: "Dodaj do planu tygodnia",
+    editWeeklyPlan: "Edytuj w planie tygodnia",
+    removeFromWeeklyPlan: "Usuń z planu tygodnia",
+    chooseWeekday: "Wybierz dzień tygodnia",
+    weeklyPlanNoItems: "Nie masz jeszcze treningów w planie tygodnia.",
     workoutTableOrientationVertical: "Wertykalna",
     workoutTableOrientationHorizontal: "Horyzontalna",
     rotateWorkoutTable: "Obróć tabelę",
@@ -607,6 +653,13 @@ const translations = {
     noProgressSearchResults: "Nie znaleziono ćwiczeń.",
     estimatedOneRepMax: "Szacowane 1RM",
     resultHistory: "Historia wyników",
+    progressHistoryAll: "Wszystkie",
+    progressHistory3Months: "3 mies.",
+    progressHistory6Months: "6 mies.",
+    progressHistory1Year: "1 rok",
+    showOlderResults: "Pokaż starsze wyniki",
+    total: "Razem",
+    totalVolume: "Suma objętości",
     last: "Ostatnio",
     noData: "Brak danych",
     historyAll: "Wszystkie",
@@ -891,7 +944,31 @@ const translations = {
     termsLiabilityText: "Nie ponosimy odpowiedzialności za skutki treningów wykonywanych na podstawie danych wpisanych przez użytkownika. W razie zauważenia błędu w działaniu aplikacji użytkownik może skorzystać z formularza „Zgłoś błąd” dostępnego w sekcji Informacje.",
     termsChangesTitle: "Zmiany regulaminu",
     termsChangesText: "Regulamin może być aktualizowany wraz ze zmianami w aplikacji. Aktualna treść regulaminu będzie dostępna w aplikacji.",
-    termsContactText: "W sprawach dotyczących regulaminu, konta, prywatności lub działania aplikacji można skontaktować się pod adresem kontakt@gymmin.app. Błędy w aplikacji najlepiej zgłaszać przez formularz „Zgłoś błąd” w sekcji Informacje."
+    termsContactText: "W sprawach dotyczących regulaminu, konta, prywatności lub działania aplikacji można skontaktować się pod adresem kontakt@gymmin.app. Błędy w aplikacji najlepiej zgłaszać przez formularz „Zgłoś błąd” w sekcji Informacje.",
+    termsHeroTitle: "Zasady korzystania z Gymmin",
+    termsHeroDescription: "Ten regulamin określa zasady korzystania z aplikacji Gymmin.",
+    termsBenefitWorkouts: "Twórz i porządkuj treningi siłowe",
+    termsBenefitProgress: "Trenuj świadomie i monitoruj postępy",
+    termsBenefitResponsibly: "Korzystaj odpowiedzialnie",
+    termsInShort: "W skrócie",
+    termsPurposeTitle: "Cel aplikacji",
+    termsPurposeText: "Gymmin służy do tworzenia, porządkowania i przeglądania treningów siłowych.",
+    termsUserResponsibilityTitle: "Odpowiedzialność użytkownika",
+    termsUserResponsibilityText: "Użytkownik odpowiada za poprawne dobranie obciążeń, techniki oraz intensywności ćwiczeń.",
+    termsNoSpecialistsTitle: "Brak zastępstwa specjalistów",
+    termsNoSpecialistsText: "Aplikacja nie zastępuje konsultacji z trenerem, fizjoterapeutą ani lekarzem.",
+    termsBugCallout: "Błędy w działaniu aplikacji możesz zgłaszać przez formularz „Zgłoś błąd” w sekcji Informacje.",
+    termsGoToInfo: "Przejdź do informacji",
+    termsDetailedRules: "Szczegółowe zasady",
+    termsExpandAll: "Rozwiń wszystkie",
+    termsCollapseAll: "Zwiń wszystkie",
+    termsAccountTitle: "Konto użytkownika",
+    termsWorkoutDataTitle: "Dane treningowe",
+    termsWorkoutDataText: "Dane treningowe zapisane w aplikacji powinny być wykorzystywane wyłącznie do planowania aktywności i monitorowania postępów. Użytkownik odpowiada za poprawność wprowadzanych danych.",
+    termsResponsibilitySafetyTitle: "Odpowiedzialność i bezpieczeństwo",
+    termsResponsibilitySafetyText: "Użytkownik odpowiada za poprawne dobranie obciążeń, techniki oraz intensywności ćwiczeń. Aplikacja nie zastępuje konsultacji z trenerem, fizjoterapeutą ani lekarzem.",
+    termsReportingIssuesTitle: "Zgłaszanie błędów",
+    termsReportingIssuesText: "Błędy w działaniu aplikacji można zgłaszać przez formularz „Zgłoś błąd” dostępny w sekcji Informacje. Zgłoszenie powinno zawierać opis problemu oraz okoliczności jego wystąpienia."
   },
   en: {
     addElement: "Element",
@@ -1021,9 +1098,14 @@ const translations = {
     bugSuccessOk: "OK",
     bugValidation: "Enter a problem description.",
     contact: "Contact",
-    contactIntro: "Have a question or suggestion? Contact us by email. Bugs are best reported with the “Report a bug” form in Information.",
-    contactResponseTime: "We reply as quickly as possible, usually within a few business days.",
-    contactBugInfo: "To report a bug, use the “Report a bug” form. The form sends the report with a problem description and device/system information.",
+    contactIntro: "Have a question or suggestion?",
+    contactEmailIntro: "Contact us by email.",
+    contactEmailLabel: "EMAIL",
+    contactEmailCta: "Email us",
+    contactEmailOpenError: "Could not open an email app. Please write to",
+    contactResponseTime: "We usually reply within a few business days.",
+    contactBugInfo: "App issues are best reported through the “Report bug” form in the Info section.",
+    contactBugAction: "Open form",
     contactFaqBugQuestion: "How do I report an app bug?",
     contactFaqBugAnswer: "Go to Settings, open Information and choose “Report a bug”. Fill in the form and the report will be sent to the Gymmin team.",
     contactFaqIdeaQuestion: "Can I suggest a new feature?",
@@ -1038,6 +1120,22 @@ const translations = {
     defaultWeight: "Default weight",
     defaultWorkoutExecutionMode: "Workout execution mode",
     defaultWorkoutTableOrientation: "Default table orientation",
+    showRestTimer: "Show rest timer",
+    week: "Week",
+    weeklyPlan: "Weekly plan",
+    planYourWeek: "Plan your week",
+    weeklyPlanEmptyCopy: "Choose the workouts you want to complete this week.",
+    setPlan: "Set plan",
+    completed: "Completed",
+    toDo: "To do",
+    weeklyPlanCompleted: "{completed} of {total} workouts completed",
+    today: "Today",
+    todayNoWorkout: "Today: no workout",
+    addToWeeklyPlan: "Add to weekly plan",
+    editWeeklyPlan: "Edit in weekly plan",
+    removeFromWeeklyPlan: "Remove from weekly plan",
+    chooseWeekday: "Choose weekday",
+    weeklyPlanNoItems: "You do not have workouts in your weekly plan yet.",
     workoutTableOrientationVertical: "Vertical",
     workoutTableOrientationHorizontal: "Horizontal",
     rotateWorkoutTable: "Rotate table",
@@ -1143,6 +1241,13 @@ const translations = {
     noProgressSearchResults: "No exercises found.",
     estimatedOneRepMax: "Estimated 1RM",
     resultHistory: "Result history",
+    progressHistoryAll: "All",
+    progressHistory3Months: "3 mo",
+    progressHistory6Months: "6 mo",
+    progressHistory1Year: "1 yr",
+    showOlderResults: "Show older results",
+    total: "Total",
+    totalVolume: "Total volume",
     last: "Last",
     noData: "No data",
     historyAll: "All",
@@ -1427,7 +1532,31 @@ const translations = {
     termsLiabilityText: "We are not responsible for the effects of workouts performed based on data entered by the user. If the user notices an app issue, they can use the “Report a bug” form available in Information.",
     termsChangesTitle: "Changes to terms",
     termsChangesText: "The terms may be updated as the app changes. The current version will be available in the app.",
-    termsContactText: "For matters related to terms, account, privacy or app behavior, contact us at kontakt@gymmin.app. App bugs are best reported with the “Report a bug” form in Information."
+    termsContactText: "For matters related to terms, account, privacy or app behavior, contact us at kontakt@gymmin.app. App bugs are best reported with the “Report a bug” form in Information.",
+    termsHeroTitle: "Gymmin usage rules",
+    termsHeroDescription: "These terms define the rules for using the Gymmin app.",
+    termsBenefitWorkouts: "Create and organize strength workouts",
+    termsBenefitProgress: "Train mindfully and track progress",
+    termsBenefitResponsibly: "Use responsibly",
+    termsInShort: "In short",
+    termsPurposeTitle: "App purpose",
+    termsPurposeText: "Gymmin is used to create, organize and review strength workouts.",
+    termsUserResponsibilityTitle: "User responsibility",
+    termsUserResponsibilityText: "The user is responsible for choosing appropriate loads, technique and exercise intensity.",
+    termsNoSpecialistsTitle: "No substitute for specialists",
+    termsNoSpecialistsText: "The app does not replace consultation with a trainer, physiotherapist or doctor.",
+    termsBugCallout: "You can report app issues through the “Report bug” form in the Info section.",
+    termsGoToInfo: "Go to info",
+    termsDetailedRules: "Detailed rules",
+    termsExpandAll: "Expand all",
+    termsCollapseAll: "Collapse all",
+    termsAccountTitle: "User account",
+    termsWorkoutDataTitle: "Workout data",
+    termsWorkoutDataText: "Workout data saved in the app should be used only for planning activity and tracking progress. The user is responsible for the accuracy of the data they enter.",
+    termsResponsibilitySafetyTitle: "Responsibility and safety",
+    termsResponsibilitySafetyText: "The user is responsible for choosing appropriate loads, technique and exercise intensity. The app does not replace consultation with a trainer, physiotherapist or doctor.",
+    termsReportingIssuesTitle: "Reporting issues",
+    termsReportingIssuesText: "App issues can be reported through the “Report bug” form available in the Info section. The report should include a description of the issue and the circumstances in which it occurred."
   }
 } as const;
 
@@ -1504,6 +1633,18 @@ function getWorkoutExecutionModeOptions(t: (key: TranslationKey) => string) {
     { label: t("executionGuided"), value: "guided" as const },
     { label: t("executionReadonlyPostWorkout"), value: "readonly-post-workout" as const },
     { label: t("executionInlineTable"), value: "inline-table" as const }
+  ];
+}
+
+function getWeeklyPlanDayOptions(t: (key: TranslationKey) => string) {
+  return [
+    { label: t("mondayShort"), value: "monday" as const },
+    { label: t("tuesdayShort"), value: "tuesday" as const },
+    { label: t("wednesdayShort"), value: "wednesday" as const },
+    { label: t("thursdayShort"), value: "thursday" as const },
+    { label: t("fridayShort"), value: "friday" as const },
+    { label: t("saturdayShort"), value: "saturday" as const },
+    { label: t("sundayShort"), value: "sunday" as const }
   ];
 }
 
@@ -1605,6 +1746,7 @@ type ApiUserSettings = {
   defaultStageType?: StageType | "" | null;
   defaultWorkoutTableOrientation?: WorkoutTableOrientation | null;
   defaultWorkoutExecutionMode?: WorkoutExecutionMode | null;
+  showRestTimer?: boolean;
   defaultWeight?: string;
   isAuthPanelDismissed?: boolean;
   language?: LanguageCode;
@@ -1803,6 +1945,7 @@ type LocalSettingsStorage = {
   defaultStageType: StageType | "";
   defaultWorkoutTableOrientation: WorkoutTableOrientation;
   defaultWorkoutExecutionMode: WorkoutExecutionMode;
+  showRestTimer: boolean;
   defaultWeight: string;
   isAuthPanelDismissed: boolean;
   language: LanguageCode;
@@ -2223,6 +2366,7 @@ function normalizeApiUserSettings(value: unknown): ApiUserSettings | null {
     defaultWorkoutTableOrientation: isWorkoutTableOrientation(value.defaultWorkoutTableOrientation)
       ? value.defaultWorkoutTableOrientation
       : "vertical",
+    showRestTimer: value.showRestTimer !== false,
     defaultWeight: typeof value.defaultWeight === "string" ? value.defaultWeight : "",
     isAuthPanelDismissed: value.isAuthPanelDismissed === true,
     language: isLanguageCode(value.language) ? value.language : "en",
@@ -2901,7 +3045,8 @@ type ScreenKey =
   | "workoutAiRewrite"
   | "workoutAiProposal"
   | "workoutDetail"
-  | "workoutSession";
+  | "workoutSession"
+  | "weeklyPlan";
 type WorkoutHistoryStatusFilter = "all" | WorkoutSessionStatus;
 type AchievementFilter = "all" | "unlocked" | "locked";
 
@@ -3607,6 +3752,9 @@ function GymminApp() {
   const [isAppLoading, setIsAppLoading] = useState(true);
   const [activeScreen, setActiveScreen] = useState<ScreenKey>("home");
   const [savedWorkouts, setSavedWorkouts] = useState<SavedWorkout[]>(() => [...initialWorkouts]);
+  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlanSettings>({ enabled: false, items: [], updatedAt: new Date().toISOString() });
+  const [hasLoadedWeeklyPlan, setHasLoadedWeeklyPlan] = useState(false);
+  const [weeklyPlanOwnerId, setWeeklyPlanOwnerId] = useState<string | null>(null);
   const [selectedWorkoutId, setSelectedWorkoutId] = useState(initialWorkouts[0]?.id ?? "");
   const [workoutSort, setWorkoutSort] = useState<WorkoutSortSettings>(defaultWorkoutSort);
   const [isWorkoutSortSheetOpen, setIsWorkoutSortSheetOpen] = useState(false);
@@ -3632,6 +3780,7 @@ function GymminApp() {
   const [pendingDefaultWorkoutExecutionMode, setPendingDefaultWorkoutExecutionMode] = useState<WorkoutExecutionMode>("guided");
   const [defaultWorkoutTableOrientation, setDefaultWorkoutTableOrientation] = useState<WorkoutTableOrientation>("vertical");
   const [pendingDefaultWorkoutTableOrientation, setPendingDefaultWorkoutTableOrientation] = useState<WorkoutTableOrientation>("vertical");
+  const [showRestTimer, setShowRestTimer] = useState(true);
   const [workoutTableOrientation, setWorkoutTableOrientation] = useState<WorkoutTableOrientation>("vertical");
   const [workoutReminders, setWorkoutReminders] = useState<WorkoutReminderSettings>(
     getDefaultWorkoutReminderSettings("en")
@@ -3652,12 +3801,16 @@ function GymminApp() {
   const [exerciseDetailReturnScreen, setExerciseDetailReturnScreen] = useState<ScreenKey>("workoutDetail");
   const [exerciseDetailMuscleSide, setExerciseDetailMuscleSide] = useState<"front" | "back">("front");
   const [exerciseDetailCollapsedPanels, setExerciseDetailCollapsedPanels] = useState<Record<string, boolean>>({});
+  const [expandedTermsSections, setExpandedTermsSections] = useState<Record<string, boolean>>({});
   const [workoutHistoryFilter, setWorkoutHistoryFilter] = useState<WorkoutHistoryStatusFilter>("all");
   const [workoutHistorySearch, setWorkoutHistorySearch] = useState("");
   const [workoutHistoryWorkoutIdFilter, setWorkoutHistoryWorkoutIdFilter] = useState<string | null>(null);
   const [progressSearch, setProgressSearch] = useState("");
   const [progressFilter, setProgressFilter] = useState<ProgressDashboardFilter>("all");
   const [selectedExerciseProgressKey, setSelectedExerciseProgressKey] = useState<string | null>(null);
+  const [exerciseProgressHistoryRange, setExerciseProgressHistoryRange] = useState<ExerciseProgressHistoryRange>("all");
+  const [exerciseProgressHistoryVisibleCount, setExerciseProgressHistoryVisibleCount] = useState(5);
+  const [expandedExerciseProgressHistoryKeys, setExpandedExerciseProgressHistoryKeys] = useState<Record<string, boolean>>({});
   const [sessionEntryIndex, setSessionEntryIndex] = useState(0);
   const [isPostWorkoutFillMode, setIsPostWorkoutFillMode] = useState(false);
   const [appDialog, setAppDialog] = useState<AppDialogState | null>(null);
@@ -4032,6 +4185,7 @@ function GymminApp() {
       WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY,
       localCreatorProfilesStorageBaseKey,
       localCreatorJobStorageBaseKey,
+      localWeeklyPlanStorageBaseKey,
       activeWorkoutSessionStorageBaseKey
     ], ownerId);
   }
@@ -4581,6 +4735,7 @@ function GymminApp() {
           setPendingDefaultWorkoutExecutionMode("guided");
           setDefaultWorkoutTableOrientation("vertical");
           setPendingDefaultWorkoutTableOrientation("vertical");
+          setShowRestTimer(true);
           setWorkoutTableOrientation("vertical");
           setWorkoutReminders(getDefaultWorkoutReminderSettings("en"));
           setPendingWorkoutReminderDay(null);
@@ -4607,6 +4762,7 @@ function GymminApp() {
         const nextDefaultWorkoutTableOrientation = isWorkoutTableOrientation(storedData.defaultWorkoutTableOrientation)
           ? storedData.defaultWorkoutTableOrientation
           : "vertical";
+        const nextShowRestTimer = storedData.showRestTimer !== false;
         const nextCollapsedPanels = normalizeCollapsedPanels(storedData.collapsedPanels);
         const nextWorkoutReminders = normalizeWorkoutReminderSettings(storedData.workoutReminders, nextLanguage);
         const nextIsAuthPanelDismissed = storedData.isAuthPanelDismissed === true;
@@ -4625,6 +4781,7 @@ function GymminApp() {
         setPendingDefaultWorkoutExecutionMode(nextDefaultWorkoutExecutionMode);
         setDefaultWorkoutTableOrientation(nextDefaultWorkoutTableOrientation);
         setPendingDefaultWorkoutTableOrientation(nextDefaultWorkoutTableOrientation);
+        setShowRestTimer(nextShowRestTimer);
         setWorkoutReminders(nextWorkoutReminders);
         setPendingWorkoutReminderDay(null);
         setCollapsedPanels(nextCollapsedPanels);
@@ -4646,6 +4803,36 @@ function GymminApp() {
       isMounted = false;
     };
   }, [hasLoadedAccountStorageMigration, storageOwnerId]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const ownerId = storageOwnerId;
+    setHasLoadedWeeklyPlan(false);
+    setWeeklyPlanOwnerId(null);
+
+    void loadWeeklyPlan(ownerId).then((plan) => {
+      if (!isMounted) {
+        return;
+      }
+      setWeeklyPlan(plan);
+      setWeeklyPlanOwnerId(ownerId);
+      setHasLoadedWeeklyPlan(true);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [storageOwnerId]);
+
+  useEffect(() => {
+    if (!hasLoadedWeeklyPlan || weeklyPlanOwnerId !== storageOwnerId) {
+      return;
+    }
+
+    saveWeeklyPlan(weeklyPlan, storageOwnerId).catch((error) => {
+      console.error("Failed to save weekly plan", error);
+    });
+  }, [hasLoadedWeeklyPlan, storageOwnerId, weeklyPlan, weeklyPlanOwnerId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -5068,7 +5255,7 @@ function GymminApp() {
     }).catch((error) => {
       console.error("Failed to save account settings", error);
     });
-  }, [collapsedPanels, defaultSetCount, defaultStageType, defaultWeight, defaultWorkoutExecutionMode, defaultWorkoutTableOrientation, hasLoadedLocalSettings, isAuthPanelDismissed, language, loadedSettingsOwnerId, storageOwnerId, themeName, user, workoutReminders]);
+  }, [collapsedPanels, defaultSetCount, defaultStageType, defaultWeight, defaultWorkoutExecutionMode, defaultWorkoutTableOrientation, hasLoadedLocalSettings, isAuthPanelDismissed, language, loadedSettingsOwnerId, showRestTimer, storageOwnerId, themeName, user, workoutReminders]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -5124,6 +5311,7 @@ function GymminApp() {
       defaultStageType,
       defaultWorkoutExecutionMode,
       defaultWorkoutTableOrientation,
+      showRestTimer,
       defaultWeight,
       isAuthPanelDismissed,
       language,
@@ -5142,7 +5330,7 @@ function GymminApp() {
     AsyncStorage.setItem(getAccountStorageKey(localSettingsStorageBaseKey, storageOwnerId), JSON.stringify(payload)).catch((error) => {
       console.error("Failed to save local settings", error);
     });
-  }, [collapsedPanels, defaultSetCount, defaultStageType, defaultWeight, defaultWorkoutExecutionMode, defaultWorkoutTableOrientation, hasLoadedLocalSettings, isAuthPanelDismissed, language, loadedSettingsOwnerId, storageOwnerId, themeName, workoutReminders]);
+  }, [collapsedPanels, defaultSetCount, defaultStageType, defaultWeight, defaultWorkoutExecutionMode, defaultWorkoutTableOrientation, hasLoadedLocalSettings, isAuthPanelDismissed, language, loadedSettingsOwnerId, showRestTimer, storageOwnerId, themeName, workoutReminders]);
 
   useEffect(() => {
     const previousOwnerId = reminderStorageOwnerIdRef.current;
@@ -5556,6 +5744,10 @@ function GymminApp() {
     () => visibleWorkoutSessions.find((session) => session.id === activeWorkoutSessionId) ?? null,
     [activeWorkoutSessionId, visibleWorkoutSessions]
   );
+  const weeklyPlanSummary = useMemo(
+    () => getWeeklyPlanSummary(weeklyPlan, savedWorkouts, visibleWorkoutSessions, new Date()),
+    [savedWorkouts, visibleWorkoutSessions, weeklyPlan]
+  );
   const shouldShowWorkoutHeaderTime = activeScreen === "workoutSession" && Boolean(activeWorkoutSession);
 
   const selectedWorkoutSessions = useMemo(
@@ -5673,6 +5865,12 @@ function GymminApp() {
 
   const selectedExerciseProgressSummary = useMemo(
     () => selectedExerciseProgressKey ? getExerciseProgressSummary(visibleWorkoutSessions, selectedExerciseProgressKey) : null,
+    [selectedExerciseProgressKey, visibleWorkoutSessions]
+  );
+  const selectedExerciseProgressHistoryGroups = useMemo(
+    () => selectedExerciseProgressKey
+      ? getExerciseProgressHistoryGroups(visibleWorkoutSessions, selectedExerciseProgressKey)
+      : [],
     [selectedExerciseProgressKey, visibleWorkoutSessions]
   );
 
@@ -6016,6 +6214,7 @@ function GymminApp() {
       defaultStageType: defaultStageType || null,
       defaultWorkoutExecutionMode,
       defaultWorkoutTableOrientation,
+      showRestTimer,
       defaultWeight,
       isAuthPanelDismissed,
       language,
@@ -6128,6 +6327,7 @@ function GymminApp() {
     const nextDefaultWorkoutTableOrientation = isWorkoutTableOrientation(settings.defaultWorkoutTableOrientation)
       ? settings.defaultWorkoutTableOrientation
       : "vertical";
+    const nextShowRestTimer = settings.showRestTimer !== false;
     const nextCollapsedPanels = normalizeCollapsedPanels(settings.collapsedPanels);
     const nextWorkoutReminders = normalizeWorkoutReminderSettings(settings.workoutReminders, nextLanguage);
     const nextUpdatedAt = typeof settings.updatedAt === "string" ? settings.updatedAt : new Date().toISOString();
@@ -6145,6 +6345,7 @@ function GymminApp() {
     setPendingDefaultWorkoutExecutionMode(nextDefaultWorkoutExecutionMode);
     setDefaultWorkoutTableOrientation(nextDefaultWorkoutTableOrientation);
     setPendingDefaultWorkoutTableOrientation(nextDefaultWorkoutTableOrientation);
+    setShowRestTimer(nextShowRestTimer);
     setWorkoutReminders(nextWorkoutReminders);
     setPendingWorkoutReminderDay(null);
     setCollapsedPanels(nextCollapsedPanels);
@@ -8590,6 +8791,11 @@ function GymminApp() {
       return null;
     }
 
+    if (activeScreen === "weeklyPlan") {
+      setActiveScreen("home");
+      return true;
+    }
+
     const statusKind = systemStatus.kind === "ok" ? "degraded" : systemStatus.kind;
     const statusIcons: Record<Exclude<SystemStatusState["kind"], "ok">, keyof typeof Ionicons.glyphMap> = {
       degraded: "information-circle-outline",
@@ -8851,6 +9057,9 @@ function GymminApp() {
 
   function openExerciseProgress(exerciseKey: string) {
     setSelectedExerciseProgressKey(exerciseKey);
+    setExerciseProgressHistoryRange("all");
+    setExerciseProgressHistoryVisibleCount(5);
+    setExpandedExerciseProgressHistoryKeys({});
     setActiveScreen("exerciseProgress");
   }
 
@@ -9045,8 +9254,163 @@ function GymminApp() {
     );
   }
 
+  function renderWeeklyPlanHomeCard() {
+    if (!savedWorkouts.length) {
+      return null;
+    }
+
+    if (!weeklyPlanSummary.total) {
+      return (
+        <View style={[styles.weeklyPlanEmptyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={[styles.weeklyPlanCardIcon, { backgroundColor: theme.secondaryBand }]}>
+            <Ionicons name="calendar-outline" size={22} color={theme.primary} />
+          </View>
+          <View style={styles.weeklyPlanEmptyCopy}>
+            <Text style={[styles.weeklyPlanEmptyTitle, { color: theme.text }]}>{t("planYourWeek")}</Text>
+            <Text style={[styles.weeklyPlanEmptyText, { color: theme.muted }]}>{t("weeklyPlanEmptyCopy")}</Text>
+          </View>
+          <Pressable accessibilityRole="button" style={[styles.weeklyPlanSetupButton, { borderColor: theme.primary }]} onPress={() => setActiveScreen("weeklyPlan")}>
+            <Text style={[styles.weeklyPlanSetupButtonText, { color: theme.primary }]}>{t("setPlan")}</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
+    const range = formatWeekRange(getCurrentWeekRange(new Date()), language);
+    const todayItem = weeklyPlanSummary.todayItems[0];
+    const completion = t("weeklyPlanCompleted")
+      .replace("{completed}", String(weeklyPlanSummary.completed))
+      .replace("{total}", String(weeklyPlanSummary.total));
+
+    return (
+      <Pressable
+        accessibilityRole="button"
+        style={[styles.weeklyPlanHomeCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+        onPress={() => setActiveScreen("weeklyPlan")}
+      >
+        <View style={styles.weeklyPlanHomeTop}>
+          <View style={[styles.weeklyPlanCardIcon, { backgroundColor: theme.primary }]}>
+            <Ionicons name="calendar-outline" size={22} color={theme.white} />
+          </View>
+          <View style={styles.weeklyPlanHomeCopy}>
+            <Text style={[styles.weeklyPlanHomeTitle, { color: theme.text }]}>{`${t("week")}: ${range}`}</Text>
+            <Text style={[styles.weeklyPlanHomeMeta, { color: theme.muted }]}>{completion}</Text>
+          </View>
+          <View style={styles.weeklyPlanProgressCopy}>
+            <Text style={[styles.weeklyPlanProgressText, { color: theme.primary }]}>{`${weeklyPlanSummary.percent}%`}</Text>
+            <View style={[styles.weeklyPlanProgressRing, { borderColor: theme.secondaryBand }]}>
+              <View style={[styles.weeklyPlanProgressRingFill, { backgroundColor: theme.primary, height: `${Math.max(8, weeklyPlanSummary.percent)}%` }]} />
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={22} color={theme.muted} />
+        </View>
+        <View style={[styles.weeklyPlanHomeStats, { borderTopColor: theme.border }]}>
+          <View style={styles.weeklyPlanHomeStat}>
+            <Ionicons name="checkmark-circle" size={21} color={theme.primary} />
+            <Text style={[styles.weeklyPlanStatNumber, { color: theme.text }]}>{weeklyPlanSummary.completed}</Text>
+            <Text style={[styles.weeklyPlanStatLabel, { color: theme.muted }]}>{t("completed")}</Text>
+          </View>
+          <View style={[styles.weeklyPlanStatDivider, { backgroundColor: theme.border }]} />
+          <View style={styles.weeklyPlanHomeStat}>
+            <Ionicons name="ellipse-outline" size={21} color={theme.secondaryBand} />
+            <Text style={[styles.weeklyPlanStatNumber, { color: theme.text }]}>{weeklyPlanSummary.remaining}</Text>
+            <Text style={[styles.weeklyPlanStatLabel, { color: theme.muted }]}>{t("toDo")}</Text>
+          </View>
+          <View style={[styles.weeklyPlanStatDivider, { backgroundColor: theme.border }]} />
+          <View style={styles.weeklyPlanToday}>
+            <Text style={[styles.weeklyPlanTodayLabel, { color: theme.muted }]}>{`${t("today")}: ${getWeeklyPlanDayOptions(t).find((item) => item.value === getWeeklyPlanDay(new Date()))?.label ?? ""}`}</Text>
+            <Text style={[styles.weeklyPlanTodayName, { color: theme.text }]} numberOfLines={1}>
+              {todayItem?.workout.name ?? t("todayNoWorkout")}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+    );
+  }
+
+  function renderWeeklyPlan() {
+    const dayOptions = getWeeklyPlanDayOptions(t);
+    const plannedIds = new Set(weeklyPlanSummary.items.map((item) => item.workoutId));
+    const availableWorkouts = savedWorkouts.filter((workout) => !plannedIds.has(workout.id));
+    const range = formatWeekRange(getCurrentWeekRange(new Date()), language);
+
+    return (
+      <View style={styles.weeklyPlanScreen}>
+        <View style={[styles.weeklyPlanDetailHeader, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={[styles.weeklyPlanCardIcon, { backgroundColor: theme.secondaryBand }]}>
+            <Ionicons name="calendar-outline" size={22} color={theme.primary} />
+          </View>
+          <View style={styles.workoutInfo}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("weeklyPlan")}</Text>
+            <Text style={[styles.workoutMeta, { color: theme.muted }]}>{`${t("week")}: ${range}`}</Text>
+          </View>
+        </View>
+
+        {weeklyPlanSummary.items.length ? (
+          <View style={[styles.weeklyPlanListCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            {weeklyPlanSummary.items.map((item, index) => (
+              <View key={item.workoutId} style={[styles.weeklyPlanItem, { borderBottomColor: theme.border }, index === weeklyPlanSummary.items.length - 1 ? styles.weeklyPlanItemLast : null]}>
+                <View style={styles.weeklyPlanItemHeader}>
+                  <View style={[styles.weeklyPlanStatusIcon, { backgroundColor: item.completed ? theme.primary : theme.secondaryBand }]}>
+                    <Ionicons name={item.completed ? "checkmark" : "calendar-outline"} size={18} color={item.completed ? theme.white : theme.primary} />
+                  </View>
+                  <View style={styles.workoutInfo}>
+                    <Text style={[styles.workoutName, { color: theme.text }]}>{item.workout.name}</Text>
+                    <Text style={[styles.workoutMeta, { color: item.completed ? theme.primary : theme.muted }]}>{item.completed ? t("completed") : t("toDo")}</Text>
+                  </View>
+                  <Pressable accessibilityLabel={t("removeFromWeeklyPlan")} accessibilityRole="button" onPress={() => setWeeklyPlan((current) => removeWeeklyPlanItem(current, item.workoutId))}>
+                    <Ionicons name="trash-outline" size={20} color={theme.danger} />
+                  </Pressable>
+                </View>
+                <Text style={[styles.weeklyPlanChooseDayLabel, { color: theme.muted }]}>{t("chooseWeekday")}</Text>
+                <View style={styles.weeklyPlanDayChips}>
+                  {dayOptions.map((day) => {
+                    const selected = item.day === day.value;
+                    return (
+                      <Pressable
+                        key={day.value}
+                        accessibilityRole="button"
+                        style={[styles.weeklyPlanDayChip, { backgroundColor: selected ? theme.primary : theme.control, borderColor: selected ? theme.primary : theme.border }]}
+                        onPress={() => setWeeklyPlan((current) => upsertWeeklyPlanItem(current, item.workoutId, day.value))}
+                      >
+                        <Text style={[styles.weeklyPlanDayChipText, { color: selected ? theme.white : theme.text }]}>{day.label}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={[styles.weeklyPlanNoItems, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("weeklyPlanNoItems")}</Text>
+          </View>
+        )}
+
+        {availableWorkouts.length ? (
+          <View style={[styles.weeklyPlanAddCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("addToWeeklyPlan")}</Text>
+            {availableWorkouts.map((workout) => (
+              <View key={workout.id} style={[styles.weeklyPlanAddRow, { borderTopColor: theme.border }]}>
+                <Text style={[styles.workoutName, styles.weeklyPlanAddName, { color: theme.text }]} numberOfLines={2}>{workout.name}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  style={[styles.weeklyPlanAddButton, { backgroundColor: theme.primary }]}
+                  onPress={() => setWeeklyPlan((current) => upsertWeeklyPlanItem(current, workout.id, getWeeklyPlanDay(new Date())))}
+                >
+                  <Ionicons name="add" size={18} color={theme.white} />
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        ) : null}
+      </View>
+    );
+  }
+
   function renderHome() {
     const homeWorkouts = filteredWorkouts.slice(0, 5);
+    const shouldShowWorkoutCreator = !hasUserDefinedWorkouts(savedWorkouts);
 
     return (
       <>
@@ -9090,9 +9454,11 @@ function GymminApp() {
 
         {renderActiveWorkoutSessionCard()}
 
+        {renderWeeklyPlanHomeCard()}
+
         {renderTrainingFactPill()}
 
-        {renderWorkoutCreatorButton()}
+        {shouldShowWorkoutCreator ? renderWorkoutCreatorButton() : null}
 
         <CollapsiblePanel
           actions={renderWorkoutSortActions()}
@@ -10037,25 +10403,77 @@ function GymminApp() {
     );
   }
 
-  function renderExerciseProgressResult(result: ExerciseProgressResult) {
-    const entry = result.entry;
+  function renderExerciseProgressHistoryGroup(group: ExerciseProgressHistoryGroup, index: number) {
+    const isExpanded = expandedExerciseProgressHistoryKeys[group.key] ?? index === 0;
+    const entryCount = group.entries.length;
 
     return (
-      <View key={`${result.session.id}-${entry.id}`} style={[styles.sessionHistoryRow, { borderColor: theme.border }]}>
-        <Text style={[styles.workoutName, { color: theme.text }]}>{formatSessionDateTime(result.session)}</Text>
-        <Text style={[styles.workoutMeta, { color: theme.muted }]}>{getWorkoutSessionDisplayName(result.session)}</Text>
-        <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatSessionEntryMeta(entry)}</Text>
-        <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-          {t("actual")}: {formatEntryActual(entry)}
-        </Text>
-        {result.volume ? (
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {t("volume")}: {formatNumber(result.volume, "kg")}
-          </Text>
-        ) : null}
-        {entry.notes ? (
-          <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{entry.notes}</Text>
-        ) : null}
+      <View key={group.key} style={[styles.exerciseProgressHistoryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.exerciseProgressHistoryHeader}
+          onPress={() => setExpandedExerciseProgressHistoryKeys((current) => ({ ...current, [group.key]: !isExpanded }))}
+        >
+          <View style={[styles.exerciseProgressHistoryCalendar, { backgroundColor: theme.secondaryBand }]}>
+            <Ionicons name="calendar-outline" size={19} color={theme.primary} />
+          </View>
+          <View style={styles.exerciseProgressHistoryTitleBlock}>
+            <Text style={[styles.exerciseProgressHistoryDate, { color: theme.text }]}>{formatSessionDateTime(group.session)}</Text>
+            <Text style={[styles.exerciseProgressHistoryWorkout, { color: theme.muted }]} numberOfLines={2}>
+              {getWorkoutSessionDisplayName(group.session)}
+            </Text>
+          </View>
+          <View style={styles.exerciseProgressHistoryHeaderRight}>
+            <View style={[styles.exerciseProgressHistoryBadge, { backgroundColor: isExpanded ? theme.primary : theme.secondaryBand }]}>
+                <Text style={[styles.exerciseProgressHistoryBadgeText, { color: isExpanded ? theme.white : theme.primary }]}>
+                {formatExerciseProgressSetCount(entryCount, language)}
+              </Text>
+            </View>
+            <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={19} color={theme.primary} />
+          </View>
+        </Pressable>
+
+        {isExpanded ? (
+          <View style={[styles.exerciseProgressTable, { borderColor: theme.border }]}>
+            {group.entries.map((result, entryIndex) => {
+              const entry = result.entry;
+              const setNumber = entry.setIteration > 0 ? entry.setIteration : entryIndex + 1;
+              const values = formatExerciseProgressSeriesValue(entry.actualReps, entry.actualWeight, result.volume, language);
+              return (
+                <View key={entry.id} style={[styles.exerciseProgressSeriesRow, { borderBottomColor: theme.border }]}>
+                  <View style={[styles.exerciseProgressSetBadge, { backgroundColor: theme.secondaryBand }]}>
+                    <Text style={[styles.exerciseProgressSetBadgeText, { color: theme.primary }]}>{setNumber}</Text>
+                  </View>
+                  <Text style={[styles.exerciseProgressSeriesValue, { color: theme.text }]}>{values.repetitions}</Text>
+                  <Text style={[styles.exerciseProgressSeriesValue, { color: theme.text }]}>{values.load}</Text>
+                  <Text style={[styles.exerciseProgressSeriesVolume, { color: theme.muted }]}>{values.volume}</Text>
+                </View>
+              );
+            })}
+            <View style={[styles.exerciseProgressTotalRow, { backgroundColor: theme.control }]}>
+              <View style={styles.exerciseProgressTotalLabel}>
+                <Ionicons name="add-outline" size={18} color={theme.primary} />
+                <Text style={[styles.exerciseProgressTotalText, { color: theme.text }]}>{t("totalVolume")}</Text>
+              </View>
+              <Text style={[styles.exerciseProgressTotalValue, { color: theme.primary }]}>{formatProgressNumber(group.totalVolume, "kg")}</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.exerciseProgressHistorySummary, { borderTopColor: theme.border }]}>
+            <View>
+              <Text style={[styles.exerciseProgressHistorySummaryLabel, { color: theme.muted }]}>{t("bestWeight")}</Text>
+              <Text style={[styles.exerciseProgressHistorySummaryValue, { color: theme.text }]}>{formatProgressNumber(group.bestWeight, "kg")}</Text>
+            </View>
+            <View>
+              <Text style={[styles.exerciseProgressHistorySummaryLabel, { color: theme.muted }]}>{t("mostReps")}</Text>
+              <Text style={[styles.exerciseProgressHistorySummaryValue, { color: theme.text }]}>{formatProgressNumber(group.bestReps)}</Text>
+            </View>
+            <View>
+              <Text style={[styles.exerciseProgressHistorySummaryLabel, { color: theme.muted }]}>{t("volume")}</Text>
+              <Text style={[styles.exerciseProgressHistorySummaryValue, { color: theme.text }]}>{formatProgressNumber(group.totalVolume, "kg")}</Text>
+            </View>
+          </View>
+        )}
       </View>
     );
   }
@@ -10292,44 +10710,88 @@ function GymminApp() {
       );
     }
 
-    const bestSessionVolume = summary.totalVolumeBySession[0]?.volume ?? null;
+    const latestGroup = selectedExerciseProgressHistoryGroups[0];
+    const filteredGroups = filterExerciseProgressHistoryGroups(selectedExerciseProgressHistoryGroups, exerciseProgressHistoryRange);
+    const visibleGroups = filteredGroups.slice(0, exerciseProgressHistoryVisibleCount);
+    const rangeOptions: Array<{ label: string; value: ExerciseProgressHistoryRange }> = [
+      { label: t("progressHistoryAll"), value: "all" },
+      { label: t("progressHistory3Months"), value: "3m" },
+      { label: t("progressHistory6Months"), value: "6m" },
+      { label: t("progressHistory1Year"), value: "1y" }
+    ];
 
     return (
       <View style={styles.historyScreen}>
-        <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            {getExerciseDisplayName(summary.exerciseName, language)}
-          </Text>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {summary.results.length} {t("sessions").toLowerCase()} · {summary.sessionCount} {t("workouts").toLowerCase()}
-          </Text>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {t("last")}: {formatEntryActual(summary.lastResult.entry)}
-          </Text>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {t("bestWeight")}: {formatNumber(summary.bestWeight, "kg")}
-          </Text>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {t("mostReps")}: {formatNumber(summary.bestReps)}
-          </Text>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {t("bestVolume")}: {formatNumber(bestSessionVolume ?? summary.bestVolumeSingleEntry, "kg")}
-          </Text>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {t("estimatedOneRepMax")}: {formatNumber(summary.estimatedOneRepMax, "kg")}
-          </Text>
+        <View style={[styles.exerciseProgressOverviewCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.exerciseProgressOverviewTop}>
+            <View style={[styles.exerciseProgressOverviewIcon, { backgroundColor: theme.secondaryBand }]}>
+              <Ionicons name="barbell-outline" size={26} color={theme.primary} />
+            </View>
+            <View style={styles.exerciseProgressOverviewTitleBlock}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]} numberOfLines={2}>{getExerciseDisplayName(summary.exerciseName, language)}</Text>
+              <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={2}>
+                {latestGroup ? getWorkoutSessionDisplayName(latestGroup.session) : "—"}
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.exerciseProgressOverviewMetrics, { borderTopColor: theme.border }]}>
+            {[
+              ["barbell-outline", t("bestWeight"), formatProgressNumber(summary.bestWeight, "kg")],
+              ["repeat-outline", t("mostReps"), formatProgressNumber(summary.bestReps)],
+              ["server-outline", t("bestVolume"), formatProgressNumber(summary.totalVolumeBySession[0]?.volume ?? summary.bestVolumeSingleEntry, "kg")],
+              ["speedometer-outline", t("estimatedOneRepMax"), formatProgressNumber(summary.estimatedOneRepMax, "kg")]
+            ].map(([icon, label, value]) => (
+              <View key={String(label)} style={styles.exerciseProgressOverviewMetric}>
+                <View style={[styles.exerciseProgressOverviewMetricIcon, { backgroundColor: theme.secondaryBand }]}>
+                  <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color={theme.primary} />
+                </View>
+                <View style={styles.exerciseProgressOverviewMetricCopy}>
+                  <Text style={[styles.exerciseProgressOverviewMetricLabel, { color: theme.muted }]} numberOfLines={1}>{label}</Text>
+                  <Text style={[styles.exerciseProgressOverviewMetricValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
 
-        <CollapsiblePanel
-          isCollapsed={false}
-          theme={theme}
-          title={t("resultHistory")}
-          onToggle={() => undefined}
-        >
-          <View style={styles.sessionHistoryList}>
-            {summary.results.map(renderExerciseProgressResult)}
+        <View style={[styles.exerciseProgressHistoryPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.exerciseProgressHistoryPanelHeader}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("resultHistory")}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.exerciseProgressRangeChips}>
+              {rangeOptions.map((option) => {
+                const selected = exerciseProgressHistoryRange === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    accessibilityRole="button"
+                    style={[styles.exerciseProgressRangeChip, { backgroundColor: selected ? theme.primary : theme.control, borderColor: selected ? theme.primary : theme.border }]}
+                    onPress={() => {
+                      setExerciseProgressHistoryRange(option.value);
+                      setExerciseProgressHistoryVisibleCount(5);
+                    }}
+                  >
+                    <Text style={[styles.exerciseProgressRangeChipText, { color: selected ? theme.white : theme.text }]}>{option.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           </View>
-        </CollapsiblePanel>
+          <View style={styles.exerciseProgressHistoryList}>
+            {visibleGroups.length ? visibleGroups.map(renderExerciseProgressHistoryGroup) : (
+              <Text style={[styles.exerciseProgressHistoryEmpty, { color: theme.muted }]}>{t("exerciseHistoryEmpty")}</Text>
+            )}
+          </View>
+          {visibleGroups.length < filteredGroups.length ? (
+            <Pressable
+              accessibilityRole="button"
+              style={styles.exerciseProgressOlderButton}
+              onPress={() => setExerciseProgressHistoryVisibleCount((count) => count + 5)}
+            >
+              <Text style={[styles.exerciseProgressOlderButtonText, { color: theme.primary }]}>{t("showOlderResults")}</Text>
+              <Ionicons name="chevron-down" size={18} color={theme.primary} />
+            </Pressable>
+          ) : null}
+        </View>
       </View>
     );
   }
@@ -10341,13 +10803,7 @@ function GymminApp() {
     const progressSummary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
     const fallbackName = step?.exerciseName ? getExerciseDisplayName(step.exerciseName, language) : t("exerciseDetails");
     const displayName = details?.displayName ?? fallbackName;
-    const exerciseTags = details
-      ? [details.category, ...details.equipment].filter(Boolean)
-      : [];
     const hasMuscleData = Boolean(details && (details.primary.length || details.secondary.length));
-    const primaryMuscleSummary = details?.primary.length
-      ? details.primary.map((muscle) => muscleLabels[language][muscle]).join(" · ")
-      : "";
     const colors = {
       inactive: "#4a4d4c",
       primary: "#ff3347",
@@ -10423,40 +10879,6 @@ function GymminApp() {
 
     return (
       <View style={styles.historyScreen}>
-        <View style={[styles.exerciseDetailHeroCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.exerciseDetailHeroHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>{displayName}</Text>
-            {details ? (
-              <View style={styles.exerciseDetailTags}>
-                {exerciseTags.map((tag) => (
-                  <View
-                    key={tag}
-                    style={[
-                      styles.exerciseDetailTag,
-                      { backgroundColor: theme.secondaryBand, borderColor: theme.border }
-                    ]}
-                  >
-                    <Text style={[styles.exerciseDetailTagText, { color: theme.primary }]}>{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("noExerciseDetails")}</Text>
-            )}
-            {primaryMuscleSummary ? (
-              <View style={styles.exerciseDetailHeroMuscleRow}>
-                <View style={[styles.exerciseDetailHeroMuscleIcon, { backgroundColor: theme.secondaryBand }]}>
-                  <Ionicons name="body-outline" size={24} color={theme.text} />
-                </View>
-                <View style={styles.exerciseDetailHeroMuscleCopy}>
-                  <Text style={[styles.label, { color: theme.text }]}>{t("primaryMuscles")}</Text>
-                  <Text style={[styles.workoutMeta, { color: theme.muted }]}>{primaryMuscleSummary}</Text>
-                </View>
-              </View>
-            ) : null}
-            </View>
-        </View>
-
         {details?.imageAssetKeys.length ? (
           <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseAnimation")}</Text>
@@ -10480,9 +10902,23 @@ function GymminApp() {
           </View>
         ) : null}
 
+        <CollapsiblePanel
+          collapseLabel={t("collapse")}
+          expandLabel={t("expand")}
+          isCollapsed={isExerciseDetailPanelCollapsed("howTo", false)}
+          theme={theme}
+          title={t("howToPerform")}
+          onToggle={() => toggleExerciseDetailPanel("howTo", false)}
+        >
+          {renderExerciseDetailSteps(
+            details?.instructions ?? [],
+            details?.exercise?.description || t("techniquePlaceholder")
+          )}
+        </CollapsiblePanel>
+
         <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.exerciseDetailMusclesHeader}>
-            <Text style={[styles.workoutName, { color: theme.text }]}>{t("workedMuscles")}</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{displayName}</Text>
           </View>
           {hasMuscleData ? (
             <View style={styles.exerciseDetailSideToggle}>
@@ -10533,20 +10969,6 @@ function GymminApp() {
             <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("noExerciseMuscleData")}</Text>
           )}
         </View>
-
-        <CollapsiblePanel
-          collapseLabel={t("collapse")}
-          expandLabel={t("expand")}
-          isCollapsed={isExerciseDetailPanelCollapsed("howTo", false)}
-          theme={theme}
-          title={t("howToPerform")}
-          onToggle={() => toggleExerciseDetailPanel("howTo", false)}
-        >
-          {renderExerciseDetailSteps(
-            details?.instructions ?? [],
-            details?.exercise?.description || t("techniquePlaceholder")
-          )}
-        </CollapsiblePanel>
 
         <CollapsiblePanel
           collapseLabel={t("collapse")}
@@ -11184,6 +11606,13 @@ function GymminApp() {
             }}
           />
           <SettingsOption
+            icon="time-outline"
+            label={t("showRestTimer")}
+            value={showRestTimer ? t("enabled") : t("disabled")}
+            theme={theme}
+            onPress={() => setShowRestTimer((current) => !current)}
+          />
+          <SettingsOption
             icon="star-outline"
             label={t("favoriteExercises")}
             value={String(getFavoriteCatalogExercises(favoriteExercises).length)}
@@ -11663,70 +12092,131 @@ function GymminApp() {
   }
 
   function renderTerms() {
+    const summaryItems: Array<{ icon: keyof typeof Ionicons.glyphMap; text: TranslationKey; title: TranslationKey }> = [
+      { icon: "bookmark-outline", text: "termsPurposeText", title: "termsPurposeTitle" },
+      { icon: "person-outline", text: "termsUserResponsibilityText", title: "termsUserResponsibilityTitle" },
+      { icon: "alert-circle-outline", text: "termsNoSpecialistsText", title: "termsNoSpecialistsTitle" }
+    ];
+    const detailedSections: Array<{ icon: keyof typeof Ionicons.glyphMap; id: string; text: TranslationKey; title: TranslationKey }> = [
+      { icon: "document-text-outline", id: "general", text: "termsGeneralText", title: "termsGeneralTitle" },
+      { icon: "person-outline", id: "account", text: "termsAccountText", title: "termsAccountTitle" },
+      { icon: "barbell-outline", id: "usage", text: "termsUsageText", title: "termsUsageTitle" },
+      { icon: "save-outline", id: "workout-data", text: "termsWorkoutDataText", title: "termsWorkoutDataTitle" },
+      { icon: "shield-checkmark-outline", id: "safety", text: "termsResponsibilitySafetyText", title: "termsResponsibilitySafetyTitle" },
+      { icon: "bug-outline", id: "issues", text: "termsReportingIssuesText", title: "termsReportingIssuesTitle" },
+      { icon: "refresh-outline", id: "changes", text: "termsChangesText", title: "termsChangesTitle" }
+    ];
+    const areAllTermsExpanded = detailedSections.every((section) => expandedTermsSections[section.id]);
+
     return (
-        <LegalPage
-          icon="document-text-outline"
-        title={t("terms")}
-        theme={theme}
-        backLabel={t("backToSettings")}
-        onBack={() => setActiveScreen("settings")}
-      >
-        <Text style={[styles.legalText, { color: theme.muted }]}>
-          {t("termsIntroOne")}
-        </Text>
-        <Text style={[styles.legalText, { color: theme.muted }]}>
-          {t("termsIntroTwo")}
-        </Text>
-        <Text style={[styles.legalText, { color: theme.muted }]}>
-          {t("termsIntroThree")}
-        </Text>
-        <View style={[styles.legalDivider, { backgroundColor: theme.border }]} />
-        <LegalSection
-          theme={theme}
-          title={t("termsGeneralTitle")}
-          text={t("termsGeneralText")}
-        />
-        <LegalSection
-          theme={theme}
-          title={t("userAccount")}
-          text={t("termsAccountText")}
-        />
-        <LegalSection
-          theme={theme}
-          title={t("termsUsageTitle")}
-          text={t("termsUsageText")}
-        />
-        <LegalSection
-          theme={theme}
-          title={t("termsWorkoutResponsibilityTitle")}
-          text={t("termsWorkoutResponsibilityText")}
-        />
-        <LegalSection
-          theme={theme}
-          title={t("termsPrivacyTitle")}
-          text={t("termsPrivacyText")}
-        />
-        <LegalSection
-          theme={theme}
-          title={t("termsLiabilityTitle")}
-          text={t("termsLiabilityText")}
-        />
-        <LegalSection
-          theme={theme}
-          title={t("termsChangesTitle")}
-          text={t("termsChangesText")}
-        />
-        <LegalSection
-          theme={theme}
-          title={t("contact")}
-          text={t("termsContactText")}
-        />
-      </LegalPage>
+      <View style={styles.termsScreen}>
+        <View style={[styles.termsHeroCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.termsHeroTop}>
+            <View style={[styles.termsHeroIcon, { backgroundColor: theme.secondaryBand }]}>
+              <Ionicons name="shield-checkmark-outline" size={40} color={theme.primary} />
+            </View>
+            <View style={styles.termsHeroCopy}>
+              <Text style={[styles.termsHeroTitle, { color: theme.text }]}>{t("termsHeroTitle")}</Text>
+              <Text style={[styles.termsHeroDescription, { color: theme.muted }]}>{t("termsHeroDescription")}</Text>
+            </View>
+          </View>
+          <View style={[styles.termsBenefits, { borderTopColor: theme.border }]}>
+            {[
+              ["barbell-outline", "termsBenefitWorkouts"],
+              ["trending-up-outline", "termsBenefitProgress"],
+              ["shield-checkmark-outline", "termsBenefitResponsibly"]
+            ].map(([icon, label]) => (
+              <View key={String(label)} style={styles.termsBenefit}>
+                <View style={[styles.termsBenefitIcon, { backgroundColor: theme.secondaryBand }]}>
+                  <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={19} color={theme.primary} />
+                </View>
+                <Text style={[styles.termsBenefitText, { color: theme.text }]}>{t(label as TranslationKey)}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <Text style={[styles.termsSectionTitle, { color: theme.text }]}>{t("termsInShort")}</Text>
+        <View style={[styles.termsSummaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          {summaryItems.map((item, index) => (
+            <View
+              key={item.title}
+              style={[styles.termsSummaryRow, { borderBottomColor: theme.border }, index === summaryItems.length - 1 ? styles.termsSummaryRowLast : null]}
+            >
+              <View style={[styles.termsSummaryIcon, { backgroundColor: theme.secondaryBand }]}>
+                <Ionicons name={item.icon} size={22} color={theme.primary} />
+              </View>
+              <View style={styles.termsSummaryCopy}>
+                <Text style={[styles.termsSummaryTitle, { color: theme.text }]}>{t(item.title)}</Text>
+                <Text style={[styles.termsSummaryText, { color: theme.muted }]}>{t(item.text)}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View style={[styles.termsBugCallout, { backgroundColor: theme.control, borderColor: theme.border }]}>
+          <View style={[styles.termsSummaryIcon, { backgroundColor: theme.secondaryBand }]}>
+            <Ionicons name="information-circle-outline" size={25} color={theme.primary} />
+          </View>
+          <Text style={[styles.termsBugCalloutText, { color: theme.text }]}>{t("termsBugCallout")}</Text>
+          <Pressable accessibilityRole="button" style={[styles.termsInfoButton, { borderColor: theme.primary }]} onPress={() => setActiveScreen("settings")}>
+            <Text style={[styles.termsInfoButtonText, { color: theme.primary }]}>{t("termsGoToInfo")}</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.termsDetailedHeader}>
+          <Text style={[styles.termsSectionTitle, { color: theme.text }]}>{t("termsDetailedRules")}</Text>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.termsExpandAllButton}
+            onPress={() => setExpandedTermsSections(Object.fromEntries(detailedSections.map((section) => [section.id, !areAllTermsExpanded])))}
+          >
+            <Text style={[styles.termsExpandAllText, { color: theme.primary }]}>
+              {areAllTermsExpanded ? t("termsCollapseAll") : t("termsExpandAll")}
+            </Text>
+            <Ionicons name={areAllTermsExpanded ? "chevron-up" : "chevron-down"} size={18} color={theme.primary} />
+          </Pressable>
+        </View>
+        <View style={[styles.termsAccordion, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          {detailedSections.map((section, index) => {
+            const isExpanded = expandedTermsSections[section.id] === true;
+
+            return (
+              <View key={section.id} style={[styles.termsAccordionItem, { borderBottomColor: theme.border }, index === detailedSections.length - 1 ? styles.termsAccordionItemLast : null]}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: isExpanded }}
+                  style={styles.termsAccordionHeader}
+                  onPress={() => setExpandedTermsSections((current) => ({ ...current, [section.id]: !isExpanded }))}
+                >
+                  <View style={[styles.termsAccordionIcon, { backgroundColor: theme.secondaryBand }]}>
+                    <Ionicons name={section.icon} size={19} color={theme.primary} />
+                  </View>
+                  <Text style={[styles.termsAccordionTitle, { color: theme.text }]}>{`${index + 1}. ${t(section.title)}`}</Text>
+                  <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color={theme.primary} />
+                </Pressable>
+                {isExpanded ? <Text style={[styles.termsAccordionText, { color: theme.muted }]}>{t(section.text)}</Text> : null}
+              </View>
+            );
+          })}
+        </View>
+      </View>
     );
   }
 
   function renderContact() {
-    const contactEmail = "kontakt@gymmin.app";
+    const openContactEmail = async () => {
+      try {
+        const url = buildContactMailUrl();
+        const canOpenMail = await Linking.canOpenURL(url);
+        if (!canOpenMail) {
+          throw new Error("No mail client is available");
+        }
+        await Linking.openURL(url);
+      } catch {
+        showInfoDialog(t("contact"), `${t("contactEmailOpenError")} ${GYMMIN_CONTACT_EMAIL}`);
+      }
+    };
 
     return (
       <LegalPage
@@ -11736,27 +12226,39 @@ function GymminApp() {
         backLabel={t("backToSettings")}
         onBack={() => setActiveScreen("settings")}
       >
-        <Text style={[styles.legalText, { color: theme.muted }]}>
-          {t("contactIntro")}
-        </Text>
-        <Pressable
-          accessibilityRole="link"
-          style={[styles.contactBox, { backgroundColor: theme.secondaryBand }]}
-          onPress={() => Linking.openURL(`mailto:${contactEmail}`)}
-        >
-          <Text style={[styles.contactLabel, { color: theme.muted }]}>Email</Text>
-          <Text style={[styles.contactValue, { color: theme.text }]}>{contactEmail}</Text>
-        </Pressable>
-        <Text style={[styles.legalText, { color: theme.muted }]}>
-          {t("contactResponseTime")}
-        </Text>
-        <Text style={[styles.legalText, { color: theme.muted }]}>
-          {t("contactBugInfo")}
-        </Text>
-        <View style={[styles.legalDivider, { backgroundColor: theme.border }]} />
-        <Text style={[styles.legalSectionTitle, { color: theme.text }]}>{t("faq")}</Text>
+        <View style={styles.contactIntroBlock}>
+          <Text style={[styles.contactIntroTitle, { color: theme.text }]}>{t("contactIntro")}</Text>
+          <Text style={[styles.contactIntroCopy, { color: theme.muted }]}>{t("contactEmailIntro")}</Text>
+        </View>
+        <View style={[styles.contactBox, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
+          <Text style={[styles.contactLabel, { color: theme.muted }]}>{t("contactEmailLabel")}</Text>
+          <Text selectable style={[styles.contactValue, { color: theme.text }]}>{GYMMIN_CONTACT_EMAIL}</Text>
+          <AppButton icon="mail-outline" theme={theme} onPress={() => { void openContactEmail(); }}>
+            {t("contactEmailCta")}
+          </AppButton>
+        </View>
+        <View style={[styles.contactInfoPill, { backgroundColor: theme.control, borderColor: theme.border }]}>
+          <View style={[styles.contactCalloutIcon, { backgroundColor: theme.secondaryBand }]}>
+            <Ionicons name="time-outline" size={20} color={theme.primary} />
+          </View>
+          <Text style={[styles.contactInfoPillText, { color: theme.muted }]}>{t("contactResponseTime")}</Text>
+        </View>
+        <View style={[styles.contactBugCallout, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={[styles.contactCalloutIcon, { backgroundColor: theme.secondaryBand }]}>
+            <Ionicons name="bug-outline" size={22} color={theme.primary} />
+          </View>
+          <View style={styles.contactBugCalloutCopy}>
+            <Text style={[styles.contactBugCalloutText, { color: theme.muted }]}>{t("contactBugInfo")}</Text>
+            <Pressable accessibilityRole="button" style={styles.contactBugAction} onPress={() => setActiveScreen("bugReport")}>
+              <Text style={[styles.contactBugActionText, { color: theme.primary }]}>{t("contactBugAction")}</Text>
+              <Ionicons name="arrow-forward" size={16} color={theme.primary} />
+            </Pressable>
+          </View>
+        </View>
+        <Text style={[styles.contactFaqTitle, { color: theme.text }]}>{t("faq")}</Text>
         <FaqItem
           answer={t("contactFaqBugAnswer")}
+          initiallyExpanded
           question={t("contactFaqBugQuestion")}
           theme={theme}
         />
@@ -11768,11 +12270,6 @@ function GymminApp() {
         <FaqItem
           answer={t("contactFaqWorkoutAnswer")}
           question={t("contactFaqWorkoutQuestion")}
-          theme={theme}
-        />
-        <FaqItem
-          answer={t("contactFaqPrivacyAnswer")}
-          question={t("contactFaqPrivacyQuestion")}
           theme={theme}
         />
       </LegalPage>
@@ -13175,36 +13672,39 @@ function GymminApp() {
 
     return (
       <View style={[styles.sessionQuickFillRow, compact ? styles.sessionQuickFillRowCompact : null]}>
-        <Text style={[styles.sessionQuickFillLabel, { color: theme.muted }]}>{t("previousResults")}</Text>
-        {previousValues.reps ? (
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.sessionQuickFillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-            onPress={() => applyPreviousExerciseValue(entries, "actualReps", previousValues.reps)}
-          >
-            <Text style={[styles.sessionQuickFillButtonText, { color: theme.primary }]}>
-              {t("previousReps")}: {previousValues.reps}
-            </Text>
-          </Pressable>
-        ) : null}
-        {previousValues.weight ? (
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.sessionQuickFillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-            onPress={() => applyPreviousExerciseValue(entries, "actualWeight", previousValues.weight)}
-          >
-            <Text style={[styles.sessionQuickFillButtonText, { color: theme.primary }]}>
-              {t("previousWeight")}: {previousValues.weight} kg
-            </Text>
-          </Pressable>
-        ) : null}
+        <View style={styles.sessionQuickFillSlot}>
+          {previousValues.weight ? (
+            <Pressable
+              accessibilityRole="button"
+              style={[styles.sessionQuickFillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+              onPress={() => applyPreviousExerciseValue(entries, "actualWeight", previousValues.weight)}
+            >
+              <Text style={[styles.sessionQuickFillButtonText, { color: theme.primary }]}>
+                {t("previousWeight")}: {previousValues.weight} kg
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+        <View style={styles.sessionQuickFillSlot}>
+          {previousValues.reps ? (
+            <Pressable
+              accessibilityRole="button"
+              style={[styles.sessionQuickFillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+              onPress={() => applyPreviousExerciseValue(entries, "actualReps", previousValues.reps)}
+            >
+              <Text style={[styles.sessionQuickFillButtonText, { color: theme.primary }]}>
+                {t("previousReps")}: {previousValues.reps}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
     );
   }
 
   function renderGuidedEntryTable(entries: WorkoutSessionEntry[]) {
     return (
-      <View style={[styles.guidedEntryTable, { borderColor: theme.border }]}>
+      <View style={[styles.guidedEntryTable, { backgroundColor: theme.card, borderColor: theme.border }]}>
         {renderPreviousExerciseValueButtons(entries)}
         {entries.map((entry) => (
           <View key={entry.id} style={styles.guidedEntryRow}>
@@ -13510,7 +14010,7 @@ function GymminApp() {
   }
 
   function renderRestTimer(entry?: WorkoutSessionEntry) {
-    if (!entry?.plannedTarget) {
+    if (!showRestTimer || !entry?.plannedTarget) {
       return null;
     }
 
@@ -13563,6 +14063,10 @@ function GymminApp() {
     const entry = group.entries[0];
     const setCount = String(group.entries.length || 1);
     const previewStep = getSessionEntryPreviewStep(session, entry);
+    const isUntimedWarmup = entry.type === "warmup" && !entry.plannedTarget?.trim();
+    const title = entry.type === "warmup"
+      ? entry.sourceStageName?.trim() || t("stageWarmup")
+      : getExerciseDisplayName(previewStep.exerciseName, language);
     const plannedTarget = entry.plannedTargetType === "repetitions"
       ? entry.plannedTarget?.trim()
       : entry.plannedTarget?.trim() || getSessionEntrySetTarget(entry);
@@ -13570,47 +14074,51 @@ function GymminApp() {
     const restText = formatRestDuration(restSeconds);
 
     return (
-      <View style={[styles.guidedPlanPreview, { borderColor: theme.border }]}>
+      <View style={[styles.guidedPlanPreview, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <View style={styles.guidedExerciseHeader}>
           <View style={[styles.guidedExerciseNumber, { backgroundColor: theme.secondaryBand }]}>
             <Text style={[styles.guidedExerciseNumberText, { color: theme.primary }]}>{exerciseNumber}</Text>
           </View>
           <Text style={[styles.guidedExerciseTitle, { color: theme.text }]} numberOfLines={3}>
-            {getExerciseDisplayName(previewStep.exerciseName, language)}
+            {title}
           </Text>
-          <Pressable
-            accessibilityLabel={t("showDetails")}
-            accessibilityRole="button"
-            hitSlop={8}
-            style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-            onPress={() => openExerciseDetail(previewStep)}
-          >
-            <Ionicons name="body-outline" size={20} color={theme.primary} />
-          </Pressable>
+          {!isUntimedWarmup ? (
+            <Pressable
+              accessibilityLabel={t("showDetails")}
+              accessibilityRole="button"
+              hitSlop={8}
+              style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+              onPress={() => openExerciseDetail(previewStep)}
+            >
+              <Ionicons name="body-outline" size={20} color={theme.primary} />
+            </Pressable>
+          ) : null}
         </View>
         {entry.notes || previewStep.notes ? (
           <Text style={[styles.guidedExerciseNotes, { color: theme.muted }]} numberOfLines={5}>
             {entry.notes || previewStep.notes}
           </Text>
         ) : null}
-        <View style={styles.guidedExerciseMetaRow}>
-          <View style={styles.guidedRestGroup}>
-            <Text style={[styles.guidedRestLabel, { color: theme.text }]}>{t("stageRest")}</Text>
-            <View style={[styles.guidedRestPill, { backgroundColor: theme.secondaryBand }]}>
-              <Ionicons name="time-outline" size={16} color={theme.text} />
-              <Text style={[styles.guidedRestPillText, { color: theme.primary }]}>{restText}</Text>
+        {!isUntimedWarmup ? (
+          <View style={styles.guidedExerciseMetaRow}>
+            <View style={styles.guidedRestGroup}>
+              <Text style={[styles.guidedRestLabel, { color: theme.text }]}>{t("stageRest")}</Text>
+              <View style={[styles.guidedRestPill, { backgroundColor: theme.secondaryBand }]}>
+                <Ionicons name="time-outline" size={16} color={theme.text} />
+                <Text style={[styles.guidedRestPillText, { color: theme.primary }]}>{restText}</Text>
+              </View>
+            </View>
+            <View style={styles.guidedTargetGroup}>
+              <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
+                <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{setCount}</Text>
+              </View>
+              <Text style={[styles.guidedTargetSeparator, { color: theme.text }]}>x</Text>
+              <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
+                <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{plannedTarget || "-"}</Text>
+              </View>
             </View>
           </View>
-          <View style={styles.guidedTargetGroup}>
-            <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
-              <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{setCount}</Text>
-            </View>
-            <Text style={[styles.guidedTargetSeparator, { color: theme.text }]}>x</Text>
-            <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
-              <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{plannedTarget || "-"}</Text>
-            </View>
-          </View>
-        </View>
+        ) : null}
         {renderRestTimer(group.restEntry)}
       </View>
     );
@@ -13787,10 +14295,8 @@ function GymminApp() {
       return (
         <View style={styles.sessionScreen}>
           {renderWorkoutSessionProgressCard(guidedGroupIndex + 1, guidedGroups.length)}
-          <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            {renderGuidedPlanPreview(session, currentGroup, guidedGroupIndex + 1)}
-            {shouldShowGuidedEntryTable ? renderGuidedEntryTable(currentGroup.entries.filter(isWorkoutSessionEntryFillRequired)) : null}
-          </View>
+          {renderGuidedPlanPreview(session, currentGroup, guidedGroupIndex + 1)}
+          {shouldShowGuidedEntryTable ? renderGuidedEntryTable(currentGroup.entries.filter(isWorkoutSessionEntryFillRequired)) : null}
           <View style={styles.sessionActions}>
             <AppButton
               disabled={!canGoBack}
@@ -14087,6 +14593,7 @@ function GymminApp() {
             {activeScreen === "workoutAiProposal" && renderWorkoutAiProposal()}
             {activeScreen === "workoutDetail" && renderWorkoutDetail()}
             {activeScreen === "workoutSession" && renderWorkoutSession()}
+            {activeScreen === "weeklyPlan" && renderWeeklyPlan()}
             {activeScreen === "workoutHistory" && renderWorkoutHistoryScreen()}
             {activeScreen === "workoutSessionDetail" && renderWorkoutSessionDetail()}
             {activeScreen === "progress" && renderProgressScreen()}
@@ -14162,6 +14669,7 @@ function GymminApp() {
             const selected =
               activeScreen === item.key ||
               (item.key === "home" && activeScreen === "articleDetail") ||
+              (item.key === "home" && activeScreen === "weeklyPlan") ||
               (item.key === "workouts" &&
                 (activeScreen === "workoutDetail" ||
                   activeScreen === "workoutCreator" ||
@@ -14248,6 +14756,7 @@ function GymminApp() {
         {renderAppDialog()}
     </SafeAreaView>
   );
+
 }
 
 type Theme = (typeof themes)[ThemeName];
@@ -14279,6 +14788,7 @@ function getScreenTitle(
     activeSessions: t("activeSessions"),
     settings: t("settings"),
     terms: t("terms"),
+    weeklyPlan: t("weeklyPlan"),
     workoutAiProposal: t("aiRewriteProposal"),
     workoutAiRewrite: t("aiRewriteTitle"),
     workoutCreator: t("aiCreator"),
@@ -15768,15 +16278,29 @@ function LegalSection({ text, theme, title }: LegalSectionProps) {
 
 type FaqItemProps = {
   answer: string;
+  initiallyExpanded?: boolean;
   question: string;
   theme: Theme;
 };
 
-function FaqItem({ answer, question, theme }: FaqItemProps) {
+function FaqItem({ answer, initiallyExpanded = false, question, theme }: FaqItemProps) {
+  const [isExpanded, setIsExpanded] = useState(initiallyExpanded);
+
   return (
-    <View style={[styles.faqItem, { borderColor: theme.border }]}>
-      <Text style={[styles.faqQuestion, { color: theme.text }]}>{question}</Text>
-      <Text style={[styles.legalText, { color: theme.muted }]}>{answer}</Text>
+    <View style={[styles.faqItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isExpanded }}
+        style={styles.faqHeader}
+        onPress={() => setIsExpanded((current) => !current)}
+      >
+        <View style={[styles.faqIcon, { backgroundColor: theme.secondaryBand }]}>
+          <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color={theme.primary} />
+        </View>
+        <Text style={[styles.faqQuestion, { color: theme.text }]}>{question}</Text>
+        <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color={theme.primary} />
+      </Pressable>
+      {isExpanded ? <Text style={[styles.faqAnswer, { color: theme.muted }]}>{answer}</Text> : null}
     </View>
   );
 }
@@ -18770,6 +19294,220 @@ const styles = StyleSheet.create({
     gap: 3,
     paddingBottom: 10
   },
+  exerciseProgressOverviewCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  exerciseProgressOverviewTop: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    padding: 14
+  },
+  exerciseProgressOverviewIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 48,
+    justifyContent: "center",
+    width: 48
+  },
+  exerciseProgressOverviewTitleBlock: {
+    flex: 1,
+    gap: 4,
+    minWidth: 0
+  },
+  exerciseProgressOverviewMetrics: {
+    borderTopWidth: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    padding: 8
+  },
+  exerciseProgressOverviewMetric: {
+    alignItems: "center",
+    flexBasis: "50%",
+    flexDirection: "row",
+    gap: 8,
+    minWidth: 0,
+    padding: 8
+  },
+  exerciseProgressOverviewMetricIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 34,
+    justifyContent: "center",
+    width: 34
+  },
+  exerciseProgressOverviewMetricCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  exerciseProgressOverviewMetricLabel: {
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  exerciseProgressOverviewMetricValue: {
+    fontSize: 16,
+    fontWeight: "900"
+  },
+  exerciseProgressHistoryPanel: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 12,
+    padding: 12
+  },
+  exerciseProgressHistoryPanelHeader: {
+    gap: 10
+  },
+  exerciseProgressRangeChips: {
+    gap: 8
+  },
+  exerciseProgressRangeChip: {
+    borderRadius: 8,
+    borderWidth: 1,
+    minHeight: 34,
+    justifyContent: "center",
+    paddingHorizontal: 12
+  },
+  exerciseProgressRangeChipText: {
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  exerciseProgressHistoryList: {
+    gap: 10
+  },
+  exerciseProgressHistoryEmpty: {
+    fontSize: 14,
+    fontWeight: "600",
+    paddingVertical: 14,
+    textAlign: "center"
+  },
+  exerciseProgressHistoryCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  exerciseProgressHistoryHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    padding: 12
+  },
+  exerciseProgressHistoryCalendar: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 36,
+    justifyContent: "center",
+    width: 36
+  },
+  exerciseProgressHistoryTitleBlock: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0
+  },
+  exerciseProgressHistoryDate: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  exerciseProgressHistoryWorkout: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18
+  },
+  exerciseProgressHistoryHeaderRight: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 7
+  },
+  exerciseProgressHistoryBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6
+  },
+  exerciseProgressHistoryBadgeText: {
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  exerciseProgressTable: {
+    borderTopWidth: 1
+  },
+  exerciseProgressSeriesRow: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 9,
+    minHeight: 44,
+    paddingHorizontal: 12
+  },
+  exerciseProgressSeriesValue: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "800",
+    textAlign: "center"
+  },
+  exerciseProgressSeriesVolume: {
+    flex: 1.15,
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "right"
+  },
+  exerciseProgressSetBadge: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 26,
+    justifyContent: "center",
+    width: 26
+  },
+  exerciseProgressSetBadgeText: {
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  exerciseProgressTotalRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingVertical: 10
+  },
+  exerciseProgressTotalLabel: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 6
+  },
+  exerciseProgressTotalText: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  exerciseProgressTotalValue: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  exerciseProgressHistorySummary: {
+    borderTopWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 12
+  },
+  exerciseProgressHistorySummaryLabel: {
+    fontSize: 11,
+    fontWeight: "700"
+  },
+  exerciseProgressHistorySummaryValue: {
+    fontSize: 14,
+    fontWeight: "900",
+    marginTop: 2
+  },
+  exerciseProgressOlderButton: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
+    justifyContent: "center",
+    minHeight: 40
+  },
+  exerciseProgressOlderButtonText: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
   sessionScreen: {
     gap: 14
   },
@@ -18874,22 +19612,26 @@ const styles = StyleSheet.create({
   sessionQuickFillRow: {
     alignItems: "center",
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8
+    gap: 10,
+    marginLeft: 44
   },
   sessionQuickFillRowCompact: {
+    marginLeft: 0,
     marginTop: 2
   },
-  sessionQuickFillLabel: {
-    fontSize: 11,
-    fontWeight: "900",
-    textTransform: "uppercase"
+  sessionQuickFillSlot: {
+    flex: 1,
+    minWidth: 0
   },
   sessionQuickFillButton: {
+    alignItems: "center",
     borderRadius: 8,
     borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 7
+    justifyContent: "center",
+    minHeight: 38,
+    paddingHorizontal: 8,
+    paddingVertical: 7,
+    width: "100%"
   },
   sessionQuickFillButtonText: {
     fontSize: 12,
@@ -19924,6 +20666,399 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 18
   },
+  termsScreen: {
+    gap: 14
+  },
+  termsHeroCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  termsHeroTop: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 14,
+    padding: 16
+  },
+  termsHeroIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 78,
+    justifyContent: "center",
+    width: 78
+  },
+  termsHeroCopy: {
+    flex: 1,
+    gap: 6,
+    minWidth: 0
+  },
+  termsHeroTitle: {
+    fontSize: 21,
+    fontWeight: "900",
+    lineHeight: 27
+  },
+  termsHeroDescription: {
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 22
+  },
+  termsBenefits: {
+    borderTopWidth: 1,
+    flexDirection: "row",
+    padding: 10
+  },
+  termsBenefit: {
+    alignItems: "center",
+    flex: 1,
+    gap: 7,
+    paddingHorizontal: 5
+  },
+  termsBenefitIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 38,
+    justifyContent: "center",
+    width: 38
+  },
+  termsBenefitText: {
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 17,
+    textAlign: "center"
+  },
+  termsSectionTitle: {
+    fontSize: 21,
+    fontWeight: "900"
+  },
+  termsSummaryCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  termsSummaryRow: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    padding: 13
+  },
+  termsSummaryRowLast: {
+    borderBottomWidth: 0
+  },
+  termsSummaryIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 48,
+    justifyContent: "center",
+    width: 48
+  },
+  termsSummaryCopy: {
+    flex: 1,
+    gap: 3,
+    minWidth: 0
+  },
+  termsSummaryTitle: {
+    fontSize: 15,
+    fontWeight: "900",
+    lineHeight: 20
+  },
+  termsSummaryText: {
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 20
+  },
+  termsBugCallout: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    padding: 12
+  },
+  termsBugCalloutText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20,
+    minWidth: 0
+  },
+  termsInfoButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 38,
+    paddingHorizontal: 10
+  },
+  termsInfoButtonText: {
+    fontSize: 13,
+    fontWeight: "900",
+    textAlign: "center"
+  },
+  termsDetailedHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  termsExpandAllButton: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
+    minHeight: 34
+  },
+  termsExpandAllText: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  termsAccordion: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  termsAccordionItem: {
+    borderBottomWidth: 1
+  },
+  termsAccordionItemLast: {
+    borderBottomWidth: 0
+  },
+  termsAccordionHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    minHeight: 60,
+    paddingHorizontal: 12,
+    paddingVertical: 10
+  },
+  termsAccordionIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 34,
+    justifyContent: "center",
+    width: 34
+  },
+  termsAccordionTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "900",
+    lineHeight: 20,
+    minWidth: 0
+  },
+  termsAccordionText: {
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 21,
+    paddingBottom: 16,
+    paddingHorizontal: 14
+  },
+  weeklyPlanHomeCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  weeklyPlanHomeTop: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    padding: 14
+  },
+  weeklyPlanCardIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 48,
+    justifyContent: "center",
+    width: 48
+  },
+  weeklyPlanHomeCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  weeklyPlanHomeTitle: {
+    fontSize: 17,
+    fontWeight: "900"
+  },
+  weeklyPlanHomeMeta: {
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 3
+  },
+  weeklyPlanProgressCopy: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 7
+  },
+  weeklyPlanProgressText: {
+    fontSize: 17,
+    fontWeight: "900"
+  },
+  weeklyPlanProgressRing: {
+    borderRadius: 999,
+    borderWidth: 5,
+    height: 35,
+    overflow: "hidden",
+    width: 35
+  },
+  weeklyPlanProgressRingFill: {
+    bottom: 0,
+    left: 0,
+    position: "absolute",
+    right: 0
+  },
+  weeklyPlanHomeStats: {
+    alignItems: "center",
+    borderTopWidth: 1,
+    flexDirection: "row",
+    padding: 12
+  },
+  weeklyPlanHomeStat: {
+    alignItems: "center",
+    flex: 0.8,
+    gap: 2
+  },
+  weeklyPlanStatNumber: {
+    fontSize: 17,
+    fontWeight: "900"
+  },
+  weeklyPlanStatLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    textAlign: "center"
+  },
+  weeklyPlanStatDivider: {
+    height: 44,
+    width: 1
+  },
+  weeklyPlanToday: {
+    flex: 1.45,
+    minWidth: 0,
+    paddingLeft: 10
+  },
+  weeklyPlanTodayLabel: {
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  weeklyPlanTodayName: {
+    fontSize: 14,
+    fontWeight: "900",
+    marginTop: 3
+  },
+  weeklyPlanEmptyCard: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    padding: 12
+  },
+  weeklyPlanEmptyCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  weeklyPlanEmptyTitle: {
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  weeklyPlanEmptyText: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
+    marginTop: 3
+  },
+  weeklyPlanSetupButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 36,
+    paddingHorizontal: 9
+  },
+  weeklyPlanSetupButtonText: {
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  weeklyPlanScreen: {
+    gap: 14
+  },
+  weeklyPlanDetailHeader: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    padding: 14
+  },
+  weeklyPlanListCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  weeklyPlanItem: {
+    borderBottomWidth: 1,
+    gap: 9,
+    padding: 12
+  },
+  weeklyPlanItemLast: {
+    borderBottomWidth: 0
+  },
+  weeklyPlanItemHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10
+  },
+  weeklyPlanStatusIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 36,
+    justifyContent: "center",
+    width: 36
+  },
+  weeklyPlanChooseDayLabel: {
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  weeklyPlanDayChips: {
+    flexDirection: "row",
+    gap: 5
+  },
+  weeklyPlanDayChip: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 35
+  },
+  weeklyPlanDayChipText: {
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  weeklyPlanNoItems: {
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 16
+  },
+  weeklyPlanAddCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    padding: 12
+  },
+  weeklyPlanAddRow: {
+    alignItems: "center",
+    borderTopWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    paddingTop: 10
+  },
+  weeklyPlanAddName: {
+    flex: 1
+  },
+  weeklyPlanAddButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 38,
+    justifyContent: "center",
+    width: 38
+  },
   creatorPanel: {
     borderRadius: 8,
     borderWidth: 1,
@@ -20230,19 +21365,44 @@ const styles = StyleSheet.create({
     opacity: 0.12
   },
   faqItem: {
-    borderTopWidth: 1,
-    gap: 5,
-    paddingTop: 10
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    overflow: "hidden"
+  },
+  faqHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    minHeight: 58,
+    paddingHorizontal: 12,
+    paddingVertical: 9
+  },
+  faqIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 34,
+    justifyContent: "center",
+    width: 34
   },
   faqQuestion: {
+    flex: 1,
     fontSize: 14,
     fontWeight: "900",
     lineHeight: 20
   },
+  faqAnswer: {
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 21,
+    paddingBottom: 14,
+    paddingHorizontal: 14
+  },
   contactBox: {
     borderRadius: 8,
+    borderWidth: 1,
     gap: 4,
-    padding: 14
+    padding: 16
   },
   contactLabel: {
     fontSize: 12,
@@ -20250,8 +21410,80 @@ const styles = StyleSheet.create({
     textTransform: "uppercase"
   },
   contactValue: {
-    fontSize: 17,
-    fontWeight: "800"
+    fontSize: 22,
+    fontWeight: "900",
+    marginBottom: 8
+  },
+  contactIntroBlock: {
+    gap: 4,
+    paddingHorizontal: 2,
+    paddingTop: 2
+  },
+  contactIntroTitle: {
+    fontSize: 20,
+    fontWeight: "900",
+    lineHeight: 27
+  },
+  contactIntroCopy: {
+    fontSize: 16,
+    fontWeight: "700",
+    lineHeight: 23
+  },
+  contactInfoPill: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    minHeight: 60,
+    padding: 10
+  },
+  contactCalloutIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 40,
+    justifyContent: "center",
+    width: 40
+  },
+  contactInfoPillText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20
+  },
+  contactBugCallout: {
+    alignItems: "flex-start",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    padding: 12
+  },
+  contactBugCalloutCopy: {
+    flex: 1,
+    gap: 7,
+    minWidth: 0
+  },
+  contactBugCalloutText: {
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20
+  },
+  contactBugAction: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: 4,
+    minHeight: 28
+  },
+  contactBugActionText: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  contactFaqTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    marginTop: 6
   },
   bugReportForm: {
     gap: 18

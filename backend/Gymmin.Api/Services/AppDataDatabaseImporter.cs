@@ -127,6 +127,7 @@ public sealed class AppDataDatabaseImporter
                 DefaultWorkoutTableOrientation = string.IsNullOrWhiteSpace(settings.DefaultWorkoutTableOrientation)
                     ? "vertical"
                     : settings.DefaultWorkoutTableOrientation,
+                ShowRestTimer = settings.ShowRestTimer,
                 IsAuthPanelDismissed = settings.IsAuthPanelDismissed,
                 Language = settings.Language,
                 ThemeName = settings.ThemeName,

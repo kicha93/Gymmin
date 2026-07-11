@@ -99,7 +99,8 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
             new Dictionary<string, bool> { ["settings"] = true },
             true,
             reminder,
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            false);
 
         var put = await client.PutAsJsonAsync("/api/settings", request);
         Assert.Equal(HttpStatusCode.OK, put.StatusCode);
@@ -112,6 +113,7 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
         Assert.Equal("dark", settings!.ThemeName);
         Assert.Equal("guided", settings.DefaultWorkoutExecutionMode);
         Assert.Equal("vertical", settings.DefaultWorkoutTableOrientation);
+        Assert.False(settings.ShowRestTimer);
         Assert.NotNull(settings.WorkoutReminders);
         Assert.True(settings.WorkoutReminders!.Enabled);
         Assert.Equal("Open Gymmin and complete your planned workout.", settings.WorkoutReminders.Description);

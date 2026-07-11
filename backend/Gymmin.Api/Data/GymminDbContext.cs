@@ -82,6 +82,7 @@ public sealed class GymminDbContext : DbContext
             entity.Property(settings => settings.DefaultWeight).HasMaxLength(32).IsRequired();
             entity.Property(settings => settings.DefaultWorkoutExecutionMode).HasMaxLength(64).IsRequired();
             entity.Property(settings => settings.DefaultWorkoutTableOrientation).HasMaxLength(20).IsRequired();
+            entity.Property(settings => settings.ShowRestTimer).IsRequired();
             entity.Property(settings => settings.CollapsedPanelsJson).IsRequired();
             entity.Property(settings => settings.WorkoutRemindersJson).IsRequired();
             entity.HasOne(settings => settings.User)
@@ -348,6 +349,7 @@ public sealed class UserSettingsEntity
     public string? DefaultStageType { get; set; }
     public string DefaultWorkoutExecutionMode { get; set; } = "guided";
     public string DefaultWorkoutTableOrientation { get; set; } = "vertical";
+    public bool ShowRestTimer { get; set; } = true;
     public string CollapsedPanelsJson { get; set; } = "{}";
     public string WorkoutRemindersJson { get; set; } = "";
     public bool IsAuthPanelDismissed { get; set; }

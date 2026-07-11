@@ -90329,7 +90329,847 @@ export const exerciseTechniqueContentById: Record<string, ExerciseTechniqueConte
                                                                                   "en":  "Lack of torso stabilization during rotational movements or swings."
                                                                               }
                                                                           ]
-                                                   }
+                                                   },
+  "machine-hip-thrust": {
+    "instructions": [
+      {
+        "pl": "Usiądź w maszynie i ustaw pas lub wałek stabilnie na biodrach.",
+        "en": "Sit in the machine and position the belt or pad securely across your hips."
+      },
+      {
+        "pl": "Oprzyj górną część pleców o podparcie i ustaw stopy na szerokość bioder.",
+        "en": "Place your upper back against the support and set your feet hip-width apart."
+      },
+      {
+        "pl": "Napnij brzuch i rozpocznij ruch z bioder.",
+        "en": "Brace your core and initiate the movement from your hips."
+      },
+      {
+        "pl": "Wypchnij biodra w górę lub do przodu, mocno napinając pośladki.",
+        "en": "Drive your hips up or forward while squeezing your glutes hard."
+      },
+      {
+        "pl": "Wróć kontrolowanie do pozycji startowej bez utraty napięcia.",
+        "en": "Return to the starting position with control while keeping tension."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Najmocniej napnij pośladki w końcowej fazie ruchu.",
+        "en": "Squeeze your glutes hardest at the top of the movement."
+      },
+      {
+        "pl": "Nie wyginaj nadmiernie odcinka lędźwiowego.",
+        "en": "Avoid excessive arching in your lower back."
+      },
+      {
+        "pl": "Kolana powinny prowadzić się stabilnie w linii ze stopami.",
+        "en": "Keep your knees tracking in line with your feet."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Przeprost w odcinku lędźwiowym zamiast pracy bioder.",
+        "en": "Hyperextending the lower back instead of moving through the hips."
+      },
+      {
+        "pl": "Ustawienie stóp zbyt daleko lub zbyt blisko maszyny.",
+        "en": "Placing the feet too far away or too close to the machine."
+      },
+      {
+        "pl": "Zbyt szybkie opuszczanie ciężaru.",
+        "en": "Lowering the weight too quickly."
+      },
+      {
+        "pl": "Brak pełnego dopięcia pośladków.",
+        "en": "Failing to fully squeeze the glutes."
+      }
+    ]
+  },
+  "machine-hack-squat": {
+    "instructions": [
+      {
+        "pl": "Ustaw plecy i barki stabilnie na podparciu maszyny.",
+        "en": "Place your back and shoulders firmly against the machine support."
+      },
+      {
+        "pl": "Ustaw stopy na platformie mniej więcej na szerokość barków.",
+        "en": "Set your feet on the platform about shoulder-width apart."
+      },
+      {
+        "pl": "Odblokuj zabezpieczenia i napnij brzuch.",
+        "en": "Unlock the safety handles and brace your core."
+      },
+      {
+        "pl": "Zejdź w dół, prowadząc kolana w linii ze stopami.",
+        "en": "Lower with control while keeping your knees tracking over your feet."
+      },
+      {
+        "pl": "Wypchnij platformę, prostując nogi bez agresywnego blokowania kolan.",
+        "en": "Drive the platform up by extending your legs without aggressively locking your knees."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Niższe ustawienie stóp zwykle mocniej angażuje czworogłowe uda.",
+        "en": "A lower foot position usually emphasizes the quadriceps more."
+      },
+      {
+        "pl": "Nie odrywaj pleców od oparcia.",
+        "en": "Do not let your back lift off the pad."
+      },
+      {
+        "pl": "Kontroluj głębokość bez podwijania miednicy.",
+        "en": "Control depth without tucking your pelvis excessively."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Zapadanie kolan do środka.",
+        "en": "Letting the knees cave inward."
+      },
+      {
+        "pl": "Zbyt płytki zakres ruchu.",
+        "en": "Using a very shallow range of motion."
+      },
+      {
+        "pl": "Odbijanie ciężaru z dołu.",
+        "en": "Bouncing out of the bottom position."
+      },
+      {
+        "pl": "Blokowanie kolan z impetem na górze.",
+        "en": "Snapping the knees into lockout at the top."
+      }
+    ]
+  },
+  "smith-machine-squat": {
+    "instructions": [
+      {
+        "pl": "Ustaw sztangę maszyny Smitha na wysokości górnej części pleców.",
+        "en": "Set the Smith machine bar at upper-back height."
+      },
+      {
+        "pl": "Wejdź pod sztangę i ustaw ją stabilnie na mięśniach czworobocznych.",
+        "en": "Step under the bar and position it securely on your traps."
+      },
+      {
+        "pl": "Ustaw stopy nieco przed linią sztangi, w zależności od komfortu.",
+        "en": "Place your feet slightly in front of the bar path based on comfort."
+      },
+      {
+        "pl": "Zejdź w dół kontrolowanym ruchem, utrzymując napięty brzuch.",
+        "en": "Lower with control while keeping your core braced."
+      },
+      {
+        "pl": "Wstań, wypychając podłoże stopami i kontrolując tor kolan.",
+        "en": "Stand up by driving through your feet and controlling your knee path."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Nie ustawiaj stóp zbyt daleko przed sobą, jeśli czujesz przeciążenie kolan lub pleców.",
+        "en": "Do not place your feet too far forward if it stresses your knees or back."
+      },
+      {
+        "pl": "Trzymaj pełny kontakt stóp z podłogą.",
+        "en": "Keep full foot contact with the floor."
+      },
+      {
+        "pl": "Dostosuj pozycję stóp do naturalnego toru maszyny.",
+        "en": "Match your foot position to the machine's fixed bar path."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Zbyt szerokie lub zbyt dalekie ustawienie stóp.",
+        "en": "Placing the feet too wide or too far forward."
+      },
+      {
+        "pl": "Opieranie się o sztangę zamiast aktywnej pracy nóg.",
+        "en": "Leaning into the bar instead of actively using the legs."
+      },
+      {
+        "pl": "Zapadanie kolan do środka.",
+        "en": "Letting the knees collapse inward."
+      },
+      {
+        "pl": "Brak kontroli w dolnej fazie ruchu.",
+        "en": "Losing control in the bottom phase."
+      }
+    ]
+  },
+  "seated-leg-curl": {
+    "instructions": [
+      {
+        "pl": "Usiądź w maszynie i ustaw oparcie tak, aby kolana były zgodne z osią obrotu.",
+        "en": "Sit in the machine and adjust the backrest so your knees align with the pivot point."
+      },
+      {
+        "pl": "Umieść wałek nad dolną częścią łydek lub nad kostkami.",
+        "en": "Place the lower pad over your lower calves or above your ankles."
+      },
+      {
+        "pl": "Dociśnij uda pod poduszką stabilizującą.",
+        "en": "Secure your thighs under the stabilizing pad."
+      },
+      {
+        "pl": "Ugnij kolana, przyciągając wałek w dół i do siebie.",
+        "en": "Curl your knees by pulling the pad down and toward you."
+      },
+      {
+        "pl": "Wróć powoli do pozycji startowej bez gwałtownego prostowania kolan.",
+        "en": "Return slowly to the starting position without snapping your knees straight."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Nie odrywaj bioder od siedziska.",
+        "en": "Do not let your hips lift off the seat."
+      },
+      {
+        "pl": "Kontroluj fazę rozciągnięcia mięśni z tyłu uda.",
+        "en": "Control the stretched phase of the hamstrings."
+      },
+      {
+        "pl": "Zatrzymaj ruch na moment w maksymalnym ugięciu.",
+        "en": "Pause briefly at maximum knee flexion."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Szarpanie ciężaru z bioder.",
+        "en": "Jerking the weight by using the hips."
+      },
+      {
+        "pl": "Niepełny zakres ruchu.",
+        "en": "Using an incomplete range of motion."
+      },
+      {
+        "pl": "Zbyt szybkie prostowanie nóg.",
+        "en": "Extending the legs too quickly."
+      },
+      {
+        "pl": "Złe ustawienie osi kolan względem maszyny.",
+        "en": "Misaligning the knees with the machine pivot."
+      }
+    ]
+  },
+  "lying-leg-curl": {
+    "instructions": [
+      {
+        "pl": "Połóż się przodem na maszynie i ustaw kolana zgodnie z osią obrotu.",
+        "en": "Lie face down on the machine and align your knees with the pivot point."
+      },
+      {
+        "pl": "Umieść wałek nad kostkami lub na dolnej części łydek.",
+        "en": "Place the pad above your ankles or on your lower calves."
+      },
+      {
+        "pl": "Złap uchwyty i dociśnij biodra do ławki.",
+        "en": "Hold the handles and keep your hips pressed into the bench."
+      },
+      {
+        "pl": "Ugnij kolana, prowadząc pięty w kierunku pośladków.",
+        "en": "Curl your knees by bringing your heels toward your glutes."
+      },
+      {
+        "pl": "Opuść ciężar powoli, utrzymując napięcie mięśni dwugłowych uda.",
+        "en": "Lower the weight slowly while keeping tension in the hamstrings."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Nie unoś bioder przy uginaniu nóg.",
+        "en": "Do not lift your hips as you curl."
+      },
+      {
+        "pl": "Prowadź ruch spokojnie, bez zamachu.",
+        "en": "Move smoothly without using momentum."
+      },
+      {
+        "pl": "Nie prostuj kolan gwałtownie na dole.",
+        "en": "Avoid snapping your knees straight at the bottom."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Odrywanie bioder od ławki.",
+        "en": "Letting the hips lift off the bench."
+      },
+      {
+        "pl": "Używanie zbyt dużego ciężaru i skracanie ruchu.",
+        "en": "Using too much weight and shortening the range."
+      },
+      {
+        "pl": "Szarpanie w pierwszej fazie powtórzenia.",
+        "en": "Jerking at the start of the rep."
+      },
+      {
+        "pl": "Złe ustawienie wałka na łydkach.",
+        "en": "Placing the pad incorrectly on the lower legs."
+      }
+    ]
+  },
+  "machine-hip-abduction": {
+    "instructions": [
+      {
+        "pl": "Usiądź na maszynie i oprzyj zewnętrzne strony ud o poduszki.",
+        "en": "Sit on the machine and place the outer thighs against the pads."
+      },
+      {
+        "pl": "Ustaw plecy stabilnie na oparciu i złap uchwyty.",
+        "en": "Keep your back stable against the backrest and hold the handles."
+      },
+      {
+        "pl": "Napnij brzuch i rozpocznij ruch od bioder.",
+        "en": "Brace your core and initiate the movement from the hips."
+      },
+      {
+        "pl": "Rozsuwaj uda na boki do komfortowego zakresu.",
+        "en": "Move your thighs outward to a comfortable range."
+      },
+      {
+        "pl": "Wróć powoli do pozycji startowej bez zderzania stosu ciężaru.",
+        "en": "Return slowly to the starting position without letting the weight stack crash."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Nie wykonuj ruchu z rozpędu.",
+        "en": "Do not use momentum."
+      },
+      {
+        "pl": "Zatrzymaj na chwilę w końcowej fazie odwodzenia.",
+        "en": "Pause briefly at the end of the abduction."
+      },
+      {
+        "pl": "Tułów może być neutralny lub lekko pochylony, jeśli lepiej czujesz pośladki.",
+        "en": "Your torso can stay neutral or lean slightly forward if it helps you feel the glutes."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Zbyt szybkie złączanie nóg.",
+        "en": "Bringing the legs back together too quickly."
+      },
+      {
+        "pl": "Używanie zbyt dużego ciężaru i skracanie zakresu.",
+        "en": "Using too much weight and shortening the range."
+      },
+      {
+        "pl": "Odrywanie bioder od siedziska.",
+        "en": "Lifting the hips off the seat."
+      },
+      {
+        "pl": "Praca głównie z tułowia zamiast z bioder.",
+        "en": "Moving mostly through the torso instead of the hips."
+      }
+    ]
+  },
+  "machine-hip-adduction": {
+    "instructions": [
+      {
+        "pl": "Usiądź na maszynie i oprzyj wewnętrzne strony ud o poduszki.",
+        "en": "Sit on the machine and place your inner thighs against the pads."
+      },
+      {
+        "pl": "Ustaw zakres ruchu tak, aby rozciągnięcie było komfortowe.",
+        "en": "Set the range so the stretch is comfortable."
+      },
+      {
+        "pl": "Napnij brzuch i trzymaj plecy stabilnie na oparciu.",
+        "en": "Brace your core and keep your back stable against the backrest."
+      },
+      {
+        "pl": "Ściągnij uda do środka, kontrolując ruch.",
+        "en": "Bring your thighs inward with control."
+      },
+      {
+        "pl": "Wróć powoli do pozycji startowej bez utraty kontroli.",
+        "en": "Return slowly to the starting position without losing control."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Zacznij od umiarkowanego zakresu, szczególnie przy sztywnych przywodzicielach.",
+        "en": "Start with a moderate range, especially if your adductors are tight."
+      },
+      {
+        "pl": "Nie dociskaj kolan gwałtownie do środka.",
+        "en": "Do not slam the knees inward."
+      },
+      {
+        "pl": "Utrzymuj stałe napięcie przez całe powtórzenie.",
+        "en": "Maintain continuous tension throughout the rep."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Zbyt duży zakres startowy i przeciążenie przywodzicieli.",
+        "en": "Using too large a starting range and overstressing the adductors."
+      },
+      {
+        "pl": "Szarpanie ciężaru.",
+        "en": "Jerking the weight."
+      },
+      {
+        "pl": "Odbijanie nóg od poduszek.",
+        "en": "Bouncing the legs against the pads."
+      },
+      {
+        "pl": "Odrywanie pośladków od siedziska.",
+        "en": "Letting the glutes lift off the seat."
+      }
+    ]
+  },
+  "cable-glute-kickback": {
+    "instructions": [
+      {
+        "pl": "Przypnij opaskę wyciągu dolnego do kostki.",
+        "en": "Attach the low cable ankle strap to your ankle."
+      },
+      {
+        "pl": "Stań przodem do wyciągu i złap uchwyt lub ramę maszyny.",
+        "en": "Stand facing the cable machine and hold the handle or frame."
+      },
+      {
+        "pl": "Lekko pochyl tułów i napnij brzuch.",
+        "en": "Lean your torso slightly forward and brace your core."
+      },
+      {
+        "pl": "Prostuj biodro, prowadząc nogę w tył bez przeprostu w plecach.",
+        "en": "Extend your hip by driving the leg back without arching the lower back."
+      },
+      {
+        "pl": "Wróć powoli do pozycji startowej i wykonaj serię na drugą nogę.",
+        "en": "Return slowly to the start and repeat on the other leg."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Ruch ma wychodzić z biodra, nie z odcinka lędźwiowego.",
+        "en": "The movement should come from the hip, not the lower back."
+      },
+      {
+        "pl": "Stopa może być lekko zgięta grzbietowo przez cały ruch.",
+        "en": "Keep the foot slightly dorsiflexed throughout the movement."
+      },
+      {
+        "pl": "Nie unoś nogi wyżej kosztem kontroli miednicy.",
+        "en": "Do not lift the leg higher by losing pelvic control."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Wyginanie pleców zamiast pracy pośladka.",
+        "en": "Arching the back instead of using the glute."
+      },
+      {
+        "pl": "Zbyt duży zamach nogą.",
+        "en": "Swinging the leg with too much momentum."
+      },
+      {
+        "pl": "Rotowanie bioder na zewnątrz.",
+        "en": "Rotating the hips outward."
+      },
+      {
+        "pl": "Zbyt szybki powrót linki.",
+        "en": "Letting the cable return too quickly."
+      }
+    ]
+  },
+  "machine-chest-press": {
+    "instructions": [
+      {
+        "pl": "Usiądź w maszynie i ustaw siedzisko tak, aby uchwyty były na wysokości środkowej części klatki.",
+        "en": "Sit in the machine and adjust the seat so the handles are at mid-chest height."
+      },
+      {
+        "pl": "Oprzyj plecy o oparcie i złap uchwyty.",
+        "en": "Keep your back against the pad and grip the handles."
+      },
+      {
+        "pl": "Ściągnij lekko łopatki i napnij brzuch.",
+        "en": "Slightly retract your shoulder blades and brace your core."
+      },
+      {
+        "pl": "Wypchnij uchwyty do przodu, prostując ramiona bez agresywnego blokowania łokci.",
+        "en": "Press the handles forward, extending the arms without aggressively locking the elbows."
+      },
+      {
+        "pl": "Wróć powoli, aż poczujesz kontrolowane rozciągnięcie klatki piersiowej.",
+        "en": "Return slowly until you feel a controlled stretch in the chest."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Trzymaj nadgarstki w jednej linii z przedramionami.",
+        "en": "Keep your wrists aligned with your forearms."
+      },
+      {
+        "pl": "Nie unoś barków do uszu.",
+        "en": "Do not shrug your shoulders toward your ears."
+      },
+      {
+        "pl": "Kontroluj końcową fazę powrotu.",
+        "en": "Control the final part of the return."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Zbyt wysokie lub zbyt niskie ustawienie siedziska.",
+        "en": "Setting the seat too high or too low."
+      },
+      {
+        "pl": "Wypychanie barków do przodu.",
+        "en": "Letting the shoulders roll forward."
+      },
+      {
+        "pl": "Odbijanie ciężaru z dołu.",
+        "en": "Bouncing the weight from the bottom."
+      },
+      {
+        "pl": "Blokowanie łokci z impetem.",
+        "en": "Snapping the elbows into lockout."
+      }
+    ]
+  },
+  "pec-deck": {
+    "instructions": [
+      {
+        "pl": "Usiądź w maszynie i ustaw siedzisko tak, aby ramiona pracowały na wysokości klatki.",
+        "en": "Sit in the machine and adjust the seat so your arms move at chest height."
+      },
+      {
+        "pl": "Oprzyj plecy o oparcie i ustaw przedramiona lub dłonie na poduszkach/uchwytach.",
+        "en": "Keep your back against the pad and place your forearms or hands on the pads/handles."
+      },
+      {
+        "pl": "Utrzymaj lekkie cofnięcie łopatek.",
+        "en": "Maintain a slight shoulder-blade retraction."
+      },
+      {
+        "pl": "Ściągnij ramiona przed sobą, napinając klatkę piersiową.",
+        "en": "Bring your arms together in front of you while squeezing your chest."
+      },
+      {
+        "pl": "Wróć powoli do pozycji startowej, kontrolując rozciągnięcie.",
+        "en": "Return slowly to the starting position while controlling the stretch."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Nie prowadź łokci zbyt wysoko względem barków.",
+        "en": "Do not let your elbows travel too high relative to your shoulders."
+      },
+      {
+        "pl": "Myśl o zbliżaniu ramion, a nie o pchaniu rękami.",
+        "en": "Think about bringing your arms together, not pushing with your hands."
+      },
+      {
+        "pl": "Zatrzymaj ruch na moment w maksymalnym napięciu klatki.",
+        "en": "Pause briefly at peak chest contraction."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Zbyt duży zakres rozciągnięcia na początku ruchu.",
+        "en": "Using too much stretch at the start."
+      },
+      {
+        "pl": "Wysuwanie barków do przodu.",
+        "en": "Letting the shoulders roll forward."
+      },
+      {
+        "pl": "Zamykanie ruchu siłą ramion zamiast klatki.",
+        "en": "Closing the movement with the arms instead of the chest."
+      },
+      {
+        "pl": "Zbyt szybki powrót ciężaru.",
+        "en": "Returning the weight too quickly."
+      }
+    ]
+  },
+  "machine-shoulder-press": {
+    "instructions": [
+      {
+        "pl": "Usiądź w maszynie i ustaw siedzisko tak, aby uchwyty zaczynały się w okolicy barków.",
+        "en": "Sit in the machine and adjust the seat so the handles start around shoulder height."
+      },
+      {
+        "pl": "Oprzyj plecy o oparcie i złap uchwyty.",
+        "en": "Keep your back against the pad and grip the handles."
+      },
+      {
+        "pl": "Napnij brzuch i utrzymaj neutralne ustawienie nadgarstków.",
+        "en": "Brace your core and keep your wrists neutral."
+      },
+      {
+        "pl": "Wyciskaj uchwyty nad głowę, prostując ramiona kontrolowanie.",
+        "en": "Press the handles overhead, extending your arms with control."
+      },
+      {
+        "pl": "Opuść uchwyty powoli do pozycji startowej.",
+        "en": "Lower the handles slowly back to the starting position."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Nie unoś barków do uszu.",
+        "en": "Do not shrug your shoulders toward your ears."
+      },
+      {
+        "pl": "Nie wyginaj mocno pleców podczas wyciskania.",
+        "en": "Avoid arching your back hard during the press."
+      },
+      {
+        "pl": "Zatrzymaj ruch przed bolesnym zakresem barków.",
+        "en": "Stop before any painful shoulder range."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Zbyt niskie ustawienie siedziska.",
+        "en": "Setting the seat too low."
+      },
+      {
+        "pl": "Przeprost pleców w końcowej fazie.",
+        "en": "Overarching the back at the top."
+      },
+      {
+        "pl": "Blokowanie łokci z impetem.",
+        "en": "Snapping the elbows into lockout."
+      },
+      {
+        "pl": "Zbyt szybkie opuszczanie ciężaru.",
+        "en": "Lowering the weight too quickly."
+      }
+    ]
+  },
+  "machine-row": {
+    "instructions": [
+      {
+        "pl": "Usiądź na maszynie i ustaw siedzisko tak, aby uchwyty były na wysokości dolnej lub środkowej części klatki.",
+        "en": "Sit on the machine and adjust the seat so the handles are around lower or mid-chest height."
+      },
+      {
+        "pl": "Złap uchwyty i ustaw tułów stabilnie.",
+        "en": "Grip the handles and keep your torso stable."
+      },
+      {
+        "pl": "Rozpocznij ruch od cofnięcia łopatek.",
+        "en": "Initiate the movement by retracting your shoulder blades."
+      },
+      {
+        "pl": "Przyciągnij uchwyty do tułowia, prowadząc łokcie w tył.",
+        "en": "Pull the handles toward your torso while driving your elbows back."
+      },
+      {
+        "pl": "Wróć powoli do pozycji startowej, utrzymując kontrolę łopatek.",
+        "en": "Return slowly to the starting position while controlling your shoulder blades."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Nie zamieniaj ruchu w uginanie ramion.",
+        "en": "Do not turn the movement into an arm curl."
+      },
+      {
+        "pl": "Trzymaj klatkę wysoko i nie garb się.",
+        "en": "Keep your chest tall and avoid rounding your back."
+      },
+      {
+        "pl": "W końcowej fazie ściągnij łopatki, ale nie unoś barków.",
+        "en": "Squeeze your shoulder blades at the end without shrugging."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Szarpanie tułowiem.",
+        "en": "Jerking with the torso."
+      },
+      {
+        "pl": "Ciągnięcie głównie bicepsami.",
+        "en": "Pulling mostly with the biceps."
+      },
+      {
+        "pl": "Zaokrąglanie pleców.",
+        "en": "Rounding the back."
+      },
+      {
+        "pl": "Zbyt szybki powrót ciężaru.",
+        "en": "Letting the weight return too quickly."
+      }
+    ]
+  },
+  "chest-supported-machine-row": {
+    "instructions": [
+      {
+        "pl": "Usiądź na maszynie i oprzyj klatkę piersiową o poduszkę.",
+        "en": "Sit on the machine and place your chest against the pad."
+      },
+      {
+        "pl": "Ustaw wysokość siedziska tak, aby uchwyty były w wygodnej linii ciągnięcia.",
+        "en": "Adjust the seat height so the handles follow a comfortable pulling path."
+      },
+      {
+        "pl": "Złap uchwyty i utrzymaj klatkę przy podparciu.",
+        "en": "Grip the handles and keep your chest against the support."
+      },
+      {
+        "pl": "Przyciągnij uchwyty, prowadząc łokcie w tył i ściągając łopatki.",
+        "en": "Pull the handles by driving your elbows back and squeezing your shoulder blades."
+      },
+      {
+        "pl": "Wróć powoli do pełnego, kontrolowanego rozciągnięcia pleców.",
+        "en": "Return slowly to a full, controlled back stretch."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Podparcie klatki ma ograniczyć bujanie tułowiem.",
+        "en": "The chest support should limit torso swinging."
+      },
+      {
+        "pl": "Nie odrywaj klatki od poduszki w końcowej fazie.",
+        "en": "Do not lift your chest off the pad at the end of the pull."
+      },
+      {
+        "pl": "Dopasuj chwyt do celu: łokcie bliżej tułowia mocniej angażują najszersze.",
+        "en": "Match the grip to your goal: elbows closer to the torso bias the lats more."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Odrywanie klatki od podparcia.",
+        "en": "Lifting the chest away from the support."
+      },
+      {
+        "pl": "Zbyt krótki zakres ruchu.",
+        "en": "Using a shortened range of motion."
+      },
+      {
+        "pl": "Unoszenie barków do uszu.",
+        "en": "Shrugging the shoulders toward the ears."
+      },
+      {
+        "pl": "Ciągnięcie wyłącznie rękami.",
+        "en": "Pulling only with the arms."
+      }
+    ]
+  },
+  "rear-delt-machine": {
+    "instructions": [
+      {
+        "pl": "Usiądź przodem do oparcia maszyny i ustaw klatkę piersiową przy poduszce.",
+        "en": "Sit facing the machine pad and keep your chest against the support."
+      },
+      {
+        "pl": "Złap uchwyty lub oprzyj ramiona na poduszkach.",
+        "en": "Grip the handles or place your arms against the pads."
+      },
+      {
+        "pl": "Utrzymaj lekkie ugięcie łokci.",
+        "en": "Keep a slight bend in the elbows."
+      },
+      {
+        "pl": "Odwiedź ramiona na boki i do tyłu, koncentrując się na tylnej części barków.",
+        "en": "Move your arms out and back while focusing on the rear shoulders."
+      },
+      {
+        "pl": "Wróć powoli do pozycji startowej bez utraty napięcia.",
+        "en": "Return slowly to the starting position without losing tension."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Nie ściągaj łopatek zbyt agresywnie, jeśli chcesz mocniej trafić w tylne barki.",
+        "en": "Do not squeeze the shoulder blades too aggressively if you want to bias the rear delts."
+      },
+      {
+        "pl": "Trzymaj barki nisko, bez unoszenia do uszu.",
+        "en": "Keep the shoulders down, away from the ears."
+      },
+      {
+        "pl": "Użyj mniejszego ciężaru i dokładniejszego ruchu.",
+        "en": "Use a lighter weight and a cleaner movement."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Szarpanie ciężaru.",
+        "en": "Jerking the weight."
+      },
+      {
+        "pl": "Zginanie i prostowanie łokci zamiast odwodzenia ramion.",
+        "en": "Bending and extending the elbows instead of moving the arms outward."
+      },
+      {
+        "pl": "Unoszenie barków.",
+        "en": "Shrugging the shoulders."
+      },
+      {
+        "pl": "Zbyt duży ciężar i skrócony zakres ruchu.",
+        "en": "Using too much weight and shortening the range."
+      }
+    ]
+  },
+  "assisted-pull-up-machine": {
+    "instructions": [
+      {
+        "pl": "Ustaw poziom asysty na maszynie zgodnie ze swoją siłą.",
+        "en": "Set the assistance level on the machine according to your strength."
+      },
+      {
+        "pl": "Wejdź na platformę lub oprzyj kolana na poduszce asystującej.",
+        "en": "Step onto the platform or place your knees on the assistance pad."
+      },
+      {
+        "pl": "Złap drążek wybranym chwytem i napnij brzuch.",
+        "en": "Grip the bar with your chosen grip and brace your core."
+      },
+      {
+        "pl": "Podciągnij ciało, prowadząc łokcie w dół i do tyłu.",
+        "en": "Pull your body up by driving your elbows down and back."
+      },
+      {
+        "pl": "Opuść się powoli do pełnego kontrolowanego wyprostu ramion.",
+        "en": "Lower slowly to a full controlled arm extension."
+      }
+    ],
+    "techniqueTips": [
+      {
+        "pl": "Większy ciężar na stosie zwykle oznacza większą asystę.",
+        "en": "More weight on the stack usually means more assistance."
+      },
+      {
+        "pl": "Nie skracaj dolnej fazy ruchu.",
+        "en": "Do not shorten the bottom phase."
+      },
+      {
+        "pl": "Ściągaj łopatki w dół zanim mocno zegniesz łokcie.",
+        "en": "Depress your shoulder blades before strongly bending your elbows."
+      }
+    ],
+    "commonMistakes": [
+      {
+        "pl": "Użycie zbyt dużej asysty i brak kontroli.",
+        "en": "Using too much assistance and losing control."
+      },
+      {
+        "pl": "Podciąganie brodą bez pracy grzbietu.",
+        "en": "Reaching with the chin without engaging the back."
+      },
+      {
+        "pl": "Bujanie ciałem.",
+        "en": "Swinging the body."
+      },
+      {
+        "pl": "Niepełny zakres ruchu.",
+        "en": "Using an incomplete range of motion."
+      }
+    ]
+  }
 };
 
 export function getExerciseTechniqueContent(exerciseId: string): ExerciseTechniqueContent | undefined {

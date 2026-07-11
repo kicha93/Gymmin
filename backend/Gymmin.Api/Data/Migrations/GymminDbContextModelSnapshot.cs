@@ -487,6 +487,9 @@ namespace Gymmin.Api.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("ShowRestTimer")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("IsAuthPanelDismissed")
                         .HasColumnType("INTEGER");
 

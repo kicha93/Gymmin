@@ -4,7 +4,7 @@ export const indoorBike = [
   {
     "id": "indoor-bike-air-bike-531",
     "name": "Air Bike",
-    "polishName": "Rower powietrzny",
+    "polishName": "Rower powietrzny Assault Bike",
     "garminCategory": "INDOOR_BIKE",
     "garminName": "AIR_BIKE",
     "foundInGarmin": false,
@@ -61,12 +61,13 @@ export const indoorBike = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "indoor-bike-assault-bike-532",
     "name": "Assault Bike",
-    "polishName": "Assault Bike",
+    "polishName": "Rower powietrzny",
     "garminCategory": "INDOOR_BIKE",
     "garminName": "ASSAULT_BIKE",
     "foundInGarmin": false,
@@ -123,7 +124,8 @@ export const indoorBike = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "indoor-bike-stationary-bike-533",
@@ -185,6 +187,7 @@ export const indoorBike = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

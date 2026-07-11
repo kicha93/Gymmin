@@ -10,6 +10,7 @@ import { core } from "./core";
 import { crunch } from "./crunch";
 import { curl } from "./curl";
 import { deadlift } from "./deadlift";
+import { dorsiflexion } from "./dorsiflexion";
 import { elliptical } from "./elliptical";
 import { floorClimb } from "./floor-climb";
 import { flye } from "./flye";
@@ -21,12 +22,14 @@ import { indoorBike } from "./indoor-bike";
 import { ladder } from "./ladder";
 import { lateralRaise } from "./lateral-raise";
 import { legCurl } from "./leg-curl";
+import { legExtension } from "./leg-extension";
 import { legRaise } from "./leg-raise";
 import { lunge } from "./lunge";
 import { olympicLift } from "./olympic-lift";
 import { plank } from "./plank";
 import { plyo } from "./plyo";
 import { pullUp } from "./pull-up";
+import { pullover } from "./pullover";
 import { pushUp } from "./push-up";
 import { row } from "./row";
 import { run } from "./run";
@@ -59,6 +62,7 @@ export const exercises = [
   ...crunch,
   ...curl,
   ...deadlift,
+  ...dorsiflexion,
   ...elliptical,
   ...floorClimb,
   ...flye,
@@ -70,12 +74,14 @@ export const exercises = [
   ...ladder,
   ...lateralRaise,
   ...legCurl,
+  ...legExtension,
   ...legRaise,
   ...lunge,
   ...olympicLift,
   ...plank,
   ...plyo,
   ...pullUp,
+  ...pullover,
   ...pushUp,
   ...row,
   ...run,
@@ -109,6 +115,7 @@ export const exercisesByGarminCategory = {
   "CRUNCH": crunch,
   "CURL": curl,
   "DEADLIFT": deadlift,
+  "DORSIFLEXION": dorsiflexion,
   "ELLIPTICAL": elliptical,
   "FLOOR_CLIMB": floorClimb,
   "FLYE": flye,
@@ -120,12 +127,14 @@ export const exercisesByGarminCategory = {
   "LADDER": ladder,
   "LATERAL_RAISE": lateralRaise,
   "LEG_CURL": legCurl,
+  "LEG_EXTENSION": legExtension,
   "LEG_RAISE": legRaise,
   "LUNGE": lunge,
   "OLYMPIC_LIFT": olympicLift,
   "PLANK": plank,
   "PLYO": plyo,
   "PULL_UP": pullUp,
+  "PULLOVER": pullover,
   "PUSH_UP": pushUp,
   "ROW": row,
   "RUN": run,

@@ -46,6 +46,8 @@ Mobile odpowiada za:
 
 Mobile używa account-scoped AsyncStorage.
 
+Aktywny plan tygodnia jest przechowywany lokalnie pod `gymmin.account.{owner}.weeklyPlan.v1`. Nie jest jeszcze synchronizowany z backendem: przypisania treningów do dni tygodnia oraz podsumowanie bieżącego tygodnia są local-first.
+
 Format kluczy:
 
 ```text
@@ -303,15 +305,18 @@ Lokalny PostgreSQL mozna uruchomic przez `docker-compose.postgres.yml`. Szczegol
 
 Poniewaz migracje powstaly na wspolnym schemacie SQLite, backend uzywa konwerterow EF dla `DateTimeOffset`, `Guid` i bool, aby te same kolumny `TEXT`/`INTEGER` dzialaly przewidywalnie rowniez na PostgreSQL.
 
-Database provider obejmuje:
+Database provider obejmuje glowne prywatne dane konta i moduly backendowe:
 
-- users,
-- sessions,
-- settings,
+- users and auth sessions,
+- user settings,
 - workouts,
 - favorite exercises,
 - workout sessions,
-- workout creator jobs.
+- workout creator jobs,
+- profile avatar metadata,
+- achievements and app usage stats,
+- AI credit accounts, ledger transactions and purchase records,
+- bug reports and diagnostics metadata where applicable.
 
 Workout plans i workout sessions są w dużej części przechowywane jako JSON z metadanymi sync w osobnych kolumnach. To jest świadomy etap pośredni: najpierw trwałość i sync, potem ewentualna normalizacja.
 
@@ -322,7 +327,10 @@ Synchronizowane z kontem:
 - settings,
 - workouts,
 - favorite exercises,
-- workout sessions.
+- workout sessions,
+- unlocked achievements and app usage stats,
+- AI credits as backend-owned balance/history,
+- profile/account metadata through auth/profile endpoints.
 
 Nie są synchronizowane jako osobne backendowe moduły:
 
@@ -349,6 +357,10 @@ Powody:
 - przyszłe mapowanie do Garmin,
 - spójny progres,
 - spójny przegląd mięśni.
+
+Katalog jest podzielony na pliki w `apps/mobile/src/domain/exerciseCatalog`. Stabilnym kluczem pozostaje `exercise.id`. Scalone rekordy nie są przepisywane w historycznych payloadach; `exerciseIdAliases.ts` rozwiązuje stare ID w runtime, a normalizacja historii i ulubionych grupuje je pod ID kanonicznym. Alias nazw jest rozwiązywany łańcuchowo, co zachowuje kompatybilność z wcześniejszymi etapami czyszczenia.
+
+`garminCategory` nadal jest kompatybilną kategorią filtrowania. Nie wdrożono połowicznej migracji do osobnych `movementPattern` i `mechanic`; rekomendowany model pozostaje opisany w raporcie katalogu. `libraryTier` kontroluje widoczność rekordów specjalistycznych bez usuwania ich z danych historycznych.
 
 AI import i AI rewrite próbują best-effort mapować nazwę ćwiczenia do katalogowego `exerciseId`. Brak dopasowania nie tworzy custom exercise.
 

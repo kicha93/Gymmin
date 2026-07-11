@@ -2,6 +2,69 @@ import type { Exercise } from "../exercises";
 
 export const olympicLift = [
   {
+    "id": "olympic-lift-clean-709",
+    "name": "Barbell Clean",
+    "polishName": "Zarzut sztangi",
+    "garminCategory": "OLYMPIC_LIFT",
+    "garminName": "CLEAN",
+    "foundInGarmin": true,
+    "image": "",
+    "url": "https://connect.garmin.com/modern/exercises/OLYMPIC_LIFT/CLEAN",
+    "difficulty": "Advanced",
+    "description": "The clean is a multi-joint exercise that develops power and strength throughout the entire body. The exercise also helps build core strength and athletic coordination. The movement requires lower and upper body strength to pull the weight up and the bring your body underneath the weight to \"catch\" it. The movement is a combination of a hip extension and a high pull, and then finishes with a quarter squat.",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 0,
+      "adductors": 2,
+      "biceps": 2,
+      "calves": 2,
+      "chest": 0,
+      "forearm": 2,
+      "glutes": 1,
+      "hamstrings": 1,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 2,
+      "obliques": 0,
+      "quads": 1,
+      "shoulders": 2,
+      "traps": 1,
+      "triceps": 0
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 1,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
+  },
+  {
     "id": "olympic-lift-barbell-hang-power-clean-699",
     "name": "Barbell Hang Power Clean",
     "polishName": "Energiczny zarzut sztangi z utrzymaniem chwytu",
@@ -61,7 +124,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-barbell-hang-power-snatch-700",
@@ -123,7 +187,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-barbell-hang-pull-701",
@@ -185,7 +250,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-barbell-hang-squat-clean-702",
@@ -247,7 +313,71 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "squat-barbell-hang-squat-snatch-1255",
+    "name": "Barbell Hang Squat Snatch",
+    "polishName": "Rwanie sztangi w przysiadzie w zwisie",
+    "garminCategory": "OLYMPIC_LIFT",
+    "garminName": "BARBELL_HANG_SQUAT_SNATCH",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 2,
+      "adductors": 0,
+      "biceps": 2,
+      "calves": 2,
+      "chest": 0,
+      "forearm": 0,
+      "glutes": 1,
+      "hamstrings": 2,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 2,
+      "obliques": 0,
+      "quads": 1,
+      "shoulders": 1,
+      "traps": 1,
+      "triceps": 2
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 1,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-barbell-high-pull-703",
@@ -309,7 +439,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-barbell-power-clean-704",
@@ -371,7 +502,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-barbell-power-snatch-705",
@@ -433,7 +565,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-barbell-snatch-706",
@@ -495,7 +628,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-barbell-split-jerk-707",
@@ -557,7 +691,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-barbell-squat-clean-708",
@@ -619,37 +754,38 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
-    "id": "olympic-lift-clean-709",
-    "name": "Barbell Clean",
-    "polishName": "Zarzut sztangi",
+    "id": "squat-barbell-squat-snatch-1259",
+    "name": "Barbell Squat Snatch",
+    "polishName": "Rwanie sztangi w przysiadzie",
     "garminCategory": "OLYMPIC_LIFT",
-    "garminName": "CLEAN",
-    "foundInGarmin": true,
+    "garminName": "BARBELL_SQUAT_SNATCH",
+    "foundInGarmin": false,
     "image": "",
-    "url": "https://connect.garmin.com/modern/exercises/OLYMPIC_LIFT/CLEAN",
-    "difficulty": "Advanced",
-    "description": "The clean is a multi-joint exercise that develops power and strength throughout the entire body. The exercise also helps build core strength and athletic coordination. The movement requires lower and upper body strength to pull the weight up and the bring your body underneath the weight to \"catch\" it. The movement is a combination of a hip extension and a high pull, and then finishes with a quarter squat.",
+    "url": "",
+    "difficulty": "",
+    "description": "",
     "muscleImpact": {
       "abductors": 0,
-      "abs": 0,
-      "adductors": 2,
+      "abs": 2,
+      "adductors": 0,
       "biceps": 2,
       "calves": 2,
       "chest": 0,
-      "forearm": 2,
+      "forearm": 0,
       "glutes": 1,
-      "hamstrings": 1,
+      "hamstrings": 2,
       "hips": 0,
       "lats": 0,
       "lowerBack": 2,
       "obliques": 0,
       "quads": 1,
-      "shoulders": 2,
+      "shoulders": 1,
       "traps": 1,
-      "triceps": 0
+      "triceps": 2
     },
     "equipment": {
       "ankleWeight": 0,
@@ -681,7 +817,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-clean-and-jerk-710",
@@ -743,7 +880,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-clean-and-press-711",
@@ -805,7 +943,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-dumbbell-clean-712",
@@ -867,7 +1006,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-dumbbell-hang-pull-713",
@@ -929,7 +1069,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-dumbbell-hang-snatch-714",
@@ -991,7 +1132,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-jerk-715",
@@ -1053,7 +1195,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-push-press-716",
@@ -1115,7 +1258,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-strict-press-717",
@@ -1177,7 +1321,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-dumbbell-snatch-718",
@@ -1239,7 +1384,134 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "squat-dumbbell-squat-clean-1273",
+    "name": "Dumbbell Squat Clean",
+    "polishName": "Zarzut hantli w przysiadzie",
+    "garminCategory": "OLYMPIC_LIFT",
+    "garminName": "DUMBBELL_SQUAT_CLEAN",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 0,
+      "adductors": 0,
+      "biceps": 2,
+      "calves": 2,
+      "chest": 0,
+      "forearm": 2,
+      "glutes": 1,
+      "hamstrings": 1,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 2,
+      "obliques": 0,
+      "quads": 1,
+      "shoulders": 2,
+      "traps": 1,
+      "triceps": 0
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 1,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "squat-dumbbell-squat-snatch-1274",
+    "name": "Dumbbell Squat Snatch",
+    "polishName": "Rwanie hantli nad głowę w przysiadzie",
+    "garminCategory": "OLYMPIC_LIFT",
+    "garminName": "DUMBBELL_SQUAT_SNATCH",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 2,
+      "adductors": 0,
+      "biceps": 2,
+      "calves": 0,
+      "chest": 0,
+      "forearm": 0,
+      "glutes": 1,
+      "hamstrings": 2,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 2,
+      "obliques": 0,
+      "quads": 1,
+      "shoulders": 1,
+      "traps": 1,
+      "triceps": 2
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 1,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-medicine-ball-clean-719",
@@ -1301,7 +1573,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-one-hand-dumbbell-split-snatch-720",
@@ -1363,7 +1636,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-push-jerk-721",
@@ -1425,7 +1699,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-single-arm-dumbbell-snatch-722",
@@ -1487,7 +1762,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-single-arm-hang-snatch-723",
@@ -1549,7 +1825,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-single-arm-kettlebell-snatch-724",
@@ -1611,131 +1888,8 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "olympic-lift-split-jerk-725",
-    "name": "Split Jerk",
-    "polishName": "Podrzut w rozkroku",
-    "garminCategory": "OLYMPIC_LIFT",
-    "garminName": "SPLIT_JERK",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 2,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 2,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 2,
-      "shoulders": 1,
-      "traps": 0,
-      "triceps": 2
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 1,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "olympic-lift-squat-clean-and-jerk-726",
-    "name": "Squat Clean and Jerk",
-    "polishName": "Przysiady z zarzutem i wybiciem",
-    "garminCategory": "OLYMPIC_LIFT",
-    "garminName": "SQUAT_CLEAN_AND_JERK",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 2,
-      "biceps": 2,
-      "calves": 2,
-      "chest": 0,
-      "forearm": 2,
-      "glutes": 1,
-      "hamstrings": 1,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 2,
-      "obliques": 0,
-      "quads": 1,
-      "shoulders": 1,
-      "traps": 1,
-      "triceps": 2
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 1,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "olympic-lift-snatch-727",
@@ -1797,6 +1951,133 @@ export const olympicLift = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "olympic-lift-split-jerk-725",
+    "name": "Split Jerk",
+    "polishName": "Podrzut w rozkroku",
+    "garminCategory": "OLYMPIC_LIFT",
+    "garminName": "SPLIT_JERK",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 2,
+      "adductors": 0,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 0,
+      "forearm": 0,
+      "glutes": 0,
+      "hamstrings": 2,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 2,
+      "shoulders": 1,
+      "traps": 0,
+      "triceps": 2
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 1,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "olympic-lift-squat-clean-and-jerk-726",
+    "name": "Squat Clean and Jerk",
+    "polishName": "Przysiady z zarzutem i wybiciem",
+    "garminCategory": "OLYMPIC_LIFT",
+    "garminName": "SQUAT_CLEAN_AND_JERK",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 0,
+      "adductors": 2,
+      "biceps": 2,
+      "calves": 2,
+      "chest": 0,
+      "forearm": 2,
+      "glutes": 1,
+      "hamstrings": 1,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 2,
+      "obliques": 0,
+      "quads": 1,
+      "shoulders": 1,
+      "traps": 1,
+      "triceps": 2
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 1,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

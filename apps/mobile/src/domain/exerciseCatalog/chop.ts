@@ -61,7 +61,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-cable-rotational-lift-158",
@@ -123,7 +124,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-cable-woodchop-159",
@@ -185,69 +187,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "chop-chop-160",
-    "name": "Chop",
-    "polishName": "Rąbanie drewna",
-    "garminCategory": "CHOP",
-    "garminName": "CHOP",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 2,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 1,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "chop-cross-chop-to-knee-161",
@@ -309,7 +250,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-dumbbell-chop-162",
@@ -371,7 +313,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-half-kneeling-rotation-163",
@@ -433,7 +376,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-half-kneeling-rotational-chop-164",
@@ -495,7 +439,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-half-kneeling-rotational-reverse-chop-165",
@@ -557,7 +502,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-half-kneeling-stability-chop-166",
@@ -619,7 +565,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-half-kneeling-stability-reverse-chop-167",
@@ -681,7 +628,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-kneeling-rotational-chop-168",
@@ -743,7 +691,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-kneeling-rotational-reverse-chop-169",
@@ -805,7 +754,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-kneeling-stability-chop-170",
@@ -867,7 +817,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-kneeling-woodchopper-171",
@@ -929,7 +880,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-medicine-ball-wood-chops-172",
@@ -991,7 +943,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-power-squat-chops-173",
@@ -1053,7 +1006,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-standing-rotational-chop-174",
@@ -1115,7 +1069,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-standing-split-rotational-chop-175",
@@ -1177,7 +1132,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-standing-split-rotational-reverse-chop-176",
@@ -1239,7 +1195,8 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "chop-standing-stability-reverse-chop-177",
@@ -1301,192 +1258,7 @@ export const chop = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "chop-weighted-cross-chop-to-knee-178",
-    "name": "Weighted Cross Chop to Knee",
-    "polishName": "Rąbanie drewna po przekątnej z uniesieniem kolana (z obciążeniem)",
-    "garminCategory": "CHOP",
-    "garminName": "WEIGHTED_CROSS_CHOP_TO_KNEE",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 1,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 2,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 1,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "chop-weighted-half-kneeling-rotation-179",
-    "name": "Weighted Half-kneeling Rotation",
-    "polishName": "Skręt tułowia w klęku jednonóż (z obciążeniem)",
-    "garminCategory": "CHOP",
-    "garminName": "WEIGHTED_HALF_KNEELING_ROTATION",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 1,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 2,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 1,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "chop-weighted-power-squat-chops-180",
-    "name": "Weighted Power Squat Chops",
-    "polishName": "Dynamiczne przysiady z rąbaniem drewna (z obciążeniem)",
-    "garminCategory": "CHOP",
-    "garminName": "WEIGHTED_POWER_SQUAT_CHOPS",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 2,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 2,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 1,
-      "quads": 2,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

@@ -76,7 +76,7 @@
         "id": "b4b1eb4d43c24587862ab3fca939e0cd",
         "tokenHash": "mpM83l0lswJSIb16\u002BNb2wghrpPzvpI8BcwBQ4rchDcQ=",
         "createdAt": "2026-07-05T17:54:33.2215078+00:00",
-        "lastSeenAt": "2026-07-08T16:54:28.207106+00:00",
+        "lastSeenAt": "2026-07-11T10:45:25.3957028+00:00",
         "expiresAt": "2026-08-04T17:54:33.2215078+00:00",
         "revokedAt": null,
         "userAgent": "okhttp/4.9.2",
@@ -86,7 +86,7 @@
       }
     ],
     "createdAt": "2026-06-28T17:11:06.182817+00:00",
-    "updatedAt": "2026-07-08T16:54:28.207106+00:00"
+    "updatedAt": "2026-07-11T10:45:25.3957028+00:00"
   },
   {
     "id": "49f083aff2b746c581fd3208e92a50fe",

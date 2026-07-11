@@ -44,6 +44,14 @@ This note tracks the current workout-view UX decisions.
 - Missing metric values are rendered as `—` instead of long empty-state text inside each card.
 - A lightweight SVG sparkline is shown when an exercise has enough local history data.
 
+## Exercise Progress History
+
+- The per-exercise Progress view groups completed entries by workout session instead of rendering every set as a separate history card; repeated placements of the selected exercise remain within that session card.
+- The newest execution is expanded by default; older executions are collapsed and show best weight, most reps and total volume.
+- An expanded execution shows compact rows with set badge, reps, weight, abbreviated volume and a total-volume footer.
+- History can be filtered to all results, 3 months, 6 months or 1 year. Initially five groups are rendered, with an explicit action to reveal older results.
+- Deleted, active and abandoned sessions remain excluded through the existing progress helpers. Missing values render as `—`.
+
 ## Starting A Workout
 
 - Starting a workout no longer opens an execution-mode picker.
@@ -56,3 +64,10 @@ This note tracks the current workout-view UX decisions.
 - The rest timer remains a separate lightweight card and uses the same elapsed-time formatting helpers as the header.
 - Execution entries use compact headers like `[2] Squat` or `[2] Rest` instead of repeating a separate `Set N` label.
 - Workout tables use the device/system orientation instead of a manual `rotate(90deg)` transform. The `horizontal` table mode widens the table for landscape use, while Android/iOS auto-rotation handles the actual screen rotation.
+## Timer odpoczynku
+
+W `Ustawienia -> Trening` użytkownik może włączyć albo wyłączyć widoczność timera odpoczynku podczas aktywnego treningu. Ustawienie jest domyślnie włączone, zapisuje się per konto lokalnie oraz synchronizuje przez ustawienia konta. Wyłączenie ukrywa wyłącznie kontrolkę timera; planowany odpoczynek pozostaje widoczny w karcie ćwiczenia.
+
+## Plan tygodnia
+
+Plan tygodnia jest lokalny i przypisany do aktualnego ownera storage. Każdy zapisany trening można dodać do jednego dnia tygodnia, a homepage pokazuje zakres bieżącego tygodnia, wykonane/do wykonania oraz najbliższy trening na dziś. Ukończona sesja zalicza trening do tygodnia nawet wtedy, gdy została wykonana w innym dniu niż zaplanowany.

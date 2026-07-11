@@ -61,7 +61,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-alternating-dumbbell-biceps-curl-on-swiss-ball-324",
@@ -123,7 +124,8 @@ export const curl = [
       "swissBall": 1,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "curl-alternating-incline-dumbbell-biceps-curl-325",
@@ -185,7 +187,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-barbell-biceps-curl-326",
@@ -247,7 +250,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-barbell-reverse-wrist-curl-327",
@@ -309,7 +313,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-barbell-wrist-curl-328",
@@ -371,7 +376,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-behind-the-back-barbell-reverse-wrist-curl-329",
@@ -433,7 +439,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-behind-the-back-one-arm-cable-curl-330",
@@ -495,7 +502,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-cable-biceps-curl-331",
@@ -557,7 +565,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-cable-hammer-curl-332",
@@ -619,7 +628,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-cheating-barbell-biceps-curl-333",
@@ -681,7 +691,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "curl-close-grip-ez-bar-biceps-curl-334",
@@ -743,7 +754,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-cross-body-dumbbell-hammer-curl-335",
@@ -805,131 +817,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "curl-curl-336",
-    "name": "Curl",
-    "polishName": "Uginanie ramion",
-    "garminCategory": "CURL",
-    "garminName": "CURL",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 1,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 2,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "curl-dead-hang-biceps-curl-337",
-    "name": "Dead-hang Biceps Curl",
-    "polishName": "Uginanie ramion na modlitewniku",
-    "garminCategory": "CURL",
-    "garminName": "DEAD_HANG_BICEPS_CURL",
-    "foundInGarmin": true,
-    "image": "",
-    "url": "https://connect.garmin.com/modern/exercises/CURL/DEAD_HANG_BICEPS_CURL",
-    "difficulty": "Intermediate",
-    "description": "The dead-hang biceps curl is an isolation exercise for the biceps and forearms. The forward hanging position maximizes the isolation of the biceps by removing assistance from the back and shoulders.",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 1,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 2,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 1,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 1,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "curl-decline-hammer-curl-338",
@@ -991,7 +880,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-dumbbell-biceps-curl-339",
@@ -1053,7 +943,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-dumbbell-biceps-curl-with-static-hold-340",
@@ -1115,7 +1006,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "variation"
   },
   {
     "id": "curl-dumbbell-hammer-curl-341",
@@ -1177,7 +1069,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-dumbbell-reverse-wrist-curl-342",
@@ -1239,7 +1132,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-dumbbell-wrist-curl-343",
@@ -1301,7 +1195,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-ez-bar-preacher-curl-344",
@@ -1363,7 +1258,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-forward-bend-biceps-curl-345",
@@ -1425,7 +1321,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-hammer-curl-to-press-346",
@@ -1487,7 +1384,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-incline-dumbbell-biceps-curl-347",
@@ -1549,69 +1447,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "curl-incline-offset-thumb-dumbbell-curl-348",
-    "name": "Incline Offset Thumb Dumbbell Curl",
-    "polishName": "Naprzemienne uginanie ramion z hantlami na ławce dodatniej",
-    "garminCategory": "CURL",
-    "garminName": "INCLINE_OFFSET_THUMB_DUMBBELL_CURL",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 1,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 2,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 1,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "curl-kettlebell-biceps-curl-349",
@@ -1673,7 +1510,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-lying-concentration-cable-curl-350",
@@ -1735,7 +1573,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-one-arm-concentration-curl-351",
@@ -1797,7 +1636,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-one-arm-preacher-curl-352",
@@ -1859,7 +1699,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-plate-pinch-curl-353",
@@ -1921,7 +1762,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-preacher-curl-with-cable-354",
@@ -1983,7 +1825,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-reverse-ez-bar-curl-355",
@@ -2045,7 +1888,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-reverse-grip-barbell-biceps-curl-356",
@@ -2107,7 +1951,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-reverse-grip-wrist-curl-357",
@@ -2169,7 +2014,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-seated-alternating-dumbbell-biceps-curl-358",
@@ -2231,7 +2077,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-seated-dumbbell-biceps-curl-359",
@@ -2293,7 +2140,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-seated-reverse-dumbbell-curl-360",
@@ -2355,7 +2203,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-split-stance-offset-pinky-dumbbell-curl-361",
@@ -2417,131 +2266,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "curl-standing-alternating-dumbbell-curls-362",
-    "name": "Standing Alternating Dumbbell Curls",
-    "polishName": "Naprzemienne uginanie ramion z hantlami stojąc",
-    "garminCategory": "CURL",
-    "garminName": "STANDING_ALTERNATING_DUMBBELL_CURLS",
-    "foundInGarmin": true,
-    "image": "",
-    "url": "https://connect.garmin.com/modern/exercises/CURL/STANDING_ALTERNATING_DUMBBELL_CURLS",
-    "difficulty": "Beginner",
-    "description": "The standing alternating dumbbell curl is a strength building exercise for the biceps and forearms. Performing the curls in an alternating manner ensures muscular balance on both sides of the body.",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 1,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 2,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "curl-standing-dumbbell-biceps-curl-363",
-    "name": "Standing Dumbbell Biceps Curl",
-    "polishName": "Uginanie ramion z hantlami stojąc",
-    "garminCategory": "CURL",
-    "garminName": "STANDING_DUMBBELL_BICEPS_CURL",
-    "foundInGarmin": true,
-    "image": "",
-    "url": "https://connect.garmin.com/modern/exercises/CURL/STANDING_DUMBBELL_BICEPS_CURL",
-    "difficulty": "Intermediate",
-    "description": "The standing dumbbell biceps curl is a traditional bodybuilding move that develops density and strength throughout the biceps region. This exercise should always be performed with a controlled motion.",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 1,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 2,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "curl-standing-ez-bar-biceps-curl-364",
@@ -2603,7 +2329,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-standing-zottman-biceps-curl-365",
@@ -2665,7 +2392,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-static-curl-366",
@@ -2727,69 +2455,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "curl-swiss-ball-dumbbell-overhead-triceps-extension-367",
-    "name": "Swiss Ball Dumbbell Overhead Triceps Extension",
-    "polishName": "Wyprost tricepsów z hantlami nad głowę na piłce gimnastycznej",
-    "garminCategory": "CURL",
-    "garminName": "SWISS_BALL_DUMBBELL_OVERHEAD_TRICEPS_EXTENSION",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 1
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 1,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "curl-swiss-ball-ez-bar-preacher-curl-368",
@@ -2851,7 +2518,8 @@ export const curl = [
       "swissBall": 1,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "curl-twisting-standing-dumbbell-biceps-curl-369",
@@ -2913,7 +2581,8 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "curl-wide-grip-ez-bar-biceps-curl-370",
@@ -2975,6 +2644,7 @@ export const curl = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

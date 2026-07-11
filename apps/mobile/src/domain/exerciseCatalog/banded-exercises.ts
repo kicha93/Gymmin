@@ -61,7 +61,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-back-extension-2",
@@ -123,7 +124,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-bicycle-crunch-3",
@@ -185,7 +187,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-calf-raises-4",
@@ -247,7 +250,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-clam-shells-5",
@@ -309,7 +313,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-curl-6",
@@ -371,7 +376,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-deadbug-7",
@@ -433,7 +439,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-deadlift-8",
@@ -495,7 +502,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-donkey-kick-9",
@@ -557,74 +565,13 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "banded-exercises-external-rotation-10",
-    "name": "Banded External Rotation",
-    "polishName": "Rotacja zewnętrzna (z gumą oporową)",
-    "garminCategory": "BANDED_EXERCISES",
-    "garminName": "EXTERNAL_ROTATION",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 1,
-      "traps": 0,
-      "triceps": 0
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 1,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-external-rotation-at-90-degree-abduction-11",
     "name": "Banded External Rotation at 90-Degree Abduction",
-    "polishName": "Rotacja zewnętrzna ramienia z linką wyciągu pod kątem 90 Stopni (z gumą oporową)",
+    "polishName": "Rotacja zewnętrzna ramienia z gumą przy odwiedzeniu do 90 stopni",
     "garminCategory": "BANDED_EXERCISES",
     "garminName": "EXTERNAL_ROTATION_AT_90_DEGREE_ABDUCTION",
     "foundInGarmin": false,
@@ -681,7 +628,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "rehab"
   },
   {
     "id": "banded-exercises-fire-hydrant-12",
@@ -743,7 +691,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-fly-13",
@@ -805,7 +754,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-front-raise-14",
@@ -867,7 +817,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-glute-bridge-15",
@@ -929,7 +880,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-hamstring-curls-16",
@@ -991,7 +943,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-high-plank-leg-lifts-17",
@@ -1053,7 +1006,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-hip-extension-18",
@@ -1115,69 +1069,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "banded-exercises-internal-rotation-19",
-    "name": "Banded Internal Rotation",
-    "polishName": "Rotacja wewnętrzna ugiętym ramieniem (z gumą oporową)",
-    "garminCategory": "BANDED_EXERCISES",
-    "garminName": "INTERNAL_ROTATION",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 1,
-      "traps": 0,
-      "triceps": 0
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 1,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-jumping-jack-20",
@@ -1239,12 +1132,13 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-kneeling-crunch-21",
     "name": "Banded Kneeling Crunch",
-    "polishName": "Spięcia brzucha na wyciągu w klęku (z gumą oporową)",
+    "polishName": "Spięcia brzucha w klęku z gumą oporową",
     "garminCategory": "BANDED_EXERCISES",
     "garminName": "KNEELING_CRUNCH",
     "foundInGarmin": false,
@@ -1301,7 +1195,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-lateral-band-walks-22",
@@ -1363,7 +1258,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-lateral-raise-23",
@@ -1425,7 +1321,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-latpull-24",
@@ -1487,7 +1384,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-leg-abduction-25",
@@ -1549,7 +1447,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-leg-adduction-26",
@@ -1611,7 +1510,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-leg-extension-27",
@@ -1673,7 +1573,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-lunge-28",
@@ -1735,7 +1636,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-plank-29",
@@ -1797,7 +1699,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-pull-apart-30",
@@ -1859,7 +1762,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-push-ups-31",
@@ -1921,7 +1825,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-reverse-crunch-32",
@@ -1983,7 +1888,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-row-33",
@@ -2045,7 +1951,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-shoulder-abduction-34",
@@ -2107,7 +2014,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-shoulder-extension-35",
@@ -2169,7 +2077,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-shoulder-external-rotation-36",
@@ -2231,7 +2140,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-shoulder-flexion-to-90-degrees-37",
@@ -2293,7 +2203,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-side-plank-leg-lifts-38",
@@ -2355,69 +2266,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "banded-exercises-squat-39",
-    "name": "Banded Squat",
-    "polishName": "Przysiady (z gumą oporową)",
-    "garminCategory": "BANDED_EXERCISES",
-    "garminName": "SQUAT",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 1,
-      "hamstrings": 2,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 1,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 1,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-squat-to-press-40",
@@ -2479,7 +2329,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-tricep-extension-41",
@@ -2541,7 +2392,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-tricep-kickback-42",
@@ -2603,7 +2455,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-upright-row-43",
@@ -2665,7 +2518,8 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "banded-exercises-wall-crawl-with-external-rotation-44",
@@ -2727,6 +2581,7 @@ export const bandedExercises = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

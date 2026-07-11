@@ -1,6 +1,8 @@
 # Backend deployment
 
 This document describes the production-ready backend configuration for Gymmin.
+For the consolidated pre-release gate and manual smoke matrix, see
+`docs/release-checklist.md`.
 
 ## Storage modes
 
@@ -170,7 +172,7 @@ Missing SMTP or OpenAI configuration does not block startup. Affected features f
 - OpenAI API key configured if AI creator should work.
 - AI credits configured: initial grant, plan/rewrite cost and `DevGrantEnabled=false` in Production.
 - AI credits running on `Provider=Database` with PostgreSQL for production paid-credit safety. File provider is a dev fallback only.
-- Google Play one-time products created and active: `ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10`.
+- Google Play one-time products created and active: `ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10` for the current 1/3/10 credit packs.
 - Google Play service account configured through environment variables or a secret manager.
 - Google Play Billing tested with internal testing/license testers before public release.
 - Diagnostics disabled or protected.
@@ -259,9 +261,9 @@ Play Console checklist:
 
 - app exists in Google Play Console with package name `com.gymmin.app`,
 - one-time products are created and active:
-  - `ai_tokens_1`,
-  - `ai_tokens_3`,
-  - `ai_tokens_10`,
+  - `ai_tokens_1` = 1 credit,
+  - `ai_tokens_3` = 3 credits,
+  - `ai_tokens_10` = 10 credits,
 - prices are configured in Play Console,
 - license testers are configured,
 - a service account has Google Play Developer API access,

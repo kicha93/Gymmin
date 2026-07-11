@@ -61,7 +61,8 @@ public sealed class EfUserSettingsStore : IUserSettingsStore
             collapsedPanels,
             entity.IsAuthPanelDismissed,
             DeserializeWorkoutReminders(entity.WorkoutRemindersJson),
-            entity.UpdatedAt);
+            entity.UpdatedAt,
+            entity.ShowRestTimer);
     }
 
     private static void Apply(UserSettingsEntity entity, UserSettings settings)
@@ -73,6 +74,7 @@ public sealed class EfUserSettingsStore : IUserSettingsStore
         entity.DefaultStageType = settings.DefaultStageType?.ToString();
         entity.DefaultWorkoutExecutionMode = settings.DefaultWorkoutExecutionMode;
         entity.DefaultWorkoutTableOrientation = settings.DefaultWorkoutTableOrientation;
+        entity.ShowRestTimer = settings.ShowRestTimer;
         entity.CollapsedPanelsJson = JsonSerializer.Serialize(settings.CollapsedPanels, JsonOptions);
         entity.WorkoutRemindersJson = settings.WorkoutReminders is null
             ? ""

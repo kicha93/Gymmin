@@ -61,7 +61,8 @@ export const sled = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "sled-chest-press-1238",
@@ -123,7 +124,8 @@ export const sled = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "sled-forward-drag-1239",
@@ -185,7 +187,8 @@ export const sled = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "sled-low-push-1240",
@@ -247,7 +250,8 @@ export const sled = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "sled-push-1241",
@@ -309,7 +313,8 @@ export const sled = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "sled-row-1242",
@@ -371,6 +376,7 @@ export const sled = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

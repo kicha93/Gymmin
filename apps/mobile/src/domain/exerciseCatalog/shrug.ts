@@ -61,7 +61,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-barbell-shrug-1176",
@@ -123,7 +124,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-barbell-upright-row-1177",
@@ -185,7 +187,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-behind-the-back-shrug-1178",
@@ -247,7 +250,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-behind-the-back-smith-machine-shrug-1179",
@@ -309,7 +313,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-dumbbell-jump-shrug-1180",
@@ -371,7 +376,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-dumbbell-shrug-1181",
@@ -433,7 +439,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-dumbbell-upright-row-1182",
@@ -495,7 +502,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-incline-dumbbell-shrug-1183",
@@ -557,7 +565,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-overhead-barbell-shrug-1184",
@@ -619,7 +628,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-overhead-dumbbell-shrug-1185",
@@ -654,14 +664,14 @@ export const shrug = [
     "equipment": {
       "ankleWeight": 0,
       "band": 0,
-      "barbell": 1,
+      "barbell": 0,
       "battleRope": 0,
       "bench": 0,
       "bike": 0,
       "bosuBall": 0,
       "box": 0,
       "cableMachine": 0,
-      "dumbbell": 0,
+      "dumbbell": 1,
       "ezBar": 0,
       "foamRoller": 0,
       "jumpRope": 0,
@@ -681,7 +691,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-scaption-and-shrug-1186",
@@ -743,7 +754,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-scapular-retraction-1187",
@@ -805,7 +817,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-serratus-chair-shrug-1188",
@@ -867,7 +880,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "shrug-serratus-shrug-1189",
@@ -929,317 +943,8 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "shrug-shrug-1190",
-    "name": "Shrug",
-    "polishName": "Ćwiczenia na mięsień zębaty przedni",
-    "garminCategory": "SHRUG",
-    "garminName": "SHRUG",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 2,
-      "traps": 1,
-      "triceps": 0
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "shrug-weighted-serratus-chair-shrug-1191",
-    "name": "Weighted Serratus Chair Shrug",
-    "polishName": "Wznosy barków na mięsień zębaty przedni na ławce płaskiej (z obciążeniem)",
-    "garminCategory": "SHRUG",
-    "garminName": "WEIGHTED_SERRATUS_CHAIR_SHRUG",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 2,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 1,
-      "traps": 2,
-      "triceps": 2
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 1,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 1,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "shrug-weighted-serratus-shrug-1192",
-    "name": "Weighted Serratus Shrug",
-    "polishName": "Wznosy barków na mięsień zębaty przedni (z obciążeniem)",
-    "garminCategory": "SHRUG",
-    "garminName": "WEIGHTED_SERRATUS_SHRUG",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 2,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 1,
-      "traps": 2,
-      "triceps": 2
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 1,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 1,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "shrug-wide-grip-barbell-shrug-1193",
-    "name": "Wide-grip Barbell Shrug",
-    "polishName": "Wznosy barków ze sztangą w chwycie szerokim",
-    "garminCategory": "SHRUG",
-    "garminName": "WIDE_GRIP_BARBELL_SHRUG",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 2,
-      "traps": 1,
-      "triceps": 0
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 1,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
-  },
-  {
-    "id": "shrug-wide-grip-jump-shrug-1194",
-    "name": "Wide-grip Jump Shrug",
-    "polishName": "Wznosy barków ze sztangą z podskokiem w chwycie szerokim",
-    "garminCategory": "SHRUG",
-    "garminName": "WIDE_GRIP_JUMP_SHRUG",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 2,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 2,
-      "hamstrings": 0,
-      "hips": 2,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 2,
-      "shoulders": 1,
-      "traps": 2,
-      "triceps": 0
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 1,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "shrug-upright-row-1195",
@@ -1301,6 +1006,133 @@ export const shrug = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "shrug-wide-grip-barbell-shrug-1193",
+    "name": "Wide-grip Barbell Shrug",
+    "polishName": "Wznosy barków ze sztangą w chwycie szerokim",
+    "garminCategory": "SHRUG",
+    "garminName": "WIDE_GRIP_BARBELL_SHRUG",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 0,
+      "adductors": 0,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 0,
+      "forearm": 0,
+      "glutes": 0,
+      "hamstrings": 0,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 0,
+      "shoulders": 2,
+      "traps": 1,
+      "triceps": 0
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 1,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "shrug-wide-grip-jump-shrug-1194",
+    "name": "Wide-grip Jump Shrug",
+    "polishName": "Wznosy barków ze sztangą z podskokiem w chwycie szerokim",
+    "garminCategory": "SHRUG",
+    "garminName": "WIDE_GRIP_JUMP_SHRUG",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "",
+    "description": "",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 0,
+      "adductors": 0,
+      "biceps": 0,
+      "calves": 2,
+      "chest": 0,
+      "forearm": 0,
+      "glutes": 2,
+      "hamstrings": 0,
+      "hips": 2,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 2,
+      "shoulders": 1,
+      "traps": 2,
+      "triceps": 0
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 1,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

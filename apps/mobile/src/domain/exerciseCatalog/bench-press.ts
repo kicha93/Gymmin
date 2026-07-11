@@ -61,7 +61,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-alternating-dumbbell-chest-press-on-swiss-ball-75",
@@ -123,7 +124,8 @@ export const benchPress = [
       "swissBall": 1,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "bench-press-barbell-bench-press-76",
@@ -185,7 +187,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-barbell-board-bench-press-77",
@@ -247,7 +250,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "bench-press-barbell-floor-press-78",
@@ -309,69 +313,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "bench-press-bench-press-79",
-    "name": "Bench Press",
-    "polishName": "Wyciskanie na ławce",
-    "garminCategory": "BENCH_PRESS",
-    "garminName": "BENCH_PRESS",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 1,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 2,
-      "traps": 0,
-      "triceps": 2
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-close-grip-barbell-bench-press-80",
@@ -433,7 +376,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-decline-dumbbell-bench-press-81",
@@ -468,14 +412,14 @@ export const benchPress = [
     "equipment": {
       "ankleWeight": 0,
       "band": 0,
-      "barbell": 1,
+      "barbell": 0,
       "battleRope": 0,
       "bench": 1,
       "bike": 0,
       "bosuBall": 0,
       "box": 0,
       "cableMachine": 0,
-      "dumbbell": 0,
+      "dumbbell": 1,
       "ezBar": 0,
       "foamRoller": 0,
       "jumpRope": 0,
@@ -495,7 +439,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-dumbbell-bench-press-82",
@@ -557,7 +502,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-dumbbell-floor-press-83",
@@ -619,7 +565,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-incline-barbell-bench-press-84",
@@ -681,7 +628,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-incline-dumbbell-bench-press-85",
@@ -743,7 +691,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-incline-smith-machine-bench-press-86",
@@ -805,7 +754,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-isometric-barbell-bench-press-87",
@@ -867,7 +817,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "bench-press-kettlebell-chest-press-88",
@@ -929,7 +880,71 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "machine-chest-press",
+    "name": "Machine Chest Press",
+    "polishName": "Wyciskanie na maszynie siedząc",
+    "garminCategory": "BENCH_PRESS",
+    "garminName": "MACHINE_CHEST_PRESS",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "Beginner",
+    "description": "A basic machine-based chest pressing exercise.",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 1,
+      "adductors": 0,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 2,
+      "forearm": 0,
+      "glutes": 0,
+      "hamstrings": 0,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 1,
+      "obliques": 0,
+      "quads": 0,
+      "shoulders": 1,
+      "traps": 0,
+      "triceps": 1
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 1,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-neutral-grip-dumbbell-bench-press-89",
@@ -991,7 +1006,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-neutral-grip-dumbbell-incline-bench-press-90",
@@ -1053,7 +1069,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-one-arm-floor-press-91",
@@ -1115,7 +1132,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-partial-lockout-92",
@@ -1177,7 +1195,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "bench-press-reverse-grip-barbell-bench-press-93",
@@ -1239,7 +1258,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-reverse-grip-incline-bench-press-94",
@@ -1301,7 +1321,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "bench-press-single-arm-cable-chest-press-95",
@@ -1363,7 +1384,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-single-arm-dumbbell-bench-press-96",
@@ -1425,7 +1447,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-smith-machine-bench-press-97",
@@ -1487,7 +1510,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "bench-press-swiss-ball-dumbbell-chest-press-98",
@@ -1549,7 +1573,8 @@ export const benchPress = [
       "swissBall": 1,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   },
   {
     "id": "bench-press-triple-stop-barbell-bench-press-99",
@@ -1611,69 +1636,8 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "bench-press-weighted-one-arm-floor-press-100",
-    "name": "Weighted One-arm Floor Press",
-    "polishName": "Wyciskanie jednorącz leżąc na podłodze (z obciążeniem)",
-    "garminCategory": "BENCH_PRESS",
-    "garminName": "WEIGHTED_ONE_ARM_FLOOR_PRESS",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 2,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 1,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 2,
-      "traps": 0,
-      "triceps": 2
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "advanced"
   },
   {
     "id": "bench-press-wide-grip-barbell-bench-press-101",
@@ -1735,6 +1699,7 @@ export const benchPress = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

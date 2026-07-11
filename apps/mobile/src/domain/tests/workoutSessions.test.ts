@@ -105,6 +105,21 @@ describe("workoutSessions", () => {
     expect(getExerciseProgressItems([completedSession, abandonedSession, deletedSession])).toHaveLength(1);
   });
 
+  it("groups progress recorded with old and canonical exercise ids", () => {
+    const completedSession = session({
+      status: "completed",
+      finishedAt: "2026-01-01T11:00:00.000Z",
+      entries: [
+        { id: "old", stageIndex: 0, seriesIndex: 0, setIteration: 1, elementIndex: 0, type: "exercise", exerciseId: "squat-back-squats-1249", exerciseName: "Back Squats", actualReps: "5", isCompleted: true },
+        { id: "canonical", stageIndex: 0, seriesIndex: 0, setIteration: 2, elementIndex: 0, type: "exercise", exerciseId: "squat-barbell-back-squat-1251", exerciseName: "Barbell Back Squat", actualReps: "5", isCompleted: true }
+      ]
+    });
+
+    const progress = getExerciseProgressItems([completedSession]);
+    expect(progress).toHaveLength(1);
+    expect(progress[0].results).toHaveLength(2);
+  });
+
   it("marks a workout history entry as a tombstone and excludes it from UI/progress", () => {
     const completedSession = session({
       id: "completed",

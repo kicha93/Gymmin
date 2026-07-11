@@ -4,7 +4,7 @@ export const flye = [
   {
     "id": "flye-cable-crossover-398",
     "name": "Cable Crossover",
-    "polishName": "Odwodzenie ramion z użyciem linek wyciągu górnego",
+    "polishName": "Rozpiętki na bramie",
     "garminCategory": "FLYE",
     "garminName": "CABLE_CROSSOVER",
     "foundInGarmin": false,
@@ -61,7 +61,8 @@ export const flye = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "flye-decline-dumbbell-flye-399",
@@ -123,7 +124,8 @@ export const flye = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "flye-dumbbell-flye-400",
@@ -185,7 +187,8 @@ export const flye = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "flye-incline-dumbbell-flye-401",
@@ -247,7 +250,8 @@ export const flye = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "flye-incline-reverse-flye-402",
@@ -309,7 +313,8 @@ export const flye = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "flye-kettlebell-flye-403",
@@ -371,7 +376,8 @@ export const flye = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "flye-kneeling-rear-flye-404",
@@ -433,7 +439,134 @@ export const flye = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "pec-deck",
+    "name": "Pec Deck",
+    "polishName": "Rozpiętki na maszynie Pec Deck",
+    "garminCategory": "FLYE",
+    "garminName": "PEC_DECK",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "Beginner",
+    "description": "It can be used as a machine-based chest fly variation.",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 1,
+      "adductors": 0,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 2,
+      "forearm": 0,
+      "glutes": 0,
+      "hamstrings": 0,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 0,
+      "shoulders": 1,
+      "traps": 0,
+      "triceps": 0
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 1,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
+  },
+  {
+    "id": "rear-delt-machine",
+    "name": "Rear Delt Machine",
+    "polishName": "Odwrotne rozpiętki na maszynie",
+    "garminCategory": "FLYE",
+    "garminName": "REAR_DELT_MACHINE",
+    "foundInGarmin": false,
+    "image": "",
+    "url": "",
+    "difficulty": "Beginner",
+    "description": "This exercise is also commonly called the reverse pec deck.",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 1,
+      "adductors": 0,
+      "biceps": 0,
+      "calves": 0,
+      "chest": 0,
+      "forearm": 0,
+      "glutes": 0,
+      "hamstrings": 0,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 0,
+      "shoulders": 2,
+      "traps": 1,
+      "triceps": 0
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 0,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 1,
+      "medicineBall": 0,
+      "other": 0,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "main"
   },
   {
     "id": "flye-single-arm-standing-cable-reverse-flye-405",
@@ -495,7 +628,8 @@ export const flye = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "flye-swiss-ball-dumbbell-flye-406",
@@ -557,6 +691,7 @@ export const flye = [
       "swissBall": 1,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "advanced"
   }
 ] satisfies readonly Exercise[];

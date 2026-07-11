@@ -61,7 +61,8 @@ export const runIndoor = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "run-indoor-treadmill-1089",
@@ -123,6 +124,7 @@ export const runIndoor = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

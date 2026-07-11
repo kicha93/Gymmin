@@ -2,11 +2,11 @@ import type { Exercise } from "../exercises";
 
 export const floorClimb = [
   {
-    "id": "floor-climb-floor-climb-397",
-    "name": "Floor Climb",
-    "polishName": "Pokonywanie pięter",
+    "id": "lateral-raise-rope-climb-557",
+    "name": "Rope Climb",
+    "polishName": "Wspinaczka po linie",
     "garminCategory": "FLOOR_CLIMB",
-    "garminName": "FLOOR_CLIMB",
+    "garminName": "ROPE_CLIMB",
     "foundInGarmin": false,
     "image": "",
     "url": "",
@@ -16,18 +16,18 @@ export const floorClimb = [
       "abductors": 0,
       "abs": 0,
       "adductors": 0,
-      "biceps": 0,
-      "calves": 1,
+      "biceps": 1,
+      "calves": 2,
       "chest": 0,
-      "forearm": 0,
-      "glutes": 1,
-      "hamstrings": 1,
-      "hips": 2,
-      "lats": 0,
+      "forearm": 1,
+      "glutes": 0,
+      "hamstrings": 2,
+      "hips": 0,
+      "lats": 1,
       "lowerBack": 0,
       "obliques": 0,
-      "quads": 1,
-      "shoulders": 0,
+      "quads": 2,
+      "shoulders": 1,
       "traps": 0,
       "triceps": 0
     },
@@ -52,7 +52,7 @@ export const floorClimb = [
       "plate": 0,
       "pullupBar": 0,
       "rings": 0,
-      "rope": 0,
+      "rope": 1,
       "sandbag": 0,
       "sled": 0,
       "slidingDisc": 0,
@@ -61,6 +61,7 @@ export const floorClimb = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

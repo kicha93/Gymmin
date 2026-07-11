@@ -175,6 +175,10 @@ Element typu `Odpoczynek` ukrywa pole ćwiczenia i ciężaru. Element typu `Rozg
 - wpływ na mięśnie,
 - metadane używane przez przegląd mięśni i progres.
 
+Po refaktorze katalog zawiera 963 rekordy. Pewne duplikaty semantyczne zostały scalone, a stare identyfikatory są rozwiązywane przez jawny mapping `exerciseId` do rekordu kanonicznego. Dzięki temu zapisane treningi, historia, progres i ulubione pozostają kompatybilne. Rekordy mają też `libraryTier`: `main`, `advanced`, `sportSpecific`, `rehab`, `variation`, `progression` albo `deprecated`; domyślny picker pokazuje poziom `main`.
+
+Walidacja `npm run exercise:catalog:validate` sprawdza unikalność ID i nazw, kategorie, sprzęt, aliasy, mapping ID oraz poziomy biblioteki. Pełny raport zmian: `docs/exercise-catalog-refactor.md`.
+
 Nie wspieramy własnych ćwiczeń w produkcie. To świadoma decyzja pod przyszłe mapowanie do Garmin.
 
 ### Ulubione ćwiczenia
@@ -301,7 +305,7 @@ Aktualnie dziala:
 - techniczny refund tokena, jesli job AI nie dostarczy uzywalnej propozycji,
 - production-grade safety dla Database provider: atomowy consume tokena na poziomie bazy i idempotentny refund,
 - unikalny constraint dla `UserId + operation type + IdempotencyKey`, zeby retry nie pobieral drugiego tokena,
-- Google Play purchase validation po stronie backendu dla paczek `ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10`,
+- Google Play purchase validation po stronie backendu dla aktualnych paczek `ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10` odpowiadajacych 1/3/10 kredytom,
 - tabela `AiCreditPurchases` z hashem purchase tokena, statusem przetwarzania i powiazaniem do ledger transaction,
 - endpoint `POST /api/ai-credits/purchases/google-play/verify`,
 - idempotentne naliczanie zakupow: ponowne wyslanie tego samego purchase tokena nie dodaje tokenow drugi raz,
@@ -375,6 +379,12 @@ Są ekrany:
 - Regulamin,
 - Kontakt,
 - Zgłoś błąd.
+
+Regulamin ma układ dashboardowy: hero z najważniejszymi zasadami, sekcję „W skrócie”, callout do zgłaszania błędów oraz siedem szczegółowych sekcji rozwijanych lokalnie przez użytkownika.
+
+Homepage pokazuje kompaktowy panel aktywnego planu tygodnia. Plan jest local-first i account-scoped: użytkownik przypisuje zapisane treningi do dni tygodnia, a ukończone `WorkoutSession` są liczone od poniedziałku do niedzieli niezależnie od dnia faktycznego wykonania.
+
+Kontakt ma zwarty układ: główny CTA otwiera klienta poczty dla `kontakt@gymmin.app`, informacja o czasie odpowiedzi jest krótkim paskiem, a problemy z aplikacją prowadzą do istniejącego formularza „Zgłoś błąd”. FAQ zawiera trzy zwijane odpowiedzi, dzięki czemu ekran nie powtarza długich bloków tekstu.
 
 Zgłoszenie błędu idzie do backendu przez `POST /api/bug-reports`. Aplikacja dołącza w tle informacje o urządzeniu, systemie, języku i ekranie. Backend wysyła mail SMTP z tematem `[Gymmin][Błąd] {Tytuł}` albo `[Gymmin][Bug] {Title}`. Jeśli tytuł jest pusty, backend używa bezpiecznego fallbacku.
 
@@ -488,7 +498,7 @@ Pokrycie mobile unit tests:
 - favorite exercises tombstones/merge,
 - workout sessions conflict resolution, deletedAt filtering i progress filtering,
 - active workout UI helpers for elapsed time, exercise progress percentage and rest-duration formatting,
-- Progress screen dashboard: top summary cards, all/strength/volume filters, compact exercise metric cards and optional local SVG sparkline,
+- Progress screen dashboard: top summary cards, all/strength/volume filters, compact exercise metric cards and optional local SVG sparkline; per-exercise history groups all sets from one completed session into collapsible cards with compact rows and range filters,
 - workout reminders pure scheduling rules,
 - app diagnostics ring buffer i sanitization.
 

@@ -10,10 +10,10 @@
     "defaultWorkoutTableOrientation": "vertical",
     "collapsedPanels": {
       "settings-account": false,
-      "settings-info": true,
+      "settings-info": false,
       "settings-integrations": true,
       "settings-notifications": false,
-      "settings-preferences": true,
+      "settings-preferences": false,
       "settings-training": false,
       "home-articles": false
     },
@@ -64,6 +64,6 @@
       "onlyIfNoWorkoutToday": true,
       "updatedAt": "2026-07-07T20:34:55.088+00:00"
     },
-    "updatedAt": "2026-07-08T13:30:07.324+00:00"
+    "updatedAt": "2026-07-10T18:44:36.907+00:00"
   }
 }

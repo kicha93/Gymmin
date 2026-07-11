@@ -4,6 +4,7 @@
   "private": true,
   "main": "expo/AppEntry.js",
   "scripts": {
+    "pretest": "node ../../scripts/validate-exercise-catalog.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

@@ -1,0 +1,764 @@
+{
+  "generatedAt": "2026-07-11T11:16:30.357Z",
+  "beforeCount": 978,
+  "afterCount": 963,
+  "mergedCount": 15,
+  "nameChanges": [
+    {
+      "id": "pull-up-chin-up-902",
+      "field": "polishName",
+      "before": "Podciąganie na drążku",
+      "after": "Podciąganie na drążku podchwytem"
+    },
+    {
+      "id": "pull-up-pull-up-918",
+      "field": "polishName",
+      "before": "Podciąganie na drążku",
+      "after": "Podciąganie na drążku nachwytem"
+    },
+    {
+      "id": "pull-up-band-assisted-chin-up-898",
+      "field": "polishName",
+      "before": "Podciąganie na drążku (z gumą oporową)",
+      "after": "Podciąganie na drążku podchwytem z pomocą gumy"
+    },
+    {
+      "id": "pull-up-band-assisted-pull-up-899",
+      "field": "polishName",
+      "before": "Podciąganie na drążku (z gumą oporową)",
+      "after": "Podciąganie na drążku nachwytem z pomocą gumy"
+    },
+    {
+      "id": "plank-rolling-side-plank-763",
+      "field": "polishName",
+      "before": "Deska boczna z rotacją",
+      "after": "Przejścia między deskami bocznymi"
+    },
+    {
+      "id": "plank-side-plank-to-plank-with-reach-under-768",
+      "field": "polishName",
+      "before": "Deska boczna z rotacją",
+      "after": "Deska boczna z przejściem do deski i sięganiem pod tułów"
+    },
+    {
+      "id": "plank-side-plank-with-reach-under-774",
+      "field": "polishName",
+      "before": "Deska boczna z rotacją",
+      "after": "Deska boczna z sięganiem pod tułów"
+    },
+    {
+      "id": "squat-air-squat-1246",
+      "field": "name",
+      "before": "Air Squat",
+      "after": "Bodyweight Squat"
+    },
+    {
+      "id": "squat-air-squat-1246",
+      "field": "polishName",
+      "before": "Przysiady (bez obciążenia)",
+      "after": "Przysiad bez obciążenia"
+    },
+    {
+      "id": "shoulder-press-overhead-dumbbell-press-1126",
+      "field": "name",
+      "before": "Overhead Dumbbell Press",
+      "after": "Dumbbell Shoulder Press"
+    },
+    {
+      "id": "crunch-kneeling-cable-crunch-255",
+      "field": "polishName",
+      "before": "Spięcia brzucha z linką wyciągu górnego w klęku",
+      "after": "Spięcia brzucha na wyciągu w klęku"
+    },
+    {
+      "id": "triceps-extension-reverse-grip-triceps-pressdown-1415",
+      "field": "polishName",
+      "before": "Wyciskanie tricepsów z linką wyciągu górnego podchwytem",
+      "after": "Prostowanie ramion na wyciągu podchwytem"
+    },
+    {
+      "id": "calf-raise-standing-calf-raise-118",
+      "field": "polishName",
+      "before": "Wznosy łydek stojąc",
+      "after": "Wspięcia na palce stojąc"
+    },
+    {
+      "id": "hyperextension-hyperextension-496",
+      "field": "name",
+      "before": "Hyperextension",
+      "after": "Back Extension"
+    },
+    {
+      "id": "hyperextension-hyperextension-496",
+      "field": "polishName",
+      "before": "Unoszenie tułowia na ławce dodatniej",
+      "after": "Wyprost grzbietu"
+    },
+    {
+      "id": "triceps-extension-dumbbell-kickback-1404",
+      "field": "name",
+      "before": "Dumbbell Kick-back",
+      "after": "Dumbbell Triceps Kickback"
+    },
+    {
+      "id": "triceps-extension-dumbbell-kickback-1404",
+      "field": "polishName",
+      "before": "Wiosłowanie hantlem w opadzie tułowia",
+      "after": "Prostowanie ramienia z hantlem w opadzie tułowia"
+    },
+    {
+      "id": "flye-cable-crossover-398",
+      "field": "polishName",
+      "before": "Odwodzenie ramion z użyciem linek wyciągu górnego",
+      "after": "Rozpiętki na bramie"
+    },
+    {
+      "id": "lateral-raise-seated-rear-lateral-raise-560",
+      "field": "polishName",
+      "before": "Wznosy wyprostowanych ramion przodem siedząc",
+      "after": "Unoszenie hantli bokiem w opadzie tułowia siedząc"
+    },
+    {
+      "id": "calf-raise-seated-dumbbell-toe-raise-110",
+      "field": "polishName",
+      "before": "Wspięcia na palce z hantlami siedząc",
+      "after": "Unoszenie palców stóp z hantlem siedząc"
+    },
+    {
+      "id": "hip-raise-barbell-hip-thrust-on-floor-407",
+      "field": "name",
+      "before": "Barbell Hip Thrust on Floor",
+      "after": "Barbell Glute Bridge"
+    },
+    {
+      "id": "hip-raise-barbell-hip-thrust-on-floor-407",
+      "field": "polishName",
+      "before": "Hip thrust ze sztangą z podłogi",
+      "after": "Mostek biodrowy ze sztangą"
+    },
+    {
+      "id": "banded-exercises-external-rotation-at-90-degree-abduction-11",
+      "field": "polishName",
+      "before": "Rotacja zewnętrzna ramienia z linką wyciągu pod kątem 90 Stopni (z gumą oporową)",
+      "after": "Rotacja zewnętrzna ramienia z gumą przy odwiedzeniu do 90 stopni"
+    },
+    {
+      "id": "banded-exercises-kneeling-crunch-21",
+      "field": "polishName",
+      "before": "Spięcia brzucha na wyciągu w klęku (z gumą oporową)",
+      "after": "Spięcia brzucha w klęku z gumą oporową"
+    },
+    {
+      "id": "squat-wall-ball-squat-and-press-1317",
+      "field": "polishName",
+      "before": "Przysiady przy ścianie z piłką gimnastyczną i z wyciskaniem",
+      "after": "Przysiad z wyrzutem piłki lekarskiej o ścianę"
+    },
+    {
+      "id": "shoulder-press-dumbbell-push-press-1119",
+      "field": "polishName",
+      "before": "Wyciskanie hantli",
+      "after": "Wyciskanie hantli nad głowę z wybiciem z nóg"
+    },
+    {
+      "id": "core-cable-core-press-186",
+      "field": "name",
+      "before": "Cable Core Press",
+      "after": "Pallof Press"
+    },
+    {
+      "id": "core-cable-core-press-186",
+      "field": "polishName",
+      "before": "Wyciskanie tułowia na wyciągu",
+      "after": "Pallof press na wyciągu"
+    },
+    {
+      "id": "cardio-ski-moguls-132",
+      "field": "polishName",
+      "before": "Ski Moguls",
+      "after": "Skoki narciarskie na boki"
+    },
+    {
+      "id": "indoor-bike-assault-bike-532",
+      "field": "polishName",
+      "before": "Assault Bike",
+      "after": "Rower powietrzny Assault Bike"
+    },
+    {
+      "id": "lateral-raise-scaption-558",
+      "field": "polishName",
+      "before": "Scaption",
+      "after": "Unoszenie ramion w płaszczyźnie łopatki"
+    },
+    {
+      "id": "run-sprint-1086",
+      "field": "polishName",
+      "before": "Sprint",
+      "after": "Bieg sprinterski"
+    },
+    {
+      "id": "squat-goblet-squat-1280",
+      "field": "polishName",
+      "before": "Goblet Squat",
+      "after": "Przysiad goblet"
+    },
+    {
+      "id": "total-body-burpee-1381",
+      "field": "polishName",
+      "before": "Burpee",
+      "after": "Burpee (padnij-powstań)"
+    }
+  ],
+  "equipmentChanges": [
+    {
+      "id": "bench-press-decline-dumbbell-bench-press-81",
+      "name": "Decline Dumbbell Bench Press",
+      "before": [
+        "barbell",
+        "bench"
+      ],
+      "after": [
+        "dumbbell",
+        "bench"
+      ]
+    },
+    {
+      "id": "calf-raise-standing-dumbbell-calf-raise-119",
+      "name": "Standing Dumbbell Calf Raise",
+      "before": [],
+      "after": [
+        "dumbbell"
+      ]
+    },
+    {
+      "id": "hip-stability-standing-cable-hip-abduction-468",
+      "name": "Standing Cable Hip Abduction",
+      "before": [],
+      "after": [
+        "cableMachine"
+      ]
+    },
+    {
+      "id": "plank-ring-plank-sprawls-762",
+      "name": "Ring Plank Sprawls",
+      "before": [],
+      "after": [
+        "rings"
+      ]
+    },
+    {
+      "id": "plank-swiss-ball-plank-with-feet-on-bench-784",
+      "name": "Swiss Ball Plank with Feet on Bench",
+      "before": [
+        "swissBall"
+      ],
+      "after": [
+        "swissBall",
+        "bench"
+      ]
+    },
+    {
+      "id": "shrug-overhead-dumbbell-shrug-1185",
+      "name": "Overhead Dumbbell Shrug",
+      "before": [
+        "barbell"
+      ],
+      "after": [
+        "dumbbell"
+      ]
+    },
+    {
+      "id": "squat-dumbbell-stepover-1276",
+      "name": "Dumbbell Step-over",
+      "before": [
+        "barbell",
+        "box"
+      ],
+      "after": [
+        "dumbbell",
+        "box"
+      ]
+    },
+    {
+      "id": "warm-up-ankle-dorsiflexion-with-band-1481",
+      "name": "Ankle Dorsiflexion with Band",
+      "before": [],
+      "after": [
+        "band"
+      ]
+    },
+    {
+      "id": "warm-up-swiss-ball-hip-crossover-1501",
+      "name": "Swiss Ball Hip Crossover",
+      "before": [],
+      "after": [
+        "swissBall"
+      ]
+    },
+    {
+      "id": "warm-up-swiss-ball-reach-roll-and-lift-1502",
+      "name": "Swiss Ball Reach, Roll, and Lift",
+      "before": [],
+      "after": [
+        "swissBall"
+      ]
+    },
+    {
+      "id": "warm-up-swiss-ball-windshield-wipers-1503",
+      "name": "Swiss Ball Windshield Wipers",
+      "before": [],
+      "after": [
+        "swissBall"
+      ]
+    }
+  ],
+  "categoryChanges": [
+    {
+      "id": "hyperextension-hollow-hold-and-roll-495",
+      "name": "Hollow, Hold, and Roll",
+      "before": "HYPEREXTENSION",
+      "after": "CORE"
+    },
+    {
+      "id": "hyperextension-knee-raises-498",
+      "name": "Knee Raises",
+      "before": "HYPEREXTENSION",
+      "after": "LEG_RAISE"
+    },
+    {
+      "id": "hyperextension-lat-pull-down-with-row-500",
+      "name": "Lat Pull-down with Row",
+      "before": "HYPEREXTENSION",
+      "after": "ROW"
+    },
+    {
+      "id": "hyperextension-medicine-ball-deadlift-to-reach-501",
+      "name": "Medicine Ball Deadlift-to-Reach",
+      "before": "HYPEREXTENSION",
+      "after": "DEADLIFT"
+    },
+    {
+      "id": "hyperextension-one-arm-one-leg-row-502",
+      "name": "One-arm One-leg Row",
+      "before": "HYPEREXTENSION",
+      "after": "ROW"
+    },
+    {
+      "id": "hyperextension-one-arm-row-with-band-503",
+      "name": "One-arm Row with Band",
+      "before": "HYPEREXTENSION",
+      "after": "ROW"
+    },
+    {
+      "id": "hyperextension-overhead-lunge-with-medicine-ball-504",
+      "name": "Overhead Lunge with Medicine Ball",
+      "before": "HYPEREXTENSION",
+      "after": "LUNGE"
+    },
+    {
+      "id": "hyperextension-plank-knee-tucks-505",
+      "name": "Plank Knee Tucks",
+      "before": "HYPEREXTENSION",
+      "after": "PLANK"
+    },
+    {
+      "id": "hyperextension-side-step-506",
+      "name": "Side Step",
+      "before": "HYPEREXTENSION",
+      "after": "HIP_STABILITY"
+    },
+    {
+      "id": "crunch-leg-extensions-260",
+      "name": "Leg Extensions",
+      "before": "SQUAT",
+      "after": "LEG_EXTENSION"
+    },
+    {
+      "id": "squat-alternating-box-dumbbell-step-ups-1247",
+      "name": "Alternating Box Dumbbell Step-ups",
+      "before": "SQUAT",
+      "after": "LUNGE"
+    },
+    {
+      "id": "squat-barbell-lateral-step-up-1256",
+      "name": "Barbell Lateral Step-up",
+      "before": "SQUAT",
+      "after": "LUNGE"
+    },
+    {
+      "id": "squat-barbell-step-up-1261",
+      "name": "Barbell Step-up",
+      "before": "SQUAT",
+      "after": "LUNGE"
+    },
+    {
+      "id": "squat-barbell-stepover-1262",
+      "name": "Barbell Step-over",
+      "before": "SQUAT",
+      "after": "LUNGE"
+    },
+    {
+      "id": "squat-crossover-dumbbell-step-up-1268",
+      "name": "Crossover Dumbbell Step-up",
+      "before": "SQUAT",
+      "after": "LUNGE"
+    },
+    {
+      "id": "squat-dumbbell-step-up-1275",
+      "name": "Dumbbell Step-up",
+      "before": "SQUAT",
+      "after": "LUNGE"
+    },
+    {
+      "id": "squat-dumbbell-stepover-1276",
+      "name": "Dumbbell Step-over",
+      "before": "SQUAT",
+      "after": "LUNGE"
+    },
+    {
+      "id": "squat-lateral-dumbbell-step-up-1284",
+      "name": "Lateral Dumbbell Step-up",
+      "before": "SQUAT",
+      "after": "LUNGE"
+    },
+    {
+      "id": "squat-step-up-1305",
+      "name": "Step-up",
+      "before": "SQUAT",
+      "after": "LUNGE"
+    },
+    {
+      "id": "squat-barbell-hang-squat-snatch-1255",
+      "name": "Barbell Hang Squat Snatch",
+      "before": "SQUAT",
+      "after": "OLYMPIC_LIFT"
+    },
+    {
+      "id": "squat-barbell-squat-snatch-1259",
+      "name": "Barbell Squat Snatch",
+      "before": "SQUAT",
+      "after": "OLYMPIC_LIFT"
+    },
+    {
+      "id": "squat-dumbbell-squat-clean-1273",
+      "name": "Dumbbell Squat Clean",
+      "before": "SQUAT",
+      "after": "OLYMPIC_LIFT"
+    },
+    {
+      "id": "squat-dumbbell-squat-snatch-1274",
+      "name": "Dumbbell Squat Snatch",
+      "before": "SQUAT",
+      "after": "OLYMPIC_LIFT"
+    },
+    {
+      "id": "squat-squat-american-swing-1300",
+      "name": "American Swing",
+      "before": "SQUAT",
+      "after": "HIP_SWING"
+    },
+    {
+      "id": "squat-kettlebell-swing-overhead-1282",
+      "name": "Kettlebell Swing Overhead",
+      "before": "SQUAT",
+      "after": "HIP_SWING"
+    },
+    {
+      "id": "shoulder-press-dumbbell-front-raise-1117",
+      "name": "Dumbbell Front Raise",
+      "before": "SHOULDER_PRESS",
+      "after": "LATERAL_RAISE"
+    },
+    {
+      "id": "shoulder-press-weight-plate-front-raise-1135",
+      "name": "Weight-plate Front Raise",
+      "before": "SHOULDER_PRESS",
+      "after": "LATERAL_RAISE"
+    },
+    {
+      "id": "leg-curl-band-good-morning-571",
+      "name": "Band Good Morning",
+      "before": "LEG_CURL",
+      "after": "DEADLIFT"
+    },
+    {
+      "id": "leg-curl-bar-good-morning-572",
+      "name": "Bar Good Morning",
+      "before": "LEG_CURL",
+      "after": "DEADLIFT"
+    },
+    {
+      "id": "leg-curl-good-morning-573",
+      "name": "Good Morning",
+      "before": "LEG_CURL",
+      "after": "DEADLIFT"
+    },
+    {
+      "id": "leg-curl-seated-barbell-good-morning-575",
+      "name": "Seated Barbell Good Morning",
+      "before": "LEG_CURL",
+      "after": "DEADLIFT"
+    },
+    {
+      "id": "leg-curl-single-leg-barbell-good-morning-576",
+      "name": "Single-leg Barbell Good Morning",
+      "before": "LEG_CURL",
+      "after": "DEADLIFT"
+    },
+    {
+      "id": "leg-curl-split-barbell-good-morning-579",
+      "name": "Split Barbell Good Morning",
+      "before": "LEG_CURL",
+      "after": "DEADLIFT"
+    },
+    {
+      "id": "leg-curl-staggered-stance-good-morning-581",
+      "name": "Staggered-stance Good Morning",
+      "before": "LEG_CURL",
+      "after": "DEADLIFT"
+    },
+    {
+      "id": "leg-curl-zercher-good-morning-584",
+      "name": "Zercher Good Morning",
+      "before": "LEG_CURL",
+      "after": "DEADLIFT"
+    },
+    {
+      "id": "row-indoor-row-1046",
+      "name": "Rowing Machine",
+      "before": "ROW",
+      "after": "CARDIO"
+    },
+    {
+      "id": "lateral-raise-calorie-row-542",
+      "name": "Calorie Row",
+      "before": "ROW",
+      "after": "CARDIO"
+    },
+    {
+      "id": "pull-up-ez-bar-pullover-906",
+      "name": "EZ-Bar Pull-over",
+      "before": "PULL_UP",
+      "after": "PULLOVER"
+    },
+    {
+      "id": "pull-up-standing-cable-pullover-920",
+      "name": "Standing Cable Pull-over",
+      "before": "PULL_UP",
+      "after": "PULLOVER"
+    },
+    {
+      "id": "pull-up-straight-arm-pulldown-921",
+      "name": "Straight-arm Pull-down",
+      "before": "PULL_UP",
+      "after": "PULLOVER"
+    },
+    {
+      "id": "pull-up-swiss-ball-ez-bar-pullover-923",
+      "name": "Swiss Ball EZ-Bar Pull-over",
+      "before": "PULL_UP",
+      "after": "PULLOVER"
+    },
+    {
+      "id": "lateral-raise-rope-climb-557",
+      "name": "Rope Climb",
+      "before": "PULL_UP",
+      "after": "FLOOR_CLIMB"
+    },
+    {
+      "id": "pull-up-hanging-hurdle-907",
+      "name": "Hanging Hurdle",
+      "before": "PULL_UP",
+      "after": "CORE"
+    },
+    {
+      "id": "core-ghd-back-extensions-192",
+      "name": "GHD Back Extensions",
+      "before": "CORE",
+      "after": "HYPEREXTENSION"
+    }
+  ],
+  "tierCounts": {
+    "main": 900,
+    "advanced": 49,
+    "sportSpecific": 7,
+    "rehab": 1,
+    "variation": 3,
+    "progression": 2,
+    "deprecated": 1
+  },
+  "merges": [
+    {
+      "removed": {
+        "id": "carry-farmers-carry-150",
+        "name": "Farmer's Carry"
+      },
+      "canonical": {
+        "id": "carry-farmers-walk-153",
+        "name": "Farmer's Walk"
+      },
+      "reason": "same loaded carry"
+    },
+    {
+      "removed": {
+        "id": "carry-farmers-carry-on-toes-151",
+        "name": "Farmer's Carry on Toes"
+      },
+      "canonical": {
+        "id": "carry-farmers-walk-on-toes-154",
+        "name": "Farmer's Walk on Toes"
+      },
+      "reason": "same loaded carry on toes"
+    },
+    {
+      "removed": {
+        "id": "squat-squat-1299",
+        "name": "Squat"
+      },
+      "canonical": {
+        "id": "squat-air-squat-1246",
+        "name": "Air Squat"
+      },
+      "reason": "same bodyweight squat"
+    },
+    {
+      "removed": {
+        "id": "squat-back-squats-1249",
+        "name": "Back Squats"
+      },
+      "canonical": {
+        "id": "squat-barbell-back-squat-1251",
+        "name": "Barbell Back Squat"
+      },
+      "reason": "same barbell back squat"
+    },
+    {
+      "removed": {
+        "id": "shoulder-press-barbell-shoulder-press-1114",
+        "name": "Barbell Shoulder Press"
+      },
+      "canonical": {
+        "id": "shoulder-press-overhead-barbell-press-1125",
+        "name": "Barbell Overhead Press"
+      },
+      "reason": "same strict standing barbell press"
+    },
+    {
+      "removed": {
+        "id": "shoulder-press-military-press-1123",
+        "name": "Military Press"
+      },
+      "canonical": {
+        "id": "shoulder-press-overhead-barbell-press-1125",
+        "name": "Barbell Overhead Press"
+      },
+      "reason": "historical name for strict barbell overhead press"
+    },
+    {
+      "removed": {
+        "id": "shoulder-press-strict-press-1133",
+        "name": "Strict Press"
+      },
+      "canonical": {
+        "id": "shoulder-press-overhead-barbell-press-1125",
+        "name": "Barbell Overhead Press"
+      },
+      "reason": "same strict barbell overhead press"
+    },
+    {
+      "removed": {
+        "id": "shoulder-press-dumbbell-shoulder-press-1120",
+        "name": "Dumbbell Shoulder Press"
+      },
+      "canonical": {
+        "id": "shoulder-press-overhead-dumbbell-press-1126",
+        "name": "Overhead Dumbbell Press"
+      },
+      "reason": "same standing dumbbell overhead press"
+    },
+    {
+      "removed": {
+        "id": "curl-standing-dumbbell-biceps-curl-363",
+        "name": "Standing Dumbbell Biceps Curl"
+      },
+      "canonical": {
+        "id": "curl-dumbbell-biceps-curl-339",
+        "name": "Dumbbell Biceps Curl"
+      },
+      "reason": "standing is the default dumbbell curl"
+    },
+    {
+      "removed": {
+        "id": "curl-standing-alternating-dumbbell-curls-362",
+        "name": "Standing Alternating Dumbbell Curls"
+      },
+      "canonical": {
+        "id": "curl-alternating-dumbbell-biceps-curl-323",
+        "name": "Alternating Dumbbell Biceps Curl"
+      },
+      "reason": "same alternating standing dumbbell curl"
+    },
+    {
+      "removed": {
+        "id": "crunch-cable-crunch-238",
+        "name": "Cable Crunch"
+      },
+      "canonical": {
+        "id": "crunch-kneeling-cable-crunch-255",
+        "name": "Kneeling Cable Crunch"
+      },
+      "reason": "generic record describes kneeling cable crunch"
+    },
+    {
+      "removed": {
+        "id": "triceps-extension-reverse-grip-pressdown-1414",
+        "name": "Reverse-grip Press-down"
+      },
+      "canonical": {
+        "id": "triceps-extension-reverse-grip-triceps-pressdown-1415",
+        "name": "Reverse-grip Triceps Press-down"
+      },
+      "reason": "same reverse-grip cable press-down"
+    },
+    {
+      "removed": {
+        "id": "calf-raise-calf-raise-107",
+        "name": "Calf Raise"
+      },
+      "canonical": {
+        "id": "calf-raise-standing-calf-raise-118",
+        "name": "Standing Calf Raise"
+      },
+      "reason": "same unweighted standing calf raise"
+    },
+    {
+      "removed": {
+        "id": "stage2-back-extension",
+        "name": "Back Extension"
+      },
+      "canonical": {
+        "id": "hyperextension-hyperextension-496",
+        "name": "Hyperextension"
+      },
+      "reason": "same equipment-free back extension"
+    },
+    {
+      "removed": {
+        "id": "curl-dead-hang-biceps-curl-337",
+        "name": "Dead-hang Biceps Curl"
+      },
+      "canonical": {
+        "id": "curl-ez-bar-preacher-curl-344",
+        "name": "EZ-Bar Preacher Curl"
+      },
+      "reason": "same EZ-bar preacher setup and muscle profile"
+    }
+  ],
+  "ambiguousNotMerged": [
+    "Band-assisted Pull-up vs Banded Pull-ups (Progression)",
+    "Dynamic Push-up vs Explosive Push-up",
+    "Body-weight Dip vs Incline Dip",
+    "Seated vs standing single-arm overhead dumbbell triceps extensions",
+    "Swiss-ball technical variants"
+  ]
+}

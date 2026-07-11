@@ -42,16 +42,17 @@ for (const fileName of files) {
 
   for (const exercise of parsed) {
     exercises.push({
+      id: exercise.id,
       polishName: exercise.polishName,
       englishName: exercise.name,
       exerciseType: exercise.garminCategory,
-      requiredEquipment: getRequiredEquipment(exercise.equipment)
+      requiredEquipment: getRequiredEquipment(exercise.equipment),
+      libraryTier: exercise.libraryTier ?? "main"
     });
   }
 }
 
 await mkdir(path.dirname(outputPath), { recursive: true });
-await writeFile(`${outputPath}.tmp`, `${JSON.stringify(exercises, null, 2)}\n`, "utf8");
 await writeFile(outputPath, `${JSON.stringify(exercises, null, 2)}\n`, "utf8");
 
 console.log(`Exported ${exercises.length} exercises to ${path.relative(repoRoot, outputPath)}`);

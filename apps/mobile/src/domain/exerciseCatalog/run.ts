@@ -61,7 +61,8 @@ export const run = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "run-run-1084",
@@ -123,74 +124,13 @@ export const run = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
-  },
-  {
-    "id": "run-run-or-walk-1085",
-    "name": "Run or Walk",
-    "polishName": "Bieg lub chód",
-    "garminCategory": "RUN",
-    "garminName": "RUN_OR_WALK",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 2,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 1,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 1,
-      "hamstrings": 1,
-      "hips": 1,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 1,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
     },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    }
+    "libraryTier": "main"
   },
   {
     "id": "run-sprint-1086",
     "name": "Sprint",
-    "polishName": "Sprint",
+    "polishName": "Bieg sprinterski",
     "garminCategory": "RUN",
     "garminName": "SPRINT",
     "foundInGarmin": false,
@@ -247,7 +187,8 @@ export const run = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   },
   {
     "id": "run-walk-1087",
@@ -309,6 +250,7 @@ export const run = [
       "swissBall": 0,
       "trx": 0,
       "weightVest": 0
-    }
+    },
+    "libraryTier": "main"
   }
 ] satisfies readonly Exercise[];

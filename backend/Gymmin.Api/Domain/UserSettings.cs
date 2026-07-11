@@ -12,7 +12,8 @@ public sealed record UserSettings(
     IReadOnlyDictionary<string, bool> CollapsedPanels,
     bool IsAuthPanelDismissed,
     WorkoutReminderSettings? WorkoutReminders,
-    DateTimeOffset UpdatedAt)
+    DateTimeOffset UpdatedAt,
+    bool ShowRestTimer = true)
 {
     public static UserSettings FromRequest(string userId, UpsertUserSettingsRequest request, UserSettings? existing = null)
     {
@@ -28,7 +29,8 @@ public sealed record UserSettings(
             request.CollapsedPanels ?? new Dictionary<string, bool>(),
             request.IsAuthPanelDismissed,
             request.WorkoutReminders ?? existing?.WorkoutReminders,
-            request.UpdatedAt ?? DateTimeOffset.UtcNow);
+            request.UpdatedAt ?? DateTimeOffset.UtcNow,
+            request.ShowRestTimer ?? existing?.ShowRestTimer ?? true);
     }
 
     private static string NormalizeOption(string? value, string fallback)
@@ -70,4 +72,5 @@ public sealed record UpsertUserSettingsRequest(
     IReadOnlyDictionary<string, bool>? CollapsedPanels,
     bool IsAuthPanelDismissed,
     WorkoutReminderSettings? WorkoutReminders,
-    DateTimeOffset? UpdatedAt);
+    DateTimeOffset? UpdatedAt,
+    bool? ShowRestTimer = null);

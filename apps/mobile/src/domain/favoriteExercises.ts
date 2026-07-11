@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { getAccountStorageKey } from "./accountStorage";
 import { exercises } from "./exerciseCatalog";
-import type { Exercise } from "./exercises";
+import { resolveExerciseId, type Exercise } from "./exercises";
 
 export const FAVORITE_EXERCISES_LEGACY_STORAGE_KEY = "gymmin.favoriteExercises";
 export const FAVORITE_EXERCISES_LEGACY_SYNC_STORAGE_KEY = "gymmin.favoriteExercisesSync";
@@ -73,7 +73,7 @@ export function normalizeFavoriteExercises(value: unknown): FavoriteExercise[] {
       return favorites;
     }
 
-    const exerciseId = item.exerciseId.trim();
+    const exerciseId = resolveExerciseId(item.exerciseId.trim());
     if (!exerciseId) {
       return favorites;
     }
@@ -158,11 +158,13 @@ export function getActiveFavoriteExercises(favorites: FavoriteExercise[]) {
 }
 
 export function isExerciseFavorite(favorites: FavoriteExercise[], exerciseId: string) {
-  return getActiveFavoriteExercises(favorites).some((favorite) => favorite.exerciseId === exerciseId);
+  const canonicalId = resolveExerciseId(exerciseId);
+  return getActiveFavoriteExercises(favorites).some((favorite) => favorite.exerciseId === canonicalId);
 }
 
 export function addFavoriteExercise(favorites: FavoriteExercise[], exerciseId: string): FavoriteExercise[] {
-  if (!exerciseId || isExerciseFavorite(favorites, exerciseId)) {
+  const canonicalId = resolveExerciseId(exerciseId);
+  if (!canonicalId || isExerciseFavorite(favorites, canonicalId)) {
     return favorites;
   }
 
@@ -170,7 +172,7 @@ export function addFavoriteExercise(favorites: FavoriteExercise[], exerciseId: s
   return normalizeFavoriteExercises([
     ...favorites,
     {
-      exerciseId,
+      exerciseId: canonicalId,
       createdAt: now,
       updatedAt: now,
       deletedAt: null
@@ -179,16 +181,17 @@ export function addFavoriteExercise(favorites: FavoriteExercise[], exerciseId: s
 }
 
 export function removeFavoriteExercise(favorites: FavoriteExercise[], exerciseId: string): FavoriteExercise[] {
+  const canonicalId = resolveExerciseId(exerciseId);
   const now = new Date().toISOString();
   const normalized = normalizeFavoriteExercises(favorites);
-  const existing = normalized.find((favorite) => favorite.exerciseId === exerciseId);
+  const existing = normalized.find((favorite) => favorite.exerciseId === canonicalId);
 
   if (!existing) {
     return normalized;
   }
 
   return normalizeFavoriteExercises([
-    ...normalized.filter((favorite) => favorite.exerciseId !== exerciseId),
+    ...normalized.filter((favorite) => favorite.exerciseId !== canonicalId),
     {
       ...existing,
       updatedAt: now,

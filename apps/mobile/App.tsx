@@ -282,6 +282,7 @@ import {
 import { WorkoutSessionDetailScreen } from "./src/screens/WorkoutSessionDetailScreen";
 import { WorkoutDetailScreen } from "./src/screens/WorkoutDetailScreen";
 import { WorkoutCreatorScreen } from "./src/screens/WorkoutCreatorScreen";
+import { WorkoutAiProposalScreen, WorkoutAiRewriteScreen } from "./src/screens/WorkoutAiScreens";
 import { styles } from "./src/theme/appStyles";
 import { themes, type Theme, type ThemeName } from "./src/theme/theme";
 
@@ -3973,6 +3974,11 @@ function GymminApp() {
     [savedWorkouts, selectedWorkoutId]
   );
 
+  const rewriteSourceWorkout = useMemo(
+    () => savedWorkouts.find((item) => item.id === (rewriteSourceWorkoutId ?? selectedWorkoutId)) ?? null,
+    [rewriteSourceWorkoutId, savedWorkouts, selectedWorkoutId]
+  );
+
   const selectedWorkoutSessions = useMemo(
     () => visibleWorkoutSessions
       .filter((session) => session.sourceWorkoutId === selectedWorkoutId && session.status !== "active")
@@ -5522,19 +5528,6 @@ function GymminApp() {
     } finally {
       setIsCreatorSubmitting(false);
     }
-  }
-
-  function getWorkoutCatalogMatchSummary(draft: WorkoutDraft) {
-    const exerciseSteps = draft.steps.filter(
-      (step) => step.kind === "exercise" && step.stageType !== "rest" && Boolean(step.exerciseName.trim())
-    );
-    const matched = exerciseSteps.filter((step) => Boolean(step.exerciseId?.trim())).length;
-
-    return {
-      matched,
-      total: exerciseSteps.length,
-      unmatched: Math.max(0, exerciseSteps.length - matched)
-    };
   }
 
   async function submitWorkoutRewrite() {
@@ -7942,230 +7935,6 @@ function GymminApp() {
     );
   }
 
-  function renderWorkoutAiRewrite() {
-    const sourceWorkout = savedWorkouts.find((item) => item.id === (rewriteSourceWorkoutId ?? selectedWorkoutId));
-    const suggestionKeys: TranslationKey[] = [
-      "aiRewriteSuggestionShorten",
-      "aiRewriteSuggestionBack",
-      "aiRewriteSuggestionHome",
-      "aiRewriteSuggestionLegs",
-      "aiRewriteSuggestionSets",
-      "aiRewriteSuggestionCatalog"
-    ];
-    const stageCount = sourceWorkout?.draft.steps.filter((step) => step.kind === "stage").length ?? 0;
-    const setCount = sourceWorkout?.draft.steps.filter((step) => step.kind === "set").length ?? 0;
-    const exerciseCount = sourceWorkout?.draft.steps.filter((step) => step.kind === "exercise").length ?? 0;
-
-    return (
-      <View style={styles.creatorForm}>
-        <View style={[styles.creatorPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.panelHeroHeader}>
-            <View style={[styles.legalIcon, { backgroundColor: theme.secondaryBand }]}>
-              <Ionicons name="sparkles-outline" size={26} color={theme.primary} />
-            </View>
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>{t("aiRewriteTitle")}</Text>
-              <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-                {sourceWorkout?.name ?? t("workout")}
-              </Text>
-            </View>
-          </View>
-
-          <View style={[styles.creatorPlanBox, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
-            <Text style={[styles.creatorPlanText, { color: theme.text }]}>
-              {stageCount} {t("stages").toLowerCase()} · {setCount} {t("setsPlural")} · {exerciseCount} {t("exercise").toLowerCase()}
-            </Text>
-          </View>
-
-          <View style={styles.creatorChoiceList}>
-            {suggestionKeys.map((key) => (
-              <Pressable
-                key={key}
-                accessibilityRole="button"
-                style={[styles.creatorChoiceChip, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}
-                onPress={() => setRewriteInstruction(t(key))}
-              >
-                <Text style={[styles.creatorChoiceText, { color: theme.primary }]}>{t(key)}</Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <AppTextarea
-            maxLength={1000}
-            placeholder={t("aiRewritePlaceholder")}
-            style={styles.creatorTextarea}
-            theme={theme}
-            value={rewriteInstruction}
-            onChangeText={(value) => {
-              setRewriteInstruction(value.slice(0, 1000));
-              if (rewriteError) {
-                setRewriteError("");
-              }
-            }}
-          />
-
-          <View style={[styles.creatorPlanBox, { backgroundColor: theme.control, borderColor: theme.border }]}>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-              {t("aiCreditsRewriteNeed")}
-            </Text>
-            <Text style={[styles.workoutName, { color: theme.text }]}>
-              {t("aiCreditsAvailable")}: {aiCreditBalance.balance}
-            </Text>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-              {t("aiCreditsCharged")}
-            </Text>
-            {aiCreditBalance.balance < aiCreditBalance.rewriteCost ? (
-              <AppButton
-                icon="sparkles-outline"
-                style={styles.secondaryButton}
-                textStyle={styles.secondaryButtonText}
-                theme={theme}
-                variant="outline"
-                onPress={() => {
-                  if (!areOnlineFeaturesAvailable) {
-                    showOnlineFeatureUnavailableDialog();
-                    return;
-                  }
-                  setActiveScreen("aiCredits");
-                }}
-              >
-                {t("aiCreditsGoTo")}
-              </AppButton>
-            ) : null}
-          </View>
-
-          {rewriteError ? <Text style={[styles.authError, { color: theme.danger }]}>{rewriteError}</Text> : null}
-
-          <AppButton
-            disabled={isRewriteSubmitting || isRewriteJobPending || !areOnlineFeaturesAvailable || !sourceWorkout || aiCreditBalance.balance < aiCreditBalance.rewriteCost}
-            icon={isRewriteSubmitting || isRewriteJobPending ? "hourglass-outline" : "sparkles-outline"}
-            theme={theme}
-            onPress={() => void submitWorkoutRewrite()}
-          >
-            {isRewriteSubmitting || isRewriteJobPending ? t("aiRewriteProcessing") : t("aiRewriteAction")}
-          </AppButton>
-        </View>
-      </View>
-    );
-  }
-
-  function renderWorkoutAiProposal() {
-    if (!rewriteProposedWorkout) {
-      return (
-        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Ionicons name="alert-circle-outline" size={26} color={theme.danger} />
-          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>{t("aiRewriteInvalidFormat")}</Text>
-          <AppButton theme={theme} variant="outline" onPress={() => setActiveScreen("workoutDetail")}>
-            {t("backToStart")}
-          </AppButton>
-        </View>
-      );
-    }
-
-    const sourceWorkout = savedWorkouts.find((item) => item.id === rewriteSourceWorkoutId);
-    const matchSummary = getWorkoutCatalogMatchSummary(rewriteProposedWorkout.draft);
-    const stageGroups = rewriteProposedWorkout.draft.steps
-      .filter((step) => step.kind === "stage")
-      .map((stage) => ({
-        stage,
-        series: rewriteProposedWorkout.draft.steps
-          .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
-          .map((set) => ({
-            set,
-            elements: rewriteProposedWorkout.draft.steps.filter(
-              (step) => step.kind === "exercise" && step.parentSetId === set.id
-            )
-          }))
-      }));
-
-    return (
-      <View style={styles.creatorForm}>
-        <View style={[styles.creatorPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.panelHeroHeader}>
-            <View style={[styles.legalIcon, { backgroundColor: theme.secondaryBand }]}>
-              <Ionicons name="sparkles-outline" size={26} color={theme.primary} />
-            </View>
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>{t("aiRewriteProposal")}</Text>
-              <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-                {sourceWorkout?.name ?? t("workout")} → {rewriteProposedWorkout.name}
-              </Text>
-            </View>
-          </View>
-
-          <View style={[styles.creatorPlanBox, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
-            <Text style={[styles.creatorPlanText, { color: theme.text }]}>
-              {matchSummary.unmatched
-                ? t("aiRewriteUnmatchedTitle")
-                : t("aiRewriteMatched")}
-            </Text>
-            {matchSummary.unmatched ? (
-              <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-                {t("aiRewriteUnmatchedCopy")} {matchSummary.matched}/{matchSummary.total}
-              </Text>
-            ) : null}
-          </View>
-
-          {rewriteProposedWorkout.draft.notes ? (
-            <Text style={[styles.workoutDetailDescription, { color: theme.muted }]}>
-              {rewriteProposedWorkout.draft.notes}
-            </Text>
-          ) : null}
-
-          <View style={styles.workoutDetailStages}>
-            {stageGroups.map(({ stage, series }, stageIndex) => (
-              <View
-                key={stage.id}
-                style={[styles.workoutDetailStage, { backgroundColor: theme.card, borderColor: theme.border }]}
-              >
-                <Text style={[styles.workoutName, { color: theme.text }]}>
-                  {stage.label || `${t("stage")} ${stageIndex + 1}`}
-                </Text>
-                {series.map(({ set, elements }, setIndex) => (
-                  <View key={set.id} style={[styles.workoutDetailSeriesRow, { borderColor: theme.border }]}>
-                    <Text style={[styles.workoutDetailExerciseName, { color: theme.text }]}>
-                      {t("set")} {setIndex + 1}
-                    </Text>
-                    {elements.map((element) => (
-                      <ExerciseSummaryRow
-                        key={element.id}
-                        language={language}
-                        step={element}
-                        targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
-                        theme={theme}
-                        t={t}
-                        onPressDetails={() => openExerciseDetail(element)}
-                        onPressMuscles={() => openExerciseDetail(element)}
-                      />
-                    ))}
-                  </View>
-                ))}
-              </View>
-            ))}
-          </View>
-
-          <AppButton icon="copy-outline" theme={theme} onPress={saveRewriteProposalAsNew}>
-            {t("aiRewriteSaveAsNew")}
-          </AppButton>
-          <AppButton icon="swap-horizontal-outline" theme={theme} variant="outline" onPress={replaceWorkoutWithRewriteProposal}>
-            {t("aiRewriteReplaceCurrent")}
-          </AppButton>
-          <AppButton
-            icon="close-outline"
-            theme={theme}
-            variant="outline"
-            onPress={() => {
-              setRewriteProposedWorkout(null);
-              setPendingCreatorJob(null);
-              setActiveScreen("workoutDetail");
-            }}
-          >
-            {t("aiRewriteDiscard")}
-          </AppButton>
-        </View>
-      </View>
-    );
-  }
   function renderSettings() {
     const stageTypeOptions = getStageTypeOptions(t);
     const executionModeOptions = getWorkoutExecutionModeOptions(t);
@@ -10283,8 +10052,47 @@ function GymminApp() {
                 />
               ) : renderProfile()
             )}
-            {activeScreen === "workoutAiRewrite" && renderWorkoutAiRewrite()}
-            {activeScreen === "workoutAiProposal" && renderWorkoutAiProposal()}
+            {activeScreen === "workoutAiRewrite" && (
+              <WorkoutAiRewriteScreen
+                areOnlineFeaturesAvailable={areOnlineFeaturesAvailable}
+                balance={aiCreditBalance.balance}
+                error={rewriteError}
+                instruction={rewriteInstruction}
+                isJobPending={isRewriteJobPending}
+                isSubmitting={isRewriteSubmitting}
+                rewriteCost={aiCreditBalance.rewriteCost}
+                sourceWorkout={rewriteSourceWorkout}
+                t={t}
+                theme={theme}
+                onInstructionChange={(value) => {
+                  setRewriteInstruction(value);
+                  if (rewriteError) {
+                    setRewriteError("");
+                  }
+                }}
+                onOpenCredits={() => setActiveScreen("aiCredits")}
+                onShowOnlineUnavailable={showOnlineFeatureUnavailableDialog}
+                onSubmit={() => void submitWorkoutRewrite()}
+              />
+            )}
+            {activeScreen === "workoutAiProposal" && (
+              <WorkoutAiProposalScreen
+                language={language}
+                proposedWorkout={rewriteProposedWorkout}
+                sourceWorkout={rewriteSourceWorkout}
+                t={t}
+                theme={theme}
+                onBackToWorkout={() => setActiveScreen("workoutDetail")}
+                onDiscard={() => {
+                  setRewriteProposedWorkout(null);
+                  setPendingCreatorJob(null);
+                  setActiveScreen("workoutDetail");
+                }}
+                onOpenExercise={openExerciseDetail}
+                onReplaceCurrent={replaceWorkoutWithRewriteProposal}
+                onSaveAsNew={saveRewriteProposalAsNew}
+              />
+            )}
             {activeScreen === "workoutDetail" && (
               <WorkoutDetailScreen
                 getExecutionModeLabel={getExecutionModeLabel}

@@ -75,6 +75,8 @@ Widok definicji treningu jest wydzielony do `WorkoutDetailScreen`. Ekran prezent
 
 Formularz Kreatora AI jest wydzielony do `WorkoutCreatorScreen`, a definicja ankiety i helpery profili do `src/domain/workoutCreator.ts`. Ekran zachowuje profile, zwijane sekcje, kontrolę salda kredytów i wszystkie fazy prezentacji, natomiast wysyłanie ankiety, polling joba, import treningów i account-scoped storage są nadal koordynowane przez `App.tsx`.
 
+Formularz modyfikowania treningu przez AI i ekran propozycji są wydzielone do `WorkoutAiScreens`. Podgląd zachowuje hierarchię etapów, serii i ćwiczeń oraz informację o dopasowaniu do katalogu. Endpoint rewrite, polling, rozliczenie kredytu, zapis jako nowy trening i zastąpienie istniejącego planu pozostają w kompozycji aplikacji.
+
 ### Logowanie i rejestracja
 
 Działa backendowe logowanie i rejestracja:

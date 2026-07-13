@@ -61,7 +61,9 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/screens/WorkoutSessionDetailScreen.tsx` odpowiada za kartę wykonanej sesji oraz poziomo przewijaną tabelę pogrupowanych ćwiczeń i serii; wybrana sesja, potwierdzenie usunięcia i wyliczenie szerokości dla orientacji poziomej pozostają w `App.tsx`,
 - `src/screens/WorkoutDetailScreen.tsx` odpowiada za prezentację definicji treningu, etapy, serie, podsumowanie mięśni i skróconą historię; wybór treningu, start sesji, potwierdzenie usunięcia, dostępność AI i nawigacja pozostają w kompozycji aplikacji,
 - `src/screens/WorkoutCreatorScreen.tsx` odpowiada za kontrolowany formularz Kreatora AI, wybór lokalnego profilu, stany wysyłania i prezentację wyniku; wywołania API, polling joba, kredyty oraz zapis profili pozostają w `App.tsx`,
+- `src/screens/WorkoutAiScreens.tsx` zawiera formularz instrukcji modyfikacji treningu oraz podgląd propozycji AI z kontrolą dopasowania ćwiczeń do katalogu; zapis, zastąpienie treningu, kredyty, endpoint rewrite i polling pozostają w `App.tsx`,
 - `src/domain/workoutCreator.ts` zawiera typy, statyczną definicję ankiety oraz czyste helpery kopiowania i porównywania profili Kreatora,
+- `src/domain/workoutAi.ts` zawiera testowalne podsumowanie dopasowania ćwiczeń z propozycji AI do katalogu,
 - `src/domain` pozostaje miejscem dla logiki domenowej i testowalnych helperów niezależnych od UI.
 
 Ten podział ogranicza rozmiar pliku głównego bez zmiany publicznych kontraktów, storage ani modelu danych. Kolejne ekrany mogą być wydzielane stopniowo z `App.tsx` do modułów funkcjonalnych.

@@ -52,7 +52,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/components/CollapsiblePanel.tsx` zawiera wspólny panel zwijany używany przez ekrany treningów, ustawień, szczegółów ćwiczeń i treści informacyjnych,
 - `src/components/WorkoutPresentation.tsx` zawiera wspólne podsumowanie ćwiczenia, mapę pracujących mięśni oraz renderowanie sylwetki SVG,
 - `src/components/LegalContent.tsx` zawiera wspólną obudowę treści prawnych i accordion FAQ,
-- `src/screens` zawiera wydzielane ekrany funkcjonalne; obecnie są tam Regulamin, Kontakt, zgłaszanie błędów, Profil z ekranami konta, Osiągnięcia, Kredyty, Postęp oraz formularze logowania, rejestracji, resetu i zmiany hasła,
+- `src/screens` zawiera kompletne ekrany funkcjonalne. Każdy widok nawigacyjny ma własny moduł ekranu; `App.tsx` nie renderuje już rozbudowanych widoków bezpośrednio,
 - `src/screens/AchievementsScreen.tsx` odpowiada za prezentację osiągnięć, lokalne filtry i podgląd grafik; obliczanie metryk, trwałe odblokowania i synchronizacja pozostają w warstwie domenowej oraz kompozycji aplikacji,
 - `src/screens/AiCreditsScreen.tsx` odpowiada za saldo, pakiety, lokalne rozwinięcie historii i informacje o kredytach; pobieranie danych, zakup, weryfikacja Google Play oraz odtwarzanie oczekujących zakupów pozostają w kompozycji aplikacji i warstwie domenowej,
 - `src/screens/ProgressScreen.tsx` odpowiada za dashboard postępu, wyszukiwanie, lokalne filtry, statystyki, karty ćwiczeń i sparklines; sesje treningowe oraz nawigacja do progresu ćwiczenia pozostają w kompozycji aplikacji, a obliczenia korzystają z testowanych helperów `src/domain/progressDashboard.ts`,
@@ -61,12 +61,22 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/screens/WorkoutSessionDetailScreen.tsx` odpowiada za kartę wykonanej sesji oraz poziomo przewijaną tabelę pogrupowanych ćwiczeń i serii; wybrana sesja, potwierdzenie usunięcia i wyliczenie szerokości dla orientacji poziomej pozostają w `App.tsx`,
 - `src/screens/WorkoutDetailScreen.tsx` odpowiada za prezentację definicji treningu, etapy, serie, podsumowanie mięśni i skróconą historię; wybór treningu, start sesji, potwierdzenie usunięcia, dostępność AI i nawigacja pozostają w kompozycji aplikacji,
 - `src/screens/WorkoutCreatorScreen.tsx` odpowiada za kontrolowany formularz Kreatora AI, wybór lokalnego profilu, stany wysyłania i prezentację wyniku; wywołania API, polling joba, kredyty oraz zapis profili pozostają w `App.tsx`,
-- `src/screens/WorkoutAiScreens.tsx` zawiera formularz instrukcji modyfikacji treningu oraz podgląd propozycji AI z kontrolą dopasowania ćwiczeń do katalogu; zapis, zastąpienie treningu, kredyty, endpoint rewrite i polling pozostają w `App.tsx`,
+- `src/screens/WorkoutAiRewriteScreen.tsx` i `src/screens/WorkoutAiProposalScreen.tsx` rozdzielają formularz instrukcji modyfikacji od podglądu propozycji AI; zapis, zastąpienie treningu, kredyty, endpoint rewrite i polling pozostają w `App.tsx`,
 - `src/domain/workoutCreator.ts` zawiera typy, statyczną definicję ankiety oraz czyste helpery kopiowania i porównywania profili Kreatora,
 - `src/domain/workoutAi.ts` zawiera testowalne podsumowanie dopasowania ćwiczeń z propozycji AI do katalogu,
 - `src/domain` pozostaje miejscem dla logiki domenowej i testowalnych helperów niezależnych od UI.
 
-Ten podział ogranicza rozmiar pliku głównego bez zmiany publicznych kontraktów, storage ani modelu danych. Kolejne ekrany mogą być wydzielane stopniowo z `App.tsx` do modułów funkcjonalnych.
+Podział warstwy mobile jest zakończony na poziomie ekranów:
+
+- `src/screens` odpowiada za układ i lokalny stan prezentacyjny poszczególnych widoków,
+- `src/components` zawiera współdzielone kontrolki, dialogi, pickery, widgety homepage i elementy prezentacji treningu,
+- `src/domain` zawiera typy, normalizację i testowalne helpery niezależne od React Native,
+- `src/navigation/appNavigation.ts` zawiera typy tras, dolną nawigację i mapowanie tytułów ekranów,
+- `App.tsx` jest warstwą kompozycji: utrzymuje nadrzędny stan aplikacji, account-scoped storage, wywołania API, synchronizację i przekazuje dane oraz callbacki do ekranów.
+
+Taki podział nie zmienia publicznych kontraktów, storage ani modelu danych. Krótkie funkcje `render...` pozostające w `App.tsx` są adapterami kompozycyjnymi i nie zawierają samodzielnych layoutów ekranów.
+
+`src/screens/SettingsScreen.tsx` prezentuje aktywne sekcje ustawień, harmonogram przypomnień i linki informacyjne. `src/components/SettingsSheetContent.tsx` zawiera kontrolowane arkusze wyboru języka, domyślnych parametrów treningu i godziny przypomnienia. Stan, uprawnienia do powiadomień, account-scoped storage oraz synchronizacja `/api/settings` nadal pozostają w kompozycji `App.tsx`; typy UI i wspólna lista dni są w `src/domain/settings.ts`.
 
 ### Local storage
 

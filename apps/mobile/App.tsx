@@ -7,9 +7,7 @@ import {
   InputField
 } from "@gluestack-ui/themed";
 import { ErrorBoundary } from "react-error-boundary";
-import type { FallbackProps } from "react-error-boundary";
-import type { ReactNode } from "react";
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Animated,
@@ -24,17 +22,14 @@ import {
   Platform,
   Pressable,
   SafeAreaView,
-  SectionList,
   ScrollView,
   StatusBar,
   Text,
   View,
   useWindowDimensions
 } from "react-native";
-import type { SectionListData, SectionListRenderItemInfo, TextInputProps } from "react-native";
 
 import { BUILD_API_BASE_URL } from "./src/config/buildConfig";
-import { exerciseImageSources } from "./src/exerciseImageSources";
 import { applyAvatarResponse, buildAvatarImageSource, type AvatarResponse } from "./src/domain/avatar";
 import {
   achievementDefinitions,
@@ -81,7 +76,6 @@ import {
   type WorkoutCreatorProfile
 } from "./src/domain/workoutCreator";
 import {
-  calculateEntryVolume,
   completeWorkoutSession,
   createWorkoutSessionFromWorkout,
   getActiveWorkoutSessionsForUi,
@@ -103,11 +97,6 @@ import {
   WORKOUT_SESSIONS_STORAGE_BASE_KEY,
   WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY
 } from "./src/domain/workoutSessions";
-import {
-  formatRestDuration,
-  formatWorkoutProgressPercent,
-  getWorkoutProgress
-} from "./src/domain/workoutSessionUi";
 import type {
   WorkoutExecutionMode,
   WorkoutSession,
@@ -115,30 +104,12 @@ import type {
   WorkoutSessionStatus
 } from "./src/domain/workoutSessions";
 import {
-  buildExerciseSections,
-  filterExerciseOptionsForPicker,
   findExerciseById,
-  findExerciseByName,
   findCatalogExerciseBestEffort,
   getCachedExerciseOptions,
-  getCachedExerciseOptionsForStageType,
   getExerciseDisplayName,
-  getExerciseSectionsForStageType,
-  getMuscleOptions,
-  getPrimaryMuscles,
-  getRequiredEquipment,
-  muscleLabels,
-  muscleKeys,
-  getExerciseOptionTierBadge
 } from "./src/domain/exercises";
-import { activeExerciseLibraryTiers } from "./src/domain/exercises";
-import type { Exercise, ExerciseLibraryTier, ExerciseOption, ExerciseSection, MuscleKey } from "./src/domain/exercises";
 import {
-  formatExerciseSetTarget,
-  getExerciseDetails,
-  getExerciseProgressKeyForDetails,
-  isRestTargetStep,
-  getWorkoutStepMuscleGroups,
   resolveWorkoutStartExecutionMode
 } from "./src/domain/workoutExerciseSummary";
 import {
@@ -229,46 +200,33 @@ import {
 } from "./src/domain/googlePlayBilling";
 import {
   createOfflineSystemStatus,
-  getSystemStatusCopy,
   normalizeSystemStatusResponse,
   shouldFetchSystemStatus,
   type SystemStatusState
 } from "./src/domain/systemStatus";
-import { articles, getArticleTranslation } from "./src/domain/articles";
+import { articles } from "./src/domain/articles";
 import type { Article } from "./src/domain/articles";
 import { GymminLogo, GymminMark } from "./src/components/GymminLogo";
-import { CollapsiblePanel } from "./src/components/CollapsiblePanel";
-import {
-  ExerciseSummaryRow,
-  HumanMuscleFigure,
-  WorkoutMuscleOverviewContent,
-  type MuscleUsage
-} from "./src/components/WorkoutPresentation";
 import {
   AppButton,
   AppIconButton,
   AppInput,
   AppTextarea,
   InlineSheetSelectControl,
-  SelectControl
+  SelectControl,
+  SuffixedInput
 } from "./src/components/AppControls";
-import {
-  parseTimerSecondsValue,
-  RestTimerControl,
-  SessionValueInput,
-  WorkoutHeaderElapsedTime
-} from "./src/components/WorkoutSessionControls";
-import { LegalPage } from "./src/components/LegalContent";
+import { WorkoutHeaderElapsedTime } from "./src/components/WorkoutSessionControls";
 import { translate, type LanguageCode, type TranslationKey } from "./src/i18n/translations";
 import { ContactScreen } from "./src/screens/ContactScreen";
-import { BugReportScreen, BugReportSuccessScreen } from "./src/screens/BugReportScreen";
-import { AccountDetailsScreen, ActiveSessionsScreen, DeleteAccountScreen } from "./src/screens/AccountScreens";
-import {
-  ChangePasswordScreen,
-  ForgotPasswordScreen,
-  LoginPanel,
-  type AuthMode
-} from "./src/screens/AuthScreens";
+import { BugReportScreen } from "./src/screens/BugReportScreen";
+import { BugReportSuccessScreen } from "./src/screens/BugReportSuccessScreen";
+import { AccountDetailsScreen } from "./src/screens/AccountDetailsScreen";
+import { ActiveSessionsScreen } from "./src/screens/ActiveSessionsScreen";
+import { DeleteAccountScreen } from "./src/screens/DeleteAccountScreen";
+import { LoginPanel, type AuthMode } from "./src/components/LoginPanel";
+import { ChangePasswordScreen } from "./src/screens/ChangePasswordScreen";
+import { ForgotPasswordScreen } from "./src/screens/ForgotPasswordScreen";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { AiCreditsScreen } from "./src/screens/AiCreditsScreen";
@@ -282,7 +240,32 @@ import {
 import { WorkoutSessionDetailScreen } from "./src/screens/WorkoutSessionDetailScreen";
 import { WorkoutDetailScreen } from "./src/screens/WorkoutDetailScreen";
 import { WorkoutCreatorScreen } from "./src/screens/WorkoutCreatorScreen";
-import { WorkoutAiProposalScreen, WorkoutAiRewriteScreen } from "./src/screens/WorkoutAiScreens";
+import { WorkoutAiProposalScreen } from "./src/screens/WorkoutAiProposalScreen";
+import { WorkoutAiRewriteScreen } from "./src/screens/WorkoutAiRewriteScreen";
+import { SettingsScreen } from "./src/screens/SettingsScreen";
+import { SettingsSheetContent } from "./src/components/SettingsSheetContent";
+import { ArticleDetailScreen } from "./src/screens/ArticleDetailScreen";
+import { WorkoutBuilderScreen } from "./src/screens/WorkoutBuilderScreen";
+import { ExerciseDetailScreen } from "./src/screens/ExerciseDetailScreen";
+import { FavoriteExercisesScreen } from "./src/screens/FavoriteExercisesScreen";
+import { WeeklyPlanScreen } from "./src/screens/WeeklyPlanScreen";
+import { HomeScreen } from "./src/screens/HomeScreen";
+import { WorkoutsScreen } from "./src/screens/WorkoutsScreen";
+import { WorkoutSessionScreen } from "./src/screens/WorkoutSessionScreen";
+import { ExerciseMuscleModal } from "./src/components/ExerciseMuscleModal";
+import {
+  ActiveWorkoutSessionCard,
+  SystemStatusCallout,
+  TrainingFactPill,
+  WeeklyPlanHomeCard,
+  WorkoutCreatorButton
+} from "./src/components/HomeWidgets";
+import { WorkoutSortActions, WorkoutSortSheet } from "./src/components/WorkoutSortControls";
+import { AppDialog, type AppDialogAction, type AppDialogState } from "./src/components/AppDialog";
+import { GlobalErrorFallback } from "./src/components/GlobalErrorFallback";
+import type { ReminderSchedulingStatus, SettingsSheetKey } from "./src/domain/settings";
+import type { SavedWorkout, SortDirection, WorkoutSortField, WorkoutSortSettings } from "./src/domain/savedWorkouts";
+import { getScreenTitle, navItems, type ScreenKey } from "./src/navigation/appNavigation";
 import { styles } from "./src/theme/appStyles";
 import { themes, type Theme, type ThemeName } from "./src/theme/theme";
 
@@ -330,11 +313,6 @@ const stageTypeValues: StageType[] = ["warmup", "exercise", "recovery", "rest", 
 const goalTypeValues: GoalType[] = ["repetitions", "time", "buttonPress", "calories", "heartRate"];
 const targetComparatorValues: TargetComparator[] = ["below", "above"];
 const workoutExecutionModeValues: WorkoutExecutionMode[] = ["guided", "readonly-post-workout", "inline-table"];
-const navItems = [
-  { key: "home", icon: "home-outline" },
-  { key: "workouts", icon: "barbell-outline" },
-  { key: "settings", icon: "settings-outline" }
-] as const;
 
 const localWorkoutsLegacyStorageKey = "gymmin.localWorkouts.v1";
 const localWorkoutsStorageBaseKey = "localWorkouts.v1";
@@ -378,21 +356,6 @@ function getDefaultApiBaseUrl() {
 
 const apiBaseUrl = getDefaultApiBaseUrl();
 
-const languageOptions: Array<{ label: string; value: LanguageCode }> = [
-  { label: "Polski", value: "pl" },
-  { label: "English", value: "en" }
-];
-
-type SettingsSheetKey =
-  | "language"
-  | "defaultSetCount"
-  | "defaultWeight"
-  | "defaultStageType"
-  | "defaultWorkoutExecutionMode"
-  | "showRestTimer"
-  | "workoutReminderDay";
-
-
 const stageTypeTranslationKeys: Record<StageType, TranslationKey> = {
   cooldown: "stageCooldown",
   exercise: "stageExercise",
@@ -401,18 +364,6 @@ const stageTypeTranslationKeys: Record<StageType, TranslationKey> = {
   rest: "stageRest",
   warmup: "stageWarmup"
 };
-
-function getReminderDayOptions(t: (key: TranslationKey) => string) {
-  return [
-    { label: t("monday"), shortLabel: t("mondayShort"), value: 1 },
-    { label: t("tuesday"), shortLabel: t("tuesdayShort"), value: 2 },
-    { label: t("wednesday"), shortLabel: t("wednesdayShort"), value: 3 },
-    { label: t("thursday"), shortLabel: t("thursdayShort"), value: 4 },
-    { label: t("friday"), shortLabel: t("fridayShort"), value: 5 },
-    { label: t("saturday"), shortLabel: t("saturdayShort"), value: 6 },
-    { label: t("sunday"), shortLabel: t("sundayShort"), value: 7 }
-  ];
-}
 
 const goalTypeTranslationKeys: Record<GoalType, TranslationKey> = {
   buttonPress: "goalButtonPress",
@@ -509,20 +460,6 @@ function normalizeCollapsedPanels(value: unknown) {
   };
 }
 
-type SavedWorkout = {
-  createdAt?: string;
-  draft: WorkoutDraft;
-  id: string;
-  name: string;
-};
-
-type WorkoutSortField = "createdAt" | "name";
-type SortDirection = "asc" | "desc";
-
-type WorkoutSortSettings = {
-  direction: SortDirection;
-  field: WorkoutSortField;
-};
 type WorkoutTableOrientation = "vertical" | "horizontal";
 
 function isWorkoutTableOrientation(value: unknown): value is WorkoutTableOrientation {
@@ -1783,48 +1720,6 @@ function createSavedWorkoutsFromApiResponse(responseBody: unknown, warmupMode: A
   });
 }
 
-type NavKey = (typeof navItems)[number]["key"];
-type ScreenKey =
-  | NavKey
-  | "articleDetail"
-  | "builder"
-  | "terms"
-  | "contact"
-  | "bugReport"
-  | "bugReportSuccess"
-  | "favoriteExercises"
-  | "forgotPassword"
-  | "resetPassword"
-  | "changePassword"
-  | "activeSessions"
-  | "achievements"
-  | "aiCredits"
-  | "profile"
-  | "accountDetails"
-  | "deleteAccount"
-  | "progress"
-  | "exerciseDetail"
-  | "exerciseProgress"
-  | "workoutHistory"
-  | "workoutSessionDetail"
-  | "workoutCreator"
-  | "workoutAiRewrite"
-  | "workoutAiProposal"
-  | "workoutDetail"
-  | "workoutSession"
-  | "weeklyPlan";
-type AppDialogAction = {
-  label: string;
-  onPress?: () => void;
-  variant?: "primary" | "outline" | "destructive";
-};
-
-type AppDialogState = {
-  actions: AppDialogAction[];
-  message: string;
-  title: string;
-};
-
 function isNetworkRequestFailure(error: unknown) {
   return error instanceof Error && /network request failed/i.test(error.message);
 }
@@ -1991,7 +1886,7 @@ function GymminApp() {
   const [hasLoadedLocalCreatorProfiles, setHasLoadedLocalCreatorProfiles] = useState(false);
   const [hasLoadedLocalCreatorJob, setHasLoadedLocalCreatorJob] = useState(false);
   const [hasLoadedLocalAuth, setHasLoadedLocalAuth] = useState(false);
-  const [selectedArticleId, setSelectedArticleId] = useState(articles[0]?.id ?? "");
+  const [selectedArticleId, setSelectedArticleId] = useState<string>(articles[0]?.id ?? "");
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [workout, setWorkout] = useState<WorkoutDraft>(() => createDefaultWorkout());
@@ -2012,7 +1907,7 @@ function GymminApp() {
     getDefaultWorkoutReminderSettings("en")
   );
   const [pendingWorkoutReminderDay, setPendingWorkoutReminderDay] = useState<ReminderDaySchedule | null>(null);
-  const [reminderSchedulingStatus, setReminderSchedulingStatus] = useState<"idle" | "scheduled" | "failed" | "permissionDenied">("idle");
+  const [reminderSchedulingStatus, setReminderSchedulingStatus] = useState<ReminderSchedulingStatus>("idle");
   const [localSettingsUpdatedAt, setLocalSettingsUpdatedAt] = useState(() => new Date().toISOString());
   const [workoutSessions, setWorkoutSessions] = useState<WorkoutSession[]>([]);
   const [hasLoadedWorkoutSessions, setHasLoadedWorkoutSessions] = useState(false);
@@ -6751,247 +6646,59 @@ function GymminApp() {
 
   function renderWorkoutSortActions() {
     return (
-      <View style={styles.panelActions}>
-        <AppIconButton
-          icon="swap-vertical-outline"
-          theme={theme}
-          onPress={() => setIsWorkoutSortSheetOpen(true)}
-        />
-        <AppIconButton icon="add" theme={theme} onPress={openWorkoutBuilder} />
-      </View>
+      <WorkoutSortActions
+        theme={theme}
+        onAdd={openWorkoutBuilder}
+        onOpenSort={() => setIsWorkoutSortSheetOpen(true)}
+      />
     );
   }
 
   function renderWorkoutSortSheet() {
-    const fieldOptions: Array<{ label: string; value: WorkoutSortField }> = [
-      { label: t("workoutSortCreatedAt"), value: "createdAt" },
-      { label: t("workoutSortAlphabetical"), value: "name" }
-    ];
-    const directionOptions: Array<{ label: string; value: SortDirection }> = [
-      { label: t("descending"), value: "desc" },
-      { label: t("ascending"), value: "asc" }
-    ];
-
     return (
-      <Modal
-        animationType="fade"
-        transparent
-        visible={isWorkoutSortSheetOpen}
-        onRequestClose={() => setIsWorkoutSortSheetOpen(false)}
-      >
-        <View style={styles.bottomSheetRoot}>
-          <Pressable
-            accessibilityRole="button"
-            style={styles.bottomSheetBackdrop}
-            onPress={() => setIsWorkoutSortSheetOpen(false)}
-          />
-          <View
-            style={[
-              styles.bottomSheetPanel,
-              {
-                backgroundColor: theme.card,
-                paddingBottom: bottomSheetBottomPadding
-              }
-            ]}
-          >
-            <Text style={[styles.bottomSheetTitle, { color: theme.text }]}>{t("workoutSortTitle")}</Text>
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.label, { color: theme.muted }]}>{t("workoutSortField")}</Text>
-              <View style={[styles.bottomSheetOptionGroup, { borderColor: theme.border }]}>
-                {fieldOptions.map((option, index) => {
-                  const selected = workoutSort.field === option.value;
-
-                  return (
-                    <Pressable
-                      key={option.value}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      style={[
-                        styles.bottomSheetOptionRow,
-                        {
-                          backgroundColor: selected ? theme.secondaryBand : theme.card,
-                          borderBottomColor: theme.border,
-                          borderBottomWidth: index === fieldOptions.length - 1 ? 0 : 1
-                        }
-                      ]}
-                      onPress={() => setWorkoutSort((current) => ({ ...current, field: option.value }))}
-                    >
-                      <Text style={[styles.bottomSheetOptionText, { color: theme.text }]}>
-                        {option.label}
-                      </Text>
-                      {selected ? (
-                        <Ionicons name="checkmark-circle" size={22} color={theme.primary} />
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.label, { color: theme.muted }]}>{t("workoutSortDirection")}</Text>
-              <View style={[styles.bottomSheetOptionGroup, { borderColor: theme.border }]}>
-                {directionOptions.map((option, index) => {
-                  const selected = workoutSort.direction === option.value;
-
-                  return (
-                    <Pressable
-                      key={option.value}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      style={[
-                        styles.bottomSheetOptionRow,
-                        {
-                          backgroundColor: selected ? theme.secondaryBand : theme.card,
-                          borderBottomColor: theme.border,
-                          borderBottomWidth: index === directionOptions.length - 1 ? 0 : 1
-                        }
-                      ]}
-                      onPress={() => setWorkoutSort((current) => ({ ...current, direction: option.value }))}
-                    >
-                      <Text style={[styles.bottomSheetOptionText, { color: theme.text }]}>
-                        {option.label}
-                      </Text>
-                      {selected ? (
-                        <Ionicons name="checkmark-circle" size={22} color={theme.primary} />
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-            <AppButton
-              icon="save-outline"
-              style={styles.bottomSheetButton}
-              theme={theme}
-              onPress={() => setIsWorkoutSortSheetOpen(false)}
-            >
-              {t("save")}
-            </AppButton>
-          </View>
-        </View>
-      </Modal>
+      <WorkoutSortSheet
+        bottomPadding={bottomSheetBottomPadding}
+        isOpen={isWorkoutSortSheetOpen}
+        sort={workoutSort}
+        t={t}
+        theme={theme}
+        onChange={setWorkoutSort}
+        onClose={() => setIsWorkoutSortSheetOpen(false)}
+      />
     );
   }
 
   function renderWorkoutCreatorButton() {
-    const needsLogin = !user;
-    const label = isCreatorJobPending
-      ? t("workoutCreatorPendingCta")
-      : needsLogin
-        ? t("workoutCreatorLoginCta")
-        : t("workoutCreatorCta");
-    const button = (
-      <AppButton
-        disabled={isCreatorJobPending || needsLogin}
-        icon={isCreatorJobPending ? "hourglass-outline" : needsLogin ? "lock-closed-outline" : "sparkles-outline"}
-        style={styles.workoutCreatorButton}
-        theme={theme}
-        onPress={openWorkoutCreator}
-      >
-        {label}
-      </AppButton>
-    );
-
     return (
-      <View style={styles.workoutCreatorButtonWrap}>
-        {needsLogin && !isCreatorJobPending ? (
-          <Pressable accessibilityRole="button" onPress={openWorkoutCreator}>
-            {button}
-          </Pressable>
-        ) : button}
-        {needsLogin && showCreatorLoginTooltip ? (
-          <View
-            pointerEvents="none"
-            style={styles.creatorLoginTooltip}
-          >
-            <View style={[styles.creatorLoginTooltipBubble, { backgroundColor: theme.primaryStrong }]}>
-              <Text style={[styles.creatorLoginTooltipText, { color: theme.white }]}>
-                {t("workoutCreatorLoginTooltip")}
-              </Text>
-            </View>
-          </View>
-        ) : null}
-      </View>
+      <WorkoutCreatorButton
+        isPending={isCreatorJobPending}
+        isUserAuthenticated={Boolean(user)}
+        showLoginTooltip={showCreatorLoginTooltip}
+        t={t}
+        theme={theme}
+        onOpen={openWorkoutCreator}
+      />
     );
   }
 
   function renderTrainingFactPill() {
     const facts = trainingFacts[language];
-    const fact = facts[trainingFactIndex % facts.length];
-
-    return (
-      <View
-        accessibilityLiveRegion="polite"
-        style={[
-          styles.trainingFactPill,
-          {
-            backgroundColor: theme.secondaryBand,
-            borderColor: theme.border
-          }
-        ]}
-      >
-        <View style={[styles.trainingFactIcon, { backgroundColor: theme.primary }]}>
-          <Ionicons name="bulb-outline" size={16} color={theme.white} />
-        </View>
-        <Text style={[styles.trainingFactText, { color: theme.text }]}>{fact}</Text>
-      </View>
-    );
+    return <TrainingFactPill fact={facts[trainingFactIndex % facts.length]} theme={theme} />;
   }
 
   function renderSystemStatusCallout() {
-    const copy = getSystemStatusCopy(systemStatus, language);
-    if (!copy) {
-      return null;
-    }
-
     if (activeScreen === "weeklyPlan") {
       setActiveScreen("home");
       return true;
     }
-
-    const statusKind = systemStatus.kind === "ok" ? "degraded" : systemStatus.kind;
-    const statusIcons: Record<Exclude<SystemStatusState["kind"], "ok">, keyof typeof Ionicons.glyphMap> = {
-      degraded: "information-circle-outline",
-      maintenance: "construct-outline",
-      offline: "cloud-offline-outline",
-      update: "refresh-circle-outline"
-    };
-    const iconName = statusIcons[statusKind];
-
     return (
-      <View
-        accessibilityLiveRegion="polite"
-        style={[
-          styles.systemStatusCallout,
-          {
-            backgroundColor: theme.card,
-            borderColor: statusKind === "offline" ? theme.primary : theme.border
-          }
-        ]}
-      >
-        <View style={[styles.systemStatusIcon, { backgroundColor: theme.secondaryBand }]}>
-          <Ionicons
-            name={iconName}
-            size={22}
-            color={theme.primary}
-          />
-        </View>
-        <View style={styles.systemStatusCopy}>
-          <Text style={[styles.systemStatusTitle, { color: theme.text }]}>{copy.title}</Text>
-          <Text style={[styles.systemStatusDescription, { color: theme.muted }]}>{copy.description}</Text>
-          <Pressable
-            accessibilityRole="button"
-            disabled={isSystemStatusRefreshing}
-            style={styles.systemStatusAction}
-            onPress={() => refreshSystemStatus(true)}
-          >
-            <Ionicons name="refresh-outline" size={16} color={theme.primary} />
-            <Text style={[styles.systemStatusActionText, { color: theme.primary }]}>
-              {isSystemStatusRefreshing ? `${copy.cta}...` : copy.cta}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
+      <SystemStatusCallout
+        isRefreshing={isSystemStatusRefreshing}
+        language={language}
+        status={systemStatus}
+        theme={theme}
+        onRefresh={() => refreshSystemStatus(true)}
+      />
     );
   }
 
@@ -7068,35 +6775,6 @@ function GymminApp() {
     return getWorkoutExecutionModeOptions(t).find((item) => item.value === mode)?.label ?? mode;
   }
 
-  function formatCodeLabel(value: string) {
-    return value
-      .toLowerCase()
-      .split("_")
-      .filter(Boolean)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ");
-  }
-
-  function getExerciseName(exercise: Exercise) {
-    return language === "pl" ? exercise.polishName : exercise.name;
-  }
-
-  function getExerciseMeta(exercise: Exercise) {
-    const primaryMuscles = getPrimaryMuscles(exercise)
-      .map((muscle) => muscleLabels[language][muscle])
-      .slice(0, 3)
-      .join(", ");
-    const equipment = getRequiredEquipment(exercise)
-      .map(formatCodeLabel)
-      .slice(0, 2)
-      .join(", ");
-
-    return [
-      primaryMuscles,
-      equipment,
-      formatCodeLabel(exercise.garminCategory)
-    ].filter(Boolean).join(" · ");
-  }
 
   function setExerciseFavorite(exerciseId: string, shouldBeFavorite: boolean) {
     if (!findExerciseById(exerciseId)) {
@@ -7159,398 +6837,111 @@ function GymminApp() {
   }
 
   function renderActiveWorkoutSessionCard() {
-    if (!activeWorkoutSession) {
-      return null;
-    }
-
     return (
-      <View style={[styles.activeSessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.workoutInfo}>
-          <Text style={[styles.workoutName, { color: theme.text }]}>{t("activeWorkoutNotice")}</Text>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {activeWorkoutSession.sourceWorkoutName}
-          </Text>
-        </View>
-        <View style={styles.activeSessionActions}>
-          <AppButton
-            icon="play-outline"
-            style={styles.compactButton}
-            textStyle={styles.compactButtonText}
-            theme={theme}
-            onPress={() => continueActiveWorkoutSession(activeWorkoutSession.id)}
-          >
-            {t("continueWorkout")}
-          </AppButton>
-          <AppButton
-            icon="close-outline"
-            style={styles.compactButton}
-            textStyle={styles.compactButtonText}
-            theme={theme}
-            variant="outline"
-            onPress={abandonActiveWorkoutSession}
-          >
-            {t("abandonWorkout")}
-          </AppButton>
-        </View>
-      </View>
+      <ActiveWorkoutSessionCard
+        session={activeWorkoutSession}
+        t={t}
+        theme={theme}
+        onAbandon={abandonActiveWorkoutSession}
+        onContinue={continueActiveWorkoutSession}
+      />
     );
   }
 
   function renderWeeklyPlanHomeCard() {
-    if (!savedWorkouts.length) {
-      return null;
-    }
-
-    if (!weeklyPlanSummary.total) {
-      return (
-        <View style={[styles.weeklyPlanEmptyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={[styles.weeklyPlanCardIcon, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="calendar-outline" size={22} color={theme.primary} />
-          </View>
-          <View style={styles.weeklyPlanEmptyCopy}>
-            <Text style={[styles.weeklyPlanEmptyTitle, { color: theme.text }]}>{t("planYourWeek")}</Text>
-            <Text style={[styles.weeklyPlanEmptyText, { color: theme.muted }]}>{t("weeklyPlanEmptyCopy")}</Text>
-          </View>
-          <Pressable accessibilityRole="button" style={[styles.weeklyPlanSetupButton, { borderColor: theme.primary }]} onPress={() => setActiveScreen("weeklyPlan")}>
-            <Text style={[styles.weeklyPlanSetupButtonText, { color: theme.primary }]}>{t("setPlan")}</Text>
-          </Pressable>
-        </View>
-      );
-    }
-
-    const range = formatWeekRange(getCurrentWeekRange(new Date()), language);
-    const todayItem = weeklyPlanSummary.todayItems[0];
-    const completion = t("weeklyPlanCompleted")
-      .replace("{completed}", String(weeklyPlanSummary.completed))
-      .replace("{total}", String(weeklyPlanSummary.total));
-
     return (
-      <Pressable
-        accessibilityRole="button"
-        style={[styles.weeklyPlanHomeCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-        onPress={() => setActiveScreen("weeklyPlan")}
-      >
-        <View style={styles.weeklyPlanHomeTop}>
-          <View style={[styles.weeklyPlanCardIcon, { backgroundColor: theme.primary }]}>
-            <Ionicons name="calendar-outline" size={22} color={theme.white} />
-          </View>
-          <View style={styles.weeklyPlanHomeCopy}>
-            <Text style={[styles.weeklyPlanHomeTitle, { color: theme.text }]}>{`${t("week")}: ${range}`}</Text>
-            <Text style={[styles.weeklyPlanHomeMeta, { color: theme.muted }]}>{completion}</Text>
-          </View>
-          <View style={styles.weeklyPlanProgressCopy}>
-            <Text style={[styles.weeklyPlanProgressText, { color: theme.primary }]}>{`${weeklyPlanSummary.percent}%`}</Text>
-            <View style={[styles.weeklyPlanProgressRing, { borderColor: theme.secondaryBand }]}>
-              <View style={[styles.weeklyPlanProgressRingFill, { backgroundColor: theme.primary, height: `${Math.max(8, weeklyPlanSummary.percent)}%` }]} />
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={22} color={theme.muted} />
-        </View>
-        <View style={[styles.weeklyPlanHomeStats, { borderTopColor: theme.border }]}>
-          <View style={styles.weeklyPlanHomeStat}>
-            <Ionicons name="checkmark-circle" size={21} color={theme.primary} />
-            <Text style={[styles.weeklyPlanStatNumber, { color: theme.text }]}>{weeklyPlanSummary.completed}</Text>
-            <Text style={[styles.weeklyPlanStatLabel, { color: theme.muted }]}>{t("completed")}</Text>
-          </View>
-          <View style={[styles.weeklyPlanStatDivider, { backgroundColor: theme.border }]} />
-          <View style={styles.weeklyPlanHomeStat}>
-            <Ionicons name="ellipse-outline" size={21} color={theme.secondaryBand} />
-            <Text style={[styles.weeklyPlanStatNumber, { color: theme.text }]}>{weeklyPlanSummary.remaining}</Text>
-            <Text style={[styles.weeklyPlanStatLabel, { color: theme.muted }]}>{t("toDo")}</Text>
-          </View>
-          <View style={[styles.weeklyPlanStatDivider, { backgroundColor: theme.border }]} />
-          <View style={styles.weeklyPlanToday}>
-            <Text style={[styles.weeklyPlanTodayLabel, { color: theme.muted }]}>{`${t("today")}: ${getWeeklyPlanDayOptions(t).find((item) => item.value === getWeeklyPlanDay(new Date()))?.label ?? ""}`}</Text>
-            {todayItem ? (
-              <Pressable
-                accessibilityLabel={`${t("showDetails")}: ${todayItem.workout.name}`}
-                accessibilityRole="link"
-                hitSlop={6}
-                style={styles.weeklyPlanTodayLink}
-                onPress={(event) => {
-                  event.stopPropagation();
-                  openWorkoutDetail(todayItem.workout.id);
-                }}
-              >
-                <Text style={[styles.weeklyPlanTodayName, { color: theme.primary }]} numberOfLines={1}>
-                  {todayItem.workout.name}
-                </Text>
-                <Ionicons name="chevron-forward" size={15} color={theme.primary} />
-              </Pressable>
-            ) : (
-              <Text style={[styles.weeklyPlanTodayName, { color: theme.text }]} numberOfLines={1}>
-                {t("todayNoWorkout")}
-              </Text>
-            )}
-          </View>
-        </View>
-      </Pressable>
+      <WeeklyPlanHomeCard
+        language={language}
+        savedWorkoutCount={savedWorkouts.length}
+        summary={weeklyPlanSummary}
+        t={t}
+        theme={theme}
+        onOpenPlan={() => setActiveScreen("weeklyPlan")}
+        onOpenWorkout={openWorkoutDetail}
+      />
     );
   }
 
   function renderWeeklyPlan() {
-    const dayOptions = getWeeklyPlanDayOptions(t);
-    const plannedIds = new Set(weeklyPlanSummary.items.map((item) => item.workoutId));
-    const availableWorkouts = savedWorkouts.filter((workout) => !plannedIds.has(workout.id));
-    const range = formatWeekRange(getCurrentWeekRange(new Date()), language);
-    const groupedItems = Array.from(
-      weeklyPlanSummary.items.reduce((groups, item) => {
-        const existing = groups.get(item.workoutId);
-        if (existing) {
-          existing.items.push(item);
-        } else {
-          groups.set(item.workoutId, { items: [item], workout: item.workout });
-        }
-        return groups;
-      }, new Map<string, { items: typeof weeklyPlanSummary.items; workout: (typeof weeklyPlanSummary.items)[number]["workout"] }>()).values()
-    );
-
     return (
-      <View style={styles.weeklyPlanScreen}>
-        <View style={[styles.weeklyPlanDetailHeader, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={[styles.weeklyPlanCardIcon, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="calendar-outline" size={22} color={theme.primary} />
-          </View>
-          <View style={styles.workoutInfo}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("weeklyPlan")}</Text>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>{`${t("week")}: ${range}`}</Text>
-          </View>
-        </View>
-
-        {groupedItems.length ? (
-          <View style={[styles.weeklyPlanListCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            {groupedItems.map((group, index) => {
-              const completedCount = group.items.filter((item) => item.completed).length;
-              const isCompleted = completedCount === group.items.length;
-              const selectedDays = new Set(group.items.map((item) => item.day));
-
-              return (
-              <View key={group.workout.id} style={[styles.weeklyPlanItem, { borderBottomColor: theme.border }, index === groupedItems.length - 1 ? styles.weeklyPlanItemLast : null]}>
-                <View style={styles.weeklyPlanItemHeader}>
-                  <View style={[styles.weeklyPlanStatusIcon, { backgroundColor: isCompleted ? theme.primary : theme.secondaryBand }]}>
-                    <Ionicons name={isCompleted ? "checkmark" : "calendar-outline"} size={18} color={isCompleted ? theme.white : theme.primary} />
-                  </View>
-                  <View style={styles.workoutInfo}>
-                    <Pressable
-                      accessibilityLabel={`${t("showDetails")}: ${group.workout.name}`}
-                      accessibilityRole="link"
-                      hitSlop={6}
-                      onPress={() => openWorkoutDetail(group.workout.id)}
-                    >
-                      <Text style={[styles.workoutName, { color: theme.primary }]}>{group.workout.name}</Text>
-                    </Pressable>
-                    <Text style={[styles.workoutMeta, { color: isCompleted ? theme.primary : theme.muted }]}>{isCompleted ? t("completed") : t("toDo")}</Text>
-                  </View>
-                  <Pressable accessibilityLabel={t("removeFromWeeklyPlan")} accessibilityRole="button" onPress={() => setWeeklyPlan((current) => removeWeeklyPlanItem(current, group.workout.id))}>
-                    <Ionicons name="trash-outline" size={20} color={theme.danger} />
-                  </Pressable>
-                </View>
-                <Text style={[styles.weeklyPlanChooseDayLabel, { color: theme.muted }]}>{t("chooseWeekday")}</Text>
-                <View style={styles.weeklyPlanDayChips}>
-                  {dayOptions.map((day) => {
-                    const selected = selectedDays.has(day.value);
-                    return (
-                      <Pressable
-                        key={day.value}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected }}
-                        style={[styles.weeklyPlanDayChip, { backgroundColor: selected ? theme.primary : theme.control, borderColor: selected ? theme.primary : theme.border }]}
-                        onPress={() => setWeeklyPlan((current) => toggleWeeklyPlanItemDay(current, group.workout.id, day.value))}
-                      >
-                        <Text style={[styles.weeklyPlanDayChipText, { color: selected ? theme.white : theme.text }]}>{day.label}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-              );
-            })}
-          </View>
-        ) : (
-          <View style={[styles.weeklyPlanNoItems, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("weeklyPlanNoItems")}</Text>
-          </View>
-        )}
-
-        {availableWorkouts.length ? (
-          <View style={[styles.weeklyPlanAddCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("addToWeeklyPlan")}</Text>
-            {availableWorkouts.map((workout) => (
-              <View key={workout.id} style={[styles.weeklyPlanAddRow, { borderTopColor: theme.border }]}>
-                <Text style={[styles.workoutName, styles.weeklyPlanAddName, { color: theme.text }]} numberOfLines={2}>{workout.name}</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  style={[styles.weeklyPlanAddButton, { backgroundColor: theme.primary }]}
-                  onPress={() => setWeeklyPlan((current) => upsertWeeklyPlanItem(current, workout.id, getWeeklyPlanDay(new Date())))}
-                >
-                  <Ionicons name="add" size={18} color={theme.white} />
-                </Pressable>
-              </View>
-            ))}
-          </View>
-        ) : null}
-      </View>
+      <WeeklyPlanScreen
+        language={language}
+        savedWorkouts={savedWorkouts}
+        summary={weeklyPlanSummary}
+        t={t}
+        theme={theme}
+        onChangePlan={setWeeklyPlan}
+        onOpenWorkout={openWorkoutDetail}
+      />
     );
   }
 
   function renderHome() {
-    const homeWorkouts = filteredWorkouts.slice(0, 5);
-    const shouldShowWorkoutCreator = !hasUserDefinedWorkouts(savedWorkouts);
+    const authPanel = !isAuthPanelDismissed ? (
+      <LoginPanel
+        authError={authError}
+        authMode={authMode}
+        displayName={displayName}
+        email={email}
+        isAuthenticated={Boolean(user)}
+        isAuthSubmitting={isAuthSubmitting}
+        logIn={logIn}
+        password={password}
+        passwordConfirm={passwordConfirm}
+        register={register}
+        setAuthError={setAuthError}
+        setAuthMode={setAuthMode}
+        setDisplayName={setDisplayName}
+        setEmail={setEmail}
+        setPassword={setPassword}
+        setPasswordConfirm={setPasswordConfirm}
+        setShowLoginForm={setShowLoginForm}
+        showLoginForm={showLoginForm}
+        t={t}
+        theme={theme}
+        onDismiss={() => {
+          setIsAuthPanelDismissed(true);
+          setShowLoginForm(false);
+        }}
+        onForgotPassword={() => {
+          setAuthError("");
+          setAuthMessage("");
+          setResetEmail(email);
+          setActiveScreen("forgotPassword");
+        }}
+      />
+    ) : null;
 
     return (
-      <>
-        {!isAuthPanelDismissed ? (
-          <LoginPanel
-            authError={authError}
-            authMode={authMode}
-            displayName={displayName}
-            email={email}
-            isAuthenticated={Boolean(user)}
-            isAuthSubmitting={isAuthSubmitting}
-            logIn={logIn}
-            password={password}
-            passwordConfirm={passwordConfirm}
-            register={register}
-            setAuthError={setAuthError}
-            setAuthMode={setAuthMode}
-            setDisplayName={setDisplayName}
-            setEmail={setEmail}
-            setPassword={setPassword}
-            setPasswordConfirm={setPasswordConfirm}
-            setShowLoginForm={setShowLoginForm}
-            showLoginForm={showLoginForm}
-            t={t}
-            theme={theme}
-            onDismiss={() => {
-              setIsAuthPanelDismissed(true);
-              setShowLoginForm(false);
-            }}
-            onForgotPassword={() => {
-              setAuthError("");
-              setAuthMessage("");
-              setResetEmail(email);
-              setActiveScreen("forgotPassword");
-            }}
-          />
-        ) : null}
-
-        {renderSystemStatusCallout()}
-
-        {renderActiveWorkoutSessionCard()}
-
-        {renderWeeklyPlanHomeCard()}
-
-        {renderTrainingFactPill()}
-
-        {shouldShowWorkoutCreator ? renderWorkoutCreatorButton() : null}
-
-        <CollapsiblePanel
-          actions={renderWorkoutSortActions()}
-          isCollapsed={isPanelCollapsed("home-workouts")}
-          theme={theme}
-          title={t("workouts")}
-          onToggle={() => togglePanel("home-workouts")}
-        >
-            {homeWorkouts.length ? (
-              <View style={styles.workoutList}>
-                {homeWorkouts.map((item, index) => (
-                  <Pressable
-                    key={item.id}
-                    accessibilityRole="button"
-                    style={[
-                      styles.workoutRow,
-                      {
-                        borderBottomWidth: index === homeWorkouts.length - 1 ? 0 : 1,
-                        borderColor: theme.border
-                      }
-                    ]}
-                    onPress={() => openWorkoutDetail(item.id)}
-                  >
-                    <View style={[styles.workoutIcon, { backgroundColor: theme.secondaryBand }]}>
-                      <Ionicons name="barbell-outline" size={20} color={theme.primary} />
-                    </View>
-                    <View style={styles.workoutInfo}>
-                      <Text style={[styles.workoutName, { color: theme.text }]}>{item.name}</Text>
-                      {item.draft.notes ? (
-                        <Text
-                          numberOfLines={2}
-                          style={[styles.workoutMeta, { color: theme.muted }]}
-                        >
-                          {getWorkoutNotesPreview(item.draft.notes)}
-                        </Text>
-                      ) : null}
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={theme.muted} />
-                  </Pressable>
-                ))}
-              </View>
-            ) : null}
-            {filteredWorkouts.length > homeWorkouts.length ? (
-              <AppButton
-                icon="list-outline"
-                style={styles.secondaryButton}
-                textStyle={styles.secondaryButtonText}
-                theme={theme}
-                variant="outline"
-                onPress={() => setActiveScreen("workouts")}
-              >
-                {t("viewAllWorkouts")}
-              </AppButton>
-            ) : null}
-        </CollapsiblePanel>
-
-        <CollapsiblePanel
-          isCollapsed={isPanelCollapsed("home-articles")}
-          theme={theme}
-          title={t("articles")}
-          onToggle={() => togglePanel("home-articles")}
-        >
-            {articles.map((article, index) => {
-              const translation = getArticleTranslation(article, language);
-
-              return (
-                <Pressable
-                  key={article.id}
-                  accessibilityRole="button"
-                  style={[
-                    styles.articleRow,
-                    {
-                      borderBottomWidth: index === articles.length - 1 ? 0 : 1,
-                      borderColor: theme.border
-                    }
-                  ]}
-                  onPress={() => {
-                    setSelectedArticleId(article.id);
-                    setActiveScreen("articleDetail");
-                  }}
-                >
-                  <View style={styles.articleContent}>
-                    <Text style={[styles.articleCategory, { color: theme.primary }]}>
-                      {translation.category}
-                    </Text>
-                    <Text style={[styles.articleTitle, { color: theme.text }]}>{translation.title}</Text>
-                    {translation.summary ? (
-                      <Text style={[styles.articleMeta, { color: theme.muted }]} numberOfLines={2}>
-                        {translation.summary}
-                      </Text>
-                    ) : null}
-                    <Text style={[styles.articleMeta, { color: theme.muted }]}>
-                      {formatArticleDate(article.publishedAt, language)} · {article.readTime}
-                    </Text>
-                  </View>
-                  <Ionicons name="reader-outline" size={22} color={theme.primary} />
-                </Pressable>
-              );
-            })}
-        </CollapsiblePanel>
-      </>
+      <HomeScreen
+        activeSessionCard={renderActiveWorkoutSessionCard()}
+        authPanel={authPanel}
+        collapsedPanels={collapsedPanels}
+        filteredWorkouts={filteredWorkouts}
+        language={language}
+        savedWorkouts={savedWorkouts}
+        systemStatusCallout={renderSystemStatusCallout()}
+        t={t}
+        theme={theme}
+        trainingFactPill={renderTrainingFactPill()}
+        weeklyPlanCard={renderWeeklyPlanHomeCard()}
+        workoutCreatorButton={renderWorkoutCreatorButton()}
+        workoutSortActions={renderWorkoutSortActions()}
+        onOpenAllWorkouts={() => setActiveScreen("workouts")}
+        onOpenArticle={(articleId) => {
+          setSelectedArticleId(articleId);
+          setActiveScreen("articleDetail");
+        }}
+        onOpenWorkout={openWorkoutDetail}
+        onTogglePanel={togglePanel}
+      />
     );
   }
 
   function renderBuilder() {
     return (
       <>
-        <WorkoutBuilder
+      <WorkoutBuilderScreen
           defaultSetCount={defaultSetCount}
           defaultStageType={defaultStageType}
           defaultWeight={defaultWeight}
@@ -7578,7 +6969,7 @@ function GymminApp() {
     }
 
     return (
-      <ArticleDetail
+      <ArticleDetailScreen
         article={article}
         language={language}
         theme={theme}
@@ -7588,94 +6979,21 @@ function GymminApp() {
 
   function renderWorkouts() {
     return (
-      <>
-        {renderActiveWorkoutSessionCard()}
-
-        {renderWorkoutCreatorButton()}
-
-        <View style={styles.historyEntryGrid}>
-          <AppButton
-            icon="time-outline"
-            style={styles.historyEntryButton}
-            theme={theme}
-            variant="outline"
-            onPress={() => openWorkoutHistory()}
-          >
-            {t("workoutHistoryTitle")}
-          </AppButton>
-          <AppButton
-            icon="trending-up-outline"
-            style={styles.historyEntryButton}
-            theme={theme}
-            variant="outline"
-            onPress={() => setActiveScreen("progress")}
-          >
-            {t("progress")}
-          </AppButton>
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: theme.muted }]}>{t("searchWorkout")}</Text>
-          <Input
-            style={[
-              styles.searchBox,
-              { backgroundColor: theme.control, borderColor: theme.border }
-            ]}
-          >
-            <Ionicons name="search" size={20} color={theme.muted} />
-            <InputField
-              placeholder={t("searchWorkoutPlaceholder")}
-              placeholderTextColor={theme.muted}
-              style={[styles.searchInput, { color: theme.inputText }]}
-              value={search}
-              onChangeText={setSearch}
-            />
-          </Input>
-        </View>
-
-        <CollapsiblePanel
-          actions={renderWorkoutSortActions()}
-          isCollapsed={isPanelCollapsed("workouts-list")}
-          theme={theme}
-          title={t("workouts")}
-          onToggle={() => togglePanel("workouts-list")}
-        >
-          {filteredWorkouts.length ? (
-            <View style={styles.workoutList}>
-              {filteredWorkouts.map((item, index) => (
-                <Pressable
-                  key={item.id}
-                  accessibilityRole="button"
-                  style={[
-                    styles.workoutRow,
-                    {
-                      borderBottomWidth: index === filteredWorkouts.length - 1 ? 0 : 1,
-                      borderColor: theme.border
-                    }
-                  ]}
-                  onPress={() => openWorkoutDetail(item.id)}
-                >
-                  <View style={[styles.workoutIcon, { backgroundColor: theme.secondaryBand }]}>
-                    <Ionicons name="barbell-outline" size={20} color={theme.primary} />
-                  </View>
-                  <View style={styles.workoutInfo}>
-                    <Text style={[styles.workoutName, { color: theme.text }]}>{item.name}</Text>
-                    {item.draft.notes ? (
-                      <Text
-                        numberOfLines={2}
-                        style={[styles.workoutMeta, { color: theme.muted }]}
-                      >
-                        {getWorkoutNotesPreview(item.draft.notes)}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.muted} />
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-        </CollapsiblePanel>
-      </>
+      <WorkoutsScreen
+        activeSessionCard={renderActiveWorkoutSessionCard()}
+        collapsed={isPanelCollapsed("workouts-list")}
+        creatorButton={renderWorkoutCreatorButton()}
+        filteredWorkouts={filteredWorkouts}
+        search={search}
+        sortActions={renderWorkoutSortActions()}
+        t={t}
+        theme={theme}
+        onChangeSearch={setSearch}
+        onOpenHistory={() => openWorkoutHistory()}
+        onOpenProgress={() => setActiveScreen("progress")}
+        onOpenWorkout={openWorkoutDetail}
+        onToggleList={() => togglePanel("workouts-list")}
+      />
     );
   }
 
@@ -7702,629 +7020,37 @@ function GymminApp() {
   }
 
   function renderExerciseDetailScreen() {
-    const step = selectedExerciseDetailStep;
-    const details = step ? getExerciseDetails(step, language) : null;
-    const progressKey = getExerciseProgressKeyForDetails(details);
-    const progressSummary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
-    const fallbackName = step?.exerciseName ? getExerciseDisplayName(step.exerciseName, language) : t("exerciseDetails");
-    const displayName = details?.displayName ?? fallbackName;
-    const hasMuscleData = Boolean(details && (details.primary.length || details.secondary.length));
-    const colors = {
-      inactive: "#4a4d4c",
-      primary: "#ff3347",
-      secondary: "#ffc43d"
-    };
-
-    function fill(muscle: MuscleKey) {
-      if (details?.primary.includes(muscle)) {
-        return colors.primary;
-      }
-
-      if (details?.secondary.includes(muscle)) {
-        return colors.secondary;
-      }
-
-      return colors.inactive;
-    }
-
-    function formatMuscleList(muscles: MuscleKey[]) {
-      return muscles.length ? muscles.map((muscle) => muscleLabels[language][muscle]).join(", ") : t("noData");
-    }
-
-    function isExerciseDetailPanelCollapsed(panelId: string, defaultValue: boolean) {
-      return exerciseDetailCollapsedPanels[panelId] ?? defaultValue;
-    }
-
-    function toggleExerciseDetailPanel(panelId: string, defaultValue: boolean) {
-      setExerciseDetailCollapsedPanels((current) => ({
-        ...current,
-        [panelId]: !(current[panelId] ?? defaultValue)
-      }));
-    }
-
-    function renderExerciseDetailBulletList(items: string[], fallback: string, markerColor = theme.primary) {
-      if (!items.length) {
-        return <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{fallback}</Text>;
-      }
-
-      return (
-        <View style={styles.exerciseDetailBulletList}>
-          {items.map((item, index) => (
-            <View key={`${index}-${item}`} style={styles.exerciseDetailBulletRow}>
-              <Text style={[styles.exerciseDetailBulletMarker, { color: markerColor }]}>•</Text>
-              <Text style={[styles.workoutDetailNotes, styles.exerciseDetailBulletText, { color: theme.muted }]}>
-                {item}
-              </Text>
-            </View>
-          ))}
-        </View>
-      );
-    }
-
-    function renderExerciseDetailSteps(items: string[], fallback: string) {
-      if (!items.length) {
-        return <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{fallback}</Text>;
-      }
-
-      return (
-        <View style={styles.exerciseDetailStepList}>
-          {items.map((item, index) => (
-            <View key={`${index}-${item}`} style={styles.exerciseDetailStepRow}>
-              <View style={[styles.exerciseDetailStepBadge, { backgroundColor: theme.primary }]}>
-                <Text style={styles.exerciseDetailStepBadgeText}>{index + 1}</Text>
-              </View>
-              <Text style={[styles.workoutDetailNotes, styles.exerciseDetailStepText, { color: theme.muted }]}>
-                {item}
-              </Text>
-            </View>
-          ))}
-        </View>
-      );
-    }
-
     return (
-      <View style={styles.historyScreen}>
-        <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.exerciseDetailMusclesHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>{displayName}</Text>
-          </View>
-          {hasMuscleData ? (
-            <View style={styles.exerciseDetailSideToggle}>
-              {([
-                { label: t("bodyFront"), value: "front" as const },
-                { label: t("bodyBack"), value: "back" as const }
-              ]).map((option) => {
-                const selected = exerciseDetailMuscleSide === option.value;
-
-                return (
-                  <Pressable
-                    key={option.value}
-                    accessibilityRole="button"
-                    style={[
-                      styles.exerciseDetailSideButton,
-                      {
-                        backgroundColor: selected ? theme.primary : theme.card,
-                        borderColor: selected ? theme.primary : theme.border
-                      }
-                    ]}
-                    onPress={() => setExerciseDetailMuscleSide(option.value)}
-                  >
-                    <Text style={[styles.exerciseDetailSideButtonText, { color: selected ? theme.white : theme.text }]}>
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          ) : null}
-          {hasMuscleData ? (
-            <View style={styles.exerciseDetailMuscleContent}>
-              <View style={styles.exerciseMuscleLists}>
-                <View style={styles.fieldGroup}>
-                  <Text style={[styles.label, { color: theme.muted }]}>{t("primaryMuscles")}</Text>
-                  <Text style={[styles.workoutMeta, { color: theme.text }]}>{formatMuscleList(details?.primary ?? [])}</Text>
-                </View>
-                <View style={styles.fieldGroup}>
-                  <Text style={[styles.label, { color: theme.muted }]}>{t("secondaryMuscles")}</Text>
-                  <Text style={[styles.workoutMeta, { color: theme.text }]}>{formatMuscleList(details?.secondary ?? [])}</Text>
-                </View>
-              </View>
-              <View style={styles.exerciseDetailSingleFigure}>
-                <HumanMuscleFigure fill={fill} side={exerciseDetailMuscleSide} style={styles.exerciseDetailHumanFigure} />
-              </View>
-            </View>
-          ) : (
-            <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("noExerciseMuscleData")}</Text>
-          )}
-        </View>
-
-        {details?.imageAssetKeys.length ? (
-          <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseAnimation")}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.exerciseImageStrip}>
-              {details.imageAssetKeys.map((imageKey) => {
-                const imageSource = exerciseImageSources[imageKey];
-                if (!imageSource) {
-                  return null;
-                }
-
-                return (
-                  <View
-                    key={imageKey}
-                    style={[styles.exerciseImageFrame, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}
-                  >
-                    <Image source={imageSource} style={styles.exerciseDetailImage} resizeMode="contain" />
-                  </View>
-                );
-              })}
-            </ScrollView>
-          </View>
-        ) : null}
-
-        <CollapsiblePanel
-          collapseLabel={t("collapse")}
-          expandLabel={t("expand")}
-          isCollapsed={isExerciseDetailPanelCollapsed("howTo", false)}
-          theme={theme}
-          title={t("howToPerform")}
-          onToggle={() => toggleExerciseDetailPanel("howTo", false)}
-        >
-          {renderExerciseDetailSteps(
-            details?.instructions ?? [],
-            details?.exercise?.description || t("techniquePlaceholder")
-          )}
-        </CollapsiblePanel>
-
-        <CollapsiblePanel
-          collapseLabel={t("collapse")}
-          expandLabel={t("expand")}
-          isCollapsed={isExerciseDetailPanelCollapsed("tips", true)}
-          theme={theme}
-          title={t("tips")}
-          onToggle={() => toggleExerciseDetailPanel("tips", true)}
-        >
-          {renderExerciseDetailBulletList(details?.techniqueTips ?? [], t("tipsPlaceholder"))}
-        </CollapsiblePanel>
-
-        <CollapsiblePanel
-          collapseLabel={t("collapse")}
-          expandLabel={t("expand")}
-          isCollapsed={isExerciseDetailPanelCollapsed("mistakes", true)}
-          theme={theme}
-          title={t("commonMistakes")}
-          onToggle={() => toggleExerciseDetailPanel("mistakes", true)}
-        >
-          {renderExerciseDetailBulletList(details?.commonMistakes ?? [], t("commonMistakesPlaceholder"), theme.danger)}
-        </CollapsiblePanel>
-
-        <CollapsiblePanel
-          collapseLabel={t("collapse")}
-          expandLabel={t("expand")}
-          isCollapsed={isExerciseDetailPanelCollapsed("history", !progressSummary)}
-          theme={theme}
-          title={t("exerciseHistory")}
-          onToggle={() => toggleExerciseDetailPanel("history", !progressSummary)}
-        >
-          {progressSummary ? (
-            <View style={styles.exerciseDetailHistoryGrid}>
-              <View style={[styles.exerciseDetailHistoryTile, { backgroundColor: theme.secondaryBand }]}>
-                <Text style={[styles.label, { color: theme.muted }]}>{t("last")}</Text>
-                <Text style={[styles.workoutMeta, { color: theme.text }]}>{formatEntryActual(progressSummary.lastResult.entry)}</Text>
-              </View>
-              <View style={[styles.exerciseDetailHistoryTile, { backgroundColor: theme.secondaryBand }]}>
-                <Text style={[styles.label, { color: theme.muted }]}>{t("bestWeight")}</Text>
-                <Text style={[styles.workoutMeta, { color: theme.text }]}>{formatNumber(progressSummary.bestWeight, "kg")}</Text>
-              </View>
-              <View style={[styles.exerciseDetailHistoryTile, { backgroundColor: theme.secondaryBand }]}>
-                <Text style={[styles.label, { color: theme.muted }]}>{t("bestVolume")}</Text>
-                <Text style={[styles.workoutMeta, { color: theme.text }]}>{formatNumber(progressSummary.bestVolumeSingleEntry, "kg")}</Text>
-              </View>
-              <View style={[styles.exerciseDetailHistoryTile, { backgroundColor: theme.secondaryBand }]}>
-                <Text style={[styles.label, { color: theme.muted }]}>{t("sessions")}</Text>
-                <Text style={[styles.workoutMeta, { color: theme.text }]}>{progressSummary.results.length}</Text>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.workoutMeta, { color: theme.text }]}>{t("exerciseHistoryEmpty")}</Text>
-              <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("exerciseHistoryPlaceholder")}</Text>
-            </View>
-          )}
-        </CollapsiblePanel>
-      </View>
+      <ExerciseDetailScreen
+        collapsedPanels={exerciseDetailCollapsedPanels}
+        formatEntryActual={formatEntryActual}
+        formatNumber={formatNumber}
+        language={language}
+        muscleSide={exerciseDetailMuscleSide}
+        step={selectedExerciseDetailStep}
+        t={t}
+        theme={theme}
+        visibleWorkoutSessions={visibleWorkoutSessions}
+        onChangeCollapsedPanels={setExerciseDetailCollapsedPanels}
+        onChangeMuscleSide={setExerciseDetailMuscleSide}
+      />
     );
   }
 
-  function renderSettings() {
-    const stageTypeOptions = getStageTypeOptions(t);
-    const executionModeOptions = getWorkoutExecutionModeOptions(t);
-    const selectedStageTypeLabel = stageTypeOptions.find((option) => option.value === defaultStageType)?.label;
-    const selectedExecutionModeLabel = executionModeOptions.find((option) => option.value === defaultWorkoutExecutionMode)?.label;
-    const reminderDayOptions = getReminderDayOptions(t);
-    return (
-      <>
-        <SettingsSection
-          isCollapsed={isPanelCollapsed("settings-preferences")}
-          title={t("preferences")}
-          theme={theme}
-          onToggle={() => togglePanel("settings-preferences")}
-        >
-          <SettingsOption
-            icon="language-outline"
-            label={t("appLanguage")}
-            value={languageOptions.find((option) => option.value === language)?.label ?? "Polski"}
-            theme={theme}
-            onPress={() => {
-              setPendingLanguage(language);
-              setActiveSettingsSheet("language");
-            }}
-          />
-          <SettingsOption
-            icon={isDarkMode ? "moon-outline" : "sunny-outline"}
-            label={t("theme")}
-            value={isDarkMode ? t("themeDark") : t("themeLight")}
-            theme={theme}
-            onPress={() => setThemeName(isDarkMode ? "light" : "dark")}
-          />
-        </SettingsSection>
-
-        <SettingsSection
-          isCollapsed={isPanelCollapsed("settings-training")}
-          title={t("training")}
-          theme={theme}
-          onToggle={() => togglePanel("settings-training")}
-        >
-          <SettingsOption
-            icon="repeat-outline"
-            label={t("defaultSetCount")}
-            value={defaultSetCount || t("setupRequired")}
-            theme={theme}
-            onPress={() => {
-              setPendingDefaultSetCount(defaultSetCount);
-              setActiveSettingsSheet("defaultSetCount");
-            }}
-          />
-          <SettingsOption
-            icon="barbell-outline"
-            label={t("defaultWeight")}
-            value={defaultWeight ? `${defaultWeight} kg` : t("empty")}
-            theme={theme}
-            onPress={() => {
-              setPendingDefaultWeight(defaultWeight);
-              setActiveSettingsSheet("defaultWeight");
-            }}
-          />
-          <SettingsOption
-            icon="layers-outline"
-            label={t("defaultStageType")}
-            value={selectedStageTypeLabel ?? t("toChoose")}
-            theme={theme}
-            onPress={() => {
-              setPendingDefaultStageType(defaultStageType);
-              setActiveSettingsSheet("defaultStageType");
-            }}
-          />
-          <SettingsOption
-            icon="walk-outline"
-            label={t("defaultWorkoutExecutionMode")}
-            value={selectedExecutionModeLabel ?? t("executionGuided")}
-            theme={theme}
-            onPress={() => {
-              setPendingDefaultWorkoutExecutionMode(defaultWorkoutExecutionMode);
-              setActiveSettingsSheet("defaultWorkoutExecutionMode");
-            }}
-          />
-          <SettingsOption
-            icon="time-outline"
-            label={t("showRestTimer")}
-            value={showRestTimer ? t("enabled") : t("disabled")}
-            theme={theme}
-            onPress={() => setShowRestTimer((current) => !current)}
-          />
-          <SettingsOption
-            icon="star-outline"
-            label={t("favoriteExercises")}
-            value={String(getFavoriteCatalogExercises(favoriteExercises).length)}
-            theme={theme}
-            onPress={() => setActiveScreen("favoriteExercises")}
-          />
-          {/* Custom exercises are intentionally not supported; catalog-only choices keep Garmin mapping possible. */}
-        </SettingsSection>
-
-        <SettingsSection
-          isCollapsed={isPanelCollapsed("settings-notifications")}
-          title={t("notifications")}
-          theme={theme}
-          onToggle={() => togglePanel("settings-notifications")}
-        >
-          <SettingsOption
-            icon="notifications-outline"
-            label={t("enableReminders")}
-            value={workoutReminders.enabled ? t("enabled") : t("disabled")}
-            theme={theme}
-            onPress={() => {
-              void toggleWorkoutRemindersEnabled();
-            }}
-          />
-          {workoutReminders.enabled ? (
-            <>
-              <SettingsOption
-                icon="checkmark-done-outline"
-                label={t("reminderOnlyIfNoWorkoutToday")}
-                value={workoutReminders.onlyIfNoWorkoutToday ? t("enabled") : t("disabled")}
-                theme={theme}
-                onPress={() => updateWorkoutReminderSettings({
-                  ...workoutReminders,
-                  onlyIfNoWorkoutToday: !workoutReminders.onlyIfNoWorkoutToday
-                })}
-              />
-              <View style={styles.reminderWeeklyBlock}>
-                <Text style={[styles.settingsOptionLabel, { color: theme.text }]}>{t("reminderWeeklySchedule")}</Text>
-                <View style={styles.reminderWeeklyRows}>
-                  {reminderDayOptions.map((day) => {
-                    const schedule = getReminderScheduleForDay(workoutReminders, day.value);
-                    const enabled = schedule.enabled;
-
-                    return (
-                      <View key={day.value} style={styles.reminderWeeklyRow}>
-                        <Pressable
-                          accessibilityLabel={`${day.label}: ${enabled ? t("enabled") : t("disabled")}`}
-                          accessibilityRole="switch"
-                          accessibilityState={{ checked: enabled }}
-                          onPress={() => {
-                            void toggleWorkoutReminderDay(day.value);
-                          }}
-                          style={[
-                            styles.reminderWeeklyDayBadge,
-                            {
-                              backgroundColor: enabled ? theme.primary : theme.secondaryBand,
-                              borderColor: enabled ? theme.primary : theme.border
-                            }
-                          ]}
-                        >
-                          <Text style={[
-                            styles.reminderWeeklyDayText,
-                            { color: enabled ? theme.white : theme.text }
-                          ]}>
-                            {day.shortLabel}
-                          </Text>
-                        </Pressable>
-                        <Pressable
-                          accessibilityLabel={day.label}
-                          accessibilityRole="button"
-                          style={[
-                            styles.reminderWeeklyDetail,
-                            {
-                              backgroundColor: theme.card,
-                              borderColor: theme.border
-                            }
-                          ]}
-                          onPress={() => openWorkoutReminderDayEditor(getReminderWeekdayFromNumber(day.value))}
-                        >
-                          <View
-                            style={[
-                              styles.reminderWeeklyStatusDot,
-                              { backgroundColor: enabled ? theme.primary : theme.muted }
-                            ]}
-                          />
-                          <Text style={[styles.reminderWeeklyStatus, { color: theme.text }]}>
-                            {enabled ? t("enabled") : t("disabled")}
-                          </Text>
-                          <Text style={[styles.reminderWeeklyTime, { color: theme.text }]}>
-                            {formatReminderDayTime(schedule)}
-                          </Text>
-                          <Ionicons name="chevron-forward" size={20} color={theme.muted} />
-                        </Pressable>
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-              <View style={styles.reminderMessageBlock}>
-                <Text style={[styles.reminderFieldLabel, { color: theme.text }]}>{t("reminderMessage")}</Text>
-                <AppInput
-                  placeholder={getDefaultWorkoutReminderSettings(language).message}
-                  theme={theme}
-                  value={workoutReminders.message}
-                  onChangeText={updateWorkoutReminderMessage}
-                />
-              </View>
-              <View style={styles.reminderMessageBlock}>
-                <Text style={[styles.reminderFieldLabel, { color: theme.text }]}>{t("reminderDescription")}</Text>
-                <AppTextarea
-                  inputStyle={styles.reminderDescriptionInput}
-                  numberOfLines={2}
-                  placeholder={getDefaultWorkoutReminderSettings(language).description}
-                  style={styles.reminderDescriptionTextarea}
-                  theme={theme}
-                  value={workoutReminders.description ?? ""}
-                  onChangeText={updateWorkoutReminderDescription}
-                />
-              </View>
-            </>
-          ) : null}
-          {reminderSchedulingStatus === "permissionDenied" ? (
-            <Text style={[styles.settingsHint, { color: theme.danger }]}>{t("remindersPermissionDenied")}</Text>
-          ) : reminderSchedulingStatus === "failed" ? (
-            <Text style={[styles.settingsHint, { color: theme.danger }]}>{t("remindersScheduleError")}</Text>
-          ) : null}
-        </SettingsSection>
-
-        <SettingsSection
-          isCollapsed={isPanelCollapsed("settings-integrations")}
-          title={t("integrations")}
-          theme={theme}
-          onToggle={() => togglePanel("settings-integrations")}
-        >
-          <SettingsPlaceholder
-            disabled
-            icon="sync-outline"
-            label="Garmin Connect"
-            meta={t("integrationPlaceholder")}
-            theme={theme}
-          />
-        </SettingsSection>
-
-        {false ? (
-        <SettingsSection
-          isCollapsed={isPanelCollapsed("settings-data")}
-          title="Dane i prywatność"
-          theme={theme}
-          onToggle={() => togglePanel("settings-data")}
-        >
-          <SettingsOption icon="download-outline" label="Eksport danych" value="Wkrótce" theme={theme} />
-          <SettingsOption icon="trash-outline" label="Czyszczenie lokalnych danych" value="Wkrótce" theme={theme} />
-          <InfoLinkRow
-            icon="document-text-outline"
-            label="Regulamin"
-            meta="Zasady korzystania z aplikacji"
-            theme={theme}
-            onPress={() => setActiveScreen("terms")}
-          />
-          <SettingsOption icon="shield-checkmark-outline" label="Polityka prywatności" value="Wkrótce" theme={theme} />
-        </SettingsSection>
-        ) : null}
-
-        {false ? (
-        <SettingsSection
-          isCollapsed={isPanelCollapsed("settings-help")}
-          title="Pomoc"
-          theme={theme}
-          onToggle={() => togglePanel("settings-help")}
-        >
-          <InfoLinkRow
-            icon="mail-outline"
-            label="Kontakt"
-            meta="Dane kontaktowe i pomoc"
-            theme={theme}
-            onPress={() => setActiveScreen("contact")}
-          />
-          <SettingsOption icon="bug-outline" label="Zgłoś problem" value="Wkrótce" theme={theme} />
-          <SettingsOption icon="help-circle-outline" label="FAQ" value="Wkrótce" theme={theme} />
-        </SettingsSection>
-        ) : null}
-
-        <SettingsSection
-          isCollapsed={isPanelCollapsed("settings-info")}
-          title={t("information")}
-          theme={theme}
-          onToggle={() => togglePanel("settings-info")}
-        >
-          <InfoLinkRow
-            icon="document-text-outline"
-            label={t("terms")}
-            meta={t("termsMeta")}
-            theme={theme}
-            onPress={() => setActiveScreen("terms")}
-          />
-          <InfoLinkRow
-            icon="mail-outline"
-            label={t("contact")}
-            meta={t("contactMeta")}
-            theme={theme}
-            onPress={() => setActiveScreen("contact")}
-          />
-          <InfoLinkRow
-            icon="bug-outline"
-            label={t("bugReport")}
-            meta={t("bugReportMeta")}
-            theme={theme}
-            onPress={() => setActiveScreen("bugReport")}
-          />
-        </SettingsSection>
-      </>
-    );
-  }
 
   function renderFavoriteExercises() {
-    const favoriteCatalogExercises = getFavoriteCatalogExercises(favoriteExercises);
-    const searchPhrase = favoriteExercisesSearch.trim().toLowerCase();
-    const filteredFavorites = favoriteCatalogExercises
-      .filter((exercise) => {
-        if (!searchPhrase) {
-          return true;
-        }
-
-        return (
-          exercise.name.toLowerCase().includes(searchPhrase) ||
-          exercise.polishName.toLowerCase().includes(searchPhrase) ||
-          exercise.garminName.toLowerCase().includes(searchPhrase)
-        );
-      })
-      .sort((first, second) => getExerciseName(first).localeCompare(getExerciseName(second), language));
-
     return (
-      <LegalPage
-        icon="star-outline"
-        title={t("favoriteExercises")}
+      <FavoriteExercisesScreen
+        favoriteExercises={favoriteExercises}
+        language={language}
+        search={favoriteExercisesSearch}
+        syncStatus={favoriteExercisesSyncStatus}
+        t={t}
         theme={theme}
-        backLabel={t("backToSettings")}
         onBack={() => setActiveScreen("settings")}
-      >
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {favoriteExercisesSyncStatus === "synced"
-              ? t("favoriteExercisesSynced")
-              : favoriteExercisesSyncStatus === "failed"
-                ? t("favoriteExercisesSyncFailed")
-                : t("favoriteExercisesSavedLocally")}
-          </Text>
-          <Input
-            style={[
-              styles.exercisePickerSearchInput,
-              { backgroundColor: theme.control, borderColor: theme.border }
-            ]}
-          >
-            <InputField
-              placeholder={t("searchExercise")}
-              placeholderTextColor={theme.muted}
-              style={[styles.exercisePickerSearchText, { color: theme.inputText }]}
-              value={favoriteExercisesSearch}
-              onChangeText={setFavoriteExercisesSearch}
-            />
-          </Input>
-        </View>
-
-        {filteredFavorites.length ? (
-          <View style={styles.favoriteExerciseList}>
-            {filteredFavorites.map((exercise) => (
-              <View
-                key={exercise.id}
-                style={[styles.favoriteExerciseRow, { borderColor: theme.border }]}
-              >
-                <View style={styles.favoriteExerciseInfo}>
-                  <Text style={[styles.workoutName, { color: theme.text }]} numberOfLines={2}>
-                    {getExerciseName(exercise)}
-                  </Text>
-                  <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={3}>
-                    {getExerciseMeta(exercise)}
-                  </Text>
-                  <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={1}>
-                    {exercise.garminName}
-                  </Text>
-                </View>
-                <Pressable
-                  accessibilityRole="button"
-                  style={styles.favoriteExerciseRemoveButton}
-                  onPress={() => setExerciseFavorite(exercise.id, false)}
-                >
-                  <Ionicons name="star" size={25} color={theme.primary} />
-                </Pressable>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <View style={[styles.emptyStatePanel, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="star-outline" size={28} color={theme.primary} />
-            <Text style={[styles.emptyStateTitle, { color: theme.text }]}>
-              {t("favoriteExercisesEmptyTitle")}
-            </Text>
-            <Text style={[styles.emptyStateCopy, { color: theme.muted }]}>
-              {t("favoriteExercisesEmptyCopy")}
-            </Text>
-          </View>
-        )}
-      </LegalPage>
+        onChangeSearch={setFavoriteExercisesSearch}
+        onSetFavorite={setExerciseFavorite}
+      />
     );
   }
 
@@ -8594,319 +7320,6 @@ function GymminApp() {
     setActiveSettingsSheet(null);
   }
 
-  function renderSettingsSheetContent() {
-    if (activeSettingsSheet === "language") {
-      return (
-        <>
-          <Text style={[styles.bottomSheetTitle, { color: theme.text }]}>{t("appLanguage")}</Text>
-          <View style={[styles.bottomSheetOptionGroup, { borderColor: theme.border }]}>
-            {languageOptions.map((option, index) => {
-              const selected = pendingLanguage === option.value;
-
-              return (
-                <Pressable
-                  key={option.value}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  style={[
-                    styles.bottomSheetOptionRow,
-                    {
-                      backgroundColor: selected ? theme.secondaryBand : theme.card,
-                      borderBottomColor: theme.border,
-                      borderBottomWidth: index === languageOptions.length - 1 ? 0 : 1
-                    }
-                  ]}
-                  onPress={() => setPendingLanguage(option.value)}
-                >
-                  <Text style={[styles.bottomSheetOptionText, { color: theme.text }]}>
-                    {option.label}
-                  </Text>
-                  {selected ? (
-                    <Ionicons name="checkmark-circle" size={22} color={theme.primary} />
-                  ) : null}
-                </Pressable>
-              );
-            })}
-          </View>
-          <AppButton
-            icon="save-outline"
-            style={styles.bottomSheetButton}
-            theme={theme}
-            onPress={() => {
-              setLanguage(pendingLanguage);
-              closeSettingsSheet();
-            }}
-          >
-            {t("save")}
-          </AppButton>
-        </>
-      );
-    }
-
-    if (activeSettingsSheet === "defaultSetCount") {
-      return (
-        <>
-          <Text style={[styles.bottomSheetTitle, { color: theme.text }]}>{t("defaultSetCount")}</Text>
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: theme.muted }]}>
-              {t("defaultSetCountHelp")}
-            </Text>
-            <AppInput
-              keyboardType="number-pad"
-              placeholder="np. 3"
-              theme={theme}
-              value={pendingDefaultSetCount}
-              onChangeText={(value) => setPendingDefaultSetCount(value.replace(/\D/g, "").slice(0, 2))}
-            />
-          </View>
-          <AppButton
-            icon="save-outline"
-            style={styles.bottomSheetButton}
-            theme={theme}
-            onPress={() => {
-              setDefaultSetCount(pendingDefaultSetCount);
-              closeSettingsSheet();
-            }}
-          >
-            {t("save")}
-          </AppButton>
-        </>
-      );
-    }
-
-    if (activeSettingsSheet === "defaultWeight") {
-      return (
-        <>
-          <Text style={[styles.bottomSheetTitle, { color: theme.text }]}>{t("defaultWeight")}</Text>
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: theme.muted }]}>
-              {t("defaultWeightHelp")}
-            </Text>
-            <SuffixedInput
-              keyboardType="decimal-pad"
-              placeholder="0"
-              suffix="kg"
-              theme={theme}
-              value={pendingDefaultWeight}
-              onChangeText={(value) => {
-                const normalized = value.replace(",", ".").replace(/[^0-9.]/g, "");
-                const parts = normalized.split(".");
-                setPendingDefaultWeight(parts.length > 1 ? `${parts[0]}.${parts.slice(1).join("")}` : normalized);
-              }}
-            />
-          </View>
-          <AppButton
-            icon="save-outline"
-            style={styles.bottomSheetButton}
-            theme={theme}
-            onPress={() => {
-              setDefaultWeight(pendingDefaultWeight);
-              closeSettingsSheet();
-            }}
-          >
-            {t("save")}
-          </AppButton>
-        </>
-      );
-    }
-
-    if (activeSettingsSheet === "defaultStageType") {
-      const options: Array<{ label: string; value: StageType | "" }> = [
-        { label: t("toChoose"), value: "" },
-        ...getStageTypeOptions(t)
-      ];
-
-      return (
-        <>
-          <Text style={[styles.bottomSheetTitle, { color: theme.text }]}>{t("defaultStageType")}</Text>
-          <View style={[styles.bottomSheetOptionGroup, { borderColor: theme.border }]}>
-            {options.map((option, index) => {
-              const selected = pendingDefaultStageType === option.value;
-
-              return (
-                <Pressable
-                  key={option.value || "empty"}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  style={[
-                    styles.bottomSheetOptionRow,
-                    {
-                      backgroundColor: selected ? theme.secondaryBand : theme.card,
-                      borderBottomColor: theme.border,
-                      borderBottomWidth: index === options.length - 1 ? 0 : 1
-                    }
-                  ]}
-                  onPress={() => setPendingDefaultStageType(option.value)}
-                >
-                  <Text style={[styles.bottomSheetOptionText, { color: theme.text }]}>
-                    {option.label}
-                  </Text>
-                  {selected ? (
-                    <Ionicons name="checkmark-circle" size={22} color={theme.primary} />
-                  ) : null}
-                </Pressable>
-              );
-            })}
-          </View>
-          <AppButton
-            icon="save-outline"
-            style={styles.bottomSheetButton}
-            theme={theme}
-            onPress={() => {
-              setDefaultStageType(pendingDefaultStageType);
-              closeSettingsSheet();
-            }}
-          >
-            {t("save")}
-          </AppButton>
-        </>
-      );
-    }
-
-    if (activeSettingsSheet === "defaultWorkoutExecutionMode") {
-      const options = getWorkoutExecutionModeOptions(t);
-
-      return (
-        <>
-          <Text style={[styles.bottomSheetTitle, { color: theme.text }]}>{t("defaultWorkoutExecutionMode")}</Text>
-          <View style={[styles.bottomSheetOptionGroup, { borderColor: theme.border }]}>
-            {options.map((option, index) => {
-              const selected = pendingDefaultWorkoutExecutionMode === option.value;
-
-              return (
-                <Pressable
-                  key={option.value}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  style={[
-                    styles.bottomSheetOptionRow,
-                    {
-                      backgroundColor: selected ? theme.secondaryBand : theme.card,
-                      borderBottomColor: theme.border,
-                      borderBottomWidth: index === options.length - 1 ? 0 : 1
-                    }
-                  ]}
-                  onPress={() => setPendingDefaultWorkoutExecutionMode(option.value)}
-                >
-                  <Text style={[styles.bottomSheetOptionText, { color: theme.text }]}>
-                    {option.label}
-                  </Text>
-                  {selected ? (
-                    <Ionicons name="checkmark-circle" size={22} color={theme.primary} />
-                  ) : null}
-                </Pressable>
-              );
-            })}
-          </View>
-          <AppButton
-            icon="save-outline"
-            style={styles.bottomSheetButton}
-            theme={theme}
-            onPress={() => {
-              setDefaultWorkoutExecutionMode(pendingDefaultWorkoutExecutionMode);
-              closeSettingsSheet();
-            }}
-          >
-            {t("save")}
-          </AppButton>
-        </>
-      );
-    }
-
-    if (activeSettingsSheet === "workoutReminderDay" && pendingWorkoutReminderDay) {
-      const [selectedHour = "18", selectedMinute = "00"] = pendingWorkoutReminderDay.time.split(":");
-      const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
-      const minuteOptions = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
-      const dayLabel = getReminderDayOptions(t)
-        .find((day) => getReminderWeekdayFromNumber(day.value) === pendingWorkoutReminderDay.day)?.label ?? t("monday");
-
-      return (
-        <>
-          <Text style={[styles.bottomSheetTitle, { color: theme.text }]}>
-            {t("reminderSingular")} — {dayLabel}
-          </Text>
-          <Text style={[styles.settingsOptionLabel, { color: theme.text }]}>{t("reminderTime")}</Text>
-          <View style={styles.timePickerRow}>
-            <View style={[styles.timePickerColumn, { borderColor: theme.border }]}>
-              <ScrollView style={styles.timePickerScroll} nestedScrollEnabled>
-                {hourOptions.map((hour) => {
-                  const selected = selectedHour === hour;
-
-                  return (
-                    <Pressable
-                      key={hour}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      style={[
-                        styles.timePickerOption,
-                        { backgroundColor: selected ? theme.secondaryBand : theme.card }
-                      ]}
-                      onPress={() => updatePendingWorkoutReminderDay({ time: `${hour}:${selectedMinute}` })}
-                    >
-                      <Text style={[styles.bottomSheetOptionText, { color: theme.text }]}>{hour}</Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </View>
-            <View style={[styles.timePickerColumn, { borderColor: theme.border }]}>
-              <ScrollView style={styles.timePickerScroll} nestedScrollEnabled>
-                {minuteOptions.map((minute) => {
-                  const selected = selectedMinute === minute;
-
-                  return (
-                    <Pressable
-                      key={minute}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      style={[
-                        styles.timePickerOption,
-                        { backgroundColor: selected ? theme.secondaryBand : theme.card }
-                      ]}
-                      onPress={() => updatePendingWorkoutReminderDay({ time: `${selectedHour}:${minute}` })}
-                    >
-                      <Text style={[styles.bottomSheetOptionText, { color: theme.text }]}>{minute}</Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          </View>
-          <AppButton
-            icon="save-outline"
-            style={styles.bottomSheetButton}
-            theme={theme}
-            onPress={() => {
-              updateWorkoutReminderSettings({
-                ...updateReminderDaySchedule(workoutReminders, pendingWorkoutReminderDay.day, {
-                  enabled: pendingWorkoutReminderDay.enabled,
-                  time: pendingWorkoutReminderDay.time
-                })
-              });
-              setPendingWorkoutReminderDay(null);
-              closeSettingsSheet();
-            }}
-          >
-            {t("save")}
-          </AppButton>
-          <AppButton
-            icon="close-outline"
-            style={styles.bottomSheetButton}
-            theme={theme}
-            variant="outline"
-            onPress={() => {
-              setPendingWorkoutReminderDay(null);
-              closeSettingsSheet();
-            }}
-          >
-            {t("cancel")}
-          </AppButton>
-        </>
-      );
-    }
-
-    return null;
-  }
 
   function formatSessionEntryTitle(entry: WorkoutSessionEntry) {
     if (entry.exerciseName) {
@@ -8923,954 +7336,49 @@ function GymminApp() {
     return String(iteration || 1);
   }
 
-  function getSessionEntryPreviewStep(session: WorkoutSession, entry: WorkoutSessionEntry): WorkoutStep {
-    const sourceStep = session.planSnapshot.steps.find(
-      (step) => step.kind === "exercise" && step.id === entry.sourceElementId
-    );
-
-    if (sourceStep) {
-      return sourceStep;
-    }
-
-    return createStep({
-      exerciseId: entry.exerciseId ?? "",
-      exerciseName: entry.exerciseName ?? "",
-      goalType: (entry.plannedTargetType as GoalType | "") || "",
-      id: entry.sourceElementId ?? entry.id,
-      kind: "exercise",
-      loadKg: entry.plannedWeight ?? "",
-      stageType: (entry.type as StageType | "") || "",
-      targetValue: entry.plannedTarget ?? ""
-    });
-  }
-
-  function getSessionEntrySetTarget(entry: WorkoutSessionEntry, setCount = "1") {
-    const previewStep = createStep({
-      exerciseName: entry.exerciseName ?? "",
-      goalType: (entry.plannedTargetType as GoalType | "") || "",
-      kind: "exercise",
-      loadKg: entry.plannedWeight ?? "",
-      stageType: (entry.type as StageType | "") || "",
-      targetValue: entry.plannedTarget ?? "",
-      setCount
-    });
-
-    return formatExerciseSetTarget(previewStep);
-  }
-
-  function getGuidedEntryGroups(session: WorkoutSession) {
-    const exerciseEntries = session.entries.filter((entry) => entry.type !== "rest");
-    const sourceEntries = exerciseEntries.length ? exerciseEntries : session.entries;
-    const groups: Array<{
-      entries: WorkoutSessionEntry[];
-      firstIndex: number;
-      key: string;
-      restEntry?: WorkoutSessionEntry;
-    }> = [];
-    const grouped = new Map<string, { entries: WorkoutSessionEntry[]; firstIndex: number; key: string }>();
-
-    sourceEntries.forEach((entry) => {
-      const key = [entry.sourceStageId, entry.sourceSeriesId, entry.sourceElementId ?? entry.id].filter(Boolean).join(":");
-      const firstIndex = session.entries.findIndex((item) => item.id === entry.id);
-      const existing = grouped.get(key);
-
-      if (existing) {
-        existing.entries.push(entry);
-        return;
-      }
-
-      const group = { entries: [entry], firstIndex, key };
-      grouped.set(key, group);
-      groups.push(group);
-    });
-
-    return groups.map((group) => {
-      const referenceEntry = group.entries[0];
-      const restEntry = session.entries.find(
-        (entry) =>
-          entry.type === "rest" &&
-          entry.sourceSeriesId === referenceEntry.sourceSeriesId &&
-          entry.elementIndex > referenceEntry.elementIndex
-      );
-
-      return {
-        ...group,
-        restEntry
-      };
-    });
-  }
-
-  function getGuidedGroupIndex(
-    groups: Array<{ entries: WorkoutSessionEntry[]; firstIndex: number }>,
-    entryIndex: number,
-    currentEntry?: WorkoutSessionEntry
-  ) {
-    const directIndex = groups.findIndex((group) => group.entries.some((entry) => entry.id === currentEntry?.id));
-
-    if (directIndex >= 0) {
-      return directIndex;
-    }
-
-    const nextIndex = groups.findIndex((group) => group.firstIndex >= entryIndex);
-    return nextIndex >= 0 ? nextIndex : Math.max(0, groups.length - 1);
-  }
-
-  function toggleWorkoutSessionEntryCompleted(entry: WorkoutSessionEntry) {
-    if (entry.isCompleted) {
-      updateWorkoutSessionEntry(entry.id, {
-        actualCalories: undefined,
-        actualDuration: undefined,
-        actualHeartRate: undefined,
-        actualReps: undefined,
-        actualTarget: undefined,
-        actualWeight: undefined,
-        completedAt: undefined,
-        isCompleted: false,
-        notes: undefined
-      });
-      return;
-    }
-
-    updateWorkoutSessionEntry(entry.id, {
-      completedAt: new Date().toISOString(),
-      isCompleted: true
-    });
-  }
-
-  function updateWorkoutSessionEntryTableValue(entry: WorkoutSessionEntry, patch: Pick<Partial<WorkoutSessionEntry>, "actualReps" | "actualWeight">) {
-    const actualReps = patch.actualReps ?? entry.actualReps ?? "";
-    const actualWeight = patch.actualWeight ?? entry.actualWeight ?? "";
-    const hasAnyValue = Boolean(actualReps.trim() || actualWeight.trim());
-
-    updateWorkoutSessionEntry(entry.id, {
-      ...patch,
-      completedAt: hasAnyValue ? entry.completedAt ?? new Date().toISOString() : undefined,
-      isCompleted: hasAnyValue
-    });
-  }
-
-  function getWorkoutSessionEntryProgressKey(entry?: WorkoutSessionEntry) {
-    if (!entry) {
-      return null;
-    }
-
-    if (entry.exerciseId?.trim()) {
-      return `id:${entry.exerciseId.trim().toLowerCase()}`;
-    }
-
-    if (entry.exerciseName?.trim()) {
-      return `name:${entry.exerciseName.trim().toLowerCase()}`;
-    }
-
-    return null;
-  }
-
-  function getPreviousExerciseValues(entries: WorkoutSessionEntry[]) {
-    const referenceEntry = entries.find((entry) => entry.exerciseId?.trim() || entry.exerciseName?.trim());
-    const progressKey = getWorkoutSessionEntryProgressKey(referenceEntry);
-    const summary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
-    const previousEntry = summary?.lastResult.entry;
-
-    return {
-      reps: previousEntry?.actualReps?.trim() || "",
-      weight: previousEntry?.actualWeight?.trim() || ""
-    };
-  }
-
-  function applyPreviousExerciseValue(
-    entries: WorkoutSessionEntry[],
-    field: "actualReps" | "actualWeight",
-    value: string
-  ) {
-    if (!activeWorkoutSessionId || !value.trim()) {
-      return;
-    }
-
-    const entryIds = new Set(entries.map((entry) => entry.id));
-    const updatedAt = new Date().toISOString();
-
-    setWorkoutSessions((current) =>
-      current.map((session) => {
-        if (session.id !== activeWorkoutSessionId) {
-          return session;
-        }
-
-        let hasChanged = false;
-        const nextEntries = session.entries.map((entry) => {
-          if (!entryIds.has(entry.id) || entry[field]?.trim()) {
-            return entry;
-          }
-
-          hasChanged = true;
-          const nextEntry = { ...entry, [field]: value } as WorkoutSessionEntry;
-          const hasAnyValue = Boolean(nextEntry.actualReps?.trim() || nextEntry.actualWeight?.trim());
-
-          return {
-            ...nextEntry,
-            completedAt: hasAnyValue ? nextEntry.completedAt ?? updatedAt : undefined,
-            isCompleted: hasAnyValue
-          };
-        });
-
-        return hasChanged
-          ? {
-              ...session,
-              entries: nextEntries,
-              updatedAt
-            }
-          : session;
-      })
-    );
-  }
-
-  function renderPreviousExerciseValueButtons(entries: WorkoutSessionEntry[], compact = false) {
-    const previousValues = getPreviousExerciseValues(entries);
-
-    if (!previousValues.reps && !previousValues.weight) {
-      return null;
-    }
-
+  function renderWorkoutSession() {
     return (
-      <View style={[styles.sessionQuickFillRow, compact ? styles.sessionQuickFillRowCompact : null]}>
-        <View style={styles.sessionQuickFillSlot}>
-          {previousValues.weight ? (
-            <Pressable
-              accessibilityRole="button"
-              style={[styles.sessionQuickFillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-              onPress={() => applyPreviousExerciseValue(entries, "actualWeight", previousValues.weight)}
-            >
-              <Text style={[styles.sessionQuickFillButtonText, { color: theme.primary }]}>
-                {t("previousWeight")}: {previousValues.weight} kg
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
-        <View style={styles.sessionQuickFillSlot}>
-          {previousValues.reps ? (
-            <Pressable
-              accessibilityRole="button"
-              style={[styles.sessionQuickFillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-              onPress={() => applyPreviousExerciseValue(entries, "actualReps", previousValues.reps)}
-            >
-              <Text style={[styles.sessionQuickFillButtonText, { color: theme.primary }]}>
-                {t("previousReps")}: {previousValues.reps}
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
-    );
-  }
-
-  function renderGuidedEntryTable(entries: WorkoutSessionEntry[]) {
-    return (
-      <View style={[styles.guidedEntryTable, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        {renderPreviousExerciseValueButtons(entries)}
-        {entries.map((entry) => (
-          <View key={entry.id} style={styles.guidedEntryRow}>
-            <Pressable
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: entry.isCompleted }}
-              style={styles.guidedEntryDone}
-              onPress={() => toggleWorkoutSessionEntryCompleted(entry)}
-            >
-              <View
-                style={[
-                  styles.sessionCheckbox,
-                  {
-                    backgroundColor: entry.isCompleted ? theme.primary : theme.control,
-                    borderColor: entry.isCompleted ? theme.primary : theme.border
-                  }
-                ]}
-              >
-                {entry.isCompleted ? <Ionicons name="checkmark" size={16} color={theme.white} /> : null}
-              </View>
-            </Pressable>
-            {entry.isCompleted ? (
-              <View style={styles.guidedEntryFields}>
-                <View style={styles.guidedEntryInput}>
-                  <SessionValueInput
-                    keyboardType="decimal-pad"
-                    placeholder={t("actualWeight")}
-                    suffix="kg"
-                    theme={theme}
-                    value={entry.actualWeight ?? ""}
-                    onChangeText={(actualWeight) => updateWorkoutSessionEntry(entry.id, { actualWeight })}
-                  />
-                </View>
-                <View style={styles.guidedEntryInput}>
-                  <SessionValueInput
-                    keyboardType="number-pad"
-                    placeholder={t("actualReps")}
-                    theme={theme}
-                    value={entry.actualReps ?? ""}
-                    onChangeText={(actualReps) => updateWorkoutSessionEntry(entry.id, { actualReps })}
-                  />
-                </View>
-              </View>
-            ) : null}
-          </View>
-        ))}
-      </View>
-    );
-  }
-
-  function renderInlineWorkoutTable(session: WorkoutSession) {
-    const visibleSessionEntries = session.entries.filter(isWorkoutSessionEntryFillRequired);
-    const groupedSessionEntries = visibleSessionEntries.reduce<
-      { entries: WorkoutSessionEntry[]; key: string; previewStep: WorkoutStep; title: string }[]
-    >((groups, entry) => {
-      const previewStep = getSessionEntryPreviewStep(session, entry);
-      const title = previewStep.exerciseName
-        ? getExerciseDisplayName(previewStep.exerciseName, language)
-        : formatSessionEntryTitle(entry);
-      const normalizedTitle = title.trim().toLowerCase();
-      const key = entry.exerciseId
-        ? `id:${entry.exerciseId}`
-        : entry.sourceElementId
-          ? `step:${entry.sourceElementId}`
-          : `name:${normalizedTitle || entry.id}`;
-      const existingGroup = groups.find((group) => group.key === key);
-
-      if (existingGroup) {
-        existingGroup.entries.push(entry);
-        return groups;
-      }
-
-      groups.push({
-        entries: [entry],
-        key,
-        previewStep,
-        title
-      });
-
-      return groups;
-    }, []);
-
-    if (!groupedSessionEntries.length) {
-      return (
-        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>{t("noData")}</Text>
-        </View>
-      );
-    }
-
-    const responsiveTableMinWidth = isLandscape
-      ? Math.max(windowSize.width - insets.left - insets.right - 44, 688)
-      : undefined;
-
-    return (
-      <View style={styles.inlineWorkoutTableFrame}>
-        <ScrollView
-          horizontal
-          keyboardShouldPersistTaps="handled"
-          showsHorizontalScrollIndicator
-          style={styles.workoutSessionDetailTableScroll}
-          contentContainerStyle={styles.workoutSessionDetailTableScrollContent}
-        >
-        <View
-          style={[
-            styles.workoutSessionDetailTable,
-            styles.inlineWorkoutTable,
-            responsiveTableMinWidth ? { minWidth: responsiveTableMinWidth } : null,
-            { borderColor: theme.border }
-          ]}
-        >
-          <View
-            style={[
-              styles.workoutSessionDetailTableHeader,
-              { backgroundColor: theme.secondaryBand, borderBottomColor: theme.border }
-            ]}
-          >
-            <View
-              style={[
-                styles.workoutSessionDetailHeaderCell,
-                styles.inlineWorkoutExerciseCell,
-                isLandscape ? styles.inlineWorkoutExerciseCellHorizontal : null,
-                { borderRightColor: theme.border }
-              ]}
-            >
-              <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("exercise")}</Text>
-            </View>
-            <View
-              style={[
-                styles.workoutSessionDetailHeaderCell,
-                styles.workoutSessionDetailSetCell,
-                { borderRightColor: theme.border }
-              ]}
-            >
-              <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("set")}</Text>
-            </View>
-            <View style={[styles.workoutSessionDetailRepsHeader, styles.inlineWorkoutRepsHeader, { borderRightColor: theme.border }]}>
-              <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("actualReps")}</Text>
-              <View style={[styles.workoutSessionDetailRepsSubHeader, { borderTopColor: theme.border }]}>
-                <Text
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.88}
-                  numberOfLines={1}
-                  style={[
-                    styles.workoutSessionDetailHeaderText,
-                    styles.workoutSessionDetailRepsCell,
-                    styles.inlineWorkoutRepsCell,
-                    { color: theme.primary, borderRightColor: theme.border }
-                  ]}
-                >
-                  {t("repsDone")}
-                </Text>
-                <Text
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.88}
-                  numberOfLines={1}
-                  style={[
-                    styles.workoutSessionDetailHeaderText,
-                    styles.workoutSessionDetailRepsCell,
-                    styles.inlineWorkoutRepsCell,
-                    { color: theme.primary, borderRightWidth: 0 }
-                  ]}
-                >
-                  {t("repsPlanned")}
-                </Text>
-              </View>
-            </View>
-            <View
-              style={[
-                styles.workoutSessionDetailHeaderCell,
-                styles.inlineWorkoutWeightCell,
-                { borderRightColor: theme.border }
-              ]}
-            >
-              <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("weight")}</Text>
-            </View>
-            <View style={[styles.workoutSessionDetailHeaderCell, styles.workoutSessionDetailVolumeCell, styles.inlineWorkoutLastHeaderCell]}>
-              <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("volume")}</Text>
-            </View>
-          </View>
-          {groupedSessionEntries.map((group, groupIndex) => (
-            <View
-              key={group.key}
-              style={[
-                styles.workoutSessionDetailExerciseGroup,
-                { borderBottomColor: theme.border },
-                groupIndex === groupedSessionEntries.length - 1 ? styles.workoutSessionDetailExerciseGroupLast : null
-              ]}
-            >
-              <View
-                style={[
-                  styles.inlineWorkoutExerciseCell,
-                  isLandscape ? styles.inlineWorkoutExerciseCellHorizontal : null,
-                  { borderRightColor: theme.border }
-                ]}
-              >
-                <Pressable
-                  accessibilityRole="button"
-                  style={styles.inlineWorkoutExerciseCopy}
-                  onPress={() => openExerciseDetail(group.previewStep)}
-                >
-                  <View style={styles.inlineWorkoutExerciseTitleRow}>
-                    <Text style={[styles.workoutDetailTableExerciseName, styles.inlineWorkoutExerciseName, { color: theme.text }]} numberOfLines={3}>
-                      {group.title}
-                    </Text>
-                    <Pressable
-                      accessibilityLabel={t("showDetails")}
-                      accessibilityRole="button"
-                      hitSlop={8}
-                      style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-                      onPress={(event) => {
-                        event.stopPropagation();
-                        setSelectedExerciseMuscleStep(group.previewStep);
-                      }}
-                    >
-                      <Ionicons name="body-outline" size={20} color={theme.primary} />
-                    </Pressable>
-                  </View>
-                  {group.previewStep.notes ? (
-                    <Text style={[styles.workoutDetailNotes, styles.inlineWorkoutExerciseNotes, { color: theme.muted }]} numberOfLines={4}>
-                      {group.previewStep.notes}
-                    </Text>
-                  ) : null}
-                </Pressable>
-                {renderPreviousExerciseValueButtons(group.entries, true)}
-              </View>
-              <View style={styles.workoutSessionDetailSetsCell}>
-                {group.entries.map((entry, entryIndex) => {
-                  const volume = calculateEntryVolume(entry);
-                  const plannedReps = entry.plannedTargetType === "repetitions" ? entry.plannedTarget : "";
-
-                  return (
-                    <View
-                      key={entry.id}
-                      style={[
-                        styles.workoutSessionDetailSetRow,
-                        styles.inlineWorkoutSetRow,
-                        { borderBottomColor: theme.border },
-                        entryIndex === group.entries.length - 1 ? styles.workoutSessionDetailSetRowLast : null
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.workoutDetailTableValue,
-                          styles.workoutSessionDetailSetCell,
-                          { color: theme.text, borderRightColor: theme.border }
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {getSessionEntryIterationLabel(entry)}
-                      </Text>
-                      <View style={[styles.inlineWorkoutInputCell, styles.workoutSessionDetailRepsCell, styles.inlineWorkoutRepsCell, { borderRightColor: theme.border }]}>
-                        <SessionValueInput
-                          keyboardType="number-pad"
-                          placeholder="-"
-                          theme={theme}
-                          value={entry.actualReps ?? ""}
-                          onChangeText={(actualReps) => updateWorkoutSessionEntryTableValue(entry, { actualReps })}
-                        />
-                      </View>
-                      <Text
-                        style={[
-                          styles.workoutDetailTableValue,
-                          styles.workoutSessionDetailRepsCell,
-                          styles.inlineWorkoutRepsCell,
-                          { color: theme.text, borderRightColor: theme.border }
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {plannedReps?.trim() || "-"}
-                      </Text>
-                      <View style={[styles.inlineWorkoutInputCell, styles.inlineWorkoutWeightCell, { borderRightColor: theme.border }]}>
-                        <SessionValueInput
-                          keyboardType="decimal-pad"
-                          placeholder="-"
-                          suffix="kg"
-                          theme={theme}
-                          value={entry.actualWeight ?? ""}
-                          onChangeText={(actualWeight) => updateWorkoutSessionEntryTableValue(entry, { actualWeight })}
-                        />
-                      </View>
-                      <Text style={[styles.workoutDetailTableValue, styles.workoutSessionDetailVolumeCell, { color: theme.text }]} numberOfLines={1}>
-                        {volume ? formatNumber(volume, "kg") : "-"}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          ))}
-        </View>
-        </ScrollView>
-      </View>
-    );
-  }
-
-  function renderRestTimer(entry?: WorkoutSessionEntry) {
-    if (!showRestTimer || !entry?.plannedTarget) {
-      return null;
-    }
-
-    const plannedSeconds = parseTimerSecondsValue(entry.plannedTarget);
-    if (plannedSeconds <= 0) {
-      return null;
-    }
-
-    return (
-      <RestTimerControl
-        key={entry.id}
-        labels={{
-          pause: t("pauseTimer"),
-          reset: t("resetTimer"),
-          restTimer: t("restTimer"),
-          start: t("startTimer")
-        }}
-        plannedSeconds={plannedSeconds}
+      <WorkoutSessionScreen
+        abandonActiveWorkoutSession={abandonActiveWorkoutSession}
+        activeWorkoutSession={activeWorkoutSession}
+        activeWorkoutSessionId={activeWorkoutSessionId}
+        formatNumber={formatNumber}
+        formatSessionEntryTitle={formatSessionEntryTitle}
+        getSessionEntryIterationLabel={getSessionEntryIterationLabel}
+        insets={insets}
+        isLandscape={isLandscape}
+        isPostWorkoutFillMode={isPostWorkoutFillMode}
+        isReadOnlyWorkoutPanelCollapsed={isReadOnlyWorkoutPanelCollapsed}
+        isWorkoutSessionEntryFillRequired={isWorkoutSessionEntryFillRequired}
+        language={language}
+        openExerciseDetail={openExerciseDetail}
+        requestFinishActiveWorkoutSession={requestFinishActiveWorkoutSession}
+        sessionEntryIndex={sessionEntryIndex}
+        setIsPostWorkoutFillMode={setIsPostWorkoutFillMode}
+        setSelectedExerciseMuscleStep={setSelectedExerciseMuscleStep}
+        setSessionEntryIndex={setSessionEntryIndex}
+        setWorkoutSessions={setWorkoutSessions}
+        showRestTimer={showRestTimer}
+        t={t}
         theme={theme}
+        toggleReadOnlyWorkoutPanel={toggleReadOnlyWorkoutPanel}
+        updateWorkoutSessionEntry={updateWorkoutSessionEntry}
+        visibleWorkoutSessions={visibleWorkoutSessions}
+        windowSize={windowSize}
       />
     );
   }
 
-  function renderWorkoutSessionProgressCard(current: number, total: number) {
-    const progress = getWorkoutProgress(current, total);
-
-    return (
-      <View style={[styles.sessionProgressCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={[styles.sessionProgressIcon, { backgroundColor: theme.secondaryBand }]}>
-          <Ionicons name="barbell-outline" size={20} color={theme.primary} />
-        </View>
-        <Text style={[styles.sessionProgressCardText, { color: theme.text }]} numberOfLines={1}>
-          {t("exercisePlural")} {progress.current}/{progress.total}
-        </Text>
-        <View style={[styles.sessionProgressTrack, { backgroundColor: theme.secondaryBand }]}>
-          <View style={[styles.sessionProgressFill, { backgroundColor: theme.primary, width: `${progress.percent}%` }]} />
-        </View>
-        <Text style={[styles.sessionProgressPercent, { color: theme.primary }]} numberOfLines={1}>
-          {formatWorkoutProgressPercent(progress.current, progress.total)}
-        </Text>
-      </View>
-    );
-  }
-
-  function renderGuidedPlanPreview(
-    session: WorkoutSession,
-    group: { entries: WorkoutSessionEntry[]; restEntry?: WorkoutSessionEntry },
-    exerciseNumber: number
-  ) {
-    const entry = group.entries[0];
-    const setCount = String(group.entries.length || 1);
-    const previewStep = getSessionEntryPreviewStep(session, entry);
-    const isUntimedWarmup = entry.type === "warmup" && !entry.plannedTarget?.trim();
-    const title = entry.type === "warmup"
-      ? entry.sourceStageName?.trim() || t("stageWarmup")
-      : getExerciseDisplayName(previewStep.exerciseName, language);
-    const plannedTarget = entry.plannedTargetType === "repetitions"
-      ? entry.plannedTarget?.trim()
-      : entry.plannedTarget?.trim() || getSessionEntrySetTarget(entry);
-    const restSeconds = group.restEntry?.plannedTarget ? parseTimerSecondsValue(group.restEntry.plannedTarget) : 0;
-    const restText = formatRestDuration(restSeconds);
-
-    return (
-      <View style={[styles.guidedPlanPreview, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.guidedExerciseHeader}>
-          <View style={[styles.guidedExerciseNumber, { backgroundColor: theme.secondaryBand }]}>
-            <Text style={[styles.guidedExerciseNumberText, { color: theme.primary }]}>{exerciseNumber}</Text>
-          </View>
-          <Text style={[styles.guidedExerciseTitle, { color: theme.text }]} numberOfLines={3}>
-            {title}
-          </Text>
-          {!isUntimedWarmup ? (
-            <Pressable
-              accessibilityLabel={t("showDetails")}
-              accessibilityRole="button"
-              hitSlop={8}
-              style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-              onPress={() => openExerciseDetail(previewStep)}
-            >
-              <Ionicons name="body-outline" size={20} color={theme.primary} />
-            </Pressable>
-          ) : null}
-        </View>
-        {entry.notes || previewStep.notes ? (
-          <Text style={[styles.guidedExerciseNotes, { color: theme.muted }]} numberOfLines={5}>
-            {entry.notes || previewStep.notes}
-          </Text>
-        ) : null}
-        {!isUntimedWarmup ? (
-          <View style={styles.guidedExerciseMetaRow}>
-            <View style={styles.guidedRestGroup}>
-              <Text style={[styles.guidedRestLabel, { color: theme.text }]}>{t("stageRest")}</Text>
-              <View style={[styles.guidedRestPill, { backgroundColor: theme.secondaryBand }]}>
-                <Ionicons name="time-outline" size={16} color={theme.text} />
-                <Text style={[styles.guidedRestPillText, { color: theme.primary }]}>{restText}</Text>
-              </View>
-            </View>
-            <View style={styles.guidedTargetGroup}>
-              <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
-                <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{setCount}</Text>
-              </View>
-              <Text style={[styles.guidedTargetSeparator, { color: theme.text }]}>x</Text>
-              <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
-                <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{plannedTarget || "-"}</Text>
-              </View>
-            </View>
-          </View>
-        ) : null}
-        {renderRestTimer(group.restEntry)}
-      </View>
-    );
-  }
-
-  function renderReadOnlyWorkoutPlan(workout: WorkoutDraft, panelPrefix: string) {
-    const stageGroups = workout.steps
-      .filter((step) => step.kind === "stage" && step.stageType !== "warmup")
-      .map((stage) => ({
-        stage,
-        series: workout.steps
-          .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
-          .map((set) => ({
-            set,
-            elements: workout.steps.filter(
-              (step) => step.kind === "exercise" && step.parentSetId === set.id
-            )
-          }))
-      }));
-
-    return (
-      <>
-        {workout.notes ? (
-          <CollapsiblePanel
-            collapseLabel={t("collapse")}
-            expandLabel={t("expand")}
-            isCollapsed={isReadOnlyWorkoutPanelCollapsed(`${panelPrefix}-notes`)}
-            theme={theme}
-            title={t("workoutNotes")}
-            onToggle={() => toggleReadOnlyWorkoutPanel(`${panelPrefix}-notes`)}
-          >
-            <Text style={[styles.workoutDetailDescription, { color: theme.muted }]}>
-              {workout.notes}
-            </Text>
-          </CollapsiblePanel>
-        ) : null}
-
-        <CollapsiblePanel
-          collapseLabel={t("collapse")}
-          expandLabel={t("expand")}
-          isCollapsed={isReadOnlyWorkoutPanelCollapsed(`${panelPrefix}-overview`)}
-          theme={theme}
-          title={t("overview")}
-          onToggle={() => toggleReadOnlyWorkoutPanel(`${panelPrefix}-overview`)}
-        >
-          <WorkoutMuscleOverviewContent language={language} theme={theme} workout={workout} />
-        </CollapsiblePanel>
-
-        <View style={styles.workoutDetailStages}>
-          {stageGroups.map(({ stage, series }, index) => {
-            const exerciseCount = series.reduce(
-              (total, item) => total + item.elements.filter((element) => !isRestTargetStep(element)).length,
-              0
-            );
-
-            return (
-              <CollapsiblePanel
-                actions={
-                  <View style={[styles.panelCountBadge, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                    <Text style={[styles.panelCountBadgeText, { color: theme.primary }]}>{exerciseCount}</Text>
-                  </View>
-                }
-                collapseLabel={t("collapse")}
-                expandLabel={t("expand")}
-                key={stage.id}
-                isCollapsed={isReadOnlyWorkoutPanelCollapsed(`${panelPrefix}-stage-${stage.id}`)}
-                theme={theme}
-                title={stage.label || `${t("stage")} ${index + 1}`}
-                onToggle={() => toggleReadOnlyWorkoutPanel(`${panelPrefix}-stage-${stage.id}`)}
-              >
-                {stage.notes ? (
-                  <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{stage.notes}</Text>
-                ) : null}
-
-                {series.length ? (
-                  <View style={styles.workoutDetailSeriesList}>
-                    {series.map(({ set, elements }, setIndex) => {
-                      const headerElement = elements.find((element) => !isRestTargetStep(element)) ?? elements[0];
-
-                      return (
-                        <View
-                          key={set.id}
-                          style={[
-                            styles.workoutDetailSeriesRow,
-                            { borderColor: theme.border },
-                            setIndex === series.length - 1 ? styles.workoutDetailSeriesRowLast : null
-                          ]}
-                        >
-                          <View style={styles.workoutInfo}>
-                            {elements.map((element) => (
-                              <View key={element.id} style={styles.workoutDetailElementRow}>
-                                <ExerciseSummaryRow
-                                  language={language}
-                                  pairedTargetText={
-                                    isRestTargetStep(element)
-                                      ? (() => {
-                                        const elementIndex = elements.findIndex((item) => item.id === element.id);
-                                        const previousExercise = [...elements]
-                                          .slice(0, Math.max(0, elementIndex))
-                                          .reverse()
-                                          .find((item) => !isRestTargetStep(item));
-
-                                        return previousExercise
-                                          ? formatExerciseSetTarget({ ...previousExercise, setCount: set.setCount || "1" })
-                                          : undefined;
-                                      })()
-                                      : undefined
-                                  }
-                                  seriesIndex={headerElement?.id === element.id ? setIndex + 1 : undefined}
-                                  step={element}
-                                  targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
-                                  theme={theme}
-                                  t={t}
-                                  onPressDetails={() => openExerciseDetail(element)}
-                                  onPressMuscles={() => openExerciseDetail(element)}
-                                />
-                                {element.notes ? (
-                                  <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
-                                    {element.notes}
-                                  </Text>
-                                ) : null}
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </View>
-                ) : null}
-              </CollapsiblePanel>
-            );
-          })}
-        </View>
-      </>
-    );
-  }
-
-  function renderWorkoutSession() {
-    const session = activeWorkoutSession;
-
-    if (!session) {
-      return (
-        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>{t("noWorkout")}</Text>
-        </View>
-      );
-    }
-
-    if (!session.entries.length) {
-      return (
-        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>{t("emptyWorkoutSession")}</Text>
-          <AppButton icon="close-outline" theme={theme} onPress={abandonActiveWorkoutSession}>
-            {t("abandonWorkout")}
-          </AppButton>
-        </View>
-      );
-    }
-
-    const currentEntry = session.entries[Math.min(sessionEntryIndex, session.entries.length - 1)];
-
-    if (session.executionMode === "guided") {
-      const guidedGroups = getGuidedEntryGroups(session);
-      const guidedGroupIndex = getGuidedGroupIndex(guidedGroups, sessionEntryIndex, currentEntry);
-      const currentGroup = guidedGroups[guidedGroupIndex] ?? {
-        entries: [currentEntry],
-        firstIndex: Math.min(sessionEntryIndex, session.entries.length - 1),
-        key: currentEntry.id
-      };
-      const canGoBack = guidedGroupIndex > 0;
-      const canGoNext = guidedGroupIndex < guidedGroups.length - 1;
-      const shouldShowGuidedEntryTable = currentGroup.entries.some(isWorkoutSessionEntryFillRequired);
-
-      return (
-        <View style={styles.sessionScreen}>
-          {renderWorkoutSessionProgressCard(guidedGroupIndex + 1, guidedGroups.length)}
-          {renderGuidedPlanPreview(session, currentGroup, guidedGroupIndex + 1)}
-          {shouldShowGuidedEntryTable ? renderGuidedEntryTable(currentGroup.entries.filter(isWorkoutSessionEntryFillRequired)) : null}
-          <View style={styles.sessionActions}>
-            <AppButton
-              disabled={!canGoBack}
-              icon="chevron-back-outline"
-              style={styles.sessionNavButton}
-              theme={theme}
-              variant="outline"
-              onPress={() => {
-                const previousGroup = guidedGroups[Math.max(0, guidedGroupIndex - 1)];
-                setSessionEntryIndex(previousGroup?.firstIndex ?? 0);
-              }}
-            >
-              {t("back")}
-            </AppButton>
-            <AppButton
-              disabled={!canGoNext}
-              icon="chevron-forward-outline"
-              style={styles.sessionNavButton}
-              theme={theme}
-              variant="outline"
-              onPress={() => {
-                const nextGroup = guidedGroups[Math.min(guidedGroups.length - 1, guidedGroupIndex + 1)];
-                setSessionEntryIndex(nextGroup?.firstIndex ?? sessionEntryIndex);
-              }}
-            >
-              {t("next")}
-            </AppButton>
-          </View>
-          <View style={styles.sessionActions}>
-            <AppButton icon="flag-outline" style={styles.sessionNavButton} theme={theme} onPress={requestFinishActiveWorkoutSession}>
-              {t("finish")}
-            </AppButton>
-            <AppButton icon="close-outline" style={styles.sessionNavButton} theme={theme} variant="outline" onPress={abandonActiveWorkoutSession}>
-              {t("cancel")}
-            </AppButton>
-          </View>
-        </View>
-      );
-    }
-
-    if (session.executionMode === "readonly-post-workout" && !isPostWorkoutFillMode) {
-      return (
-        <View style={styles.sessionScreen}>
-          {renderReadOnlyWorkoutPlan(session.planSnapshot, `active-session-${session.id}`)}
-          <AppButton icon="create-outline" theme={theme} onPress={() => setIsPostWorkoutFillMode(true)}>
-            {t("finishAndFill")}
-          </AppButton>
-          <AppButton icon="close-outline" theme={theme} variant="outline" onPress={abandonActiveWorkoutSession}>
-            {t("cancelWorkout")}
-          </AppButton>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.sessionScreen}>
-        {renderInlineWorkoutTable(session)}
-        <View style={styles.sessionActions}>
-          <AppButton icon="flag-outline" style={styles.sessionNavButton} theme={theme} onPress={requestFinishActiveWorkoutSession}>
-            {t("finish")}
-          </AppButton>
-          <AppButton icon="close-outline" style={styles.sessionNavButton} theme={theme} variant="outline" onPress={abandonActiveWorkoutSession}>
-            {t("cancel")}
-          </AppButton>
-        </View>
-      </View>
-    );
-  }
-
   function renderAppDialog() {
-    if (!appDialog) {
-      return null;
-    }
-
-    function closeDialog(action?: AppDialogAction) {
-      setAppDialog(null);
-      action?.onPress?.();
-    }
-
     return (
-      <Modal
-        animationType="fade"
-        transparent
-        visible={Boolean(appDialog)}
-        onRequestClose={() => setAppDialog(null)}
-      >
-        <View style={styles.appDialogBackdrop}>
-          <View style={[styles.appDialogPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={styles.appDialogBody}>
-              <Text style={[styles.appDialogTitle, { color: theme.text }]}>{appDialog.title}</Text>
-              <Text style={[styles.appDialogMessage, { color: theme.muted }]}>{appDialog.message}</Text>
-            </View>
-            <View style={[styles.appDialogFooter, { borderTopColor: theme.border }]}>
-              {appDialog.actions.map((action, index) => {
-                const isDestructive = action.variant === "destructive";
-                const isLast = index === appDialog.actions.length - 1;
-
-                return (
-                  <Pressable
-                    key={`${action.label}-${index}`}
-                    accessibilityRole="button"
-                    style={[
-                      styles.appDialogFooterButton,
-                      !isLast ? { borderRightColor: theme.border, borderRightWidth: 1 } : null
-                    ]}
-                    onPress={() => closeDialog(action)}
-                  >
-                    <Text
-                      style={[
-                        styles.appDialogFooterButtonText,
-                        { color: isDestructive ? theme.danger : theme.primary }
-                      ]}
-                    >
-                      {action.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <AppDialog
+        dialog={appDialog}
+        theme={theme}
+        onClose={(action) => {
+          setAppDialog(null);
+          action?.onPress?.();
+        }}
+      />
     );
   }
 
@@ -10012,7 +7520,64 @@ function GymminApp() {
           >
             {activeScreen === "home" && renderHome()}
             {activeScreen === "workouts" && renderWorkouts()}
-            {activeScreen === "settings" && renderSettings()}
+            {activeScreen === "settings" && (
+              <SettingsScreen
+                defaultSetCount={defaultSetCount}
+                defaultStageTypeLabel={
+                  getStageTypeOptions(t).find((option) => option.value === defaultStageType)?.label ?? t("toChoose")
+                }
+                defaultWeight={defaultWeight}
+                defaultWorkoutExecutionModeLabel={
+                  getWorkoutExecutionModeOptions(t).find((option) => option.value === defaultWorkoutExecutionMode)?.label
+                    ?? t("executionGuided")
+                }
+                favoriteExerciseCount={getFavoriteCatalogExercises(favoriteExercises).length}
+                isDarkMode={isDarkMode}
+                isPanelCollapsed={isPanelCollapsed}
+                language={language}
+                reminderDescriptionPlaceholder={getDefaultWorkoutReminderSettings(language).description ?? ""}
+                reminderMessagePlaceholder={getDefaultWorkoutReminderSettings(language).message}
+                reminderSchedulingStatus={reminderSchedulingStatus}
+                showRestTimer={showRestTimer}
+                t={t}
+                theme={theme}
+                workoutReminders={workoutReminders}
+                onOpenContact={() => setActiveScreen("contact")}
+                onOpenFavoriteExercises={() => setActiveScreen("favoriteExercises")}
+                onOpenReminderDay={openWorkoutReminderDayEditor}
+                onOpenReportBug={() => setActiveScreen("bugReport")}
+                onOpenSettingsSheet={(sheet) => {
+                  if (sheet === "language") {
+                    setPendingLanguage(language);
+                  } else if (sheet === "defaultSetCount") {
+                    setPendingDefaultSetCount(defaultSetCount);
+                  } else if (sheet === "defaultWeight") {
+                    setPendingDefaultWeight(defaultWeight);
+                  } else if (sheet === "defaultStageType") {
+                    setPendingDefaultStageType(defaultStageType);
+                  } else if (sheet === "defaultWorkoutExecutionMode") {
+                    setPendingDefaultWorkoutExecutionMode(defaultWorkoutExecutionMode);
+                  }
+                  setActiveSettingsSheet(sheet);
+                }}
+                onOpenTerms={() => setActiveScreen("terms")}
+                onReminderDescriptionChange={updateWorkoutReminderDescription}
+                onReminderMessageChange={updateWorkoutReminderMessage}
+                onTogglePanel={togglePanel}
+                onToggleReminderDay={(dayNumber) => {
+                  void toggleWorkoutReminderDay(dayNumber);
+                }}
+                onToggleReminderOnlyIfNoWorkoutToday={() => updateWorkoutReminderSettings({
+                  ...workoutReminders,
+                  onlyIfNoWorkoutToday: !workoutReminders.onlyIfNoWorkoutToday
+                })}
+                onToggleReminders={() => {
+                  void toggleWorkoutRemindersEnabled();
+                }}
+                onToggleRestTimer={() => setShowRestTimer((current) => !current)}
+                onToggleTheme={() => setThemeName(isDarkMode ? "light" : "dark")}
+              />
+            )}
             {activeScreen === "articleDetail" && renderArticleDetail()}
             {activeScreen === "builder" && renderBuilder()}
             {activeScreen === "workoutCreator" && (
@@ -10336,7 +7901,62 @@ function GymminApp() {
                 }
               ]}
             >
-              {renderSettingsSheetContent()}
+              <SettingsSheetContent
+                activeSheet={activeSettingsSheet}
+                pendingDefaultSetCount={pendingDefaultSetCount}
+                pendingDefaultStageType={pendingDefaultStageType}
+                pendingDefaultWeight={pendingDefaultWeight}
+                pendingDefaultWorkoutExecutionMode={pendingDefaultWorkoutExecutionMode}
+                pendingLanguage={pendingLanguage}
+                pendingWorkoutReminderDay={pendingWorkoutReminderDay}
+                stageTypeOptions={getStageTypeOptions(t)}
+                t={t}
+                theme={theme}
+                workoutExecutionModeOptions={getWorkoutExecutionModeOptions(t)}
+                onCancelReminderDay={() => {
+                  setPendingWorkoutReminderDay(null);
+                  closeSettingsSheet();
+                }}
+                onPendingDefaultSetCountChange={setPendingDefaultSetCount}
+                onPendingDefaultStageTypeChange={setPendingDefaultStageType}
+                onPendingDefaultWeightChange={setPendingDefaultWeight}
+                onPendingDefaultWorkoutExecutionModeChange={setPendingDefaultWorkoutExecutionMode}
+                onPendingLanguageChange={setPendingLanguage}
+                onPendingWorkoutReminderDayChange={updatePendingWorkoutReminderDay}
+                onSaveDefaultSetCount={() => {
+                  setDefaultSetCount(pendingDefaultSetCount);
+                  closeSettingsSheet();
+                }}
+                onSaveDefaultStageType={() => {
+                  setDefaultStageType(pendingDefaultStageType);
+                  closeSettingsSheet();
+                }}
+                onSaveDefaultWeight={() => {
+                  setDefaultWeight(pendingDefaultWeight);
+                  closeSettingsSheet();
+                }}
+                onSaveDefaultWorkoutExecutionMode={() => {
+                  setDefaultWorkoutExecutionMode(pendingDefaultWorkoutExecutionMode);
+                  closeSettingsSheet();
+                }}
+                onSaveLanguage={() => {
+                  setLanguage(pendingLanguage);
+                  closeSettingsSheet();
+                }}
+                onSaveReminderDay={() => {
+                  if (!pendingWorkoutReminderDay) {
+                    return;
+                  }
+                  updateWorkoutReminderSettings({
+                    ...updateReminderDaySchedule(workoutReminders, pendingWorkoutReminderDay.day, {
+                      enabled: pendingWorkoutReminderDay.enabled,
+                      time: pendingWorkoutReminderDay.time
+                    })
+                  });
+                  setPendingWorkoutReminderDay(null);
+                  closeSettingsSheet();
+                }}
+              />
             </Animated.View>
           </View>
         </Modal>
@@ -10354,1853 +7974,5 @@ function GymminApp() {
         {renderWorkoutSortSheet()}
         {renderAppDialog()}
     </SafeAreaView>
-  );
-
-}
-
-function getScreenTitle(
-  activeScreen: ScreenKey,
-  editingWorkoutId: string | null,
-  t: (key: TranslationKey) => string
-) {
-  const titles: Record<ScreenKey, string> = {
-    accountDetails: t("accountDetails"),
-    articleDetail: t("articles"),
-    bugReport: t("bugReport"),
-    bugReportSuccess: t("bugReport"),
-    builder: editingWorkoutId ? t("editWorkout") : t("addNewWorkout"),
-    contact: t("contact"),
-    deleteAccount: t("deleteAccount"),
-    exerciseDetail: t("exerciseDetails"),
-    exerciseProgress: t("exerciseProgress"),
-    achievements: t("achievements"),
-    aiCredits: t("aiCredits"),
-    favoriteExercises: t("favoriteExercises"),
-    forgotPassword: t("resetPassword"),
-    home: t("home"),
-    progress: t("progress"),
-    profile: t("profile"),
-    resetPassword: t("resetPassword"),
-    changePassword: t("changePassword"),
-    activeSessions: t("activeSessions"),
-    settings: t("settings"),
-    terms: t("terms"),
-    weeklyPlan: t("weeklyPlan"),
-    workoutAiProposal: t("aiRewriteProposal"),
-    workoutAiRewrite: t("aiRewriteTitle"),
-    workoutCreator: t("aiCreator"),
-    workoutDetail: t("workout"),
-    workoutHistory: t("workoutHistoryTitle"),
-    workoutSession: t("workout"),
-    workoutSessionDetail: t("workoutDetails"),
-    workouts: t("workouts")
-  };
-
-  return titles[activeScreen];
-}
-
-function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
-  const theme = themes.light;
-  const errorMessage = error instanceof Error ? error.message : "Nieznany błąd aplikacji";
-  const userFacingErrorMessage = "Szczegóły błędu zostały zapisane diagnostycznie.";
-  addDiagnosticEvent({
-    area: "ui",
-    level: "error",
-    message: errorMessage,
-    screen: "error-boundary"
-  });
-
-  return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]}>
-      <StatusBar barStyle={theme.statusBar === "dark" ? "dark-content" : "light-content"} />
-      <View style={styles.errorScreen}>
-        <View style={[styles.errorPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={[styles.legalIcon, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="alert-circle-outline" size={28} color={theme.danger} />
-          </View>
-          <Text style={[styles.errorTitle, { color: theme.text }]}>Coś poszło nie tak</Text>
-          <Text style={[styles.errorCopy, { color: theme.muted }]}>
-            Widok nie mogl zostac wyswietlony. Mozesz sprobowac odswiezyc aplikacje albo
-            skontaktować się z nami, jeśli problem będzie wracał.
-          </Text>
-          <View style={[styles.errorDetails, { backgroundColor: theme.secondaryBand }]}>
-            <Text style={[styles.errorDetailsText, { color: theme.muted }]} numberOfLines={3}>
-              {userFacingErrorMessage}
-            </Text>
-          </View>
-          <View style={styles.errorActions}>
-            <AppButton
-              icon="refresh-outline"
-              style={styles.errorActionButton}
-              theme={theme}
-              onPress={resetErrorBoundary}
-            >
-              Spróbuj ponownie
-            </AppButton>
-            <AppButton
-              icon="mail-outline"
-              style={styles.errorActionButton}
-              theme={theme}
-              variant="outline"
-            >
-              Kontakt
-            </AppButton>
-          </View>
-        </View>
-      </View>
-    </SafeAreaView>
-  );
-}
-
-type ExerciseMuscleModalProps = {
-  language: LanguageCode;
-  onClose: () => void;
-  onShowDetails?: (step: WorkoutStep) => void;
-  step: WorkoutStep | null;
-  t: (key: TranslationKey) => string;
-  theme: Theme;
-};
-
-function ExerciseMuscleModal({ language, onClose, onShowDetails, step, t, theme }: ExerciseMuscleModalProps) {
-  const muscleGroups = useMemo(() => step ? getWorkoutStepMuscleGroups(step) : { primary: [], secondary: [] }, [step]);
-  const usage = useMemo(() => {
-    const nextUsage = Object.fromEntries(muscleKeys.map((muscle) => [muscle, 0])) as MuscleUsage;
-    muscleGroups.primary.forEach((muscle) => {
-      nextUsage[muscle] = 2;
-    });
-    muscleGroups.secondary.forEach((muscle) => {
-      nextUsage[muscle] = Math.max(nextUsage[muscle], 1) as 0 | 1 | 2;
-    });
-    return nextUsage;
-  }, [muscleGroups.primary, muscleGroups.secondary]);
-  const hasMuscleData = muscleGroups.primary.length > 0 || muscleGroups.secondary.length > 0;
-  const exerciseName = step?.exerciseName
-    ? getExerciseDisplayName(step.exerciseName, language)
-    : t("exercise");
-  const colors = {
-    inactive: "#4a4d4c",
-    primary: "#ff3347",
-    secondary: "#ffc43d"
-  };
-
-  function fill(muscle: MuscleKey) {
-    if (usage[muscle] === 2) {
-      return colors.primary;
-    }
-
-    if (usage[muscle] === 1) {
-      return colors.secondary;
-    }
-
-    return colors.inactive;
-  }
-
-  function formatMuscleList(muscles: MuscleKey[]) {
-    return muscles.length ? muscles.map((muscle) => muscleLabels[language][muscle]).join(", ") : t("noData");
-  }
-
-  return (
-    <Modal animationType="fade" transparent visible={Boolean(step)} onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.exerciseMuscleModal, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.panelHeroHeader}>
-            <View style={[styles.legalIcon, { backgroundColor: theme.secondaryBand }]}>
-              <Ionicons name="body-outline" size={26} color={theme.primary} />
-            </View>
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>{t("workedMuscles")}</Text>
-              <Text style={[styles.creatorDescription, { color: theme.muted }]}>{exerciseName}</Text>
-            </View>
-          </View>
-
-          {hasMuscleData ? (
-            <>
-              <View style={styles.exerciseMuscleLists}>
-                <View style={styles.fieldGroup}>
-                  <Text style={[styles.label, { color: theme.muted }]}>{t("primaryMuscles")}</Text>
-                  <Text style={[styles.workoutName, { color: theme.text }]}>{formatMuscleList(muscleGroups.primary)}</Text>
-                </View>
-                <View style={styles.fieldGroup}>
-                  <Text style={[styles.label, { color: theme.muted }]}>{t("secondaryMuscles")}</Text>
-                  <Text style={[styles.workoutName, { color: theme.text }]}>{formatMuscleList(muscleGroups.secondary)}</Text>
-                </View>
-              </View>
-              <View style={styles.muscleOverviewFigures}>
-                <HumanMuscleFigure fill={fill} side="front" />
-                <HumanMuscleFigure fill={fill} side="back" />
-              </View>
-            </>
-          ) : (
-            <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>
-              {t("noExerciseMuscleData")}
-            </Text>
-          )}
-
-          {step && onShowDetails ? (
-            <AppButton icon="information-circle-outline" theme={theme} onPress={() => onShowDetails(step)}>
-              {t("showDetails")}
-            </AppButton>
-          ) : null}
-          <AppButton icon="close-outline" theme={theme} variant="outline" onPress={onClose}>
-            {t("close")}
-          </AppButton>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-type ExercisePickerProps = {
-  disabled?: boolean;
-  emptyText: string;
-  favoriteExerciseIds: ReadonlySet<string>;
-  favoriteFilterAllLabel: string;
-  favoriteFilterOnlyLabel: string;
-  hideAdditionalExercisesLabel: string;
-  showMoreExercisesLabel: string;
-  tierLabels: Readonly<Record<Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">, string>>;
-  language: LanguageCode;
-  loadingText: string;
-  muscleFilterAllLabel: string;
-  muscleFilterLabel: string;
-  onChange: (value: string) => void;
-  onToggleFavorite: (exerciseId: string) => void;
-  optionByValue: ReadonlyMap<string, ExerciseOption>;
-  options: readonly ExerciseOption[];
-  placeholder: string;
-  searchPlaceholder: string;
-  stageType: StageType | "";
-  theme: Theme;
-  title: string;
-  value: string;
-};
-
-function ExercisePicker({
-  disabled = false,
-  emptyText,
-  favoriteExerciseIds,
-  favoriteFilterAllLabel,
-  favoriteFilterOnlyLabel,
-  hideAdditionalExercisesLabel,
-  showMoreExercisesLabel,
-  tierLabels,
-  language,
-  loadingText,
-  muscleFilterAllLabel,
-  muscleFilterLabel,
-  onChange,
-  onToggleFavorite,
-  optionByValue,
-  options,
-  placeholder,
-  searchPlaceholder,
-  stageType,
-  theme,
-  title,
-  value
-}: ExercisePickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [selectedMuscle, setSelectedMuscle] = useState<MuscleKey | "all">("all");
-  const [favoriteFilter, setFavoriteFilter] = useState<"all" | "favorites">("all");
-  const [showAdditionalExercises, setShowAdditionalExercises] = useState(false);
-  const [enabledAdditionalTiers, setEnabledAdditionalTiers] = useState<Set<Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">>>(new Set());
-  const pickerInsets = useSafeAreaInsets();
-  const pickerHeaderTopPadding = Math.max(pickerInsets.top, 20) + 6;
-  const selectedOption = value ? optionByValue.get(value) : undefined;
-  const deferredQuery = useDeferredValue(query);
-  const normalizedQuery = deferredQuery.trim().toLowerCase();
-  const defaultGroupedOptions = useMemo(
-    () => getExerciseSectionsForStageType(language, stageType, "all"),
-    [language, stageType]
-  );
-  const visibleOptions = useMemo(() => {
-    return favoriteFilter === "favorites"
-      ? filterExerciseOptionsForPicker(options, normalizedQuery, enabledAdditionalTiers).filter((option) => favoriteExerciseIds.has(option.exerciseId))
-      : filterExerciseOptionsForPicker(options, normalizedQuery, enabledAdditionalTiers);
-  }, [enabledAdditionalTiers, favoriteExerciseIds, favoriteFilter, normalizedQuery, options]);
-  const muscleOptions = useMemo(
-    () => [
-      { label: muscleFilterAllLabel, value: "all" as const },
-      ...getMuscleOptions(language)
-    ],
-    [language, muscleFilterAllLabel]
-  );
-  const groupedOptions = useMemo<ExerciseSection[]>(() => {
-    if (!isOpen) {
-      return [];
-    }
-
-    if (
-      !normalizedQuery &&
-      favoriteFilter === "all" &&
-      enabledAdditionalTiers.size === 0 &&
-      selectedMuscle === "all"
-    ) {
-      return defaultGroupedOptions;
-    }
-
-    const nextOptions = visibleOptions;
-
-    return buildExerciseSections(nextOptions, language, selectedMuscle);
-  }, [defaultGroupedOptions, enabledAdditionalTiers, favoriteFilter, isOpen, language, normalizedQuery, selectedMuscle, visibleOptions]);
-  const exerciseListEmptyText = isOpen ? emptyText : loadingText;
-  const exerciseListExtraData = useMemo(
-    () => ({ favoriteExerciseIds, value }),
-    [favoriteExerciseIds, value]
-  );
-
-  const selectExercise = useCallback((nextValue: string) => {
-    onChange(nextValue);
-    setIsOpen(false);
-    setQuery("");
-    setIsSearchOpen(false);
-    setSelectedMuscle("all");
-    setFavoriteFilter("all");
-    setShowAdditionalExercises(false);
-    setEnabledAdditionalTiers(new Set());
-  }, [onChange]);
-
-  const toggleAdditionalTier = useCallback((tier: Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">) => {
-    setEnabledAdditionalTiers((current) => {
-      const next = new Set(current);
-      if (next.has(tier)) next.delete(tier);
-      else next.add(tier);
-      return next;
-    });
-  }, []);
-
-  function openPicker() {
-    if (disabled) {
-      return;
-    }
-
-    setIsOpen(true);
-  }
-
-  const getExerciseItemKey = useCallback((item: ExerciseSection["data"][number]) => item.sectionKey, []);
-  const renderExerciseListEmpty = useCallback(
-    () => (
-      <Text style={[styles.exercisePickerEmpty, { color: theme.text }]}>
-        {exerciseListEmptyText}
-      </Text>
-    ),
-    [exerciseListEmptyText, theme.text]
-  );
-  const renderExerciseSectionHeader = useCallback(
-    ({ section }: { section: SectionListData<ExerciseSection["data"][number], ExerciseSection> }) => (
-      <Text
-        style={[
-          styles.exercisePickerLetter,
-          { backgroundColor: theme.secondaryBand, color: theme.muted }
-        ]}
-      >
-        {section.title}
-      </Text>
-    ),
-    [theme.muted, theme.secondaryBand]
-  );
-  const renderExerciseItem = useCallback(
-    ({ item }: SectionListRenderItemInfo<ExerciseSection["data"][number], ExerciseSection>) => {
-      const isFavorite = favoriteExerciseIds.has(item.exerciseId);
-      const tierBadge = getExerciseOptionTierBadge(item);
-
-      return (
-        <Pressable
-          accessibilityRole="button"
-          style={[
-            styles.exercisePickerRow,
-            {
-              backgroundColor: item.value === value ? theme.secondaryBand : theme.card,
-              borderBottomColor: theme.border
-            }
-          ]}
-          onPress={() => selectExercise(item.value)}
-        >
-          <Text style={[styles.exercisePickerRowText, { color: theme.text }]}>
-            {item.label}
-          </Text>
-          {tierBadge ? (
-            <Text style={[styles.exercisePickerTierBadge, { color: theme.primary, backgroundColor: theme.secondaryBand }]}>
-              {tierLabels[tierBadge]}
-            </Text>
-          ) : null}
-          <Pressable
-            accessibilityLabel={isFavorite ? favoriteFilterOnlyLabel : favoriteFilterAllLabel}
-            accessibilityRole="button"
-            style={styles.exercisePickerFavoriteButton}
-            onPress={(event) => {
-              event.stopPropagation();
-              onToggleFavorite(item.exerciseId);
-            }}
-          >
-            <Ionicons
-              name={isFavorite ? "star" : "star-outline"}
-              size={24}
-              color={isFavorite ? theme.primary : theme.muted}
-            />
-          </Pressable>
-        </Pressable>
-      );
-    },
-    [
-      favoriteExerciseIds,
-      favoriteFilterAllLabel,
-      favoriteFilterOnlyLabel,
-      onToggleFavorite,
-      selectExercise,
-      tierLabels,
-      theme.border,
-      theme.card,
-      theme.muted,
-      theme.primary,
-      theme.secondaryBand,
-      theme.text,
-      value
-    ]
-  );
-
-  return (
-    <>
-      <Pressable
-        accessibilityRole="button"
-        style={[
-          styles.exercisePickerTrigger,
-          {
-            backgroundColor: disabled ? theme.secondaryBand : theme.control,
-            borderColor: theme.border,
-            opacity: disabled ? 0.72 : 1
-          }
-        ]}
-        onPress={openPicker}
-      >
-        <Text
-          numberOfLines={1}
-          style={[
-            styles.exercisePickerTriggerText,
-            { color: selectedOption ? theme.inputText : theme.muted }
-          ]}
-        >
-          {selectedOption?.label ?? placeholder}
-        </Text>
-        <Ionicons name="chevron-down" size={19} color={theme.muted} />
-      </Pressable>
-
-      <Modal animationType="slide" visible={isOpen} onRequestClose={() => setIsOpen(false)}>
-        <SafeAreaView style={[styles.exercisePickerScreen, { backgroundColor: theme.background }]}>
-          <StatusBar
-            backgroundColor={theme.card}
-            barStyle={theme.statusBar === "dark" ? "dark-content" : "light-content"}
-            translucent={false}
-          />
-          <View style={styles.exercisePickerContent}>
-            <View
-              style={[
-                styles.exercisePickerHeader,
-                {
-                  backgroundColor: theme.card,
-                  borderBottomColor: theme.border,
-                  paddingTop: pickerHeaderTopPadding
-                }
-              ]}
-            >
-              <Pressable
-                accessibilityRole="button"
-                style={styles.exercisePickerHeaderButton}
-                onPress={() => setIsOpen(false)}
-              >
-                <Ionicons name="arrow-back" size={28} color={theme.text} />
-              </Pressable>
-              <Text style={[styles.exercisePickerTitle, { color: theme.text }]}>{title}</Text>
-              <View style={styles.exercisePickerHeaderActions}>
-                <Pressable
-                  accessibilityRole="button"
-                  style={styles.exercisePickerHeaderButton}
-                  onPress={() => setIsSearchOpen((current) => !current)}
-                >
-                  <Ionicons name="search" size={27} color={theme.text} />
-                </Pressable>
-              </View>
-            </View>
-
-            {isSearchOpen ? (
-              <View style={styles.exercisePickerFilters}>
-                <Input
-                  style={[
-                    styles.exercisePickerSearchInput,
-                    { backgroundColor: theme.control, borderColor: theme.border }
-                  ]}
-                >
-                  <InputField
-                    autoFocus
-                    placeholder={searchPlaceholder}
-                    placeholderTextColor={theme.muted}
-                    style={[styles.exercisePickerSearchText, { color: theme.inputText }]}
-                    value={query}
-                    onChangeText={setQuery}
-                  />
-                </Input>
-                <View style={styles.exercisePickerMuscleFilter}>
-                  <Text style={[styles.label, { color: theme.muted }]}>{muscleFilterLabel}</Text>
-                  <InlineSheetSelectControl
-                    options={muscleOptions}
-                    placeholder={muscleFilterAllLabel}
-                    theme={theme}
-                    value={selectedMuscle}
-                    onChange={setSelectedMuscle}
-                  />
-                </View>
-              </View>
-            ) : null}
-
-            <View style={styles.exerciseFavoriteFilterRow}>
-              {([
-                { label: favoriteFilterAllLabel, value: "all" as const },
-                { label: favoriteFilterOnlyLabel, value: "favorites" as const }
-              ]).map((option) => {
-                const selected = favoriteFilter === option.value;
-
-                return (
-                  <Pressable
-                    key={option.value}
-                    accessibilityRole="button"
-                    style={[
-                      styles.exerciseFavoriteFilterButton,
-                      {
-                        backgroundColor: selected ? theme.primary : theme.secondaryBand
-                      }
-                    ]}
-                    onPress={() => setFavoriteFilter(option.value)}
-                  >
-                    <Text
-                      style={[
-                        styles.exerciseFavoriteFilterText,
-                        { color: selected ? theme.white : theme.text }
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <View style={styles.exerciseTierFilterPanel}>
-              <Pressable
-                accessibilityRole="button"
-                style={[styles.exerciseTierFilterToggle, { borderColor: theme.border, backgroundColor: theme.control }]}
-                onPress={() => setShowAdditionalExercises((current) => !current)}
-              >
-                <Text style={[styles.exerciseTierFilterToggleText, { color: theme.text }]}>
-                  {showAdditionalExercises ? hideAdditionalExercisesLabel : showMoreExercisesLabel}
-                </Text>
-                <Ionicons name={showAdditionalExercises ? "chevron-up" : "chevron-down"} size={18} color={theme.primary} />
-              </Pressable>
-              {showAdditionalExercises ? (
-                <View style={styles.exerciseTierFilterOptions}>
-                  {(["variation", "advanced", "sportSpecific", "rehab"] as const).map((tier) => {
-                    const enabled = enabledAdditionalTiers.has(tier);
-                    return (
-                      <Pressable
-                        key={tier}
-                        accessibilityRole="checkbox"
-                        accessibilityState={{ checked: enabled }}
-                        style={[styles.exerciseTierFilterChip, { borderColor: theme.border, backgroundColor: enabled ? theme.primary : theme.secondaryBand }]}
-                        onPress={() => toggleAdditionalTier(tier)}
-                      >
-                        <Ionicons name={enabled ? "checkmark-circle" : "ellipse-outline"} size={18} color={enabled ? theme.white : theme.muted} />
-                        <Text style={[styles.exerciseTierFilterChipText, { color: enabled ? theme.white : theme.text }]}>{tierLabels[tier]}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              ) : null}
-            </View>
-
-            <SectionList
-              initialNumToRender={14}
-              extraData={exerciseListExtraData}
-              keyboardShouldPersistTaps="handled"
-              maxToRenderPerBatch={16}
-              sections={groupedOptions}
-              style={[styles.exercisePickerList, { backgroundColor: theme.background }]}
-              contentContainerStyle={styles.exercisePickerListContent}
-              keyExtractor={getExerciseItemKey}
-              ListEmptyComponent={renderExerciseListEmpty}
-              renderSectionHeader={renderExerciseSectionHeader}
-              renderItem={renderExerciseItem}
-              removeClippedSubviews={Platform.OS === "android"}
-              stickySectionHeadersEnabled={false}
-              updateCellsBatchingPeriod={50}
-              windowSize={7}
-            />
-          </View>
-        </SafeAreaView>
-      </Modal>
-    </>
-  );
-}
-
-type InfoLinkRowProps = {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  meta: string;
-  onPress: () => void;
-  theme: Theme;
-};
-
-type SettingsSectionProps = {
-  children: ReactNode;
-  isCollapsed: boolean;
-  onToggle: () => void;
-  theme: Theme;
-  title: string;
-};
-
-type ArticleBlock =
-  | { kind: "lead"; text: string }
-  | { kind: "section"; paragraphs: string[]; title: string }
-  | { headers: string[]; kind: "table"; rows: string[][] };
-
-function parseArticleMarkdown(content: string) {
-  const blocks: ArticleBlock[] = [];
-  const lines = content.split(/\r?\n/);
-  let paragraph: string[] = [];
-  let currentSection: { paragraphs: string[]; title: string } | null = null;
-  let index = 0;
-
-  function flushParagraph() {
-    if (!paragraph.length) {
-      return;
-    }
-
-    const text = paragraph.join(" ");
-    if (currentSection) {
-      currentSection.paragraphs.push(text);
-    } else {
-      blocks.push({ kind: "lead", text });
-    }
-    paragraph = [];
-  }
-
-  function flushSection() {
-    if (!currentSection) {
-      return;
-    }
-
-    blocks.push({ kind: "section", paragraphs: currentSection.paragraphs, title: currentSection.title });
-    currentSection = null;
-  }
-
-  while (index < lines.length) {
-    const line = lines[index].trim();
-
-    if (!line) {
-      flushParagraph();
-      index += 1;
-      continue;
-    }
-
-    if (line.startsWith("## ")) {
-      flushParagraph();
-      flushSection();
-      currentSection = { paragraphs: [], title: line.replace(/^##\s+/, "") };
-      index += 1;
-      continue;
-    }
-
-    if (line.startsWith("|")) {
-      flushParagraph();
-      const tableLines: string[] = [];
-
-      while (index < lines.length && lines[index].trim().startsWith("|")) {
-        tableLines.push(lines[index].trim());
-        index += 1;
-      }
-
-      const rows = tableLines
-        .filter((tableLine) => !/^\|\s*-+/.test(tableLine))
-        .map((tableLine) =>
-          tableLine
-            .replace(/^\|/, "")
-            .replace(/\|$/, "")
-            .split("|")
-            .map((cell) => cell.trim())
-        );
-
-      if (rows.length) {
-        flushSection();
-        blocks.push({ headers: rows[0], kind: "table", rows: rows.slice(1) });
-      }
-
-      continue;
-    }
-
-    paragraph.push(line);
-    flushParagraph();
-    index += 1;
-  }
-
-  flushParagraph();
-  flushSection();
-  return blocks;
-}
-
-function formatArticleDate(value: string, language: LanguageCode) {
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-
-  return new Intl.DateTimeFormat(language === "pl" ? "pl-PL" : "en-US", {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  }).format(date);
-}
-
-function splitTrainingPlanItems(value: string) {
-  const sentenceParts = value.split(/\. (?=[A-ZŁŚŻŹĆŃÓĄĘ])/).map((part, index, parts) => {
-    const trimmed = part.trim();
-    return index < parts.length - 1 && !trimmed.endsWith(".") ? `${trimmed}.` : trimmed;
-  });
-
-  return sentenceParts
-    .flatMap((part) => (part.includes("×") ? part.split(/,\s+(?=[^,]*\d+×)/) : [part]))
-    .map((item) => capitalizeFirstLetter(item.trim()))
-    .filter(Boolean);
-}
-
-function capitalizeFirstLetter(value: string) {
-  if (!value) {
-    return value;
-  }
-
-  return `${value.charAt(0).toLocaleUpperCase("pl-PL")}${value.slice(1)}`;
-}
-
-type ArticleDetailProps = {
-  article: Article;
-  language: LanguageCode;
-  theme: Theme;
-};
-
-function ArticleDetail({ article, language, theme }: ArticleDetailProps) {
-  const translation = getArticleTranslation(article, language);
-  const blocks = useMemo(() => parseArticleMarkdown(translation.content), [translation.content]);
-
-  return (
-    <View style={styles.articleDetail}>
-      <View style={[styles.articleDetailPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.articleCategory, { color: theme.primary }]}>{translation.category}</Text>
-        <Text style={[styles.articleDetailTitle, { color: theme.text }]}>{translation.title}</Text>
-        <Text style={[styles.articleMeta, { color: theme.muted }]}>
-          {formatArticleDate(article.publishedAt, language)} · {article.readTime}
-        </Text>
-        {translation.summary ? (
-          <Text style={[styles.articleParagraph, { color: theme.muted }]}>
-            {translation.summary}
-          </Text>
-        ) : null}
-
-        <View style={[styles.legalDivider, { backgroundColor: theme.border }]} />
-
-        {blocks.map((block, blockIndex) => {
-          if (block.kind === "lead") {
-            return (
-              <View
-                key={`${block.kind}-${blockIndex}`}
-                style={[styles.articleLead, { backgroundColor: theme.secondaryBand }]}
-              >
-                <Text style={[styles.articleLeadText, { color: theme.text }]}>
-                  {block.text}
-                </Text>
-              </View>
-            );
-          }
-
-          if (block.kind === "section") {
-            return (
-              <View key={`${block.kind}-${blockIndex}`} style={styles.articleSectionBlock}>
-                <Text style={[styles.articleBlockHeading, { color: theme.text }]}>
-                  {block.title}
-                </Text>
-                {block.paragraphs.map((paragraph, paragraphIndex) => (
-                  <Text
-                    key={`${block.title}-${paragraphIndex}`}
-                    style={[styles.articleParagraph, { color: theme.muted }]}
-                  >
-                    {paragraph}
-                  </Text>
-                ))}
-              </View>
-            );
-          }
-
-          if (block.kind === "table") {
-            return (
-              <View key={`${block.kind}-${blockIndex}`} style={styles.articlePlanList}>
-                <Text style={[styles.articlePlanTitle, { color: theme.text }]}>
-                  {block.headers.join(" / ")}
-                </Text>
-                {block.rows.map((row, rowIndex) => (
-                  <View
-                    key={`${row.join("-")}-${rowIndex}`}
-                    style={[styles.articlePlanCard, { backgroundColor: theme.control, borderColor: theme.border }]}
-                  >
-                    <View style={[styles.articlePlanDayBadge, { backgroundColor: theme.secondaryBand }]}>
-                      <Text style={[styles.articlePlanDayBadgeText, { color: theme.primary }]}>
-                        {row[0]}
-                      </Text>
-                    </View>
-                    <View style={styles.articlePlanItems}>
-                      {splitTrainingPlanItems(row[1]).map((item, itemIndex) => (
-                        <View key={`${item}-${itemIndex}`} style={styles.articlePlanItemRow}>
-                          <View style={[styles.articlePlanBullet, { backgroundColor: theme.primary }]} />
-                          <Text style={[styles.articlePlanDescription, { color: theme.text }]}>
-                            {item}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                ))}
-              </View>
-            );
-          }
-
-          return null;
-        })}
-      </View>
-    </View>
-  );
-}
-
-function SettingsSection({ children, isCollapsed, onToggle, theme, title }: SettingsSectionProps) {
-  return (
-    <CollapsiblePanel isCollapsed={isCollapsed} theme={theme} title={title} onToggle={onToggle}>
-      {children}
-    </CollapsiblePanel>
-  );
-}
-
-type SettingsOptionProps = {
-  disabled?: boolean;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress?: () => void;
-  theme: Theme;
-  value: string;
-};
-
-function SettingsOption({ disabled = false, icon, label, onPress, theme, value }: SettingsOptionProps) {
-  const Container = onPress && !disabled ? Pressable : View;
-
-  return (
-    <Container
-      accessibilityRole={onPress && !disabled ? "button" : undefined}
-      accessibilityState={disabled ? { disabled: true } : undefined}
-      onPress={disabled ? undefined : onPress}
-      style={[styles.settingsOptionRow, { borderColor: theme.border, opacity: disabled ? 0.48 : 1 }]}
-    >
-      <View style={[styles.infoLinkIcon, { backgroundColor: disabled ? theme.segment : theme.secondaryBand }]}>
-        <Ionicons name={icon} size={21} color={disabled ? theme.muted : theme.primary} />
-      </View>
-      <Text style={[styles.settingsOptionLabel, { color: disabled ? theme.muted : theme.text }]}>{label}</Text>
-      <Text style={[styles.settingsOptionValue, { color: theme.muted }]}>{value}</Text>
-    </Container>
-  );
-}
-
-type SettingsPlaceholderProps = {
-  disabled?: boolean;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  meta: string;
-  theme: Theme;
-};
-
-function SettingsPlaceholder({ disabled = false, icon, label, meta, theme }: SettingsPlaceholderProps) {
-  return (
-    <View style={[styles.settingsPlaceholder, { opacity: disabled ? 0.48 : 1 }]}>
-      <View style={[styles.infoLinkIcon, { backgroundColor: disabled ? theme.segment : theme.secondaryBand }]}>
-        <Ionicons name={icon} size={22} color={disabled ? theme.muted : theme.primary} />
-      </View>
-      <View style={styles.workoutInfo}>
-        <Text style={[styles.workoutName, { color: disabled ? theme.muted : theme.text }]}>{label}</Text>
-        <Text style={[styles.workoutMeta, { color: theme.muted }]}>{meta}</Text>
-      </View>
-    </View>
-  );
-}
-
-function InfoLinkRow({ icon, label, meta, onPress, theme }: InfoLinkRowProps) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      style={[styles.infoLinkRow, { borderColor: theme.border }]}
-      onPress={onPress}
-    >
-      <View style={[styles.infoLinkIcon, { backgroundColor: theme.secondaryBand }]}>
-        <Ionicons name={icon} size={22} color={theme.primary} />
-      </View>
-      <View style={styles.workoutInfo}>
-        <Text style={[styles.workoutName, { color: theme.text }]}>{label}</Text>
-        <Text style={[styles.workoutMeta, { color: theme.muted }]}>{meta}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color={theme.muted} />
-    </Pressable>
-  );
-}
-
-type WorkoutBuilderProps = {
-  defaultSetCount: string;
-  defaultStageType: StageType | "";
-  defaultWeight: string;
-  favoriteExerciseIds: ReadonlySet<string>;
-  isEditing: boolean;
-  language: LanguageCode;
-  moveStep: (stepId: string, direction: -1 | 1) => void;
-  onToggleFavoriteExercise: (exerciseId: string) => void;
-  removeStep: (stepId: string) => void;
-  setWorkout: React.Dispatch<React.SetStateAction<WorkoutDraft>>;
-  t: (key: TranslationKey) => string;
-  theme: Theme;
-  updateStep: (stepId: string, nextStep: WorkoutStep) => void;
-  workout: WorkoutDraft;
-};
-
-type StepConfigurationProps = {
-  favoriteExerciseIds: ReadonlySet<string>;
-  language: LanguageCode;
-  onToggleFavoriteExercise: (exerciseId: string) => void;
-  parentStageType?: StageType | "";
-  step: WorkoutStep;
-  t: (key: TranslationKey) => string;
-  theme: Theme;
-  typeLabel: string;
-  updateStep: (stepId: string, nextStep: WorkoutStep) => void;
-};
-
-type StageConfigurationProps = {
-  stage: WorkoutStep;
-  t: (key: TranslationKey) => string;
-  theme: Theme;
-  updateStep: (stepId: string, nextStep: WorkoutStep) => void;
-};
-
-type SuffixedInputProps = {
-  editable?: boolean;
-  keyboardType?: TextInputProps["keyboardType"];
-  onChangeText: (value: string) => void;
-  placeholder?: string;
-  suffix: string;
-  theme: Theme;
-  value: string;
-};
-
-function SuffixedInput({
-  editable = true,
-  keyboardType = "number-pad",
-  onChangeText,
-  placeholder = "0",
-  suffix,
-  theme,
-  value
-}: SuffixedInputProps) {
-  return (
-    <Input
-      style={[
-        styles.suffixedInput,
-        {
-          backgroundColor: editable ? theme.control : theme.secondaryBand,
-          borderColor: theme.border,
-          opacity: editable ? 1 : 0.72
-        }
-      ]}
-    >
-      <InputField
-        editable={editable}
-        keyboardType={keyboardType}
-        placeholder={placeholder}
-        placeholderTextColor={theme.muted}
-        style={[styles.suffixedTextInput, { color: theme.inputText }]}
-        value={value}
-        onChangeText={onChangeText}
-      />
-      <Text style={[styles.inputSuffix, { color: theme.muted }]}>{suffix}</Text>
-    </Input>
-  );
-}
-
-type TimeTargetInputProps = {
-  onChange: (value: string) => void;
-  t: (key: TranslationKey) => string;
-  theme: Theme;
-  value: string;
-};
-
-function TimeTargetInput({ onChange, t, theme, value }: TimeTargetInputProps) {
-  const [hours = "", minutes = "", seconds = ""] = value.split(":");
-
-  function updatePart(partIndex: number, partValue: string) {
-    const numericValue = partValue.replace(/\D/g, "").slice(0, 2);
-    const nextParts = [hours, minutes, seconds];
-    nextParts[partIndex] = numericValue;
-    onChange(nextParts.join(":"));
-  }
-
-  return (
-    <View style={styles.timeTargetRow}>
-      {[
-        { label: t("timeHours"), value: hours },
-        { label: t("timeMinutes"), value: minutes },
-        { label: t("timeSeconds"), value: seconds }
-      ].map((part, index) => (
-        <View key={part.label} style={styles.timeTargetPart}>
-          <Input
-            style={[
-              styles.suffixedInput,
-              { backgroundColor: theme.control, borderColor: theme.border }
-            ]}
-          >
-            <InputField
-              keyboardType="number-pad"
-              maxLength={2}
-              placeholder="00"
-              placeholderTextColor={theme.muted}
-              style={[
-                styles.timeTargetTextInput,
-                { color: theme.inputText }
-              ]}
-              value={part.value}
-              onChangeText={(nextValue) => updatePart(index, nextValue)}
-            />
-          </Input>
-          <Text style={[styles.timeTargetLabel, { color: theme.muted }]}>{part.label}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-type GoalTargetControlProps = {
-  step: WorkoutStep;
-  t: (key: TranslationKey) => string;
-  theme: Theme;
-  updateStep: (stepId: string, nextStep: WorkoutStep) => void;
-};
-
-function GoalTargetControl({ step, t, theme, updateStep }: GoalTargetControlProps) {
-  if (!step.goalType || step.goalType === "buttonPress") {
-    return null;
-  }
-
-  if (step.goalType === "time") {
-    return (
-      <View style={styles.fieldGroup}>
-        <Text style={[styles.label, { color: theme.muted }]}>{t("goal")}</Text>
-        <TimeTargetInput
-          t={t}
-          theme={theme}
-          value={step.targetValue}
-          onChange={(targetValue) => updateStep(step.id, { ...step, targetValue })}
-        />
-      </View>
-    );
-  }
-
-  if (step.goalType === "heartRate") {
-    return (
-      <View style={styles.fieldGroup}>
-        <Text style={[styles.label, { color: theme.muted }]}>{t("goal")}</Text>
-        <View style={styles.heartRateTargetRow}>
-          <View style={styles.heartRateComparatorField}>
-            <SelectControl
-              onChange={(targetComparator) =>
-                updateStep(step.id, { ...step, targetComparator })
-              }
-              options={getTargetComparatorOptions(t)}
-              placeholder={t("select")}
-              theme={theme}
-              value={step.targetComparator}
-            />
-          </View>
-          <View style={styles.heartRateValueField}>
-            <SuffixedInput
-              suffix="bpm"
-              theme={theme}
-              value={step.targetValue}
-              onChangeText={(targetValue) => updateStep(step.id, { ...step, targetValue })}
-            />
-          </View>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.fieldGroup}>
-      <Text style={[styles.label, { color: theme.muted }]}>{t("goal")}</Text>
-      <SuffixedInput
-        suffix={step.goalType === "calories" ? t("caloriesSuffix") : t("repetitionsSuffix")}
-        theme={theme}
-        value={step.targetValue}
-        onChangeText={(targetValue) => updateStep(step.id, { ...step, targetValue })}
-      />
-    </View>
-  );
-}
-
-function StageConfiguration({ stage, t, theme, updateStep }: StageConfigurationProps) {
-  return (
-    <>
-      <View style={styles.fieldGroup}>
-        <Text style={[styles.label, { color: theme.muted }]}>{t("stageType")}</Text>
-        <SelectControl
-          onChange={(stageType) => updateStep(stage.id, { ...stage, stageType })}
-          options={getStageTypeOptions(t)}
-          placeholder={t("select")}
-          theme={theme}
-          value={stage.stageType}
-        />
-      </View>
-
-      <View style={[styles.fieldGroup, styles.stepParagraph]}>
-        <Text style={[styles.label, { color: theme.muted }]}>{t("workoutNotes")}</Text>
-        <AppTextarea
-          placeholder={t("addNotes")}
-          theme={theme}
-          value={stage.notes}
-          onChangeText={(notes) => updateStep(stage.id, { ...stage, notes })}
-        />
-      </View>
-    </>
-  );
-}
-
-function normalizeSetCountInput(value: string) {
-  const numericValue = value.replace(/\D/g, "").slice(0, 2);
-
-  if (!numericValue) {
-    return "";
-  }
-
-  return String(Math.min(Number(numericValue), 20));
-}
-
-function StepConfiguration({
-  favoriteExerciseIds,
-  language,
-  onToggleFavoriteExercise,
-  parentStageType,
-  step,
-  t,
-  theme,
-  typeLabel,
-  updateStep
-}: StepConfigurationProps) {
-  const includeSetCount = false;
-  const shouldShowExerciseFields = step.stageType !== "rest" && step.stageType !== "warmup";
-  const exerciseCatalogStageType =
-    step.stageType === "exercise" &&
-    (parentStageType === "warmup" || parentStageType === "recovery" || parentStageType === "cooldown")
-      ? parentStageType
-      : step.stageType;
-  const filteredExerciseOptions = useMemo(
-    () => shouldShowExerciseFields ? getCachedExerciseOptionsForStageType(language, exerciseCatalogStageType, activeExerciseLibraryTiers) : [],
-    [exerciseCatalogStageType, language, shouldShowExerciseFields]
-  );
-  const filteredExerciseOptionByValue = useMemo(
-    () => new Map(filteredExerciseOptions.map((option) => [option.value, option])),
-    [filteredExerciseOptions]
-  );
-  const canSelectExercise = filteredExerciseOptions.length > 0;
-  const hasSelectedType = Boolean(step.stageType);
-
-  useEffect(() => {
-    if (!shouldShowExerciseFields && (step.exerciseId || step.exerciseName || step.loadKg)) {
-      updateStep(step.id, {
-        ...step,
-        exerciseId: "",
-        exerciseName: "",
-        loadKg: ""
-      });
-      return;
-    }
-
-    if (step.exerciseName && filteredExerciseOptionByValue.has(step.exerciseName)) {
-      const catalogExercise = findCatalogExerciseBestEffort(step.exerciseName);
-
-      if (catalogExercise && step.exerciseId !== catalogExercise.id) {
-        updateStep(step.id, {
-          ...step,
-          exerciseId: catalogExercise.id,
-          exerciseName: catalogExercise.name
-        });
-      }
-      return;
-    }
-
-    if (step.exerciseName && !filteredExerciseOptionByValue.has(step.exerciseName)) {
-      const canonicalExercise = findCatalogExerciseBestEffort(step.exerciseName);
-      const canonicalExerciseName = canonicalExercise?.name;
-
-      if (canonicalExerciseName && filteredExerciseOptionByValue.has(canonicalExerciseName)) {
-        updateStep(step.id, {
-          ...step,
-          exerciseId: canonicalExercise?.id ?? "",
-          exerciseName: canonicalExerciseName
-        });
-        return;
-      }
-
-      updateStep(step.id, {
-        ...step,
-        exerciseId: "",
-        exerciseName: "",
-        loadKg: ""
-      });
-    }
-  }, [filteredExerciseOptionByValue, shouldShowExerciseFields, step, updateStep]);
-
-  function updateStageType(stageType: StageType | "") {
-    if (stageType === "rest" || stageType === "warmup") {
-      updateStep(step.id, {
-        ...step,
-        exerciseId: "",
-        exerciseName: "",
-        loadKg: "",
-        stageType
-      });
-      return;
-    }
-
-    const nextExerciseCatalogStageType =
-      stageType === "exercise" &&
-      (parentStageType === "warmup" || parentStageType === "recovery" || parentStageType === "cooldown")
-        ? parentStageType
-        : stageType;
-    const nextOptions = getCachedExerciseOptionsForStageType(language, nextExerciseCatalogStageType, activeExerciseLibraryTiers);
-    const hasCurrentExercise = nextOptions.some((option) => option.value === step.exerciseName);
-
-    updateStep(step.id, {
-      ...step,
-      exerciseId: hasCurrentExercise ? step.exerciseId : "",
-      exerciseName: hasCurrentExercise ? step.exerciseName : "",
-      loadKg: hasCurrentExercise ? step.loadKg : "",
-      stageType
-    });
-  }
-
-  return (
-    <>
-      {includeSetCount && (
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: theme.muted }]}>{t("setCount")}</Text>
-          <AppInput
-            keyboardType="number-pad"
-            maxLength={2}
-            placeholder="0"
-            theme={theme}
-            value={step.setCount}
-            onChangeText={(setCount) => updateStep(step.id, { ...step, setCount: normalizeSetCountInput(setCount) })}
-          />
-        </View>
-      )}
-
-      <View style={styles.stepParagraph}>
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: theme.muted }]}>{typeLabel}</Text>
-          <SelectControl
-            onChange={updateStageType}
-            options={getStageTypeOptions(t)}
-            placeholder={t("select")}
-            theme={theme}
-            value={step.stageType}
-          />
-        </View>
-
-        {shouldShowExerciseFields ? (
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: theme.muted }]}>{t("exercise")}</Text>
-            <ExercisePicker
-              disabled={!hasSelectedType || !canSelectExercise}
-              emptyText={t("exercisePickerEmpty")}
-              favoriteExerciseIds={favoriteExerciseIds}
-              favoriteFilterAllLabel={t("favoriteExercisesAllFilter")}
-              favoriteFilterOnlyLabel={t("favoriteExercisesOnlyFilter")}
-              hideAdditionalExercisesLabel={t("exercisePickerHideMore")}
-              showMoreExercisesLabel={t("exercisePickerShowMore")}
-              tierLabels={{
-                variation: t("exercisePickerTierVariation"),
-                advanced: t("exercisePickerTierAdvanced"),
-                sportSpecific: t("exercisePickerTierSportSpecific"),
-                rehab: t("exercisePickerTierRehab")
-              }}
-              language={language}
-              loadingText={t("exercisePickerLoading")}
-              muscleFilterAllLabel={t("exerciseMuscleFilterAll")}
-              muscleFilterLabel={t("exerciseMuscleFilter")}
-              onChange={(exerciseName) => {
-                const catalogExercise = findCatalogExerciseBestEffort(exerciseName);
-                updateStep(step.id, {
-                  ...step,
-                  exerciseId: catalogExercise?.id ?? "",
-                  exerciseName: catalogExercise?.name ?? exerciseName,
-                  loadKg: step.loadKg
-                });
-              }}
-              onToggleFavorite={onToggleFavoriteExercise}
-              optionByValue={filteredExerciseOptionByValue}
-              options={filteredExerciseOptions}
-              placeholder={t("select")}
-              searchPlaceholder={t("searchExercise")}
-              stageType={exerciseCatalogStageType}
-              theme={theme}
-              title={t("exercisePickerTitle")}
-              value={step.exerciseName}
-            />
-          </View>
-        ) : null}
-      </View>
-
-      <View style={shouldShowExerciseFields ? [styles.row, styles.stepParagraph] : [styles.fieldGroup, styles.stepParagraph]}>
-        <View style={shouldShowExerciseFields ? styles.goalField : undefined}>
-          <Text style={[styles.label, { color: theme.muted }]}>{t("goalType")}</Text>
-          <SelectControl
-            disabled={!hasSelectedType}
-            onChange={(goalType) =>
-              updateStep(step.id, {
-                ...step,
-                goalType,
-                targetComparator: "",
-                targetValue: ""
-              })
-            }
-            options={getGoalTypeOptions(t)}
-            placeholder={t("select")}
-            theme={theme}
-            value={step.goalType}
-          />
-        </View>
-        {shouldShowExerciseFields ? (
-          <View style={styles.weightField}>
-            <Text style={[styles.label, { color: theme.muted }]}>{t("weight")}</Text>
-            <SuffixedInput
-              editable={canSelectExercise && Boolean(step.exerciseName)}
-              keyboardType="decimal-pad"
-              suffix="kg"
-              theme={theme}
-              value={step.loadKg}
-              onChangeText={(loadKg) => updateStep(step.id, { ...step, loadKg })}
-            />
-          </View>
-        ) : null}
-      </View>
-
-      <GoalTargetControl step={step} t={t} theme={theme} updateStep={updateStep} />
-
-      <View style={[styles.fieldGroup, styles.stepParagraph]}>
-        <Text style={[styles.label, { color: theme.muted }]}>{t("workoutNotes")}</Text>
-        <AppTextarea
-          placeholder={t("addNotes")}
-          theme={theme}
-          value={step.notes}
-          onChangeText={(notes) => updateStep(step.id, { ...step, notes })}
-        />
-      </View>
-    </>
-  );
-}
-
-function WorkoutBuilder({
-  defaultSetCount,
-  defaultStageType,
-  defaultWeight,
-  favoriteExerciseIds,
-  isEditing,
-  language,
-  moveStep,
-  onToggleFavoriteExercise,
-  removeStep,
-  setWorkout,
-  t,
-  theme,
-  updateStep,
-  workout
-}: WorkoutBuilderProps) {
-  const [collapsedPanels, setCollapsedPanels] = useState<Record<string, boolean>>({});
-  const hasConfiguredExercises = workout.steps.some(
-    (step) => step.kind === "exercise" && Boolean(step.exerciseName)
-  );
-  const overviewCollapsed = collapsedPanels["builder-overview"] ?? true;
-  const stageGroups = workout.steps
-    .filter((step) => step.kind === "stage")
-    .map((stage) => ({
-      stage,
-      series: workout.steps
-        .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
-        .map((set) => ({
-          set,
-          elements: workout.steps.filter((step) => step.kind === "exercise" && step.parentSetId === set.id)
-        }))
-    }));
-
-  function addSeriesToStage(stageId: string) {
-    setWorkout((current) => {
-      const stageIndex = current.steps.findIndex((step) => step.id === stageId);
-
-      if (stageIndex < 0) {
-        return current;
-      }
-
-      const nextStageIndex = current.steps.findIndex(
-        (step, index) => index > stageIndex && step.kind === "stage"
-      );
-      const insertIndex = nextStageIndex === -1 ? current.steps.length : nextStageIndex;
-      const nextSteps = [...current.steps];
-      nextSteps.splice(insertIndex, 0, createStep({ kind: "set", parentStageId: stageId, setCount: defaultSetCount }));
-
-      return {
-        ...current,
-        steps: nextSteps
-      };
-    });
-  }
-
-  function addElementToSet(setId: string) {
-    setWorkout((current) => {
-      const setIndex = current.steps.findIndex((step) => step.id === setId);
-
-      if (setIndex < 0) {
-        return current;
-      }
-
-      const nextSetIndex = current.steps.findIndex(
-        (step, index) => index > setIndex && (step.kind === "set" || step.kind === "stage")
-      );
-      const insertIndex = nextSetIndex === -1 ? current.steps.length : nextSetIndex;
-      const nextSteps = [...current.steps];
-      nextSteps.splice(insertIndex, 0, createStep({
-        kind: "exercise",
-        loadKg: defaultWeight,
-        parentSetId: setId,
-        stageType: defaultStageType
-      }));
-
-      return {
-        ...current,
-        steps: nextSteps
-      };
-    });
-  }
-
-  function isCollapsed(panelId: string) {
-    return collapsedPanels[panelId] ?? false;
-  }
-
-  function togglePanel(panelId: string) {
-    setCollapsedPanels((current) => ({
-      ...current,
-      [panelId]: !isCollapsed(panelId)
-    }));
-  }
-
-  return (
-    <View style={styles.builderBlock}>
-      <View style={styles.sectionHeader}>
-        {!isEditing ? (
-          <View>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              {t("addNewWorkout")}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-
-      <View style={styles.fieldGroup}>
-        <Text style={[styles.label, { color: theme.muted }]}>{t("workoutName")}</Text>
-        <AppInput
-          placeholder={t("workoutNamePlaceholder")}
-          theme={theme}
-          value={workout.name}
-          onChangeText={(name) => setWorkout((current) => ({ ...current, name }))}
-        />
-      </View>
-
-      <View style={styles.fieldGroup}>
-        <Text style={[styles.label, { color: theme.muted }]}>{t("workoutNotes")}</Text>
-        <AppTextarea
-          placeholder={t("workoutNotesPlaceholder")}
-          theme={theme}
-          value={workout.notes}
-          onChangeText={(notes) => setWorkout((current) => ({ ...current, notes }))}
-        />
-      </View>
-
-      {hasConfiguredExercises && (
-        <CollapsiblePanel
-          isCollapsed={overviewCollapsed}
-          title={t("overview")}
-          theme={theme}
-          onToggle={() => togglePanel("builder-overview")}
-        >
-          <WorkoutMuscleOverviewContent language={language} theme={theme} workout={workout} />
-        </CollapsiblePanel>
-      )}
-
-      {workout.steps.length === 0 && (
-        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Ionicons name="list-outline" size={26} color={theme.primary} />
-          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>
-            {t("emptyWorkoutBuilderTitle")}
-          </Text>
-          <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>
-            {t("emptyWorkoutBuilderCopy")}
-          </Text>
-        </View>
-      )}
-
-      {stageGroups.map(({ stage, series }, index) => {
-        const stageCollapsed = isCollapsed(stage.id);
-        const stageConfigCollapsed = isCollapsed(`stage-config-${stage.id}`);
-        const stageTitle = stage.label.trim() || `${t("stage")} ${index + 1}`;
-
-        return (
-          <View
-            key={stage.id}
-            style={[styles.stepCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-          >
-            <View style={styles.stepTopRow}>
-              <Pressable
-                accessibilityLabel={stageCollapsed ? "Rozwin etap" : "Zwin etap"}
-                accessibilityRole="button"
-                accessibilityState={{ expanded: !stageCollapsed }}
-                style={styles.stepTitleButton}
-                onPress={() => togglePanel(stage.id)}
-              >
-                <Ionicons
-                  name={stageCollapsed ? "chevron-forward" : "chevron-down"}
-                  size={20}
-                  color={theme.primary}
-                />
-                <View style={styles.stepTitleCopy}>
-                  <Text style={[styles.stepTitle, { color: theme.text }]}>{stageTitle}</Text>
-                  <Text style={[styles.stepKind, { color: theme.muted }]}>
-                    {series.length} {series.length === 1 ? t("set").toLowerCase() : t("setsPlural")}
-                  </Text>
-                </View>
-              </Pressable>
-              <View style={styles.stepActions}>
-                <Pressable
-                  accessibilityLabel="Przenies wyzej"
-                  accessibilityRole="button"
-                  disabled={index === 0}
-                  style={[
-                    styles.stepActionButton,
-                    {
-                      opacity: index === 0 ? 0.35 : 1
-                    }
-                  ]}
-                  onPress={() => moveStep(stage.id, -1)}
-                >
-                  <Ionicons name="arrow-up" size={19} color={theme.primary} />
-                </Pressable>
-                <Pressable
-                  accessibilityLabel="Przenies nizej"
-                  accessibilityRole="button"
-                  disabled={index === workout.steps.length - 1}
-                  style={[
-                    styles.stepActionButton,
-                    {
-                      opacity: index === stageGroups.length - 1 ? 0.35 : 1
-                    }
-                  ]}
-                  onPress={() => moveStep(stage.id, 1)}
-                >
-                  <Ionicons name="arrow-down" size={19} color={theme.primary} />
-                </Pressable>
-                <Pressable
-                  accessibilityLabel="Usun element"
-                  accessibilityRole="button"
-                  style={styles.stepActionButton}
-                  onPress={() => removeStep(stage.id)}
-                >
-                  <Ionicons name="trash-outline" size={20} color={theme.danger} />
-                </Pressable>
-              </View>
-            </View>
-
-            {!stageCollapsed && (
-              <>
-                <View style={styles.stageNameRow}>
-                  <AppInput
-                    placeholder={`${t("stage")} ${index + 1}`}
-                    style={styles.stageNameInput}
-                    theme={theme}
-                    value={stage.label}
-                    onChangeText={(label) => updateStep(stage.id, { ...stage, label })}
-                  />
-                  <Pressable
-                    accessibilityLabel={
-                      stageConfigCollapsed
-                        ? "Pokaż konfigurację etapu"
-                        : "Ukryj konfigurację etapu"
-                    }
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded: !stageConfigCollapsed }}
-                    style={[
-                      styles.stageConfigToggle,
-                      { backgroundColor: theme.secondaryBand, borderColor: theme.border }
-                    ]}
-                    onPress={() => togglePanel(`stage-config-${stage.id}`)}
-                  >
-                    <Ionicons
-                      name={stageConfigCollapsed ? "chevron-down" : "chevron-up"}
-                      size={22}
-                      color={theme.primary}
-                    />
-                  </Pressable>
-                </View>
-
-                {!stageConfigCollapsed && (
-                  <StageConfiguration
-                    stage={stage}
-                    t={t}
-                    theme={theme}
-                    updateStep={updateStep}
-                  />
-                )}
-
-                <View style={[styles.seriesBlock, { borderColor: theme.border }]}>
-                  <View style={styles.seriesHeader}>
-                    <Text style={[styles.seriesTitle, { color: theme.text }]}>{t("setsInStage")}</Text>
-                    <AppButton
-                      icon="add"
-                      style={styles.seriesAddButton}
-                      textStyle={styles.seriesAddButtonText}
-                      theme={theme}
-                      onPress={() => addSeriesToStage(stage.id)}
-                    >
-                      {t("set")}
-                    </AppButton>
-                  </View>
-
-                  {series.length === 0 ? (
-                    <View style={[styles.emptySeries, { backgroundColor: theme.secondaryBand }]}>
-                      <Text style={[styles.emptySeriesText, { color: theme.muted }]}>
-                        {t("stageWithoutSeries")}
-                      </Text>
-                    </View>
-                  ) : (
-                    <View style={styles.seriesList}>
-                      {series.map(({ set, elements }, setIndex) => {
-                        const seriesCollapsed = isCollapsed(set.id);
-
-                        return (
-                          <View
-                            key={set.id}
-                            style={[
-                              styles.seriesCard,
-                              { backgroundColor: theme.background, borderColor: theme.border }
-                            ]}
-                          >
-                            <View style={styles.stepTopRow}>
-                              <Pressable
-                                accessibilityLabel={seriesCollapsed ? "Rozwin serie" : "Zwin serie"}
-                                accessibilityRole="button"
-                                accessibilityState={{ expanded: !seriesCollapsed }}
-                                style={styles.stepTitleButton}
-                                onPress={() => togglePanel(set.id)}
-                              >
-                                <Ionicons
-                                  name={seriesCollapsed ? "chevron-forward" : "chevron-down"}
-                                  size={20}
-                                  color={theme.primary}
-                                />
-                                <View style={styles.stepTitleCopy}>
-                                  <Text style={[styles.stepTitle, { color: theme.text }]}>
-                                    {t("set")} {setIndex + 1}
-                                  </Text>
-                                </View>
-                              </Pressable>
-                              <View style={styles.stepActions}>
-                                <Pressable
-                                  accessibilityLabel="Przenies serie wyzej"
-                                  accessibilityRole="button"
-                                  disabled={setIndex === 0}
-                                  style={[
-                                    styles.stepActionButton,
-                                    { opacity: setIndex === 0 ? 0.35 : 1 }
-                                  ]}
-                                  onPress={() => moveStep(set.id, -1)}
-                                >
-                                  <Ionicons name="arrow-up" size={19} color={theme.primary} />
-                                </Pressable>
-                                <Pressable
-                                  accessibilityLabel="Przenies serie nizej"
-                                  accessibilityRole="button"
-                                  disabled={setIndex === series.length - 1}
-                                  style={[
-                                    styles.stepActionButton,
-                                    { opacity: setIndex === series.length - 1 ? 0.35 : 1 }
-                                  ]}
-                                  onPress={() => moveStep(set.id, 1)}
-                                >
-                                  <Ionicons name="arrow-down" size={19} color={theme.primary} />
-                                </Pressable>
-                                <Pressable
-                                  accessibilityLabel="Usun serie"
-                                  accessibilityRole="button"
-                                  style={styles.stepActionButton}
-                                  onPress={() => removeStep(set.id)}
-                                >
-                                  <Ionicons name="trash-outline" size={20} color={theme.danger} />
-                                </Pressable>
-                              </View>
-                            </View>
-
-                            {!seriesCollapsed && (
-                              <View style={styles.seriesContent}>
-                                <View style={styles.fieldGroup}>
-                                  <Text style={[styles.label, { color: theme.muted }]}>{t("setCount")}</Text>
-                                  <AppInput
-                                    keyboardType="number-pad"
-                                    maxLength={2}
-                                    placeholder="0"
-                                    theme={theme}
-                                    value={set.setCount}
-                                    onChangeText={(setCount) => updateStep(set.id, { ...set, setCount: normalizeSetCountInput(setCount) })}
-                                  />
-                                </View>
-
-                                <View style={[styles.seriesBlock, { borderColor: theme.border }]}>
-                                  <View style={styles.seriesHeader}>
-                                    <Text style={[styles.seriesTitle, { color: theme.text }]}>
-                                    {t("setElements")}
-                                    </Text>
-                                    <AppButton
-                                      icon="add"
-                                      style={styles.seriesAddButton}
-                                      textStyle={styles.seriesAddButtonText}
-                                      theme={theme}
-                                      onPress={() => addElementToSet(set.id)}
-                                    >
-                                      {t("addElement")}
-                                    </AppButton>
-                                  </View>
-
-                                  {elements.length === 0 ? (
-                                    <View style={[styles.emptySeries, { backgroundColor: theme.secondaryBand }]}>
-                                      <Text style={[styles.emptySeriesText, { color: theme.muted }]}>
-                                        {t("setWithoutElements")}
-                                      </Text>
-                                    </View>
-                                  ) : (
-                                    <View style={styles.seriesList}>
-                                      {elements.map((element, elementIndex) => {
-                                        const elementCollapsed = isCollapsed(element.id);
-
-                                        return (
-                                          <View
-                                            key={element.id}
-                                            style={[
-                                              styles.seriesCard,
-                                              { backgroundColor: theme.card, borderColor: theme.border }
-                                            ]}
-                                          >
-                                            <View style={styles.stepTopRow}>
-                                              <Pressable
-                                                accessibilityLabel={elementCollapsed ? "Rozwiń element" : "Zwiń element"}
-                                                accessibilityRole="button"
-                                                accessibilityState={{ expanded: !elementCollapsed }}
-                                                style={styles.stepTitleButton}
-                                                onPress={() => togglePanel(element.id)}
-                                              >
-                                                <Ionicons
-                                                  name={elementCollapsed ? "chevron-forward" : "chevron-down"}
-                                                  size={20}
-                                                  color={theme.primary}
-                                                />
-                                                <View style={styles.stepTitleCopy}>
-                                                  <Text style={[styles.stepTitle, { color: theme.text }]}>
-                                                    {element.exerciseName
-                                                      ? getExerciseDisplayName(element.exerciseName, language)
-                                                      : element.stageType
-                                                        ? t(stageTypeTranslationKeys[element.stageType])
-                                                      : `${t("addElement")} ${elementIndex + 1}`}
-                                                  </Text>
-                                                </View>
-                                              </Pressable>
-                                              <View style={styles.stepActions}>
-                                                <Pressable
-                                                  accessibilityLabel="Przenieś element wyżej"
-                                                  accessibilityRole="button"
-                                                  disabled={elementIndex === 0}
-                                                  style={[
-                                                    styles.stepActionButton,
-                                                    { opacity: elementIndex === 0 ? 0.35 : 1 }
-                                                  ]}
-                                                  onPress={() => moveStep(element.id, -1)}
-                                                >
-                                                  <Ionicons name="arrow-up" size={19} color={theme.primary} />
-                                                </Pressable>
-                                                <Pressable
-                                                  accessibilityLabel="Przenieś element niżej"
-                                                  accessibilityRole="button"
-                                                  disabled={elementIndex === elements.length - 1}
-                                                  style={[
-                                                    styles.stepActionButton,
-                                                    { opacity: elementIndex === elements.length - 1 ? 0.35 : 1 }
-                                                  ]}
-                                                  onPress={() => moveStep(element.id, 1)}
-                                                >
-                                                  <Ionicons name="arrow-down" size={19} color={theme.primary} />
-                                                </Pressable>
-                                                <Pressable
-                                                  accessibilityLabel="Usuń element"
-                                                  accessibilityRole="button"
-                                                  style={styles.stepActionButton}
-                                                  onPress={() => removeStep(element.id)}
-                                                >
-                                                  <Ionicons name="trash-outline" size={20} color={theme.danger} />
-                                                </Pressable>
-                                              </View>
-                                            </View>
-
-                                            {!elementCollapsed && (
-                                          <StepConfiguration
-                                            favoriteExerciseIds={favoriteExerciseIds}
-                                            language={language}
-                                            onToggleFavoriteExercise={onToggleFavoriteExercise}
-                                            parentStageType={stage.stageType}
-                                            step={element}
-                                            t={t}
-                                            theme={theme}
-                                            typeLabel={t("type")}
-                                            updateStep={updateStep}
-                                          />
-                                            )}
-                                          </View>
-                                        );
-                                      })}
-                                    </View>
-                                  )}
-                                </View>
-                              </View>
-                            )}
-                          </View>
-                        );
-                      })}
-                    </View>
-                  )}
-                </View>
-              </>
-            )}
-          </View>
-        );
-      })}
-
-    </View>
   );
 }

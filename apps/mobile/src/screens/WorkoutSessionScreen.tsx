@@ -1,0 +1,977 @@
+import { Ionicons } from "@expo/vector-icons";
+import type { Dispatch, SetStateAction } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+
+import { AppButton } from "../components/AppControls";
+import { CollapsiblePanel } from "../components/CollapsiblePanel";
+import { ExerciseSummaryRow, WorkoutMuscleOverviewContent } from "../components/WorkoutPresentation";
+import { parseTimerSecondsValue, RestTimerControl, SessionValueInput } from "../components/WorkoutSessionControls";
+import { getExerciseDisplayName } from "../domain/exercises";
+import {
+  calculateEntryVolume,
+  getExerciseProgressSummary,
+  type WorkoutSession,
+  type WorkoutSessionEntry
+} from "../domain/workoutSessions";
+import { formatRestDuration, formatWorkoutProgressPercent, getWorkoutProgress } from "../domain/workoutSessionUi";
+import { formatExerciseSetTarget, isRestTargetStep } from "../domain/workoutExerciseSummary";
+import { createStep, type GoalType, type StageType, type WorkoutDraft, type WorkoutStep } from "../domain/workouts";
+import type { LanguageCode, TranslationKey } from "../i18n/translations";
+import { styles } from "../theme/appStyles";
+import type { Theme } from "../theme/theme";
+
+type WorkoutSessionScreenProps = {
+  activeWorkoutSession: WorkoutSession | null;
+  activeWorkoutSessionId: string | null;
+  formatNumber: (value: number | null | undefined, suffix?: string) => string;
+  formatSessionEntryTitle: (entry: WorkoutSessionEntry) => string;
+  getSessionEntryIterationLabel: (entry: WorkoutSessionEntry) => string;
+  insets: { left: number; right: number };
+  isLandscape: boolean;
+  isPostWorkoutFillMode: boolean;
+  isReadOnlyWorkoutPanelCollapsed: (panelId: string) => boolean;
+  isWorkoutSessionEntryFillRequired: (entry: WorkoutSessionEntry) => boolean;
+  language: LanguageCode;
+  openExerciseDetail: (step: WorkoutStep) => void;
+  requestFinishActiveWorkoutSession: () => void;
+  sessionEntryIndex: number;
+  setIsPostWorkoutFillMode: (value: boolean) => void;
+  setSelectedExerciseMuscleStep: (step: WorkoutStep | null) => void;
+  setSessionEntryIndex: (value: number) => void;
+  setWorkoutSessions: Dispatch<SetStateAction<WorkoutSession[]>>;
+  showRestTimer: boolean;
+  t: (key: TranslationKey) => string;
+  theme: Theme;
+  toggleReadOnlyWorkoutPanel: (panelId: string) => void;
+  updateWorkoutSessionEntry: (entryId: string, patch: Partial<WorkoutSessionEntry>) => void;
+  visibleWorkoutSessions: WorkoutSession[];
+  windowSize: { width: number };
+  abandonActiveWorkoutSession: () => void;
+};
+
+export function WorkoutSessionScreen({
+  abandonActiveWorkoutSession,
+  activeWorkoutSession,
+  activeWorkoutSessionId,
+  formatNumber,
+  formatSessionEntryTitle,
+  getSessionEntryIterationLabel,
+  insets,
+  isLandscape,
+  isPostWorkoutFillMode,
+  isReadOnlyWorkoutPanelCollapsed,
+  isWorkoutSessionEntryFillRequired,
+  language,
+  openExerciseDetail,
+  requestFinishActiveWorkoutSession,
+  sessionEntryIndex,
+  setIsPostWorkoutFillMode,
+  setSelectedExerciseMuscleStep,
+  setSessionEntryIndex,
+  setWorkoutSessions,
+  showRestTimer,
+  t,
+  theme,
+  toggleReadOnlyWorkoutPanel,
+  updateWorkoutSessionEntry,
+  visibleWorkoutSessions,
+  windowSize
+}: WorkoutSessionScreenProps) {
+  function getSessionEntryPreviewStep(session: WorkoutSession, entry: WorkoutSessionEntry): WorkoutStep {
+    const sourceStep = session.planSnapshot.steps.find(
+      (step) => step.kind === "exercise" && step.id === entry.sourceElementId
+    );
+
+    if (sourceStep) {
+      return sourceStep;
+    }
+
+    return createStep({
+      exerciseId: entry.exerciseId ?? "",
+      exerciseName: entry.exerciseName ?? "",
+      goalType: (entry.plannedTargetType as GoalType | "") || "",
+      id: entry.sourceElementId ?? entry.id,
+      kind: "exercise",
+      loadKg: entry.plannedWeight ?? "",
+      stageType: (entry.type as StageType | "") || "",
+      targetValue: entry.plannedTarget ?? ""
+    });
+  }
+
+  function getSessionEntrySetTarget(entry: WorkoutSessionEntry, setCount = "1") {
+    const previewStep = createStep({
+      exerciseName: entry.exerciseName ?? "",
+      goalType: (entry.plannedTargetType as GoalType | "") || "",
+      kind: "exercise",
+      loadKg: entry.plannedWeight ?? "",
+      stageType: (entry.type as StageType | "") || "",
+      targetValue: entry.plannedTarget ?? "",
+      setCount
+    });
+
+    return formatExerciseSetTarget(previewStep);
+  }
+
+  function getGuidedEntryGroups(session: WorkoutSession) {
+    const exerciseEntries = session.entries.filter((entry) => entry.type !== "rest");
+    const sourceEntries = exerciseEntries.length ? exerciseEntries : session.entries;
+    const groups: Array<{
+      entries: WorkoutSessionEntry[];
+      firstIndex: number;
+      key: string;
+      restEntry?: WorkoutSessionEntry;
+    }> = [];
+    const grouped = new Map<string, { entries: WorkoutSessionEntry[]; firstIndex: number; key: string }>();
+
+    sourceEntries.forEach((entry) => {
+      const key = [entry.sourceStageId, entry.sourceSeriesId, entry.sourceElementId ?? entry.id].filter(Boolean).join(":");
+      const firstIndex = session.entries.findIndex((item) => item.id === entry.id);
+      const existing = grouped.get(key);
+
+      if (existing) {
+        existing.entries.push(entry);
+        return;
+      }
+
+      const group = { entries: [entry], firstIndex, key };
+      grouped.set(key, group);
+      groups.push(group);
+    });
+
+    return groups.map((group) => {
+      const referenceEntry = group.entries[0];
+      const restEntry = session.entries.find(
+        (entry) =>
+          entry.type === "rest" &&
+          entry.sourceSeriesId === referenceEntry.sourceSeriesId &&
+          entry.elementIndex > referenceEntry.elementIndex
+      );
+
+      return {
+        ...group,
+        restEntry
+      };
+    });
+  }
+
+  function getGuidedGroupIndex(
+    groups: Array<{ entries: WorkoutSessionEntry[]; firstIndex: number }>,
+    entryIndex: number,
+    currentEntry?: WorkoutSessionEntry
+  ) {
+    const directIndex = groups.findIndex((group) => group.entries.some((entry) => entry.id === currentEntry?.id));
+
+    if (directIndex >= 0) {
+      return directIndex;
+    }
+
+    const nextIndex = groups.findIndex((group) => group.firstIndex >= entryIndex);
+    return nextIndex >= 0 ? nextIndex : Math.max(0, groups.length - 1);
+  }
+
+  function toggleWorkoutSessionEntryCompleted(entry: WorkoutSessionEntry) {
+    if (entry.isCompleted) {
+      updateWorkoutSessionEntry(entry.id, {
+        actualCalories: undefined,
+        actualDuration: undefined,
+        actualHeartRate: undefined,
+        actualReps: undefined,
+        actualTarget: undefined,
+        actualWeight: undefined,
+        completedAt: undefined,
+        isCompleted: false,
+        notes: undefined
+      });
+      return;
+    }
+
+    updateWorkoutSessionEntry(entry.id, {
+      completedAt: new Date().toISOString(),
+      isCompleted: true
+    });
+  }
+
+  function updateWorkoutSessionEntryTableValue(entry: WorkoutSessionEntry, patch: Pick<Partial<WorkoutSessionEntry>, "actualReps" | "actualWeight">) {
+    const actualReps = patch.actualReps ?? entry.actualReps ?? "";
+    const actualWeight = patch.actualWeight ?? entry.actualWeight ?? "";
+    const hasAnyValue = Boolean(actualReps.trim() || actualWeight.trim());
+
+    updateWorkoutSessionEntry(entry.id, {
+      ...patch,
+      completedAt: hasAnyValue ? entry.completedAt ?? new Date().toISOString() : undefined,
+      isCompleted: hasAnyValue
+    });
+  }
+
+  function getWorkoutSessionEntryProgressKey(entry?: WorkoutSessionEntry) {
+    if (!entry) {
+      return null;
+    }
+
+    if (entry.exerciseId?.trim()) {
+      return `id:${entry.exerciseId.trim().toLowerCase()}`;
+    }
+
+    if (entry.exerciseName?.trim()) {
+      return `name:${entry.exerciseName.trim().toLowerCase()}`;
+    }
+
+    return null;
+  }
+
+  function getPreviousExerciseValues(entries: WorkoutSessionEntry[]) {
+    const referenceEntry = entries.find((entry) => entry.exerciseId?.trim() || entry.exerciseName?.trim());
+    const progressKey = getWorkoutSessionEntryProgressKey(referenceEntry);
+    const summary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
+    const previousEntry = summary?.lastResult.entry;
+
+    return {
+      reps: previousEntry?.actualReps?.trim() || "",
+      weight: previousEntry?.actualWeight?.trim() || ""
+    };
+  }
+
+  function applyPreviousExerciseValue(
+    entries: WorkoutSessionEntry[],
+    field: "actualReps" | "actualWeight",
+    value: string
+  ) {
+    if (!activeWorkoutSessionId || !value.trim()) {
+      return;
+    }
+
+    const entryIds = new Set(entries.map((entry) => entry.id));
+    const updatedAt = new Date().toISOString();
+
+    setWorkoutSessions((current) =>
+      current.map((session) => {
+        if (session.id !== activeWorkoutSessionId) {
+          return session;
+        }
+
+        let hasChanged = false;
+        const nextEntries = session.entries.map((entry) => {
+          if (!entryIds.has(entry.id) || entry[field]?.trim()) {
+            return entry;
+          }
+
+          hasChanged = true;
+          const nextEntry = { ...entry, [field]: value } as WorkoutSessionEntry;
+          const hasAnyValue = Boolean(nextEntry.actualReps?.trim() || nextEntry.actualWeight?.trim());
+
+          return {
+            ...nextEntry,
+            completedAt: hasAnyValue ? nextEntry.completedAt ?? updatedAt : undefined,
+            isCompleted: hasAnyValue
+          };
+        });
+
+        return hasChanged
+          ? {
+              ...session,
+              entries: nextEntries,
+              updatedAt
+            }
+          : session;
+      })
+    );
+  }
+
+  function renderPreviousExerciseValueButtons(entries: WorkoutSessionEntry[], compact = false) {
+    const previousValues = getPreviousExerciseValues(entries);
+
+    if (!previousValues.reps && !previousValues.weight) {
+      return null;
+    }
+
+    return (
+      <View style={[styles.sessionQuickFillRow, compact ? styles.sessionQuickFillRowCompact : null]}>
+        <View style={styles.sessionQuickFillSlot}>
+          {previousValues.weight ? (
+            <Pressable
+              accessibilityRole="button"
+              style={[styles.sessionQuickFillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+              onPress={() => applyPreviousExerciseValue(entries, "actualWeight", previousValues.weight)}
+            >
+              <Text style={[styles.sessionQuickFillButtonText, { color: theme.primary }]}>
+                {t("previousWeight")}: {previousValues.weight} kg
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+        <View style={styles.sessionQuickFillSlot}>
+          {previousValues.reps ? (
+            <Pressable
+              accessibilityRole="button"
+              style={[styles.sessionQuickFillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+              onPress={() => applyPreviousExerciseValue(entries, "actualReps", previousValues.reps)}
+            >
+              <Text style={[styles.sessionQuickFillButtonText, { color: theme.primary }]}>
+                {t("previousReps")}: {previousValues.reps}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
+    );
+  }
+
+  function renderGuidedEntryTable(entries: WorkoutSessionEntry[]) {
+    return (
+      <View style={[styles.guidedEntryTable, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        {renderPreviousExerciseValueButtons(entries)}
+        {entries.map((entry) => (
+          <View key={entry.id} style={styles.guidedEntryRow}>
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: entry.isCompleted }}
+              style={styles.guidedEntryDone}
+              onPress={() => toggleWorkoutSessionEntryCompleted(entry)}
+            >
+              <View
+                style={[
+                  styles.sessionCheckbox,
+                  {
+                    backgroundColor: entry.isCompleted ? theme.primary : theme.control,
+                    borderColor: entry.isCompleted ? theme.primary : theme.border
+                  }
+                ]}
+              >
+                {entry.isCompleted ? <Ionicons name="checkmark" size={16} color={theme.white} /> : null}
+              </View>
+            </Pressable>
+            {entry.isCompleted ? (
+              <View style={styles.guidedEntryFields}>
+                <View style={styles.guidedEntryInput}>
+                  <SessionValueInput
+                    keyboardType="decimal-pad"
+                    placeholder={t("actualWeight")}
+                    suffix="kg"
+                    theme={theme}
+                    value={entry.actualWeight ?? ""}
+                    onChangeText={(actualWeight) => updateWorkoutSessionEntry(entry.id, { actualWeight })}
+                  />
+                </View>
+                <View style={styles.guidedEntryInput}>
+                  <SessionValueInput
+                    keyboardType="number-pad"
+                    placeholder={t("actualReps")}
+                    theme={theme}
+                    value={entry.actualReps ?? ""}
+                    onChangeText={(actualReps) => updateWorkoutSessionEntry(entry.id, { actualReps })}
+                  />
+                </View>
+              </View>
+            ) : null}
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  function renderInlineWorkoutTable(session: WorkoutSession) {
+    const visibleSessionEntries = session.entries.filter(isWorkoutSessionEntryFillRequired);
+    const groupedSessionEntries = visibleSessionEntries.reduce<
+      { entries: WorkoutSessionEntry[]; key: string; previewStep: WorkoutStep; title: string }[]
+    >((groups, entry) => {
+      const previewStep = getSessionEntryPreviewStep(session, entry);
+      const title = previewStep.exerciseName
+        ? getExerciseDisplayName(previewStep.exerciseName, language)
+        : formatSessionEntryTitle(entry);
+      const normalizedTitle = title.trim().toLowerCase();
+      const key = entry.exerciseId
+        ? `id:${entry.exerciseId}`
+        : entry.sourceElementId
+          ? `step:${entry.sourceElementId}`
+          : `name:${normalizedTitle || entry.id}`;
+      const existingGroup = groups.find((group) => group.key === key);
+
+      if (existingGroup) {
+        existingGroup.entries.push(entry);
+        return groups;
+      }
+
+      groups.push({
+        entries: [entry],
+        key,
+        previewStep,
+        title
+      });
+
+      return groups;
+    }, []);
+
+    if (!groupedSessionEntries.length) {
+      return (
+        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>{t("noData")}</Text>
+        </View>
+      );
+    }
+
+    const responsiveTableMinWidth = isLandscape
+      ? Math.max(windowSize.width - insets.left - insets.right - 44, 688)
+      : undefined;
+
+    return (
+      <View style={styles.inlineWorkoutTableFrame}>
+        <ScrollView
+          horizontal
+          keyboardShouldPersistTaps="handled"
+          showsHorizontalScrollIndicator
+          style={styles.workoutSessionDetailTableScroll}
+          contentContainerStyle={styles.workoutSessionDetailTableScrollContent}
+        >
+        <View
+          style={[
+            styles.workoutSessionDetailTable,
+            styles.inlineWorkoutTable,
+            responsiveTableMinWidth ? { minWidth: responsiveTableMinWidth } : null,
+            { borderColor: theme.border }
+          ]}
+        >
+          <View
+            style={[
+              styles.workoutSessionDetailTableHeader,
+              { backgroundColor: theme.secondaryBand, borderBottomColor: theme.border }
+            ]}
+          >
+            <View
+              style={[
+                styles.workoutSessionDetailHeaderCell,
+                styles.inlineWorkoutExerciseCell,
+                isLandscape ? styles.inlineWorkoutExerciseCellHorizontal : null,
+                { borderRightColor: theme.border }
+              ]}
+            >
+              <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("exercise")}</Text>
+            </View>
+            <View
+              style={[
+                styles.workoutSessionDetailHeaderCell,
+                styles.workoutSessionDetailSetCell,
+                { borderRightColor: theme.border }
+              ]}
+            >
+              <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("set")}</Text>
+            </View>
+            <View style={[styles.workoutSessionDetailRepsHeader, styles.inlineWorkoutRepsHeader, { borderRightColor: theme.border }]}>
+              <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("actualReps")}</Text>
+              <View style={[styles.workoutSessionDetailRepsSubHeader, { borderTopColor: theme.border }]}>
+                <Text
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.88}
+                  numberOfLines={1}
+                  style={[
+                    styles.workoutSessionDetailHeaderText,
+                    styles.workoutSessionDetailRepsCell,
+                    styles.inlineWorkoutRepsCell,
+                    { color: theme.primary, borderRightColor: theme.border }
+                  ]}
+                >
+                  {t("repsDone")}
+                </Text>
+                <Text
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.88}
+                  numberOfLines={1}
+                  style={[
+                    styles.workoutSessionDetailHeaderText,
+                    styles.workoutSessionDetailRepsCell,
+                    styles.inlineWorkoutRepsCell,
+                    { color: theme.primary, borderRightWidth: 0 }
+                  ]}
+                >
+                  {t("repsPlanned")}
+                </Text>
+              </View>
+            </View>
+            <View
+              style={[
+                styles.workoutSessionDetailHeaderCell,
+                styles.inlineWorkoutWeightCell,
+                { borderRightColor: theme.border }
+              ]}
+            >
+              <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("weight")}</Text>
+            </View>
+            <View style={[styles.workoutSessionDetailHeaderCell, styles.workoutSessionDetailVolumeCell, styles.inlineWorkoutLastHeaderCell]}>
+              <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("volume")}</Text>
+            </View>
+          </View>
+          {groupedSessionEntries.map((group, groupIndex) => (
+            <View
+              key={group.key}
+              style={[
+                styles.workoutSessionDetailExerciseGroup,
+                { borderBottomColor: theme.border },
+                groupIndex === groupedSessionEntries.length - 1 ? styles.workoutSessionDetailExerciseGroupLast : null
+              ]}
+            >
+              <View
+                style={[
+                  styles.inlineWorkoutExerciseCell,
+                  isLandscape ? styles.inlineWorkoutExerciseCellHorizontal : null,
+                  { borderRightColor: theme.border }
+                ]}
+              >
+                <Pressable
+                  accessibilityRole="button"
+                  style={styles.inlineWorkoutExerciseCopy}
+                  onPress={() => openExerciseDetail(group.previewStep)}
+                >
+                  <View style={styles.inlineWorkoutExerciseTitleRow}>
+                    <Text style={[styles.workoutDetailTableExerciseName, styles.inlineWorkoutExerciseName, { color: theme.text }]} numberOfLines={3}>
+                      {group.title}
+                    </Text>
+                    <Pressable
+                      accessibilityLabel={t("showDetails")}
+                      accessibilityRole="button"
+                      hitSlop={8}
+                      style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+                      onPress={(event) => {
+                        event.stopPropagation();
+                        setSelectedExerciseMuscleStep(group.previewStep);
+                      }}
+                    >
+                      <Ionicons name="body-outline" size={20} color={theme.primary} />
+                    </Pressable>
+                  </View>
+                  {group.previewStep.notes ? (
+                    <Text style={[styles.workoutDetailNotes, styles.inlineWorkoutExerciseNotes, { color: theme.muted }]} numberOfLines={4}>
+                      {group.previewStep.notes}
+                    </Text>
+                  ) : null}
+                </Pressable>
+                {renderPreviousExerciseValueButtons(group.entries, true)}
+              </View>
+              <View style={styles.workoutSessionDetailSetsCell}>
+                {group.entries.map((entry, entryIndex) => {
+                  const volume = calculateEntryVolume(entry);
+                  const plannedReps = entry.plannedTargetType === "repetitions" ? entry.plannedTarget : "";
+
+                  return (
+                    <View
+                      key={entry.id}
+                      style={[
+                        styles.workoutSessionDetailSetRow,
+                        styles.inlineWorkoutSetRow,
+                        { borderBottomColor: theme.border },
+                        entryIndex === group.entries.length - 1 ? styles.workoutSessionDetailSetRowLast : null
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.workoutDetailTableValue,
+                          styles.workoutSessionDetailSetCell,
+                          { color: theme.text, borderRightColor: theme.border }
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {getSessionEntryIterationLabel(entry)}
+                      </Text>
+                      <View style={[styles.inlineWorkoutInputCell, styles.workoutSessionDetailRepsCell, styles.inlineWorkoutRepsCell, { borderRightColor: theme.border }]}>
+                        <SessionValueInput
+                          keyboardType="number-pad"
+                          placeholder="-"
+                          theme={theme}
+                          value={entry.actualReps ?? ""}
+                          onChangeText={(actualReps) => updateWorkoutSessionEntryTableValue(entry, { actualReps })}
+                        />
+                      </View>
+                      <Text
+                        style={[
+                          styles.workoutDetailTableValue,
+                          styles.workoutSessionDetailRepsCell,
+                          styles.inlineWorkoutRepsCell,
+                          { color: theme.text, borderRightColor: theme.border }
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {plannedReps?.trim() || "-"}
+                      </Text>
+                      <View style={[styles.inlineWorkoutInputCell, styles.inlineWorkoutWeightCell, { borderRightColor: theme.border }]}>
+                        <SessionValueInput
+                          keyboardType="decimal-pad"
+                          placeholder="-"
+                          suffix="kg"
+                          theme={theme}
+                          value={entry.actualWeight ?? ""}
+                          onChangeText={(actualWeight) => updateWorkoutSessionEntryTableValue(entry, { actualWeight })}
+                        />
+                      </View>
+                      <Text style={[styles.workoutDetailTableValue, styles.workoutSessionDetailVolumeCell, { color: theme.text }]} numberOfLines={1}>
+                        {volume ? formatNumber(volume, "kg") : "-"}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
+        </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  function renderRestTimer(entry?: WorkoutSessionEntry) {
+    if (!showRestTimer || !entry?.plannedTarget) {
+      return null;
+    }
+
+    const plannedSeconds = parseTimerSecondsValue(entry.plannedTarget);
+    if (plannedSeconds <= 0) {
+      return null;
+    }
+
+    return (
+      <RestTimerControl
+        key={entry.id}
+        labels={{
+          pause: t("pauseTimer"),
+          reset: t("resetTimer"),
+          restTimer: t("restTimer"),
+          start: t("startTimer")
+        }}
+        plannedSeconds={plannedSeconds}
+        theme={theme}
+      />
+    );
+  }
+
+  function renderWorkoutSessionProgressCard(current: number, total: number) {
+    const progress = getWorkoutProgress(current, total);
+
+    return (
+      <View style={[styles.sessionProgressCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.sessionProgressIcon, { backgroundColor: theme.secondaryBand }]}>
+          <Ionicons name="barbell-outline" size={20} color={theme.primary} />
+        </View>
+        <Text style={[styles.sessionProgressCardText, { color: theme.text }]} numberOfLines={1}>
+          {t("exercisePlural")} {progress.current}/{progress.total}
+        </Text>
+        <View style={[styles.sessionProgressTrack, { backgroundColor: theme.secondaryBand }]}>
+          <View style={[styles.sessionProgressFill, { backgroundColor: theme.primary, width: `${progress.percent}%` }]} />
+        </View>
+        <Text style={[styles.sessionProgressPercent, { color: theme.primary }]} numberOfLines={1}>
+          {formatWorkoutProgressPercent(progress.current, progress.total)}
+        </Text>
+      </View>
+    );
+  }
+
+  function renderGuidedPlanPreview(
+    session: WorkoutSession,
+    group: { entries: WorkoutSessionEntry[]; restEntry?: WorkoutSessionEntry },
+    exerciseNumber: number
+  ) {
+    const entry = group.entries[0];
+    const setCount = String(group.entries.length || 1);
+    const previewStep = getSessionEntryPreviewStep(session, entry);
+    const isUntimedWarmup = entry.type === "warmup" && !entry.plannedTarget?.trim();
+    const title = entry.type === "warmup"
+      ? entry.sourceStageName?.trim() || t("stageWarmup")
+      : getExerciseDisplayName(previewStep.exerciseName, language);
+    const plannedTarget = entry.plannedTargetType === "repetitions"
+      ? entry.plannedTarget?.trim()
+      : entry.plannedTarget?.trim() || getSessionEntrySetTarget(entry);
+    const restSeconds = group.restEntry?.plannedTarget ? parseTimerSecondsValue(group.restEntry.plannedTarget) : 0;
+    const restText = formatRestDuration(restSeconds);
+
+    return (
+      <View style={[styles.guidedPlanPreview, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={styles.guidedExerciseHeader}>
+          <View style={[styles.guidedExerciseNumber, { backgroundColor: theme.secondaryBand }]}>
+            <Text style={[styles.guidedExerciseNumberText, { color: theme.primary }]}>{exerciseNumber}</Text>
+          </View>
+          <Text style={[styles.guidedExerciseTitle, { color: theme.text }]} numberOfLines={3}>
+            {title}
+          </Text>
+          {!isUntimedWarmup ? (
+            <Pressable
+              accessibilityLabel={t("showDetails")}
+              accessibilityRole="button"
+              hitSlop={8}
+              style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+              onPress={() => openExerciseDetail(previewStep)}
+            >
+              <Ionicons name="body-outline" size={20} color={theme.primary} />
+            </Pressable>
+          ) : null}
+        </View>
+        {entry.notes || previewStep.notes ? (
+          <Text style={[styles.guidedExerciseNotes, { color: theme.muted }]} numberOfLines={5}>
+            {entry.notes || previewStep.notes}
+          </Text>
+        ) : null}
+        {!isUntimedWarmup ? (
+          <View style={styles.guidedExerciseMetaRow}>
+            <View style={styles.guidedRestGroup}>
+              <Text style={[styles.guidedRestLabel, { color: theme.text }]}>{t("stageRest")}</Text>
+              <View style={[styles.guidedRestPill, { backgroundColor: theme.secondaryBand }]}>
+                <Ionicons name="time-outline" size={16} color={theme.text} />
+                <Text style={[styles.guidedRestPillText, { color: theme.primary }]}>{restText}</Text>
+              </View>
+            </View>
+            <View style={styles.guidedTargetGroup}>
+              <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
+                <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{setCount}</Text>
+              </View>
+              <Text style={[styles.guidedTargetSeparator, { color: theme.text }]}>x</Text>
+              <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
+                <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{plannedTarget || "-"}</Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
+        {renderRestTimer(group.restEntry)}
+      </View>
+    );
+  }
+
+  function renderReadOnlyWorkoutPlan(workout: WorkoutDraft, panelPrefix: string) {
+    const stageGroups = workout.steps
+      .filter((step) => step.kind === "stage" && step.stageType !== "warmup")
+      .map((stage) => ({
+        stage,
+        series: workout.steps
+          .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
+          .map((set) => ({
+            set,
+            elements: workout.steps.filter(
+              (step) => step.kind === "exercise" && step.parentSetId === set.id
+            )
+          }))
+      }));
+
+    return (
+      <>
+        {workout.notes ? (
+          <CollapsiblePanel
+            collapseLabel={t("collapse")}
+            expandLabel={t("expand")}
+            isCollapsed={isReadOnlyWorkoutPanelCollapsed(`${panelPrefix}-notes`)}
+            theme={theme}
+            title={t("workoutNotes")}
+            onToggle={() => toggleReadOnlyWorkoutPanel(`${panelPrefix}-notes`)}
+          >
+            <Text style={[styles.workoutDetailDescription, { color: theme.muted }]}>
+              {workout.notes}
+            </Text>
+          </CollapsiblePanel>
+        ) : null}
+
+        <CollapsiblePanel
+          collapseLabel={t("collapse")}
+          expandLabel={t("expand")}
+          isCollapsed={isReadOnlyWorkoutPanelCollapsed(`${panelPrefix}-overview`)}
+          theme={theme}
+          title={t("overview")}
+          onToggle={() => toggleReadOnlyWorkoutPanel(`${panelPrefix}-overview`)}
+        >
+          <WorkoutMuscleOverviewContent language={language} theme={theme} workout={workout} />
+        </CollapsiblePanel>
+
+        <View style={styles.workoutDetailStages}>
+          {stageGroups.map(({ stage, series }, index) => {
+            const exerciseCount = series.reduce(
+              (total, item) => total + item.elements.filter((element) => !isRestTargetStep(element)).length,
+              0
+            );
+
+            return (
+              <CollapsiblePanel
+                actions={
+                  <View style={[styles.panelCountBadge, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                    <Text style={[styles.panelCountBadgeText, { color: theme.primary }]}>{exerciseCount}</Text>
+                  </View>
+                }
+                collapseLabel={t("collapse")}
+                expandLabel={t("expand")}
+                key={stage.id}
+                isCollapsed={isReadOnlyWorkoutPanelCollapsed(`${panelPrefix}-stage-${stage.id}`)}
+                theme={theme}
+                title={stage.label || `${t("stage")} ${index + 1}`}
+                onToggle={() => toggleReadOnlyWorkoutPanel(`${panelPrefix}-stage-${stage.id}`)}
+              >
+                {stage.notes ? (
+                  <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{stage.notes}</Text>
+                ) : null}
+
+                {series.length ? (
+                  <View style={styles.workoutDetailSeriesList}>
+                    {series.map(({ set, elements }, setIndex) => {
+                      const headerElement = elements.find((element) => !isRestTargetStep(element)) ?? elements[0];
+
+                      return (
+                        <View
+                          key={set.id}
+                          style={[
+                            styles.workoutDetailSeriesRow,
+                            { borderColor: theme.border },
+                            setIndex === series.length - 1 ? styles.workoutDetailSeriesRowLast : null
+                          ]}
+                        >
+                          <View style={styles.workoutInfo}>
+                            {elements.map((element) => (
+                              <View key={element.id} style={styles.workoutDetailElementRow}>
+                                <ExerciseSummaryRow
+                                  language={language}
+                                  pairedTargetText={
+                                    isRestTargetStep(element)
+                                      ? (() => {
+                                        const elementIndex = elements.findIndex((item) => item.id === element.id);
+                                        const previousExercise = [...elements]
+                                          .slice(0, Math.max(0, elementIndex))
+                                          .reverse()
+                                          .find((item) => !isRestTargetStep(item));
+
+                                        return previousExercise
+                                          ? formatExerciseSetTarget({ ...previousExercise, setCount: set.setCount || "1" })
+                                          : undefined;
+                                      })()
+                                      : undefined
+                                  }
+                                  seriesIndex={headerElement?.id === element.id ? setIndex + 1 : undefined}
+                                  step={element}
+                                  targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
+                                  theme={theme}
+                                  t={t}
+                                  onPressDetails={() => openExerciseDetail(element)}
+                                  onPressMuscles={() => openExerciseDetail(element)}
+                                />
+                                {element.notes ? (
+                                  <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
+                                    {element.notes}
+                                  </Text>
+                                ) : null}
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : null}
+              </CollapsiblePanel>
+            );
+          })}
+        </View>
+      </>
+    );
+  }
+
+  function renderWorkoutSession() {
+    const session = activeWorkoutSession;
+
+    if (!session) {
+      return (
+        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>{t("noWorkout")}</Text>
+        </View>
+      );
+    }
+
+    if (!session.entries.length) {
+      return (
+        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>{t("emptyWorkoutSession")}</Text>
+          <AppButton icon="close-outline" theme={theme} onPress={abandonActiveWorkoutSession}>
+            {t("abandonWorkout")}
+          </AppButton>
+        </View>
+      );
+    }
+
+    const currentEntry = session.entries[Math.min(sessionEntryIndex, session.entries.length - 1)];
+
+    if (session.executionMode === "guided") {
+      const guidedGroups = getGuidedEntryGroups(session);
+      const guidedGroupIndex = getGuidedGroupIndex(guidedGroups, sessionEntryIndex, currentEntry);
+      const currentGroup = guidedGroups[guidedGroupIndex] ?? {
+        entries: [currentEntry],
+        firstIndex: Math.min(sessionEntryIndex, session.entries.length - 1),
+        key: currentEntry.id
+      };
+      const canGoBack = guidedGroupIndex > 0;
+      const canGoNext = guidedGroupIndex < guidedGroups.length - 1;
+      const shouldShowGuidedEntryTable = currentGroup.entries.some(isWorkoutSessionEntryFillRequired);
+
+      return (
+        <View style={styles.sessionScreen}>
+          {renderWorkoutSessionProgressCard(guidedGroupIndex + 1, guidedGroups.length)}
+          {renderGuidedPlanPreview(session, currentGroup, guidedGroupIndex + 1)}
+          {shouldShowGuidedEntryTable ? renderGuidedEntryTable(currentGroup.entries.filter(isWorkoutSessionEntryFillRequired)) : null}
+          <View style={styles.sessionActions}>
+            <AppButton
+              disabled={!canGoBack}
+              icon="chevron-back-outline"
+              style={styles.sessionNavButton}
+              theme={theme}
+              variant="outline"
+              onPress={() => {
+                const previousGroup = guidedGroups[Math.max(0, guidedGroupIndex - 1)];
+                setSessionEntryIndex(previousGroup?.firstIndex ?? 0);
+              }}
+            >
+              {t("back")}
+            </AppButton>
+            <AppButton
+              disabled={!canGoNext}
+              icon="chevron-forward-outline"
+              style={styles.sessionNavButton}
+              theme={theme}
+              variant="outline"
+              onPress={() => {
+                const nextGroup = guidedGroups[Math.min(guidedGroups.length - 1, guidedGroupIndex + 1)];
+                setSessionEntryIndex(nextGroup?.firstIndex ?? sessionEntryIndex);
+              }}
+            >
+              {t("next")}
+            </AppButton>
+          </View>
+          <View style={styles.sessionActions}>
+            <AppButton icon="flag-outline" style={styles.sessionNavButton} theme={theme} onPress={requestFinishActiveWorkoutSession}>
+              {t("finish")}
+            </AppButton>
+            <AppButton icon="close-outline" style={styles.sessionNavButton} theme={theme} variant="outline" onPress={abandonActiveWorkoutSession}>
+              {t("cancel")}
+            </AppButton>
+          </View>
+        </View>
+      );
+    }
+
+    if (session.executionMode === "readonly-post-workout" && !isPostWorkoutFillMode) {
+      return (
+        <View style={styles.sessionScreen}>
+          {renderReadOnlyWorkoutPlan(session.planSnapshot, `active-session-${session.id}`)}
+          <AppButton icon="create-outline" theme={theme} onPress={() => setIsPostWorkoutFillMode(true)}>
+            {t("finishAndFill")}
+          </AppButton>
+          <AppButton icon="close-outline" theme={theme} variant="outline" onPress={abandonActiveWorkoutSession}>
+            {t("cancelWorkout")}
+          </AppButton>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.sessionScreen}>
+        {renderInlineWorkoutTable(session)}
+        <View style={styles.sessionActions}>
+          <AppButton icon="flag-outline" style={styles.sessionNavButton} theme={theme} onPress={requestFinishActiveWorkoutSession}>
+            {t("finish")}
+          </AppButton>
+          <AppButton icon="close-outline" style={styles.sessionNavButton} theme={theme} variant="outline" onPress={abandonActiveWorkoutSession}>
+            {t("cancel")}
+          </AppButton>
+        </View>
+      </View>
+    );
+  }
+
+  return renderWorkoutSession();
+}
+

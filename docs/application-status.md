@@ -75,7 +75,11 @@ Widok definicji treningu jest wydzielony do `WorkoutDetailScreen`. Ekran prezent
 
 Formularz Kreatora AI jest wydzielony do `WorkoutCreatorScreen`, a definicja ankiety i helpery profili do `src/domain/workoutCreator.ts`. Ekran zachowuje profile, zwijane sekcje, kontrolę salda kredytów i wszystkie fazy prezentacji, natomiast wysyłanie ankiety, polling joba, import treningów i account-scoped storage są nadal koordynowane przez `App.tsx`.
 
-Formularz modyfikowania treningu przez AI i ekran propozycji są wydzielone do `WorkoutAiScreens`. Podgląd zachowuje hierarchię etapów, serii i ćwiczeń oraz informację o dopasowaniu do katalogu. Endpoint rewrite, polling, rozliczenie kredytu, zapis jako nowy trening i zastąpienie istniejącego planu pozostają w kompozycji aplikacji.
+Formularz modyfikowania treningu przez AI i ekran propozycji mają osobne moduły `WorkoutAiRewriteScreen` oraz `WorkoutAiProposalScreen`. Podgląd zachowuje hierarchię etapów, serii i ćwiczeń oraz informację o dopasowaniu do katalogu. Endpoint rewrite, polling, rozliczenie kredytu, zapis jako nowy trening i zastąpienie istniejącego planu pozostają w kompozycji aplikacji.
+
+Warstwa prezentacyjna Ustawień jest wydzielona do `SettingsScreen` i `SettingsSheetContent`. Ekran zachowuje sekcje preferencji, treningu, przypomnień, integracji i informacji, a arkusze zachowują edycję języka, wartości domyślnych oraz godzin per dzień. Persystencja local-first, uprawnienia powiadomień i synchronizacja ustawień nadal są koordynowane przez `App.tsx`.
+
+Wszystkie widoki nawigacyjne mobile mają obecnie własne moduły w `src/screens`. Dotyczy to również homepage, listy treningów, planu tygodnia, buildera treningu, aktywnej sesji, szczegółów ćwiczenia, ulubionych ćwiczeń i artykułu. Elementy używane przez kilka ekranów zostały przeniesione do `src/components`, a typy i czyste helpery do `src/domain`. `App.tsx` pozostaje kompozytorem stanu, storage, API, synchronizacji i nawigacji; nie zawiera już pełnych implementacji ekranów.
 
 ### Logowanie i rejestracja
 

@@ -48,6 +48,50 @@ export function AppInput({ theme, style, ...props }: AppInputProps) {
   );
 }
 
+type SuffixedInputProps = {
+  editable?: boolean;
+  keyboardType?: TextInputProps["keyboardType"];
+  onChangeText: (value: string) => void;
+  placeholder?: string;
+  suffix: string;
+  theme: Theme;
+  value: string;
+};
+
+export function SuffixedInput({
+  editable = true,
+  keyboardType = "number-pad",
+  onChangeText,
+  placeholder = "0",
+  suffix,
+  theme,
+  value
+}: SuffixedInputProps) {
+  return (
+    <Input
+      style={[
+        styles.suffixedInput,
+        {
+          backgroundColor: editable ? theme.control : theme.secondaryBand,
+          borderColor: theme.border,
+          opacity: editable ? 1 : 0.72
+        }
+      ]}
+    >
+      <InputField
+        editable={editable}
+        keyboardType={keyboardType}
+        placeholder={placeholder}
+        placeholderTextColor={theme.muted}
+        style={[styles.suffixedTextInput, { color: theme.inputText }]}
+        value={value}
+        onChangeText={onChangeText}
+      />
+      <Text style={[styles.inputSuffix, { color: theme.muted }]}>{suffix}</Text>
+    </Input>
+  );
+}
+
 type PasswordInputProps = AppInputProps & {
   isVisible: boolean;
   setIsVisible: Dispatch<SetStateAction<boolean>>;

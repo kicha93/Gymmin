@@ -41,6 +41,14 @@ scripts/
   start-expo-tunnel.ps1
 ```
 
+The mobile UI is split by responsibility: route-level views live in
+`apps/mobile/src/screens`, reusable controls and view fragments in
+`apps/mobile/src/components`, domain types and pure helpers in
+`apps/mobile/src/domain`, and navigation metadata in
+`apps/mobile/src/navigation`. `apps/mobile/App.tsx` composes application
+state, account-scoped persistence, backend integrations, synchronization,
+and screen callbacks instead of containing complete screen layouts.
+
 ## Getting Started
 
 ### Mobile

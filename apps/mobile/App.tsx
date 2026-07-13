@@ -273,6 +273,8 @@ import { LegalPage } from "./src/components/LegalContent";
 import { translate, type LanguageCode, type TranslationKey } from "./src/i18n/translations";
 import { ContactScreen } from "./src/screens/ContactScreen";
 import { BugReportScreen, BugReportSuccessScreen } from "./src/screens/BugReportScreen";
+import { AccountDetailsScreen, ActiveSessionsScreen, DeleteAccountScreen } from "./src/screens/AccountScreens";
+import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { TermsScreen } from "./src/screens/TermsScreen";
 import { styles } from "./src/theme/appStyles";
 import { themes, type Theme, type ThemeName } from "./src/theme/theme";
@@ -10726,33 +10728,26 @@ function GymminApp() {
 
     const unlockedCount = unlockedAchievementProgress.length;
     const totalCount = achievementProgress.length;
-    const achievementPercent = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0;
-    const displayNameValue = getProfileDisplayName(user, t("profileUser"));
-    const emailValue = getProfileDisplayEmail(user);
 
-    const openChangePassword = () => {
-      setAuthError("");
-      setAuthMessage("");
-      setCurrentPassword("");
-      setNewPassword("");
-      setNewPasswordConfirm("");
-      setIsCurrentPasswordVisible(false);
-      setIsNewPasswordVisible(false);
-      setIsRepeatPasswordVisible(false);
-      setActiveScreen("changePassword");
-    };
-
-    const openActiveSessions = () => {
-      setAuthError("");
-      setAuthMessage("");
-      setActiveScreen("activeSessions");
-    };
-
-    const quickActions: Array<{ icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }> = [
-      {
-        icon: "server-outline",
-        label: t("aiCredits"),
-        onPress: () => {
+    return (
+      <ProfileScreen
+        achievementPercent={totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0}
+        avatarMessage={avatarMessage}
+        avatarMessageIsSuccess={avatarMessage === t("avatarUpdated") || avatarMessage === t("avatarRemoved")}
+        avatarSource={userAvatarSource}
+        canRemoveAvatar={Boolean(user.avatarUrl)}
+        displayEmail={getProfileDisplayEmail(user)}
+        displayName={getProfileDisplayName(user, t("profileUser"))}
+        isAvatarSubmitting={isAvatarSubmitting}
+        latestAchievementTitle={latestUnlockedAchievement ? getAchievementTitle(latestUnlockedAchievement) : undefined}
+        t={t}
+        theme={theme}
+        totalAchievements={totalCount}
+        unlockedAchievements={unlockedCount}
+        onChangeAvatar={changeUserAvatar}
+        onRemoveAvatar={removeUserAvatar}
+        onOpenAchievements={() => setActiveScreen("achievements")}
+        onOpenCredits={() => {
           if (!areOnlineFeaturesAvailable) {
             showOnlineFeatureUnavailableDialog();
             return;
@@ -10760,185 +10755,32 @@ function GymminApp() {
 
           setActiveScreen("aiCredits");
           void fetchAiCredits(user);
-        }
-      },
-      {
-        icon: "lock-closed-outline",
-        label: t("changePassword"),
-        onPress: openChangePassword
-      },
-      {
-        icon: "calendar-outline",
-        label: t("profileSessions"),
-        onPress: openActiveSessions
-      },
-      {
-        icon: "warning-outline",
-        label: t("bugReport"),
-        onPress: () => setActiveScreen("bugReport")
-      }
-    ];
-
-    return (
-      <View style={styles.profileScreen}>
-        <View style={[styles.profileDashboardCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={[styles.profileDashboardAvatarFrame, { backgroundColor: theme.secondaryBand }]}>
-            {userAvatarSource ? (
-              <Image
-                resizeMode="cover"
-                source={userAvatarSource}
-                style={styles.profileDashboardAvatarImage}
-              />
-            ) : (
-              <Ionicons name="person" size={52} color={theme.primary} />
-            )}
-          </View>
-          <View style={styles.profileDashboardInfo}>
-            <Text style={[styles.profileDashboardName, { color: theme.text }]} numberOfLines={2}>
-              {displayNameValue}
-            </Text>
-            <Text style={[styles.profileDashboardEmail, { color: theme.muted }]} numberOfLines={2}>
-              {emailValue}
-            </Text>
-            <View style={styles.profileDashboardAvatarActions}>
-              <AppButton
-                disabled={isAvatarSubmitting}
-                icon="image-outline"
-                style={styles.profileDashboardAvatarButton}
-                textStyle={styles.profileDashboardAvatarButtonText}
-                theme={theme}
-                variant="outline"
-                onPress={changeUserAvatar}
-              >
-                {t("changeAvatar")}
-              </AppButton>
-              {user.avatarUrl ? (
-                <AppButton
-                  disabled={isAvatarSubmitting}
-                  icon="trash-outline"
-                  style={styles.profileDashboardAvatarButton}
-                  textStyle={styles.profileDashboardAvatarButtonText}
-                  theme={theme}
-                  variant="outline"
-                  onPress={removeUserAvatar}
-                >
-                  {t("removeAvatar")}
-                </AppButton>
-              ) : null}
-            </View>
-            {avatarMessage ? (
-              <Text style={[styles.workoutMeta, { color: avatarMessage === t("avatarUpdated") || avatarMessage === t("avatarRemoved") ? theme.primary : theme.danger }]}>
-                {avatarMessage}
-              </Text>
-            ) : null}
-          </View>
-        </View>
-
-        <Pressable
-          accessibilityRole="button"
-          style={[styles.achievementSummaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-          onPress={() => setActiveScreen("achievements")}
-        >
-          <View style={[styles.achievementIcon, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="trophy-outline" size={24} color={theme.primary} />
-          </View>
-          <View style={styles.achievementCopy}>
-            <View style={styles.achievementTitleRow}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("achievements")}</Text>
-              <Text style={[styles.achievementCount, { color: theme.primary }]}>
-                {unlockedCount}/{totalCount}
-              </Text>
-            </View>
-            {renderAchievementProgressBar({
-              current: unlockedCount,
-              definition: achievementDefinitions[0],
-              percent: achievementPercent,
-              target: totalCount,
-              unlocked: false
-            })}
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-              {latestUnlockedAchievement
-                ? `${t("achievementsLast")}: ${getAchievementTitle(latestUnlockedAchievement)}`
-                : t("achievementsNothingUnlocked")}
-            </Text>
-            <View style={styles.profileAchievementLinkRow}>
-              <Text style={[styles.achievementLink, { color: theme.primary }]}>{t("achievementsViewAll")}</Text>
-              <Ionicons name="chevron-forward" size={20} color={theme.primary} />
-            </View>
-          </View>
-        </Pressable>
-
-        <View style={styles.profileQuickActionsSection}>
-          <Text style={[styles.profileSectionHeading, { color: theme.text }]}>{t("quickActions")}</Text>
-          <View style={styles.profileQuickActionsGrid}>
-            {quickActions.map((action) => (
-              <Pressable
-                key={action.label}
-                accessibilityRole="button"
-                style={[styles.profileQuickActionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                onPress={action.onPress}
-              >
-                <View style={[styles.profileQuickActionIcon, { backgroundColor: theme.secondaryBand }]}>
-                  <Ionicons name={action.icon} size={22} color={theme.primary} />
-                </View>
-                <Text style={[styles.profileQuickActionLabel, { color: theme.text }]} numberOfLines={2}>
-                  {action.label}
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color={theme.text} />
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <View style={[styles.profileAccountCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.profileSectionHeading, { color: theme.text }]}>{t("account")}</Text>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.profileAccountRow, { borderBottomColor: theme.border }]}
-            onPress={() => setActiveScreen("accountDetails")}
-          >
-            <Ionicons name="person-circle-outline" size={24} color={theme.muted} />
-            <Text style={[styles.profileAccountRowText, { color: theme.text }]}>{t("accountDetails")}</Text>
-            <Ionicons name="chevron-forward" size={20} color={theme.text} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.profileAccountRow, { borderBottomColor: theme.border }]}
-            onPress={() => setActiveScreen("activeSessions")}
-          >
-            <Ionicons name="phone-portrait-outline" size={24} color={theme.muted} />
-            <Text style={[styles.profileAccountRowText, { color: theme.text }]}>{t("activeSessions")}</Text>
-            <Ionicons name="chevron-forward" size={20} color={theme.text} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.profileAccountRow, { borderBottomColor: theme.border }]}
-            onPress={() => {
-              if (!user) {
-                showInfoDialog(t("profile"), t("deleteAccountLoginRequired"));
-                return;
-              }
-
-              setDeleteAccountConfirmation("");
-              setDeleteAccountError("");
-              setActiveScreen("deleteAccount");
-            }}
-          >
-            <Ionicons name="trash-outline" size={24} color={theme.danger} />
-            <Text style={[styles.profileAccountRowText, { color: theme.danger }]}>{t("deleteAccount")}</Text>
-            <Ionicons name="chevron-forward" size={20} color={theme.danger} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.profileAccountRow, styles.profileLogoutRow]}
-            onPress={logOut}
-          >
-            <Ionicons name="log-out-outline" size={24} color={theme.danger} />
-            <Text style={[styles.profileAccountRowText, { color: theme.danger }]}>{t("logout")}</Text>
-            <Ionicons name="chevron-forward" size={20} color={theme.danger} />
-          </Pressable>
-        </View>
-      </View>
+        }}
+        onOpenChangePassword={() => {
+          setAuthError("");
+          setAuthMessage("");
+          setCurrentPassword("");
+          setNewPassword("");
+          setNewPasswordConfirm("");
+          setIsCurrentPasswordVisible(false);
+          setIsNewPasswordVisible(false);
+          setIsRepeatPasswordVisible(false);
+          setActiveScreen("changePassword");
+        }}
+        onOpenActiveSessions={() => {
+          setAuthError("");
+          setAuthMessage("");
+          setActiveScreen("activeSessions");
+        }}
+        onOpenBugReport={() => setActiveScreen("bugReport")}
+        onOpenAccountDetails={() => setActiveScreen("accountDetails")}
+        onDeleteAccount={() => {
+          setDeleteAccountConfirmation("");
+          setDeleteAccountError("");
+          setActiveScreen("deleteAccount");
+        }}
+        onLogout={logOut}
+      />
     );
   }
 
@@ -10954,51 +10796,8 @@ function GymminApp() {
       accountName: t("accountName"),
       defaultUserName: t("defaultUserName")
     }, formatAccountDateTime);
-    const accountRowIcons: Record<(typeof accountRows)[number]["key"], keyof typeof Ionicons.glyphMap> = {
-      accountId: "finger-print-outline",
-      createdOn: "calendar-outline",
-      email: "mail-outline",
-      name: "person-outline"
-    };
 
-    return (
-      <View style={styles.profileScreen}>
-        <View style={[styles.profileAccountCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.accountDetailsHeader}>
-            <View style={[styles.profileQuickActionIcon, { backgroundColor: theme.secondaryBand }]}>
-              <Ionicons name="person-circle-outline" size={24} color={theme.primary} />
-            </View>
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.profileSectionHeading, { color: theme.text }]}>{t("accountDetails")}</Text>
-              <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("accountDetailsIntro")}</Text>
-            </View>
-          </View>
-
-          <View style={styles.accountDetailsList}>
-            {accountRows.map((row, index) => (
-              <View
-                key={row.label}
-                style={[
-                  styles.accountDetailsRow,
-                  { borderBottomColor: theme.border },
-                  index === accountRows.length - 1 ? styles.accountDetailsRowLast : null
-                ]}
-              >
-                <View style={[styles.accountDetailsIcon, { backgroundColor: theme.secondaryBand }]}>
-                  <Ionicons name={accountRowIcons[row.key]} size={19} color={theme.primary} />
-                </View>
-                <View style={styles.workoutInfo}>
-                  <Text style={[styles.accountDetailsLabel, { color: theme.muted }]}>{row.label}</Text>
-                  <Text style={[styles.accountDetailsValue, { color: theme.text }]} selectable>
-                    {row.value}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-      </View>
-    );
+    return <AccountDetailsScreen rows={accountRows} t={t} theme={theme} />;
   }
 
   function renderDeleteAccount() {
@@ -11010,71 +10809,22 @@ function GymminApp() {
     const canDelete = isDeleteAccountConfirmationValid(deleteAccountConfirmation, language);
 
     return (
-      <View style={styles.profileScreen}>
-        <View style={[styles.profileAccountCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.accountDetailsHeader}>
-            <View style={[styles.profileQuickActionIcon, { backgroundColor: theme.secondaryBand }]}>
-              <Ionicons name="trash-outline" size={24} color={theme.danger} />
-            </View>
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.profileSectionHeading, { color: theme.text }]}>{t("deleteAccount")}</Text>
-              <Text style={[styles.workoutMeta, { color: theme.danger }]}>{t("deleteAccountIrreversible")}</Text>
-            </View>
-          </View>
-
-          <Text style={[styles.workoutMeta, styles.deleteAccountCopy, { color: theme.muted }]}>
-            {t("deleteAccountCopy")}
-          </Text>
-          <Text style={[styles.workoutMeta, styles.deleteAccountCopy, { color: theme.text }]}>
-            {t("deleteAccountTypeToConfirm")}
-          </Text>
-          <AppInput
-            autoCapitalize="characters"
-            editable={!isDeletingAccount}
-            placeholder={t("deleteAccountInputPlaceholder")}
-            style={[
-              {
-                borderColor: canDelete || !deleteAccountConfirmation ? theme.border : theme.danger
-              }
-            ]}
-            theme={theme}
-            value={deleteAccountConfirmation}
-            onChangeText={setDeleteAccountConfirmation}
-          />
-          {deleteAccountError ? (
-            <Text style={[styles.authError, { color: theme.danger }]}>{deleteAccountError}</Text>
-          ) : null}
-          <View style={styles.deleteAccountActions}>
-            <AppButton
-              disabled={isDeletingAccount}
-              icon="close-outline"
-              style={styles.deleteAccountActionButton}
-              theme={theme}
-              variant="outline"
-              onPress={() => {
-                setDeleteAccountConfirmation("");
-                setDeleteAccountError("");
-                setActiveScreen("profile");
-              }}
-            >
-              {t("cancel")}
-            </AppButton>
-            <AppButton
-              disabled={!canDelete || isDeletingAccount}
-              icon="trash-outline"
-              style={[styles.deleteAccountActionButton, { backgroundColor: theme.danger }]}
-              textStyle={{ color: theme.white }}
-              theme={theme}
-              onPress={deleteAccountPermanently}
-            >
-              {isDeletingAccount ? `${t("deleteAccount")}...` : t("deleteAccountPermanent")}
-            </AppButton>
-          </View>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {language === "pl" ? `Wymagana fraza: ${confirmationPhrase}` : `Required phrase: ${confirmationPhrase}`}
-          </Text>
-        </View>
-      </View>
+      <DeleteAccountScreen
+        canDelete={canDelete}
+        confirmation={deleteAccountConfirmation}
+        confirmationPhrase={confirmationPhrase}
+        error={deleteAccountError}
+        isDeleting={isDeletingAccount}
+        t={t}
+        theme={theme}
+        onCancel={() => {
+          setDeleteAccountConfirmation("");
+          setDeleteAccountError("");
+          setActiveScreen("profile");
+        }}
+        onChangeConfirmation={setDeleteAccountConfirmation}
+        onDelete={deleteAccountPermanently}
+      />
     );
   }
 
@@ -11269,44 +11019,18 @@ function GymminApp() {
 
   function renderActiveSessions() {
     return (
-      <LegalPage
-        icon="phone-portrait-outline"
-        title={t("activeSessions")}
+      <ActiveSessionsScreen
+        error={authError}
+        fallbackDeviceName={getAuthDeviceName()}
+        formatDateTime={formatDateTime}
+        message={authMessage}
+        sessions={activeAuthSessions}
+        t={t}
         theme={theme}
-        backLabel={t("profile")}
         onBack={() => setActiveScreen("profile")}
-      >
-        <View style={styles.sessionHistoryList}>
-          {activeAuthSessions.length === 0 ? (
-            <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("noActiveSessions")}</Text>
-          ) : null}
-          {activeAuthSessions.map((session) => (
-            <View key={session.id} style={[styles.sessionEntryCard, { backgroundColor: theme.control, borderColor: theme.border }]}>
-              <Text style={[styles.workoutName, { color: theme.text }]}>
-                {session.deviceName && session.deviceName.toLowerCase() !== "unknown device"
-                  ? session.deviceName
-                  : session.isCurrent
-                    ? getAuthDeviceName()
-                    : t("unknownDevice")} {session.isCurrent ? `· ${t("thisSession")}` : ""}
-              </Text>
-              <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                {t("lastActivity")}: {formatDateTime(session.lastSeenAt)}
-              </Text>
-              <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                {t("expires")}: {formatDateTime(session.expiresAt)}
-              </Text>
-              <AppButton icon="log-out-outline" theme={theme} variant="outline" onPress={() => void revokeAuthSession(session.id)}>
-                {t("signOutThisSession")}
-              </AppButton>
-            </View>
-          ))}
-        </View>
-        {authError ? <Text style={[styles.authError, { color: theme.danger }]}>{authError}</Text> : null}
-        {authMessage ? <Text style={[styles.legalText, { color: theme.primary }]}>{authMessage}</Text> : null}
-        <AppButton icon="log-out-outline" theme={theme} onPress={logoutAllAuthSessions}>
-          {t("signOutAllSessions")}
-        </AppButton>
-      </LegalPage>
+        onLogoutAll={logoutAllAuthSessions}
+        onRevoke={(sessionId) => void revokeAuthSession(sessionId)}
+      />
     );
   }
 

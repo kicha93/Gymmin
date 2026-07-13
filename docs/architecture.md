@@ -50,7 +50,8 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/components/AppControls.tsx` zawiera współdzielone kontrolki formularzy i wyboru,
 - `src/components/WorkoutSessionControls.tsx` zawiera kontrolki aktywnej sesji, czasu i timera odpoczynku,
 - `src/components/LegalContent.tsx` zawiera wspólną obudowę treści prawnych i accordion FAQ,
-- `src/screens` zawiera wydzielane ekrany funkcjonalne; obecnie są tam Regulamin, Kontakt, zgłaszanie błędów, Profil z ekranami konta oraz formularze logowania, rejestracji, resetu i zmiany hasła,
+- `src/screens` zawiera wydzielane ekrany funkcjonalne; obecnie są tam Regulamin, Kontakt, zgłaszanie błędów, Profil z ekranami konta, Osiągnięcia oraz formularze logowania, rejestracji, resetu i zmiany hasła,
+- `src/screens/AchievementsScreen.tsx` odpowiada za prezentację osiągnięć, lokalne filtry i podgląd grafik; obliczanie metryk, trwałe odblokowania i synchronizacja pozostają w warstwie domenowej oraz kompozycji aplikacji,
 - `src/domain` pozostaje miejscem dla logiki domenowej i testowalnych helperów niezależnych od UI.
 
 Ten podział ogranicza rozmiar pliku głównego bez zmiany publicznych kontraktów, storage ani modelu danych. Kolejne ekrany mogą być wydzielane stopniowo z `App.tsx` do modułów funkcjonalnych.

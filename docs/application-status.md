@@ -50,6 +50,7 @@ Aplikacja ma prostą nawigację opartą o stan aktywnego ekranu. Główne widoki
 - Wykonywanie treningu.
 - Historia treningów.
 - Progres.
+- Osiągnięcia.
 - Ulubione ćwiczenia.
 - Artykuły.
 - Regulamin.
@@ -58,6 +59,8 @@ Aplikacja ma prostą nawigację opartą o stan aktywnego ekranu. Główne widoki
 - Profil / Logowanie.
 
 Android back button jest obsłużony i prowadzi użytkownika krokami w stronę ekranu głównego.
+
+Warstwa widoku Osiągnięć jest wydzielona z głównego `App.tsx`: ekran utrzymuje lokalny filtr `Wszystkie/Odblokowane/Zablokowane`, sortuje odblokowane po dacie i obsługuje pełnoekranowy podgląd grafik. Metryki, zapis per konto, synchronizacja i toast po lokalnym odblokowaniu nadal korzystają z istniejącego systemu domenowego.
 
 ### Logowanie i rejestracja
 

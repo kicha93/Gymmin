@@ -2627,32 +2627,6 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20
   },
-  achievementPreviewPanel: {
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 16,
-    maxWidth: 420,
-    padding: 16,
-    width: "100%"
-  },
-  achievementPreviewHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "space-between"
-  },
-  achievementPreviewTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: "900"
-  },
-  achievementPreviewCloseButton: {
-    alignItems: "center",
-    borderRadius: 18,
-    height: 36,
-    justifyContent: "center",
-    width: 36
-  },
   achievementPreviewImage: {
     alignSelf: "center",
     aspectRatio: 1,

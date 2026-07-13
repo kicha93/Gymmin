@@ -32,7 +32,7 @@ import {
   View,
   useWindowDimensions
 } from "react-native";
-import type { ImageSourcePropType, SectionListData, SectionListRenderItemInfo, StyleProp, TextInputProps, ViewStyle } from "react-native";
+import type { SectionListData, SectionListRenderItemInfo, StyleProp, TextInputProps, ViewStyle } from "react-native";
 
 import { BUILD_API_BASE_URL } from "./src/config/buildConfig";
 import { exerciseImageSources } from "./src/exerciseImageSources";
@@ -56,7 +56,6 @@ import {
   saveAppUsageStats,
   saveAchievementsSyncState,
   saveUserAchievements,
-  type AchievementProgress,
   type AchievementsSyncState,
   type AppUsageStats,
   type UserAchievement
@@ -280,6 +279,7 @@ import {
   type AuthMode
 } from "./src/screens/AuthScreens";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
+import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { TermsScreen } from "./src/screens/TermsScreen";
 import { styles } from "./src/theme/appStyles";
 import { themes, type Theme, type ThemeName } from "./src/theme/theme";
@@ -1812,8 +1812,6 @@ type ScreenKey =
   | "workoutSession"
   | "weeklyPlan";
 type WorkoutHistoryStatusFilter = "all" | "completed" | "active";
-type AchievementFilter = "all" | "unlocked" | "locked";
-
 type AppDialogAction = {
   label: string;
   onPress?: () => void;
@@ -2230,39 +2228,6 @@ const defaultCollapsedPanels: Record<string, boolean> = {
   "settings-training": true
 };
 
-const achievementImageSources: Record<string, ImageSourcePropType> = {
-  "fifty-training-hours": require("./assets/achievements/fifty-training-hours.png"),
-  "fifty-tons-volume": require("./assets/achievements/fifty-tons-volume.png"),
-  "fifty-two-week-streak": require("./assets/achievements/fifty-two-week-streak.png"),
-  "fifty-unique-exercises": require("./assets/achievements/fifty-unique-exercises.png"),
-  "fifty-workouts": require("./assets/achievements/fifty-workouts.png"),
-  "first-workout": require("./assets/achievements/first-workout.png"),
-  "five-hundred-tons-volume": require("./assets/achievements/five-hundred-tons-volume.png"),
-  "five-hundred-workouts": require("./assets/achievements/five-hundred-workouts.png"),
-  "five-workouts": require("./assets/achievements/five-workouts.png"),
-  "five-workouts-single-week": require("./assets/achievements/five-workouts-single-week.png"),
-  "hundred-training-days": require("./assets/achievements/hundred-training-days.png"),
-  "hundred-training-hours": require("./assets/achievements/hundred-training-hours.png"),
-  "hundred-tons-volume": require("./assets/achievements/hundred-tons-volume.png"),
-  "hundred-unique-exercises": require("./assets/achievements/hundred-unique-exercises.png"),
-  "hundred-workouts": require("./assets/achievements/hundred-workouts.png"),
-  "one-ton-volume": require("./assets/achievements/one-ton-volume.png"),
-  "seven-training-days": require("./assets/achievements/seven-training-days.png"),
-  "ten-app-hours": require("./assets/achievements/ten-app-hours.png"),
-  "ten-training-hours": require("./assets/achievements/ten-training-hours.png"),
-  "ten-tons-volume": require("./assets/achievements/ten-tons-volume.png"),
-  "ten-unique-exercises": require("./assets/achievements/ten-unique-exercises.png"),
-  "ten-workouts": require("./assets/achievements/ten-workouts.png"),
-  "thirty-training-days": require("./assets/achievements/thirty-training-days.png"),
-  "thirty-unique-exercises": require("./assets/achievements/thirty-unique-exercises.png"),
-  "three-week-streak": require("./assets/achievements/three-week-streak.png"),
-  "three-workouts-single-week": require("./assets/achievements/three-workouts-single-week.png"),
-  "twelve-week-streak": require("./assets/achievements/twelve-week-streak.png"),
-  "twenty-five-workouts": require("./assets/achievements/twenty-five-workouts.png"),
-  "two-hundred-fifty-tons-volume": require("./assets/achievements/two-hundred-fifty-tons-volume.png"),
-  "two-hundred-fifty-workouts": require("./assets/achievements/two-hundred-fifty-workouts.png")
-};
-
 export default function App() {
   return (
     <GluestackUIProvider config={gluestackConfig}>
@@ -2379,11 +2344,6 @@ function GymminApp() {
   const [appUsageStats, setAppUsageStats] = useState<AppUsageStats>(() => getDefaultAppUsageStats());
   const [achievementsSyncState, setAchievementsSyncState] = useState<AchievementsSyncState>({});
   const [achievementToast, setAchievementToast] = useState<{ title: string; extraCount: number } | null>(null);
-  const [achievementFilter, setAchievementFilter] = useState<AchievementFilter>("all");
-  const [selectedAchievementPreview, setSelectedAchievementPreview] = useState<{
-    imageSource: ImageSourcePropType;
-    title: string;
-  } | null>(null);
   const [hasLoadedAchievements, setHasLoadedAchievements] = useState(false);
   const [loadedAchievementsOwnerId, setLoadedAchievementsOwnerId] = useState<string | null>(null);
   const [isAuthActionSubmitting, setIsAuthActionSubmitting] = useState(false);
@@ -7594,151 +7554,6 @@ function GymminApp() {
     setActiveScreen("exerciseProgress");
   }
 
-  function getAchievementIconName(iconKey?: string): keyof typeof Ionicons.glyphMap {
-    const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
-      barbell: "barbell-outline",
-      calendar: "calendar-outline",
-      "calendar-number": "calendar-number-outline",
-      compass: "compass-outline",
-      construct: "construct-outline",
-      cube: "cube-outline",
-      fitness: "fitness-outline",
-      flame: "flame-outline",
-      hammer: "hammer-outline",
-      hourglass: "hourglass-outline",
-      layers: "layers-outline",
-      library: "library-outline",
-      medal: "medal-outline",
-      "phone-portrait": "phone-portrait-outline",
-      pulse: "pulse-outline",
-      ribbon: "ribbon-outline",
-      shield: "shield-checkmark-outline",
-      trophy: "trophy-outline",
-      "trending-up": "trending-up-outline"
-    };
-
-    return iconKey ? icons[iconKey] ?? "trophy-outline" : "trophy-outline";
-  }
-
-  function getAchievementImageSource(imageKey?: string) {
-    return imageKey ? achievementImageSources[imageKey] : undefined;
-  }
-
-  function formatAchievementValue(value: number, unit: AchievementProgress["definition"]["unit"]) {
-    const safeValue = Math.max(0, value);
-    if (unit === "tons") {
-      return safeValue >= 10 ? safeValue.toFixed(0) : safeValue.toFixed(1).replace(/\.0$/, "");
-    }
-
-    if (unit === "hours") {
-      return safeValue >= 10 ? safeValue.toFixed(0) : safeValue.toFixed(1).replace(/\.0$/, "");
-    }
-
-    if (unit === "minutes") {
-      return Math.floor(safeValue).toString();
-    }
-
-    return Math.floor(safeValue).toString();
-  }
-
-  function getAchievementTitle(progress: AchievementProgress) {
-    return progress.definition.title[language];
-  }
-
-  function getAchievementDescription(progress: AchievementProgress) {
-    return progress.definition.description[language];
-  }
-
-  function renderAchievementProgressBar(progress: AchievementProgress) {
-    return (
-      <View style={[styles.achievementProgressTrack, { backgroundColor: theme.secondaryBand }]}>
-        <View
-          style={[
-            styles.achievementProgressFill,
-            {
-              backgroundColor: progress.unlocked ? theme.primary : theme.muted,
-              width: `${Math.max(0, Math.min(100, progress.percent))}%`
-            }
-          ]}
-        />
-      </View>
-    );
-  }
-
-  function renderAchievementCard(progress: AchievementProgress) {
-    const title = getAchievementTitle(progress);
-    const description = getAchievementDescription(progress);
-    const current = formatAchievementValue(Math.min(progress.current, progress.target), progress.definition.unit);
-    const target = formatAchievementValue(progress.target, progress.definition.unit);
-    const imageSource = getAchievementImageSource(progress.definition.imageKey);
-
-    return (
-      <View
-        key={progress.definition.id}
-        style={[
-          styles.achievementCard,
-          {
-            backgroundColor: theme.card,
-            borderColor: progress.unlocked ? theme.primary : theme.border
-          }
-        ]}
-      >
-        <View style={imageSource ? styles.achievementImageSlot : [styles.achievementIcon, { backgroundColor: theme.secondaryBand }]}>
-          {imageSource ? (
-            <Pressable
-              accessibilityLabel={title}
-              accessibilityRole="imagebutton"
-              hitSlop={8}
-              onPress={() => setSelectedAchievementPreview({ imageSource, title })}
-            >
-              <Image
-                accessibilityIgnoresInvertColors
-                resizeMode="contain"
-                source={imageSource}
-                style={[
-                  styles.achievementImage,
-                  { opacity: progress.unlocked ? 1 : 0.48 }
-                ]}
-              />
-            </Pressable>
-          ) : (
-            <Ionicons
-              name={getAchievementIconName(progress.definition.iconKey)}
-              size={24}
-              color={progress.unlocked ? theme.primary : theme.muted}
-            />
-          )}
-        </View>
-        <View style={styles.achievementCopy}>
-          <View style={styles.achievementTitleRow}>
-            <Text style={[styles.workoutName, { color: theme.text }]}>{title}</Text>
-            <Text style={[styles.achievementStatus, { color: progress.unlocked ? theme.primary : theme.muted }]}>
-              {progress.unlocked ? t("achievementUnlockedStatus") : t("achievementLockedStatus")}
-            </Text>
-          </View>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>{description}</Text>
-          <View style={styles.achievementProgressRow}>
-            {progress.unlocked ? (
-              <Text style={[styles.workoutMeta, { color: theme.primary }]}>
-                {t("achievementUnlockedStatus")}
-              </Text>
-            ) : (
-              <Text style={[styles.workoutMeta, { color: theme.text }]}>
-                {current} / {target}
-              </Text>
-            )}
-            {progress.unlockedAt ? (
-              <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                {t("unlockedAt")}: {formatDateTime(progress.unlockedAt)}
-              </Text>
-            ) : null}
-          </View>
-          {renderAchievementProgressBar(progress)}
-        </View>
-      </View>
-    );
-  }
-
   function openExerciseDetail(step: WorkoutStep) {
     setSelectedExerciseDetailStep(step);
     setExerciseDetailMuscleSide("front");
@@ -10743,7 +10558,7 @@ function GymminApp() {
         displayEmail={getProfileDisplayEmail(user)}
         displayName={getProfileDisplayName(user, t("profileUser"))}
         isAvatarSubmitting={isAvatarSubmitting}
-        latestAchievementTitle={latestUnlockedAchievement ? getAchievementTitle(latestUnlockedAchievement) : undefined}
+        latestAchievementTitle={latestUnlockedAchievement?.definition.title[language]}
         t={t}
         theme={theme}
         totalAchievements={totalCount}
@@ -10829,79 +10644,6 @@ function GymminApp() {
         onChangeConfirmation={setDeleteAccountConfirmation}
         onDelete={deleteAccountPermanently}
       />
-    );
-  }
-
-  function renderAchievements() {
-    const filters: Array<{ label: string; value: AchievementFilter }> = [
-      { label: t("achievementsAll"), value: "all" },
-      { label: t("achievementsUnlocked"), value: "unlocked" },
-      { label: t("achievementsLocked"), value: "locked" }
-    ];
-    const filteredAchievements = achievementProgress.filter((item) => {
-      if (achievementFilter === "unlocked") {
-        return item.unlocked;
-      }
-
-      if (achievementFilter === "locked") {
-        return !item.unlocked;
-      }
-
-      return true;
-    }).sort((left, right) => {
-      if (achievementFilter === "all" && left.unlocked !== right.unlocked) {
-        return left.unlocked ? -1 : 1;
-      }
-
-      if (left.unlocked && right.unlocked) {
-        return Date.parse(right.unlockedAt ?? "") - Date.parse(left.unlockedAt ?? "");
-      }
-
-      return left.definition.sortOrder - right.definition.sortOrder;
-    });
-
-    return (
-      <View style={styles.profileScreen}>
-        <View style={[styles.legalPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.legalContent}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              {unlockedAchievementProgress.length}/{achievementProgress.length} {t("achievementsUnlocked").toLowerCase()}
-            </Text>
-            {renderAchievementProgressBar({
-              current: unlockedAchievementProgress.length,
-              definition: achievementDefinitions[0],
-              percent: achievementProgress.length ? (unlockedAchievementProgress.length / achievementProgress.length) * 100 : 0,
-              target: achievementProgress.length,
-              unlocked: false
-            })}
-          </View>
-        </View>
-
-        <View style={styles.segmentedControl}>
-          {filters.map((filter) => {
-            const selected = achievementFilter === filter.value;
-            return (
-              <Pressable
-                key={filter.value}
-                accessibilityRole="button"
-                style={[
-                  styles.segmentButton,
-                  { backgroundColor: selected ? theme.primary : theme.segment }
-                ]}
-                onPress={() => setAchievementFilter(filter.value)}
-              >
-                <Text style={[styles.segmentButtonText, { color: selected ? theme.white : theme.text }]}>
-                  {filter.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <View style={styles.achievementList}>
-          {filteredAchievements.map(renderAchievementCard)}
-        </View>
-      </View>
     );
   }
 
@@ -12259,35 +12001,6 @@ function GymminApp() {
     );
   }
 
-  function renderAchievementPreviewModal() {
-    if (!selectedAchievementPreview) {
-      return null;
-    }
-
-    return (
-      <Modal
-        animationType="fade"
-        transparent
-        visible={Boolean(selectedAchievementPreview)}
-        onRequestClose={() => setSelectedAchievementPreview(null)}
-      >
-        <Pressable
-          accessibilityLabel={t("close")}
-          accessibilityRole="button"
-          style={styles.achievementPreviewBackdrop}
-          onPress={() => setSelectedAchievementPreview(null)}
-        >
-          <Image
-            accessibilityIgnoresInvertColors
-            resizeMode="contain"
-            source={selectedAchievementPreview.imageSource}
-            style={styles.achievementPreviewImage}
-          />
-        </Pressable>
-      </Modal>
-    );
-  }
-
   if (isAppLoading) {
     return (
       <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]}>
@@ -12442,7 +12155,15 @@ function GymminApp() {
             {activeScreen === "exerciseProgress" && renderExerciseProgressScreen()}
             {activeScreen === "favoriteExercises" && renderFavoriteExercises()}
             {activeScreen === "aiCredits" && renderAiCredits()}
-            {activeScreen === "achievements" && renderAchievements()}
+            {activeScreen === "achievements" && (
+              <AchievementsScreen
+                formatDateTime={formatDateTime}
+                language={language}
+                progress={achievementProgress}
+                t={t}
+                theme={theme}
+              />
+            )}
             {activeScreen === "terms" && renderTerms()}
             {activeScreen === "contact" && renderContact()}
             {activeScreen === "bugReport" && renderBugReport()}
@@ -12595,7 +12316,6 @@ function GymminApp() {
           }}
         />
         {renderWorkoutSortSheet()}
-        {renderAchievementPreviewModal()}
         {renderAppDialog()}
     </SafeAreaView>
   );

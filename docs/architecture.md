@@ -42,6 +42,17 @@ Mobile odpowiada za:
 - integrację z backendem,
 - import wyników AI.
 
+Kod mobile jest dzielony według odpowiedzialności:
+
+- `App.tsx` pozostaje głównym miejscem kompozycji ekranów, nawigacji i stanu aplikacji,
+- `src/i18n/translations.ts` zawiera typowane tłumaczenia PL/EN oraz helper `translate`,
+- `src/theme/theme.ts` i `src/theme/appStyles.ts` zawierają motywy oraz wspólne style,
+- `src/components/AppControls.tsx` zawiera współdzielone kontrolki formularzy i wyboru,
+- `src/components/WorkoutSessionControls.tsx` zawiera kontrolki aktywnej sesji, czasu i timera odpoczynku,
+- `src/domain` pozostaje miejscem dla logiki domenowej i testowalnych helperów niezależnych od UI.
+
+Ten podział ogranicza rozmiar pliku głównego bez zmiany publicznych kontraktów, storage ani modelu danych. Kolejne ekrany mogą być wydzielane stopniowo z `App.tsx` do modułów funkcjonalnych.
+
 ### Local storage
 
 Mobile używa account-scoped AsyncStorage.

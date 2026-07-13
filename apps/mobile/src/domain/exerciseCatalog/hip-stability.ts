@@ -629,7 +629,7 @@ export const hipStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "hip-stability-quadruped-462",
@@ -1322,6 +1322,6 @@ export const hipStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   }
 ] satisfies readonly Exercise[];

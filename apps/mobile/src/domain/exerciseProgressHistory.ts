@@ -40,9 +40,17 @@ export function formatExerciseProgressSeriesValue(
   const repetitions = reps?.trim() ? `${reps.trim()} ${language === "pl" ? "powt." : "reps"}` : "—";
   const load = weight?.trim() ? `${weight.trim()} kg` : "—";
   const volumeLabel = language === "pl" ? "obj." : "vol.";
-  const displayedVolume = volume !== null && Number.isFinite(volume) && volume > 0 ? `${volume} kg` : "—";
+  const displayedVolume = volume !== null && Number.isFinite(volume) && volume > 0
+    ? `${formatExerciseProgressDecimal(volume, language)} kg`
+    : "—";
 
   return { load, repetitions, volume: `${volumeLabel} ${displayedVolume}` };
+}
+
+function formatExerciseProgressDecimal(value: number, language: "pl" | "en") {
+  const rounded = Math.round((value + Number.EPSILON) * 10) / 10;
+  const formatted = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return language === "pl" ? formatted.replace(".", ",") : formatted;
 }
 
 function getGroupKey(result: ExerciseProgressResult, exerciseKey: string) {

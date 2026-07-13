@@ -49,11 +49,13 @@ export function normalizeWeeklyPlanSettings(value: unknown, now = new Date()): W
       }
       const value = item as Partial<WeeklyPlanItem>;
       const workoutId = typeof value.workoutId === "string" ? value.workoutId.trim() : "";
-      if (!workoutId || seen.has(workoutId) || !weeklyPlanDays.includes(value.day as WeeklyPlanDay)) {
+      const day = value.day as WeeklyPlanDay;
+      const uniqueKey = `${workoutId}:${day}`;
+      if (!workoutId || seen.has(uniqueKey) || !weeklyPlanDays.includes(day)) {
         return [];
       }
-      seen.add(workoutId);
-      return [{ workoutId, day: value.day as WeeklyPlanDay, order: Number.isFinite(value.order) ? Number(value.order) : index }];
+      seen.add(uniqueKey);
+      return [{ workoutId, day, order: Number.isFinite(value.order) ? Number(value.order) : index }];
     })
     : [];
 
@@ -134,10 +136,34 @@ export function getWeeklyPlanSummary(
   const workoutById = new Map(workouts.map((workout) => [workout.id, workout]));
   const range = getCurrentWeekRange(now);
   const currentDay = getWeeklyPlanDay(now);
-  const items = normalizeWeeklyPlanSettings(plan, now).items
+  const normalizedItems = normalizeWeeklyPlanSettings(plan, now).items;
+  const completedSessionsByWorkoutId = new Map<string, number>();
+  for (const session of sessions) {
+    if (session.status !== "completed" || session.deletedAt) {
+      continue;
+    }
+    const startedAt = new Date(session.startedAt);
+    if (Number.isNaN(startedAt.getTime()) || startedAt < range.start || startedAt > range.end) {
+      continue;
+    }
+    const matchingWorkout = workouts.find((workout) => sessionMatchesWorkout(session, workout.id));
+    if (matchingWorkout) {
+      completedSessionsByWorkoutId.set(matchingWorkout.id, (completedSessionsByWorkoutId.get(matchingWorkout.id) ?? 0) + 1);
+    }
+  }
+  const consumedCompletionsByWorkoutId = new Map<string, number>();
+  const items = normalizedItems
     .flatMap((item) => {
       const workout = workoutById.get(item.workoutId);
-      return workout ? [{ ...item, workout, completed: isWeeklyPlanWorkoutCompleted(item, sessions, range) }] : [];
+      if (!workout) {
+        return [];
+      }
+      const consumed = consumedCompletionsByWorkoutId.get(item.workoutId) ?? 0;
+      const completed = consumed < (completedSessionsByWorkoutId.get(item.workoutId) ?? 0);
+      if (completed) {
+        consumedCompletionsByWorkoutId.set(item.workoutId, consumed + 1);
+      }
+      return [{ ...item, workout, completed }];
     });
   const completed = items.filter((item) => item.completed).length;
   const total = items.length;
@@ -153,16 +179,23 @@ export function getWeeklyPlanSummary(
 
 export function upsertWeeklyPlanItem(plan: WeeklyPlanSettings, workoutId: string, day: WeeklyPlanDay, now = new Date()): WeeklyPlanSettings {
   const normalized = normalizeWeeklyPlanSettings(plan, now);
-  const existingIndex = normalized.items.findIndex((item) => item.workoutId === workoutId);
-  const items = existingIndex >= 0
-    ? normalized.items.map((item, index) => index === existingIndex ? { ...item, day } : item)
+  const alreadyPlanned = normalized.items.some((item) => item.workoutId === workoutId && item.day === day);
+  const items = alreadyPlanned
+    ? normalized.items
     : [...normalized.items, { workoutId, day, order: normalized.items.length }];
   return { enabled: items.length > 0, items, updatedAt: now.toISOString() };
 }
 
-export function removeWeeklyPlanItem(plan: WeeklyPlanSettings, workoutId: string, now = new Date()): WeeklyPlanSettings {
+export function removeWeeklyPlanItem(plan: WeeklyPlanSettings, workoutId: string, day?: WeeklyPlanDay, now = new Date()): WeeklyPlanSettings {
   const items = normalizeWeeklyPlanSettings(plan, now).items
-    .filter((item) => item.workoutId !== workoutId)
+    .filter((item) => item.workoutId !== workoutId || (day !== undefined && item.day !== day))
     .map((item, index) => ({ ...item, order: index }));
   return { enabled: items.length > 0, items, updatedAt: now.toISOString() };
+}
+
+export function toggleWeeklyPlanItemDay(plan: WeeklyPlanSettings, workoutId: string, day: WeeklyPlanDay, now = new Date()) {
+  const normalized = normalizeWeeklyPlanSettings(plan, now);
+  return normalized.items.some((item) => item.workoutId === workoutId && item.day === day)
+    ? removeWeeklyPlanItem(normalized, workoutId, day, now)
+    : upsertWeeklyPlanItem(normalized, workoutId, day, now);
 }

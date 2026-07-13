@@ -194,6 +194,27 @@ public sealed class EfUserStore : IUserStore
             .ToList();
     }
 
+    public bool UpdateSessionMetadata(string userId, string sessionId, AuthRequestMetadata metadata)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var session = db.UserSessions.FirstOrDefault(item => item.UserId == userId && item.Id == sessionId);
+        var deviceName = !string.IsNullOrWhiteSpace(metadata.DeviceName)
+            ? NormalizeDeviceName(metadata.DeviceName, null)
+            : NeedsDeviceNameRepair(session?.DeviceName)
+                ? NormalizeDeviceName(null, metadata.UserAgent)
+                : null;
+        if (session is null || string.IsNullOrWhiteSpace(deviceName))
+        {
+            return false;
+        }
+
+        session.DeviceName = deviceName;
+        session.UserAgent = string.IsNullOrWhiteSpace(metadata.UserAgent) ? session.UserAgent : metadata.UserAgent;
+        session.LastIpAddress = string.IsNullOrWhiteSpace(metadata.IpAddress) ? session.LastIpAddress : metadata.IpAddress;
+        db.SaveChanges();
+        return true;
+    }
+
     public bool RevokeSession(string userId, string sessionId, string reason)
     {
         using var db = _dbFactory.CreateDbContext();
@@ -399,7 +420,7 @@ public sealed class EfUserStore : IUserStore
     {
         if (!string.IsNullOrWhiteSpace(deviceName))
         {
-            return deviceName.Trim();
+            return deviceName.Trim()[..Math.Min(deviceName.Trim().Length, 120)];
         }
 
         if (string.IsNullOrWhiteSpace(userAgent))
@@ -407,7 +428,8 @@ public sealed class EfUserStore : IUserStore
             return null;
         }
 
-        if (userAgent.Contains("Android", StringComparison.OrdinalIgnoreCase))
+        if (userAgent.Contains("Android", StringComparison.OrdinalIgnoreCase) ||
+            userAgent.Contains("okhttp", StringComparison.OrdinalIgnoreCase))
         {
             return "Android";
         }
@@ -420,4 +442,8 @@ public sealed class EfUserStore : IUserStore
 
         return "Unknown device";
     }
+
+    private static bool NeedsDeviceNameRepair(string? deviceName) =>
+        string.IsNullOrWhiteSpace(deviceName) ||
+        deviceName.Equals("Unknown device", StringComparison.OrdinalIgnoreCase);
 }

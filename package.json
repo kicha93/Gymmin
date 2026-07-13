@@ -20,6 +20,7 @@
     "exercise:catalog:audit": "node scripts/audit-exercise-catalog.mjs",
     "exercise:catalog:validate": "node scripts/validate-exercise-catalog.mjs",
     "exercise:catalog:export": "node scripts/export-exercise-summary.mjs",
-    "exercise:catalog:report": "node scripts/generate-exercise-refactor-report.mjs"
+    "exercise:catalog:report": "node scripts/generate-exercise-refactor-report.mjs",
+    "exercise:catalog:audit:phase2": "node scripts/audit-exercise-catalog-phase2.mjs"
   }
 }

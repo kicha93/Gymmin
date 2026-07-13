@@ -1826,7 +1826,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-plank-with-knee-to-elbow-758",
@@ -2582,7 +2582,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-side-plank-with-feet-on-bench-770",
@@ -2960,7 +2960,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-single-leg-flex-and-extend-776",
@@ -3023,7 +3023,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-single-leg-side-plank-777",
@@ -3086,7 +3086,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-spiderman-plank-778",
@@ -3338,7 +3338,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-swiss-ball-plank-leg-lift-782",
@@ -3401,7 +3401,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-swiss-ball-plank-leg-lift-and-hold-783",
@@ -3464,7 +3464,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-swiss-ball-plank-with-feet-on-bench-784",
@@ -3527,7 +3527,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-swiss-ball-prone-jackknife-785",
@@ -3590,7 +3590,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-swiss-ball-side-plank-786",
@@ -3653,7 +3653,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-t-stabilization-787",
@@ -3905,7 +3905,7 @@ export const plank = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "plank-two-point-plank-791",

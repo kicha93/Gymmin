@@ -62,7 +62,7 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-alternating-hands-medicine-ball-push-up-943",
@@ -125,7 +125,7 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-biceps-push-up-945",
@@ -377,7 +377,7 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-close-hands-push-up-950",
@@ -692,7 +692,7 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-explosive-push-up-955",
@@ -944,7 +944,7 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "push-up-hindu-push-up-959",
@@ -1574,7 +1574,7 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-parallette-handstand-push-up-969",
@@ -1637,7 +1637,7 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "push-up-pike-push-up-970",
@@ -2015,7 +2015,7 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "push-up-ring-push-up-977",
@@ -2267,7 +2267,7 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-spiderman-push-up-981",
@@ -2456,7 +2456,7 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-suspended-push-up-984",
@@ -2771,6 +2771,6 @@ export const pushUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

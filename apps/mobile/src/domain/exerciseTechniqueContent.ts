@@ -1,3 +1,5 @@
+import { resolveExerciseId } from "./exercises";
+
 export type LocalizedExerciseText = {
   pl: string;
   en: string;
@@ -91173,5 +91175,5 @@ export const exerciseTechniqueContentById: Record<string, ExerciseTechniqueConte
 };
 
 export function getExerciseTechniqueContent(exerciseId: string): ExerciseTechniqueContent | undefined {
-  return exerciseTechniqueContentById[exerciseId];
+  return exerciseTechniqueContentById[resolveExerciseId(exerciseId)];
 }

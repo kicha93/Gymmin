@@ -11,7 +11,5 @@ export const exerciseIdAliasMap = {
   "curl-standing-alternating-dumbbell-curls-362": "curl-alternating-dumbbell-biceps-curl-323",
   "crunch-cable-crunch-238": "crunch-kneeling-cable-crunch-255",
   "triceps-extension-reverse-grip-pressdown-1414": "triceps-extension-reverse-grip-triceps-pressdown-1415",
-  "calf-raise-calf-raise-107": "calf-raise-standing-calf-raise-118",
-  "stage2-back-extension": "hyperextension-hyperextension-496",
-  "curl-dead-hang-biceps-curl-337": "curl-ez-bar-preacher-curl-344"
+  "calf-raise-calf-raise-107": "calf-raise-standing-calf-raise-118"
 } as const;

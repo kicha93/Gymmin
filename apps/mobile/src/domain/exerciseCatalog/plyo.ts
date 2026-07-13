@@ -62,7 +62,7 @@ export const plyo = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "plyo-body-weight-jump-squat-861",

@@ -189,7 +189,7 @@ Backend odpowiada za:
 - rejestrację i logowanie,
 - bearer token validation,
 - settings sync,
-- per-user workout table orientation in settings; `horizontal` widens workout tables for landscape use while screen rotation is handled by the device/system auto-rotate setting,
+- native device orientation for workout tables; current window dimensions drive responsive table widths while legacy orientation settings remain readable for compatibility,
 - workouts CRUD i sync,
 - favorite exercises sync,
 - workout sessions sync,
@@ -360,7 +360,7 @@ Powody:
 
 Katalog jest podzielony na pliki w `apps/mobile/src/domain/exerciseCatalog`. Stabilnym kluczem pozostaje `exercise.id`. Scalone rekordy nie są przepisywane w historycznych payloadach; `exerciseIdAliases.ts` rozwiązuje stare ID w runtime, a normalizacja historii i ulubionych grupuje je pod ID kanonicznym. Alias nazw jest rozwiązywany łańcuchowo, co zachowuje kompatybilność z wcześniejszymi etapami czyszczenia.
 
-`garminCategory` nadal jest kompatybilną kategorią filtrowania. Nie wdrożono połowicznej migracji do osobnych `movementPattern` i `mechanic`; rekomendowany model pozostaje opisany w raporcie katalogu. `libraryTier` kontroluje widoczność rekordów specjalistycznych bez usuwania ich z danych historycznych.
+`garminCategory` nadal jest kompatybilną kategorią filtrowania. Audyt kontrolny wydzielił osobne rodziny `FRONT_RAISE`, `STEP_UP`, `GOOD_MORNING` i `ROPE_CLIMB`, zamiast przypisywać je do podobnych, lecz biomechanicznie innych kategorii. Nie wdrożono połowicznej migracji do osobnych `movementPattern` i `mechanic`; rekomendowany model pozostaje opisany w raporcie katalogu. `libraryTier` kontroluje widoczność rekordów specjalistycznych bez usuwania ich z danych historycznych, a `resolveExerciseId` kanonizuje stare ID na granicach odczytu mobile.
 
 AI import i AI rewrite próbują best-effort mapować nazwę ćwiczenia do katalogowego `exerciseId`. Brak dopasowania nie tworzy custom exercise.
 

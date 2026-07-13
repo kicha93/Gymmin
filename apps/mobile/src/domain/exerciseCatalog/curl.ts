@@ -62,7 +62,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-alternating-dumbbell-biceps-curl-on-swiss-ball-324",
@@ -125,7 +125,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-alternating-incline-dumbbell-biceps-curl-325",
@@ -188,7 +188,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-barbell-biceps-curl-326",
@@ -251,7 +251,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-barbell-reverse-wrist-curl-327",
@@ -503,7 +503,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-cable-biceps-curl-331",
@@ -692,7 +692,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "main"
   },
   {
     "id": "curl-close-grip-ez-bar-biceps-curl-334",
@@ -755,7 +755,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-cross-body-dumbbell-hammer-curl-335",
@@ -819,6 +819,69 @@ export const curl = [
       "weightVest": 0
     },
     "libraryTier": "main"
+  },
+  {
+    "id": "curl-dead-hang-biceps-curl-337",
+    "name": "Dead-hang Biceps Curl",
+    "polishName": "Uginanie ramion ze swobodnego zwisu",
+    "garminCategory": "CURL",
+    "garminName": "DEAD_HANG_BICEPS_CURL",
+    "foundInGarmin": true,
+    "image": "",
+    "url": "https://connect.garmin.com/modern/exercises/CURL/DEAD_HANG_BICEPS_CURL",
+    "difficulty": "Intermediate",
+    "description": "The dead-hang biceps curl uses a forward hanging arm position to isolate the biceps without preacher-bench support.",
+    "muscleImpact": {
+      "abductors": 0,
+      "abs": 0,
+      "adductors": 0,
+      "biceps": 1,
+      "calves": 0,
+      "chest": 0,
+      "forearm": 2,
+      "glutes": 0,
+      "hamstrings": 0,
+      "hips": 0,
+      "lats": 0,
+      "lowerBack": 0,
+      "obliques": 0,
+      "quads": 0,
+      "shoulders": 0,
+      "traps": 0,
+      "triceps": 0
+    },
+    "equipment": {
+      "ankleWeight": 0,
+      "band": 0,
+      "barbell": 0,
+      "battleRope": 0,
+      "bench": 0,
+      "bike": 0,
+      "bosuBall": 0,
+      "box": 0,
+      "cableMachine": 0,
+      "dumbbell": 0,
+      "ezBar": 1,
+      "foamRoller": 0,
+      "jumpRope": 0,
+      "kettlebell": 0,
+      "machine": 0,
+      "medicineBall": 0,
+      "other": 1,
+      "plate": 0,
+      "pullupBar": 0,
+      "rings": 0,
+      "rope": 0,
+      "sandbag": 0,
+      "sled": 0,
+      "slidingDisc": 0,
+      "smithMachine": 0,
+      "squatRack": 0,
+      "swissBall": 0,
+      "trx": 0,
+      "weightVest": 0
+    },
+    "libraryTier": "variation"
   },
   {
     "id": "curl-decline-hammer-curl-338",
@@ -1637,7 +1700,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-one-arm-preacher-curl-352",
@@ -1700,7 +1763,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-plate-pinch-curl-353",
@@ -1952,7 +2015,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-reverse-grip-wrist-curl-357",
@@ -2015,7 +2078,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-seated-alternating-dumbbell-biceps-curl-358",
@@ -2078,7 +2141,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-seated-dumbbell-biceps-curl-359",
@@ -2519,7 +2582,7 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-twisting-standing-dumbbell-biceps-curl-369",
@@ -2645,6 +2708,6 @@ export const curl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

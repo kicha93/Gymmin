@@ -62,7 +62,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-bench-dip-1399",
@@ -944,7 +944,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-overhead-dumbbell-triceps-extension-1412",
@@ -1133,7 +1133,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lateral-raise-ring-dip-554",
@@ -1511,7 +1511,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-single-arm-dumbbell-overhead-triceps-extension-1421",
@@ -1574,7 +1574,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-single-dumbbell-seated-overhead-triceps-extension-1422",
@@ -1700,7 +1700,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-single-leg-dip-1424",
@@ -1763,7 +1763,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-static-lying-triceps-extension-1425",
@@ -1952,7 +1952,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-swiss-ball-dumbbell-overhead-triceps-extension-367",
@@ -2015,7 +2015,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-swiss-ball-ez-bar-lying-triceps-extension-1428",
@@ -2078,7 +2078,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-swiss-ball-ez-bar-overhead-triceps-extension-1429",
@@ -2141,7 +2141,7 @@ export const tricepsExtension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-tabletop-dip-1430",

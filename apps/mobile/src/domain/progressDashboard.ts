@@ -14,6 +14,21 @@ export type ProgressDashboardStats = {
   trackedExercises: number;
 };
 
+export function formatProgressDashboardVolume(value: number, language: "pl" | "en") {
+  if (!Number.isFinite(value) || value <= 0) {
+    return "0 kg";
+  }
+
+  const roundedKilograms = Math.round(value);
+  if (roundedKilograms < 1000) {
+    return `${roundedKilograms} kg`;
+  }
+
+  const tons = Math.round((value / 1000 + Number.EPSILON) * 10) / 10;
+  const formatted = Number.isInteger(tons) ? String(tons) : tons.toFixed(1);
+  return `${language === "pl" ? formatted.replace(".", ",") : formatted} t`;
+}
+
 function compareNullableNumbersDesc(left: number | null, right: number | null) {
   if (left === null && right === null) {
     return 0;

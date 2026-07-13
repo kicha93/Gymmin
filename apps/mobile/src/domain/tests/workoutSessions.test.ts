@@ -120,6 +120,14 @@ describe("workoutSessions", () => {
     expect(progress[0].results).toHaveLength(2);
   });
 
+  it("canonicalizes historical exercise ids while normalizing synced sessions", () => {
+    const normalized = normalizeWorkoutSessions([session({
+      entries: [{ id: "old", stageIndex: 0, seriesIndex: 0, setIteration: 1, elementIndex: 0, type: "exercise", exerciseId: "squat-back-squats-1249", exerciseName: "Back Squats", isCompleted: true }]
+    })]);
+
+    expect(normalized[0]?.entries[0]?.exerciseId).toBe("squat-barbell-back-squat-1251");
+  });
+
   it("marks a workout history entry as a tombstone and excludes it from UI/progress", () => {
     const completedSession = session({
       id: "completed",

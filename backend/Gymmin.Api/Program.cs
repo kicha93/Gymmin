@@ -312,6 +312,7 @@ app.MapGet("/api/auth/sessions", (HttpRequest request, IUserStore users) =>
         return Results.Unauthorized();
     }
 
+    users.UpdateSessionMetadata(context.User.Id, context.SessionId, GetAuthMetadata(request));
     return Results.Ok(new AuthSessionsResponse(users.ListSessions(context.User.Id, context.SessionId)));
 });
 

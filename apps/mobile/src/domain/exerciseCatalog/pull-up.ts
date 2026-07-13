@@ -377,7 +377,7 @@ export const pullUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "pull-up-chin-up-902",
@@ -503,7 +503,7 @@ export const pullUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-close-grip-lat-pulldown-904",
@@ -566,7 +566,7 @@ export const pullUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-crossover-chin-up-905",
@@ -629,7 +629,7 @@ export const pullUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-jumping-pull-ups-908",
@@ -1196,7 +1196,7 @@ export const pullUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-pull-up-918",
@@ -1322,7 +1322,7 @@ export const pullUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lateral-raise-ring-muscle-up-556",
@@ -1385,7 +1385,7 @@ export const pullUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "pull-up-suspended-chin-up-922",
@@ -1574,7 +1574,7 @@ export const pullUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-wide-grip-pull-up-942",
@@ -1637,6 +1637,6 @@ export const pullUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

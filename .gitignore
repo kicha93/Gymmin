@@ -16,3 +16,21 @@ coverage/
 .dotnet_home/
 .localappdata/
 .nuget_packages/
+
+# Local development toolchains and downloaded tools
+.android-sdk/
+.tools/
+
+# Generated build, publishing, and temporary workspace state
+.artifacts/
+.tmp/
+tmp-build/
+.codex-remote-attachments/
+
+# File-provider runtime data. Stores recreate this directory when needed.
+backend/Gymmin.Api/App_Data/
+
+# Native Android build caches
+apps/mobile/android/.gradle/
+apps/mobile/android/app/.cxx/
+apps/mobile/android/app/build/

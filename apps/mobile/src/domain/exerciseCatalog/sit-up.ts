@@ -62,7 +62,7 @@ export const sitUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-bent-knee-v-up-1197",
@@ -629,7 +629,7 @@ export const sitUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-medicine-ball-sit-up-1206",
@@ -944,7 +944,7 @@ export const sitUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-reverse-curl-up-1212",
@@ -1070,7 +1070,7 @@ export const sitUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-single-leg-swiss-ball-jackknife-1214",
@@ -1133,7 +1133,7 @@ export const sitUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-sit-up-1215",
@@ -1259,7 +1259,7 @@ export const sitUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "sit-up-v-up-1220",

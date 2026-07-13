@@ -62,7 +62,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-hang-power-clean-699",
@@ -125,7 +125,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-hang-power-snatch-700",
@@ -188,7 +188,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-hang-pull-701",
@@ -251,7 +251,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-hang-squat-clean-702",
@@ -314,7 +314,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-barbell-hang-squat-snatch-1255",
@@ -377,7 +377,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-high-pull-703",
@@ -440,7 +440,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-power-clean-704",
@@ -503,7 +503,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-power-snatch-705",
@@ -566,7 +566,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-snatch-706",
@@ -629,7 +629,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-split-jerk-707",
@@ -692,7 +692,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-squat-clean-708",
@@ -755,7 +755,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-barbell-squat-snatch-1259",
@@ -818,7 +818,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-clean-and-jerk-710",
@@ -881,7 +881,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-clean-and-press-711",
@@ -944,7 +944,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-clean-712",
@@ -1007,7 +1007,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-hang-pull-713",
@@ -1070,7 +1070,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-hang-snatch-714",
@@ -1133,7 +1133,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-jerk-715",
@@ -1196,7 +1196,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-push-press-716",
@@ -1259,7 +1259,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-strict-press-717",
@@ -1322,7 +1322,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-snatch-718",
@@ -1385,7 +1385,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-dumbbell-squat-clean-1273",
@@ -1448,7 +1448,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-dumbbell-squat-snatch-1274",
@@ -1511,7 +1511,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-medicine-ball-clean-719",
@@ -1574,7 +1574,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-one-hand-dumbbell-split-snatch-720",
@@ -1637,7 +1637,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-push-jerk-721",
@@ -1700,7 +1700,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-single-arm-dumbbell-snatch-722",
@@ -1763,7 +1763,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-single-arm-hang-snatch-723",
@@ -1826,7 +1826,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-single-arm-kettlebell-snatch-724",
@@ -1889,7 +1889,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-snatch-727",
@@ -1952,7 +1952,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-split-jerk-725",
@@ -2015,7 +2015,7 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-squat-clean-and-jerk-726",
@@ -2078,6 +2078,6 @@ export const olympicLift = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   }
 ] satisfies readonly Exercise[];

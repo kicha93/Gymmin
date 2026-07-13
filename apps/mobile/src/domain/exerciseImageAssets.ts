@@ -1,3 +1,5 @@
+import { resolveExerciseId } from "./exercises";
+
 export type ExerciseImageAssetKey = string;
 
 const exerciseImageAssetKeysById: Record<string, ExerciseImageAssetKey[]> = {
@@ -58,5 +60,5 @@ const exerciseImageAssetKeysById: Record<string, ExerciseImageAssetKey[]> = {
 };
 
 export function getExerciseImageAssetKeys(exerciseId: string): ExerciseImageAssetKey[] {
-  return exerciseImageAssetKeysById[exerciseId] ?? [];
+  return exerciseImageAssetKeysById[resolveExerciseId(exerciseId)] ?? [];
 }

@@ -288,9 +288,9 @@ PUT /api/settings
 Jeśli ustawień brak, backend zwraca `204 No Content`.
 
 Settings include the workout execution defaults used by mobile, including
-`defaultWorkoutExecutionMode` and `defaultWorkoutTableOrientation`. The table
-orientation value is `vertical` or `horizontal`; missing legacy values fall back
-to `vertical`.
+`defaultWorkoutExecutionMode`. Older payloads may still contain
+`defaultWorkoutTableOrientation`; mobile accepts this legacy field for compatibility,
+but orientation is now controlled by device auto-rotate and is not exposed in Settings.
 
 Synchronizowane pola obejmują:
 

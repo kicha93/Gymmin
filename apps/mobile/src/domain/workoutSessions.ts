@@ -310,7 +310,12 @@ export function normalizeWorkoutSessions(value: unknown): WorkoutSession[] {
       updatedAt: getWorkoutSessionUpdatedAt(raw),
       deletedAt: typeof raw.deletedAt === "string" ? raw.deletedAt : null,
       planSnapshot: cloneWorkoutDraft(raw.planSnapshot, sourceWorkoutName),
-      entries: Array.isArray(raw.entries) ? raw.entries.filter((entry): entry is WorkoutSessionEntry => Boolean(entry && typeof entry === "object" && typeof entry.id === "string")) : [],
+      entries: Array.isArray(raw.entries) ? raw.entries
+        .filter((entry): entry is WorkoutSessionEntry => Boolean(entry && typeof entry === "object" && typeof entry.id === "string"))
+        .map((entry) => ({
+          ...entry,
+          exerciseId: entry.exerciseId?.trim() ? resolveExerciseId(entry.exerciseId.trim()) : entry.exerciseId
+        })) : [],
       notes: typeof raw.notes === "string" ? raw.notes : undefined
     };
 

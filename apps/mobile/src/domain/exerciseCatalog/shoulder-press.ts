@@ -62,7 +62,7 @@ export const shoulderPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "shoulder-press-arnold-press-1111",
@@ -377,7 +377,7 @@ export const shoulderPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "shoulder-press-dumbbell-push-press-1119",
@@ -755,7 +755,7 @@ export const shoulderPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "shoulder-press-seated-barbell-shoulder-press-1127",
@@ -944,70 +944,7 @@ export const shoulderPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
-  },
-  {
-    "id": "shoulder-press-single-arm-step-up-and-press-1130",
-    "name": "Single-arm Step-up and Press",
-    "polishName": "Wyciskanie hantla jednorącz z wejściem na podwyższenie",
-    "garminCategory": "SHOULDER_PRESS",
-    "garminName": "SINGLE_ARM_STEP_UP_AND_PRESS",
-    "foundInGarmin": true,
-    "image": "",
-    "url": "https://connect.garmin.com/modern/exercises/SHOULDER_PRESS/SINGLE_ARM_STEP_UP_AND_PRESS",
-    "difficulty": "Intermediate",
-    "description": "The single-arm step-up and press builds strength in the lower-body and shoulder area. Isolating one arm at a time also improves balance and stability.",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 2,
-      "forearm": 0,
-      "glutes": 1,
-      "hamstrings": 2,
-      "hips": 2,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 1,
-      "shoulders": 1,
-      "traps": 2,
-      "triceps": 2
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 1,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "shoulder-press-smith-machine-overhead-press-1131",
@@ -1196,6 +1133,6 @@ export const shoulderPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

@@ -377,7 +377,7 @@ export const hyperextension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-spine-extension-508",
@@ -629,7 +629,7 @@ export const hyperextension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-swiss-ball-back-extension-512",
@@ -692,7 +692,7 @@ export const hyperextension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-swiss-ball-hyperextension-513",
@@ -755,7 +755,7 @@ export const hyperextension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-swiss-ball-opposite-arm-and-leg-lift-514",
@@ -818,6 +818,6 @@ export const hyperextension = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

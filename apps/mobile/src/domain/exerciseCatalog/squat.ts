@@ -1007,7 +1007,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-dumbbell-split-squat-1271",
@@ -1259,7 +1259,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-figure-four-squats-1279",
@@ -1952,7 +1952,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-pistol-squat-1292",
@@ -2015,7 +2015,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "squat-plie-slides-1293",
@@ -2267,7 +2267,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-single-leg-bench-squat-1297",
@@ -2330,7 +2330,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "smith-machine-squat",
@@ -2582,7 +2582,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-suitcase-squats-1306",
@@ -2960,7 +2960,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-swiss-ball-body-weight-wall-squat-1312",
@@ -3023,7 +3023,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-thrusters-1313",
@@ -3212,7 +3212,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-wall-ball-squat-and-press-1317",
@@ -3275,7 +3275,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-weighted-swiss-ball-wall-squat-1338",
@@ -3338,7 +3338,7 @@ export const squat = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-weighted-wall-squat-1340",

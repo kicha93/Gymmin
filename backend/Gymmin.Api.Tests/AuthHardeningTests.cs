@@ -76,6 +76,39 @@ public sealed class AuthHardeningTests : IClassFixture<GymminApiFactory>
     }
 
     [Fact]
+    public async Task Sessions_api_repairs_current_session_device_name_from_request_metadata()
+    {
+        using var client = _factory.CreateClient();
+        var auth = await TestPayloads.RegisterAsync(client, "session-device-name");
+        client.Authorize(auth.Token);
+        client.DefaultRequestHeaders.Add("X-Gymmin-Device-Name", "Google Pixel 8 · Android 15");
+
+        var response = await client.GetFromJsonAsync<AuthSessionsResponse>("/api/auth/sessions", TestJson.Options);
+
+        var currentSession = Assert.Single(response!.Sessions, session => session.IsCurrent);
+        Assert.Equal("Google Pixel 8 · Android 15", currentSession.DeviceName);
+
+        client.DefaultRequestHeaders.Remove("X-Gymmin-Device-Name");
+        var persistedResponse = await client.GetFromJsonAsync<AuthSessionsResponse>("/api/auth/sessions", TestJson.Options);
+        Assert.Equal(
+            "Google Pixel 8 · Android 15",
+            Assert.Single(persistedResponse!.Sessions, session => session.IsCurrent).DeviceName);
+    }
+
+    [Fact]
+    public async Task Sessions_api_replaces_legacy_unknown_device_with_android_fallback()
+    {
+        using var client = _factory.CreateClient();
+        var auth = await TestPayloads.RegisterAsync(client, "legacy-session-device-name");
+        client.Authorize(auth.Token);
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("okhttp/4.9.2");
+
+        var response = await client.GetFromJsonAsync<AuthSessionsResponse>("/api/auth/sessions", TestJson.Options);
+
+        Assert.Equal("Android", Assert.Single(response!.Sessions, session => session.IsCurrent).DeviceName);
+    }
+
+    [Fact]
     public async Task User_cannot_revoke_another_users_session()
     {
         using var client = _factory.CreateClient();

@@ -251,7 +251,7 @@ export const warmUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "warm-up-ankle-internal-rotation-1482",
@@ -314,7 +314,7 @@ export const warmUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "warm-up-arm-circles-1483",
@@ -3653,7 +3653,7 @@ export const warmUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "warm-up-swiss-ball-reach-roll-and-lift-1502",
@@ -3716,7 +3716,7 @@ export const warmUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "warm-up-swiss-ball-windshield-wipers-1503",
@@ -3779,7 +3779,7 @@ export const warmUp = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "warm-up-thoracic-rotation-1504",

@@ -175,7 +175,7 @@ Element typu `Odpoczynek` ukrywa pole ćwiczenia i ciężaru. Element typu `Rozg
 - wpływ na mięśnie,
 - metadane używane przez przegląd mięśni i progres.
 
-Po refaktorze katalog zawiera 963 rekordy. Pewne duplikaty semantyczne zostały scalone, a stare identyfikatory są rozwiązywane przez jawny mapping `exerciseId` do rekordu kanonicznego. Dzięki temu zapisane treningi, historia, progres i ulubione pozostają kompatybilne. Rekordy mają też `libraryTier`: `main`, `advanced`, `sportSpecific`, `rehab`, `variation`, `progression` albo `deprecated`; domyślny picker pokazuje poziom `main`.
+Po kontrolnej fazie refaktoru katalog zawiera 964 rekordy. Ryzykowne scalenie `Dead-hang Biceps Curl` zostało cofnięte, a nieudowodniony alias `stage2-back-extension` usunięty. Stare identyfikatory zatwierdzonych scaleń są rozwiązywane centralnie przy odczycie planów, sesji, progresu, ulubionych, treści technicznych i obrazów. Rekordy mają `libraryTier`: `main`, `advanced`, `sportSpecific`, `rehab`, `variation`, `progression` albo `deprecated`; domyślny picker pokazuje wyłącznie poziom `main`.
 
 Walidacja `npm run exercise:catalog:validate` sprawdza unikalność ID i nazw, kategorie, sprzęt, aliasy, mapping ID oraz poziomy biblioteki. Pełny raport zmian: `docs/exercise-catalog-refactor.md`.
 
@@ -208,10 +208,9 @@ Dostępne tryby:
 - `guided` / Krok po kroku,
 - `readonly-post-workout` / Tylko podgląd, uzupełnię po treningu,
 - `inline-table` / Tabela do uzupełniania na bieżąco.
-- Inline table mode has a top-left orientation control and a synced per-user
-  default orientation setting (`vertical` / `horizontal`) in Settings. Horizontal
-  mode widens the table for landscape use; screen rotation is handled by the
-  device/system auto-rotate setting, not by a manual CSS transform.
+- Workout tables follow the current device orientation. The manual orientation
+  control and its Settings row were removed; with system auto-rotate enabled,
+  the screen rotates natively and tables adapt to the available width.
 
 Sesja wykonania jest osobnym obiektem od planu treningowego. Plan nie jest nadpisywany wynikami. Sesja zapisuje snapshot treningu i entries do wykonania.
 

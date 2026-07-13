@@ -63,11 +63,11 @@ This note tracks the current workout-view UX decisions.
 - The current exercise card shows the exercise number, name, details/anatomy action, technical notes, rest duration as a clock pill and set/target tiles such as `[4] x [6]`.
 - The rest timer remains a separate lightweight card and uses the same elapsed-time formatting helpers as the header.
 - Execution entries use compact headers like `[2] Squat` or `[2] Rest` instead of repeating a separate `Set N` label.
-- Workout tables use the device/system orientation instead of a manual `rotate(90deg)` transform. The `horizontal` table mode widens the table for landscape use, while Android/iOS auto-rotation handles the actual screen rotation.
+- Workout tables use the device/system orientation without a manual toggle or `rotate(90deg)` transform. With system auto-rotate enabled, portrait and landscape layouts are detected from the current window dimensions and table widths adapt automatically.
 ## Timer odpoczynku
 
 W `Ustawienia -> Trening` użytkownik może włączyć albo wyłączyć widoczność timera odpoczynku podczas aktywnego treningu. Ustawienie jest domyślnie włączone, zapisuje się per konto lokalnie oraz synchronizuje przez ustawienia konta. Wyłączenie ukrywa wyłącznie kontrolkę timera; planowany odpoczynek pozostaje widoczny w karcie ćwiczenia.
 
 ## Plan tygodnia
 
-Plan tygodnia jest lokalny i przypisany do aktualnego ownera storage. Każdy zapisany trening można dodać do jednego dnia tygodnia, a homepage pokazuje zakres bieżącego tygodnia, wykonane/do wykonania oraz najbliższy trening na dziś. Ukończona sesja zalicza trening do tygodnia nawet wtedy, gdy została wykonana w innym dniu niż zaplanowany.
+Plan tygodnia jest lokalny i przypisany do aktualnego ownera storage. Każdy zapisany trening można dodać do wielu dni tygodnia, a homepage pokazuje zakres bieżącego tygodnia, wykonane/do wykonania oraz najbliższy trening na dziś. Każdy zaplanowany dzień jest osobnym wykonaniem; ukończona sesja zalicza jedno z nich nawet wtedy, gdy została wykonana w innym dniu niż zaplanowany.

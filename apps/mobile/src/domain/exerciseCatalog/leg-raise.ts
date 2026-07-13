@@ -188,7 +188,7 @@ export const legRaise = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "leg-raise-kettlebell-leg-raises-588",
@@ -289,69 +289,6 @@ export const legRaise = [
       "barbell": 0,
       "battleRope": 0,
       "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    },
-    "libraryTier": "main"
-  },
-  {
-    "id": "leg-raise-lateral-stepover-589",
-    "name": "Lateral Step-over",
-    "polishName": "Przechodzenie bokiem nad podwyższeniem",
-    "garminCategory": "LEG_RAISE",
-    "garminName": "LATERAL_STEPOVER",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 2,
-      "abs": 0,
-      "adductors": 2,
-      "biceps": 0,
-      "calves": 2,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 2,
-      "hamstrings": 2,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 1,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 1,
       "bike": 0,
       "bosuBall": 0,
       "box": 0,
@@ -818,7 +755,7 @@ export const legRaise = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "leg-raise-single-leg-lowering-drill-597",
@@ -881,6 +818,6 @@ export const legRaise = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

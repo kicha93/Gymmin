@@ -62,7 +62,7 @@ export const flye = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "flye-decline-dumbbell-flye-399",
@@ -629,7 +629,7 @@ export const flye = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "flye-swiss-ball-dumbbell-flye-406",
@@ -692,6 +692,6 @@ export const flye = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

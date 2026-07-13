@@ -251,7 +251,7 @@ export const legCurl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "leg-curl-sliding-leg-curl-578",
@@ -440,6 +440,6 @@ export const legCurl = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

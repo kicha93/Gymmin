@@ -67,3 +67,14 @@ export function createDefaultWorkout(): WorkoutDraft {
     steps: []
   };
 }
+
+export function normalizeWorkoutDraftExerciseIds(draft: WorkoutDraft): WorkoutDraft {
+  return {
+    ...draft,
+    steps: draft.steps.map((step) => ({
+      ...step,
+      exerciseId: step.exerciseId?.trim() ? resolveExerciseId(step.exerciseId.trim()) : step.exerciseId
+    }))
+  };
+}
+import { resolveExerciseId } from "./exercises";

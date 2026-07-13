@@ -1,12 +1,12 @@
 import type { Exercise } from "../exercises";
 
-export const dorsiflexion = [
+export const ropeClimb = [
   {
-    "id": "calf-raise-seated-dumbbell-toe-raise-110",
-    "name": "Seated Dumbbell Toe Raise",
-    "polishName": "Unoszenie palców stóp z hantlem siedząc",
-    "garminCategory": "DORSIFLEXION",
-    "garminName": "SEATED_DUMBBELL_TOE_RAISE",
+    "id": "lateral-raise-rope-climb-557",
+    "name": "Rope Climb",
+    "polishName": "Wspinaczka po linie",
+    "garminCategory": "ROPE_CLIMB",
+    "garminName": "ROPE_CLIMB",
     "foundInGarmin": false,
     "image": "",
     "url": "",
@@ -16,18 +16,18 @@ export const dorsiflexion = [
       "abductors": 0,
       "abs": 0,
       "adductors": 0,
-      "biceps": 0,
-      "calves": 1,
+      "biceps": 1,
+      "calves": 2,
       "chest": 0,
-      "forearm": 0,
+      "forearm": 1,
       "glutes": 0,
-      "hamstrings": 0,
+      "hamstrings": 2,
       "hips": 0,
-      "lats": 0,
+      "lats": 1,
       "lowerBack": 0,
       "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
+      "quads": 2,
+      "shoulders": 1,
       "traps": 0,
       "triceps": 0
     },
@@ -36,12 +36,12 @@ export const dorsiflexion = [
       "band": 0,
       "barbell": 0,
       "battleRope": 0,
-      "bench": 1,
+      "bench": 0,
       "bike": 0,
       "bosuBall": 0,
       "box": 0,
       "cableMachine": 0,
-      "dumbbell": 1,
+      "dumbbell": 0,
       "ezBar": 0,
       "foamRoller": 0,
       "jumpRope": 0,
@@ -52,7 +52,7 @@ export const dorsiflexion = [
       "plate": 0,
       "pullupBar": 0,
       "rings": 0,
-      "rope": 0,
+      "rope": 1,
       "sandbag": 0,
       "sled": 0,
       "slidingDisc": 0,
@@ -62,6 +62,6 @@ export const dorsiflexion = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "rehab"
+    "libraryTier": "sportSpecific"
   }
 ] satisfies readonly Exercise[];

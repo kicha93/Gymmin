@@ -23,7 +23,7 @@ import {
 import { ErrorBoundary } from "react-error-boundary";
 import type { FallbackProps } from "react-error-boundary";
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgXml } from "react-native-svg";
 import {
@@ -47,7 +47,8 @@ import {
   Text,
   TextInput,
   Vibration,
-  View
+  View,
+  useWindowDimensions
 } from "react-native";
 import type { ImageSourcePropType, SectionListData, SectionListRenderItemInfo, StyleProp, TextInputProps, ViewStyle } from "react-native";
 
@@ -88,7 +89,8 @@ import {
   WorkoutStepKind,
   createDefaultWorkout,
   createStep,
-  hasUserDefinedWorkouts
+  hasUserDefinedWorkouts,
+  normalizeWorkoutDraftExerciseIds
 } from "./src/domain/workouts";
 import {
   calculateEntryVolume,
@@ -130,6 +132,7 @@ import type {
 } from "./src/domain/workoutSessions";
 import {
   buildExerciseSections,
+  filterExerciseOptionsForPicker,
   findExerciseById,
   findExerciseByName,
   findCatalogExerciseBestEffort,
@@ -141,9 +144,11 @@ import {
   getPrimaryMuscles,
   getRequiredEquipment,
   muscleLabels,
-  muscleKeys
+  muscleKeys,
+  getExerciseOptionTierBadge
 } from "./src/domain/exercises";
-import type { Exercise, ExerciseOption, ExerciseSection, MuscleKey } from "./src/domain/exercises";
+import { activeExerciseLibraryTiers } from "./src/domain/exercises";
+import type { Exercise, ExerciseLibraryTier, ExerciseOption, ExerciseSection, MuscleKey } from "./src/domain/exercises";
 import {
   formatExerciseSetTarget,
   getExerciseDetails,
@@ -193,6 +198,7 @@ import {
   loadWeeklyPlan,
   removeWeeklyPlanItem,
   saveWeeklyPlan,
+  toggleWeeklyPlanItemDay,
   upsertWeeklyPlanItem,
   weeklyPlanDays,
   type WeeklyPlanSettings
@@ -233,6 +239,7 @@ import {
 } from "./src/domain/aiCredits";
 import type { AiCreditBalance, AiCreditPack, AiCreditTransaction } from "./src/domain/aiCredits";
 import {
+  formatProgressDashboardVolume,
   getProgressDashboardStats,
   getProgressSparklineValues,
   getSortedProgressItems,
@@ -377,7 +384,6 @@ type SettingsSheetKey =
   | "defaultWeight"
   | "defaultStageType"
   | "defaultWorkoutExecutionMode"
-  | "defaultWorkoutTableOrientation"
   | "showRestTimer"
   | "workoutReminderDay";
 
@@ -691,6 +697,12 @@ const translations = {
     exercisePickerEmpty: "Brak ćwiczeń",
     exercisePickerLoading: "Ładowanie ćwiczeń...",
     exercisePickerTitle: "Wybierz ćwiczenie",
+    exercisePickerShowMore: "Pokaż więcej ćwiczeń",
+    exercisePickerHideMore: "Ukryj dodatkowe ćwiczenia",
+    exercisePickerTierVariation: "Wariant",
+    exercisePickerTierAdvanced: "Zaawansowane",
+    exercisePickerTierSportSpecific: "Sportowe",
+    exercisePickerTierRehab: "Rehabilitacyjne",
     exerciseMuscleFilter: "Filtruj według mięśnia",
     exerciseMuscleFilterAll: "Wszystkie mięśnie",
     faq: "FAQ",
@@ -1279,6 +1291,12 @@ const translations = {
     exercisePickerEmpty: "No exercises",
     exercisePickerLoading: "Loading exercises...",
     exercisePickerTitle: "Choose exercise",
+    exercisePickerShowMore: "Show more exercises",
+    exercisePickerHideMore: "Hide additional exercises",
+    exercisePickerTierVariation: "Variation",
+    exercisePickerTierAdvanced: "Advanced",
+    exercisePickerTierSportSpecific: "Sport-specific",
+    exercisePickerTierRehab: "Rehabilitation",
     exerciseMuscleFilter: "Filter by muscle",
     exerciseMuscleFilterAll: "All muscles",
     faq: "FAQ",
@@ -1667,13 +1685,6 @@ function getReminderWeekdayFromNumber(value: number): ReminderWeekday {
   }
 }
 
-function getWorkoutTableOrientationOptions(t: (key: TranslationKey) => string) {
-  return [
-    { label: t("workoutTableOrientationVertical"), value: "vertical" as const },
-    { label: t("workoutTableOrientationHorizontal"), value: "horizontal" as const }
-  ];
-}
-
 function normalizeCollapsedPanels(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return defaultCollapsedPanels;
@@ -1856,11 +1867,12 @@ function repairTextEncoding(value: string) {
 }
 
 function normalizeWorkoutDraftTextFields(draft: WorkoutDraft): WorkoutDraft {
+  const normalizedDraft = normalizeWorkoutDraftExerciseIds(draft);
   return {
-    ...draft,
+    ...normalizedDraft,
     name: repairTextEncoding(draft.name),
     notes: repairTextEncoding(draft.notes),
-    steps: draft.steps.map((step) => ({
+    steps: normalizedDraft.steps.map((step) => ({
       ...step,
       exerciseName: repairTextEncoding(step.exerciseName),
       label: repairTextEncoding(step.label),
@@ -2654,7 +2666,10 @@ function appendDeviceField(fields: string[], label: string, value: unknown) {
 }
 
 function getDeviceReportInfo() {
-  const platformConstants = (NativeModules.PlatformConstants ?? {}) as Record<string, unknown>;
+  const platformConstants = {
+    ...((NativeModules.PlatformConstants ?? {}) as Record<string, unknown>),
+    ...(Platform.constants as unknown as Record<string, unknown>)
+  };
   const expoConstants = (
     NativeModules.ExponentConstants ??
     NativeModules.ExpoConstants ??
@@ -2695,7 +2710,10 @@ function getDeviceReportInfo() {
 }
 
 function getAuthDeviceName() {
-  const platformConstants = (NativeModules.PlatformConstants ?? {}) as Record<string, unknown>;
+  const platformConstants = {
+    ...((NativeModules.PlatformConstants ?? {}) as Record<string, unknown>),
+    ...(Platform.constants as unknown as Record<string, unknown>)
+  };
   const brand = stringifyDeviceValue(platformConstants.Brand);
   const manufacturer = stringifyDeviceValue(platformConstants.Manufacturer);
   const model = stringifyDeviceValue(platformConstants.Model);
@@ -3047,7 +3065,7 @@ type ScreenKey =
   | "workoutDetail"
   | "workoutSession"
   | "weeklyPlan";
-type WorkoutHistoryStatusFilter = "all" | WorkoutSessionStatus;
+type WorkoutHistoryStatusFilter = "all" | "completed" | "active";
 type AchievementFilter = "all" | "unlocked" | "locked";
 
 type AppDialogAction = {
@@ -3747,6 +3765,8 @@ function RestTimerControl({ labels, plannedSeconds, theme }: RestTimerControlPro
 
 function GymminApp() {
   const insets = useSafeAreaInsets();
+  const windowSize = useWindowDimensions();
+  const isLandscape = windowSize.width > windowSize.height;
   const splashOpacity = useRef(new Animated.Value(1)).current;
   const languageSheetTranslateY = useRef(new Animated.Value(360)).current;
   const [isAppLoading, setIsAppLoading] = useState(true);
@@ -3779,9 +3799,7 @@ function GymminApp() {
   const [defaultWorkoutExecutionMode, setDefaultWorkoutExecutionMode] = useState<WorkoutExecutionMode>("guided");
   const [pendingDefaultWorkoutExecutionMode, setPendingDefaultWorkoutExecutionMode] = useState<WorkoutExecutionMode>("guided");
   const [defaultWorkoutTableOrientation, setDefaultWorkoutTableOrientation] = useState<WorkoutTableOrientation>("vertical");
-  const [pendingDefaultWorkoutTableOrientation, setPendingDefaultWorkoutTableOrientation] = useState<WorkoutTableOrientation>("vertical");
   const [showRestTimer, setShowRestTimer] = useState(true);
-  const [workoutTableOrientation, setWorkoutTableOrientation] = useState<WorkoutTableOrientation>("vertical");
   const [workoutReminders, setWorkoutReminders] = useState<WorkoutReminderSettings>(
     getDefaultWorkoutReminderSettings("en")
   );
@@ -4734,9 +4752,7 @@ function GymminApp() {
           setDefaultWorkoutExecutionMode("guided");
           setPendingDefaultWorkoutExecutionMode("guided");
           setDefaultWorkoutTableOrientation("vertical");
-          setPendingDefaultWorkoutTableOrientation("vertical");
           setShowRestTimer(true);
-          setWorkoutTableOrientation("vertical");
           setWorkoutReminders(getDefaultWorkoutReminderSettings("en"));
           setPendingWorkoutReminderDay(null);
           setCollapsedPanels(defaultCollapsedPanels);
@@ -4780,7 +4796,6 @@ function GymminApp() {
         setDefaultWorkoutExecutionMode(nextDefaultWorkoutExecutionMode);
         setPendingDefaultWorkoutExecutionMode(nextDefaultWorkoutExecutionMode);
         setDefaultWorkoutTableOrientation(nextDefaultWorkoutTableOrientation);
-        setPendingDefaultWorkoutTableOrientation(nextDefaultWorkoutTableOrientation);
         setShowRestTimer(nextShowRestTimer);
         setWorkoutReminders(nextWorkoutReminders);
         setPendingWorkoutReminderDay(null);
@@ -5726,6 +5741,14 @@ function GymminApp() {
     return () => clearTimeout(timeoutId);
   }, [creatorPhase]);
 
+  useEffect(() => {
+    if (activeScreen !== "activeSessions" || !user) {
+      return;
+    }
+
+    void fetchAuthSessions();
+  }, [activeScreen, user?.id]);
+
   const filteredWorkouts = useMemo(() => {
     const phrase = search.trim().toLowerCase();
     const visibleWorkouts = !phrase
@@ -6344,7 +6367,6 @@ function GymminApp() {
     setDefaultWorkoutExecutionMode(nextDefaultWorkoutExecutionMode);
     setPendingDefaultWorkoutExecutionMode(nextDefaultWorkoutExecutionMode);
     setDefaultWorkoutTableOrientation(nextDefaultWorkoutTableOrientation);
-    setPendingDefaultWorkoutTableOrientation(nextDefaultWorkoutTableOrientation);
     setShowRestTimer(nextShowRestTimer);
     setWorkoutReminders(nextWorkoutReminders);
     setPendingWorkoutReminderDay(null);
@@ -6841,7 +6863,6 @@ function GymminApp() {
     setActiveWorkoutSessionId(session.id);
     activeWorkoutSessionEntryIndexRef.current[session.id] = 0;
     setSessionEntryIndex(0);
-    setWorkoutTableOrientation(defaultWorkoutTableOrientation);
     setIsPostWorkoutFillMode(false);
     setActiveScreen("workoutSession");
   }
@@ -8112,7 +8133,10 @@ function GymminApp() {
     setAuthError("");
     try {
       const response = await fetch(`${apiBaseUrl}/api/auth/sessions`, {
-        headers: getAuthHeaders(user)
+        headers: {
+          ...getAuthHeaders(user),
+          "X-Gymmin-Device-Name": getAuthDeviceName()
+        }
       });
 
       if (response.status === 401) {
@@ -9319,9 +9343,27 @@ function GymminApp() {
           <View style={[styles.weeklyPlanStatDivider, { backgroundColor: theme.border }]} />
           <View style={styles.weeklyPlanToday}>
             <Text style={[styles.weeklyPlanTodayLabel, { color: theme.muted }]}>{`${t("today")}: ${getWeeklyPlanDayOptions(t).find((item) => item.value === getWeeklyPlanDay(new Date()))?.label ?? ""}`}</Text>
-            <Text style={[styles.weeklyPlanTodayName, { color: theme.text }]} numberOfLines={1}>
-              {todayItem?.workout.name ?? t("todayNoWorkout")}
-            </Text>
+            {todayItem ? (
+              <Pressable
+                accessibilityLabel={`${t("showDetails")}: ${todayItem.workout.name}`}
+                accessibilityRole="link"
+                hitSlop={6}
+                style={styles.weeklyPlanTodayLink}
+                onPress={(event) => {
+                  event.stopPropagation();
+                  openWorkoutDetail(todayItem.workout.id);
+                }}
+              >
+                <Text style={[styles.weeklyPlanTodayName, { color: theme.primary }]} numberOfLines={1}>
+                  {todayItem.workout.name}
+                </Text>
+                <Ionicons name="chevron-forward" size={15} color={theme.primary} />
+              </Pressable>
+            ) : (
+              <Text style={[styles.weeklyPlanTodayName, { color: theme.text }]} numberOfLines={1}>
+                {t("todayNoWorkout")}
+              </Text>
+            )}
           </View>
         </View>
       </Pressable>
@@ -9333,6 +9375,17 @@ function GymminApp() {
     const plannedIds = new Set(weeklyPlanSummary.items.map((item) => item.workoutId));
     const availableWorkouts = savedWorkouts.filter((workout) => !plannedIds.has(workout.id));
     const range = formatWeekRange(getCurrentWeekRange(new Date()), language);
+    const groupedItems = Array.from(
+      weeklyPlanSummary.items.reduce((groups, item) => {
+        const existing = groups.get(item.workoutId);
+        if (existing) {
+          existing.items.push(item);
+        } else {
+          groups.set(item.workoutId, { items: [item], workout: item.workout });
+        }
+        return groups;
+      }, new Map<string, { items: typeof weeklyPlanSummary.items; workout: (typeof weeklyPlanSummary.items)[number]["workout"] }>()).values()
+    );
 
     return (
       <View style={styles.weeklyPlanScreen}>
@@ -9346,32 +9399,45 @@ function GymminApp() {
           </View>
         </View>
 
-        {weeklyPlanSummary.items.length ? (
+        {groupedItems.length ? (
           <View style={[styles.weeklyPlanListCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            {weeklyPlanSummary.items.map((item, index) => (
-              <View key={item.workoutId} style={[styles.weeklyPlanItem, { borderBottomColor: theme.border }, index === weeklyPlanSummary.items.length - 1 ? styles.weeklyPlanItemLast : null]}>
+            {groupedItems.map((group, index) => {
+              const completedCount = group.items.filter((item) => item.completed).length;
+              const isCompleted = completedCount === group.items.length;
+              const selectedDays = new Set(group.items.map((item) => item.day));
+
+              return (
+              <View key={group.workout.id} style={[styles.weeklyPlanItem, { borderBottomColor: theme.border }, index === groupedItems.length - 1 ? styles.weeklyPlanItemLast : null]}>
                 <View style={styles.weeklyPlanItemHeader}>
-                  <View style={[styles.weeklyPlanStatusIcon, { backgroundColor: item.completed ? theme.primary : theme.secondaryBand }]}>
-                    <Ionicons name={item.completed ? "checkmark" : "calendar-outline"} size={18} color={item.completed ? theme.white : theme.primary} />
+                  <View style={[styles.weeklyPlanStatusIcon, { backgroundColor: isCompleted ? theme.primary : theme.secondaryBand }]}>
+                    <Ionicons name={isCompleted ? "checkmark" : "calendar-outline"} size={18} color={isCompleted ? theme.white : theme.primary} />
                   </View>
                   <View style={styles.workoutInfo}>
-                    <Text style={[styles.workoutName, { color: theme.text }]}>{item.workout.name}</Text>
-                    <Text style={[styles.workoutMeta, { color: item.completed ? theme.primary : theme.muted }]}>{item.completed ? t("completed") : t("toDo")}</Text>
+                    <Pressable
+                      accessibilityLabel={`${t("showDetails")}: ${group.workout.name}`}
+                      accessibilityRole="link"
+                      hitSlop={6}
+                      onPress={() => openWorkoutDetail(group.workout.id)}
+                    >
+                      <Text style={[styles.workoutName, { color: theme.primary }]}>{group.workout.name}</Text>
+                    </Pressable>
+                    <Text style={[styles.workoutMeta, { color: isCompleted ? theme.primary : theme.muted }]}>{isCompleted ? t("completed") : t("toDo")}</Text>
                   </View>
-                  <Pressable accessibilityLabel={t("removeFromWeeklyPlan")} accessibilityRole="button" onPress={() => setWeeklyPlan((current) => removeWeeklyPlanItem(current, item.workoutId))}>
+                  <Pressable accessibilityLabel={t("removeFromWeeklyPlan")} accessibilityRole="button" onPress={() => setWeeklyPlan((current) => removeWeeklyPlanItem(current, group.workout.id))}>
                     <Ionicons name="trash-outline" size={20} color={theme.danger} />
                   </Pressable>
                 </View>
                 <Text style={[styles.weeklyPlanChooseDayLabel, { color: theme.muted }]}>{t("chooseWeekday")}</Text>
                 <View style={styles.weeklyPlanDayChips}>
                   {dayOptions.map((day) => {
-                    const selected = item.day === day.value;
+                    const selected = selectedDays.has(day.value);
                     return (
                       <Pressable
                         key={day.value}
                         accessibilityRole="button"
+                        accessibilityState={{ selected }}
                         style={[styles.weeklyPlanDayChip, { backgroundColor: selected ? theme.primary : theme.control, borderColor: selected ? theme.primary : theme.border }]}
-                        onPress={() => setWeeklyPlan((current) => upsertWeeklyPlanItem(current, item.workoutId, day.value))}
+                        onPress={() => setWeeklyPlan((current) => toggleWeeklyPlanItemDay(current, group.workout.id, day.value))}
                       >
                         <Text style={[styles.weeklyPlanDayChipText, { color: selected ? theme.white : theme.text }]}>{day.label}</Text>
                       </Pressable>
@@ -9379,7 +9445,8 @@ function GymminApp() {
                   })}
                 </View>
               </View>
-            ))}
+              );
+            })}
           </View>
         ) : (
           <View style={[styles.weeklyPlanNoItems, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -10038,7 +10105,6 @@ function GymminApp() {
     const filters: Array<{ label: string; value: WorkoutHistoryStatusFilter }> = [
       { label: t("historyAll"), value: "all" },
       { label: t("completedStatus"), value: "completed" },
-      { label: t("abandonedStatus"), value: "abandoned" },
       { label: t("activeStatus"), value: "active" }
     ];
 
@@ -10183,9 +10249,8 @@ function GymminApp() {
     }
 
     const visibleSessionEntries = session.entries.filter((entry) => entry.type !== "rest" && entry.type !== "warmup");
-    const screenSize = Dimensions.get("window");
-    const historyTableMinWidth = workoutTableOrientation === "horizontal"
-      ? Math.max(screenSize.width - 44, 900)
+    const historyTableMinWidth = isLandscape
+      ? Math.max(windowSize.width - insets.left - insets.right - 44, 552)
       : undefined;
     const groupedSessionEntries = visibleSessionEntries.reduce<
       { key: string; title: string; entries: WorkoutSessionEntry[] }[]
@@ -10237,22 +10302,6 @@ function GymminApp() {
           ) : null}
         </View>
 
-        <Pressable
-          accessibilityLabel={t("rotateWorkoutTable")}
-          accessibilityRole="button"
-          style={[styles.inlineWorkoutRotateButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-          onPress={() => setWorkoutTableOrientation((current) => current === "vertical" ? "horizontal" : "vertical")}
-        >
-          <Ionicons
-            name={workoutTableOrientation === "horizontal" ? "phone-portrait-outline" : "phone-landscape-outline"}
-            size={18}
-            color={theme.primary}
-          />
-          <Text style={[styles.inlineWorkoutRotateButtonText, { color: theme.primary }]}>
-            {workoutTableOrientation === "horizontal" ? t("workoutTableOrientationVertical") : t("workoutTableOrientationHorizontal")}
-          </Text>
-        </Pressable>
-
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator
@@ -10288,6 +10337,9 @@ function GymminApp() {
                 <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("actualReps")}</Text>
                 <View style={[styles.workoutSessionDetailRepsSubHeader, { borderTopColor: theme.border }]}>
                   <Text
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.88}
+                    numberOfLines={1}
                     style={[
                       styles.workoutSessionDetailHeaderText,
                       styles.workoutSessionDetailRepsCell,
@@ -10297,6 +10349,9 @@ function GymminApp() {
                     {t("repsDone")}
                   </Text>
                   <Text
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.88}
+                    numberOfLines={1}
                     style={[
                       styles.workoutSessionDetailHeaderText,
                       styles.workoutSessionDetailRepsCell,
@@ -10452,7 +10507,6 @@ function GymminApp() {
             })}
             <View style={[styles.exerciseProgressTotalRow, { backgroundColor: theme.control }]}>
               <View style={styles.exerciseProgressTotalLabel}>
-                <Ionicons name="add-outline" size={18} color={theme.primary} />
                 <Text style={[styles.exerciseProgressTotalText, { color: theme.text }]}>{t("totalVolume")}</Text>
               </View>
               <Text style={[styles.exerciseProgressTotalValue, { color: theme.primary }]}>{formatProgressNumber(group.totalVolume, "kg")}</Text>
@@ -10552,7 +10606,14 @@ function GymminApp() {
         </View>
         <View style={styles.progressStatCopy}>
           <Text style={[styles.progressStatTitle, { color: theme.muted }]}>{title}</Text>
-          <Text style={[styles.progressStatValue, { color: theme.text }]}>{value}</Text>
+          <Text
+            adjustsFontSizeToFit
+            minimumFontScale={0.65}
+            numberOfLines={1}
+            style={[styles.progressStatValue, { color: theme.text }]}
+          >
+            {value}
+          </Text>
           <Text style={[styles.progressStatCaption, { color: theme.muted }]}>{caption}</Text>
         </View>
       </View>
@@ -10650,7 +10711,7 @@ function GymminApp() {
           {renderProgressStatCard(
             "server-outline",
             t("volume"),
-            formatNumber(progressDashboardStats.monthlyVolume, "kg"),
+            formatProgressDashboardVolume(progressDashboardStats.monthlyVolume, language),
             t("progressThisMonth")
           )}
         </ScrollView>
@@ -10879,43 +10940,6 @@ function GymminApp() {
 
     return (
       <View style={styles.historyScreen}>
-        {details?.imageAssetKeys.length ? (
-          <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseAnimation")}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.exerciseImageStrip}>
-              {details.imageAssetKeys.map((imageKey) => {
-                const imageSource = exerciseImageSources[imageKey];
-                if (!imageSource) {
-                  return null;
-                }
-
-                return (
-                  <View
-                    key={imageKey}
-                    style={[styles.exerciseImageFrame, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}
-                  >
-                    <Image source={imageSource} style={styles.exerciseDetailImage} resizeMode="contain" />
-                  </View>
-                );
-              })}
-            </ScrollView>
-          </View>
-        ) : null}
-
-        <CollapsiblePanel
-          collapseLabel={t("collapse")}
-          expandLabel={t("expand")}
-          isCollapsed={isExerciseDetailPanelCollapsed("howTo", false)}
-          theme={theme}
-          title={t("howToPerform")}
-          onToggle={() => toggleExerciseDetailPanel("howTo", false)}
-        >
-          {renderExerciseDetailSteps(
-            details?.instructions ?? [],
-            details?.exercise?.description || t("techniquePlaceholder")
-          )}
-        </CollapsiblePanel>
-
         <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.exerciseDetailMusclesHeader}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>{displayName}</Text>
@@ -10969,6 +10993,43 @@ function GymminApp() {
             <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("noExerciseMuscleData")}</Text>
           )}
         </View>
+
+        {details?.imageAssetKeys.length ? (
+          <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseAnimation")}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.exerciseImageStrip}>
+              {details.imageAssetKeys.map((imageKey) => {
+                const imageSource = exerciseImageSources[imageKey];
+                if (!imageSource) {
+                  return null;
+                }
+
+                return (
+                  <View
+                    key={imageKey}
+                    style={[styles.exerciseImageFrame, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}
+                  >
+                    <Image source={imageSource} style={styles.exerciseDetailImage} resizeMode="contain" />
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+        ) : null}
+
+        <CollapsiblePanel
+          collapseLabel={t("collapse")}
+          expandLabel={t("expand")}
+          isCollapsed={isExerciseDetailPanelCollapsed("howTo", false)}
+          theme={theme}
+          title={t("howToPerform")}
+          onToggle={() => toggleExerciseDetailPanel("howTo", false)}
+        >
+          {renderExerciseDetailSteps(
+            details?.instructions ?? [],
+            details?.exercise?.description || t("techniquePlaceholder")
+          )}
+        </CollapsiblePanel>
 
         <CollapsiblePanel
           collapseLabel={t("collapse")}
@@ -11516,11 +11577,8 @@ function GymminApp() {
   function renderSettings() {
     const stageTypeOptions = getStageTypeOptions(t);
     const executionModeOptions = getWorkoutExecutionModeOptions(t);
-    const tableOrientationOptions = getWorkoutTableOrientationOptions(t);
     const selectedStageTypeLabel = stageTypeOptions.find((option) => option.value === defaultStageType)?.label;
     const selectedExecutionModeLabel = executionModeOptions.find((option) => option.value === defaultWorkoutExecutionMode)?.label;
-    const selectedTableOrientationLabel =
-      tableOrientationOptions.find((option) => option.value === defaultWorkoutTableOrientation)?.label;
     const reminderDayOptions = getReminderDayOptions(t);
     return (
       <>
@@ -11593,16 +11651,6 @@ function GymminApp() {
             onPress={() => {
               setPendingDefaultWorkoutExecutionMode(defaultWorkoutExecutionMode);
               setActiveSettingsSheet("defaultWorkoutExecutionMode");
-            }}
-          />
-          <SettingsOption
-            icon="phone-landscape-outline"
-            label={t("defaultWorkoutTableOrientation")}
-            value={selectedTableOrientationLabel ?? t("workoutTableOrientationVertical")}
-            theme={theme}
-            onPress={() => {
-              setPendingDefaultWorkoutTableOrientation(defaultWorkoutTableOrientation);
-              setActiveSettingsSheet("defaultWorkoutTableOrientation");
             }}
           />
           <SettingsOption
@@ -12155,11 +12203,20 @@ function GymminApp() {
         </View>
 
         <View style={[styles.termsBugCallout, { backgroundColor: theme.control, borderColor: theme.border }]}>
-          <View style={[styles.termsSummaryIcon, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="information-circle-outline" size={25} color={theme.primary} />
+          <View style={styles.termsBugCalloutHeader}>
+            <View style={[styles.termsSummaryIcon, { backgroundColor: theme.secondaryBand }]}>
+              <Ionicons name="information-circle-outline" size={25} color={theme.primary} />
+            </View>
+            <Text style={[styles.termsBugCalloutText, { color: theme.text }]}>{t("termsBugCallout")}</Text>
           </View>
-          <Text style={[styles.termsBugCalloutText, { color: theme.text }]}>{t("termsBugCallout")}</Text>
-          <Pressable accessibilityRole="button" style={[styles.termsInfoButton, { borderColor: theme.primary }]} onPress={() => setActiveScreen("settings")}>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.termsInfoButton, { borderColor: theme.primary }]}
+            onPress={() => {
+              setActiveScreen("settings");
+              setTimeout(() => mainScrollRef.current?.scrollToEnd({ animated: true }), 150);
+            }}
+          >
             <Text style={[styles.termsInfoButtonText, { color: theme.primary }]}>{t("termsGoToInfo")}</Text>
           </Pressable>
         </View>
@@ -12420,7 +12477,6 @@ function GymminApp() {
       setAuthError("");
       setAuthMessage("");
       setActiveScreen("activeSessions");
-      void fetchAuthSessions();
     };
 
     const quickActions: Array<{ icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }> = [
@@ -12958,7 +13014,11 @@ function GymminApp() {
           {activeAuthSessions.map((session) => (
             <View key={session.id} style={[styles.sessionEntryCard, { backgroundColor: theme.control, borderColor: theme.border }]}>
               <Text style={[styles.workoutName, { color: theme.text }]}>
-                {session.deviceName || t("unknownDevice")} {session.isCurrent ? `· ${t("thisSession")}` : ""}
+                {session.deviceName && session.deviceName.toLowerCase() !== "unknown device"
+                  ? session.deviceName
+                  : session.isCurrent
+                    ? getAuthDeviceName()
+                    : t("unknownDevice")} {session.isCurrent ? `· ${t("thisSession")}` : ""}
               </Text>
               <Text style={[styles.workoutMeta, { color: theme.muted }]}>
                 {t("lastActivity")}: {formatDateTime(session.lastSeenAt)}
@@ -13195,56 +13255,6 @@ function GymminApp() {
             theme={theme}
             onPress={() => {
               setDefaultWorkoutExecutionMode(pendingDefaultWorkoutExecutionMode);
-              closeSettingsSheet();
-            }}
-          >
-            {t("save")}
-          </AppButton>
-        </>
-      );
-    }
-
-    if (activeSettingsSheet === "defaultWorkoutTableOrientation") {
-      const options = getWorkoutTableOrientationOptions(t);
-
-      return (
-        <>
-          <Text style={[styles.bottomSheetTitle, { color: theme.text }]}>{t("defaultWorkoutTableOrientation")}</Text>
-          <View style={[styles.bottomSheetOptionGroup, { borderColor: theme.border }]}>
-            {options.map((option, index) => {
-              const selected = pendingDefaultWorkoutTableOrientation === option.value;
-
-              return (
-                <Pressable
-                  key={option.value}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  style={[
-                    styles.bottomSheetOptionRow,
-                    {
-                      backgroundColor: selected ? theme.secondaryBand : theme.card,
-                      borderBottomColor: theme.border,
-                      borderBottomWidth: index === options.length - 1 ? 0 : 1
-                    }
-                  ]}
-                  onPress={() => setPendingDefaultWorkoutTableOrientation(option.value)}
-                >
-                  <Text style={[styles.bottomSheetOptionText, { color: theme.text }]}>
-                    {option.label}
-                  </Text>
-                  {selected ? (
-                    <Ionicons name="checkmark-circle" size={22} color={theme.primary} />
-                  ) : null}
-                </Pressable>
-              );
-            })}
-          </View>
-          <AppButton
-            icon="save-outline"
-            style={styles.bottomSheetButton}
-            theme={theme}
-            onPress={() => {
-              setDefaultWorkoutTableOrientation(pendingDefaultWorkoutTableOrientation);
               closeSettingsSheet();
             }}
           >
@@ -13795,26 +13805,12 @@ function GymminApp() {
       );
     }
 
-    const screenSize = Dimensions.get("window");
-    const horizontalTableMinWidth = Math.max(screenSize.width - 44, 900);
+    const responsiveTableMinWidth = isLandscape
+      ? Math.max(windowSize.width - insets.left - insets.right - 44, 688)
+      : undefined;
 
     return (
       <View style={styles.inlineWorkoutTableFrame}>
-        <Pressable
-          accessibilityLabel={t("rotateWorkoutTable")}
-          accessibilityRole="button"
-          style={[styles.inlineWorkoutRotateButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-          onPress={() => setWorkoutTableOrientation((current) => current === "vertical" ? "horizontal" : "vertical")}
-        >
-          <Ionicons
-            name={workoutTableOrientation === "horizontal" ? "phone-portrait-outline" : "phone-landscape-outline"}
-            size={18}
-            color={theme.primary}
-          />
-          <Text style={[styles.inlineWorkoutRotateButtonText, { color: theme.primary }]}>
-            {workoutTableOrientation === "horizontal" ? t("workoutTableOrientationVertical") : t("workoutTableOrientationHorizontal")}
-          </Text>
-        </Pressable>
         <ScrollView
           horizontal
           keyboardShouldPersistTaps="handled"
@@ -13826,7 +13822,7 @@ function GymminApp() {
           style={[
             styles.workoutSessionDetailTable,
             styles.inlineWorkoutTable,
-            workoutTableOrientation === "horizontal" ? [styles.inlineWorkoutTableHorizontal, { minWidth: horizontalTableMinWidth }] : null,
+            responsiveTableMinWidth ? { minWidth: responsiveTableMinWidth } : null,
             { borderColor: theme.border }
           ]}
         >
@@ -13840,7 +13836,7 @@ function GymminApp() {
               style={[
                 styles.workoutSessionDetailHeaderCell,
                 styles.inlineWorkoutExerciseCell,
-                workoutTableOrientation === "horizontal" ? styles.inlineWorkoutExerciseCellHorizontal : null,
+                isLandscape ? styles.inlineWorkoutExerciseCellHorizontal : null,
                 { borderRightColor: theme.border }
               ]}
             >
@@ -13859,6 +13855,9 @@ function GymminApp() {
               <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("actualReps")}</Text>
               <View style={[styles.workoutSessionDetailRepsSubHeader, { borderTopColor: theme.border }]}>
                 <Text
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.88}
+                  numberOfLines={1}
                   style={[
                     styles.workoutSessionDetailHeaderText,
                     styles.workoutSessionDetailRepsCell,
@@ -13869,6 +13868,9 @@ function GymminApp() {
                   {t("repsDone")}
                 </Text>
                 <Text
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.88}
+                  numberOfLines={1}
                   style={[
                     styles.workoutSessionDetailHeaderText,
                     styles.workoutSessionDetailRepsCell,
@@ -13905,7 +13907,7 @@ function GymminApp() {
               <View
                 style={[
                   styles.inlineWorkoutExerciseCell,
-                  workoutTableOrientation === "horizontal" ? styles.inlineWorkoutExerciseCellHorizontal : null,
+                  isLandscape ? styles.inlineWorkoutExerciseCellHorizontal : null,
                   { borderRightColor: theme.border }
                 ]}
               >
@@ -14479,6 +14481,8 @@ function GymminApp() {
             {
               backgroundColor: theme.card,
               borderBottomColor: theme.border,
+              paddingLeft: 20 + insets.left,
+              paddingRight: 20 + insets.right,
               paddingTop: Math.max(insets.top, 20) + 6
             }
           ]}
@@ -14574,6 +14578,8 @@ function GymminApp() {
             contentContainerStyle={[
               styles.content,
               {
+                paddingLeft: 20 + insets.left,
+                paddingRight: 20 + insets.right,
                 paddingBottom:
                   activeScreen === "builder"
                     ? stickyActionBottom + 118
@@ -14661,7 +14667,9 @@ function GymminApp() {
             {
               backgroundColor: theme.card,
               borderTopColor: theme.border,
-              paddingBottom: bottomInset
+              left: insets.left,
+              paddingBottom: bottomInset,
+              right: insets.right
             }
           ]}
         >
@@ -15536,6 +15544,9 @@ type ExercisePickerProps = {
   favoriteExerciseIds: ReadonlySet<string>;
   favoriteFilterAllLabel: string;
   favoriteFilterOnlyLabel: string;
+  hideAdditionalExercisesLabel: string;
+  showMoreExercisesLabel: string;
+  tierLabels: Readonly<Record<Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">, string>>;
   language: LanguageCode;
   loadingText: string;
   muscleFilterAllLabel: string;
@@ -15558,6 +15569,9 @@ function ExercisePicker({
   favoriteExerciseIds,
   favoriteFilterAllLabel,
   favoriteFilterOnlyLabel,
+  hideAdditionalExercisesLabel,
+  showMoreExercisesLabel,
+  tierLabels,
   language,
   loadingText,
   muscleFilterAllLabel,
@@ -15578,17 +15592,22 @@ function ExercisePicker({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleKey | "all">("all");
   const [favoriteFilter, setFavoriteFilter] = useState<"all" | "favorites">("all");
+  const [showAdditionalExercises, setShowAdditionalExercises] = useState(false);
+  const [enabledAdditionalTiers, setEnabledAdditionalTiers] = useState<Set<Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">>>(new Set());
   const pickerInsets = useSafeAreaInsets();
   const pickerHeaderTopPadding = Math.max(pickerInsets.top, 20) + 6;
   const selectedOption = value ? optionByValue.get(value) : undefined;
-  const normalizedQuery = query.trim().toLowerCase();
-  const visibleOptions = useMemo(
-    () =>
-      favoriteFilter === "favorites"
-        ? options.filter((option) => favoriteExerciseIds.has(option.exerciseId))
-        : options,
-    [favoriteExerciseIds, favoriteFilter, options]
+  const deferredQuery = useDeferredValue(query);
+  const normalizedQuery = deferredQuery.trim().toLowerCase();
+  const defaultGroupedOptions = useMemo(
+    () => getExerciseSectionsForStageType(language, stageType, "all"),
+    [language, stageType]
   );
+  const visibleOptions = useMemo(() => {
+    return favoriteFilter === "favorites"
+      ? filterExerciseOptionsForPicker(options, normalizedQuery, enabledAdditionalTiers).filter((option) => favoriteExerciseIds.has(option.exerciseId))
+      : filterExerciseOptionsForPicker(options, normalizedQuery, enabledAdditionalTiers);
+  }, [enabledAdditionalTiers, favoriteExerciseIds, favoriteFilter, normalizedQuery, options]);
   const muscleOptions = useMemo(
     () => [
       { label: muscleFilterAllLabel, value: "all" as const },
@@ -15601,31 +15620,24 @@ function ExercisePicker({
       return [];
     }
 
-    const nextOptions = normalizedQuery
-      ? visibleOptions.filter((option) => option.label.toLowerCase().includes(normalizedQuery))
-      : visibleOptions;
+    if (
+      !normalizedQuery &&
+      favoriteFilter === "all" &&
+      enabledAdditionalTiers.size === 0 &&
+      selectedMuscle === "all"
+    ) {
+      return defaultGroupedOptions;
+    }
 
-    return favoriteFilter === "all" && !normalizedQuery
-      ? getExerciseSectionsForStageType(language, stageType, selectedMuscle)
-      : buildExerciseSections(nextOptions, language, selectedMuscle);
-  }, [favoriteFilter, isOpen, language, normalizedQuery, selectedMuscle, stageType, visibleOptions]);
+    const nextOptions = visibleOptions;
+
+    return buildExerciseSections(nextOptions, language, selectedMuscle);
+  }, [defaultGroupedOptions, enabledAdditionalTiers, favoriteFilter, isOpen, language, normalizedQuery, selectedMuscle, visibleOptions]);
   const exerciseListEmptyText = isOpen ? emptyText : loadingText;
   const exerciseListExtraData = useMemo(
     () => ({ favoriteExerciseIds, value }),
     [favoriteExerciseIds, value]
   );
-
-  useEffect(() => {
-    if (disabled) {
-      return;
-    }
-
-    const timeoutId = setTimeout(() => {
-      getExerciseSectionsForStageType(language, stageType, "all");
-    }, 80);
-
-    return () => clearTimeout(timeoutId);
-  }, [disabled, language, stageType]);
 
   const selectExercise = useCallback((nextValue: string) => {
     onChange(nextValue);
@@ -15634,7 +15646,18 @@ function ExercisePicker({
     setIsSearchOpen(false);
     setSelectedMuscle("all");
     setFavoriteFilter("all");
+    setShowAdditionalExercises(false);
+    setEnabledAdditionalTiers(new Set());
   }, [onChange]);
+
+  const toggleAdditionalTier = useCallback((tier: Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">) => {
+    setEnabledAdditionalTiers((current) => {
+      const next = new Set(current);
+      if (next.has(tier)) next.delete(tier);
+      else next.add(tier);
+      return next;
+    });
+  }, []);
 
   function openPicker() {
     if (disabled) {
@@ -15669,6 +15692,7 @@ function ExercisePicker({
   const renderExerciseItem = useCallback(
     ({ item }: SectionListRenderItemInfo<ExerciseSection["data"][number], ExerciseSection>) => {
       const isFavorite = favoriteExerciseIds.has(item.exerciseId);
+      const tierBadge = getExerciseOptionTierBadge(item);
 
       return (
         <Pressable
@@ -15685,6 +15709,11 @@ function ExercisePicker({
           <Text style={[styles.exercisePickerRowText, { color: theme.text }]}>
             {item.label}
           </Text>
+          {tierBadge ? (
+            <Text style={[styles.exercisePickerTierBadge, { color: theme.primary, backgroundColor: theme.secondaryBand }]}>
+              {tierLabels[tierBadge]}
+            </Text>
+          ) : null}
           <Pressable
             accessibilityLabel={isFavorite ? favoriteFilterOnlyLabel : favoriteFilterAllLabel}
             accessibilityRole="button"
@@ -15709,6 +15738,7 @@ function ExercisePicker({
       favoriteFilterOnlyLabel,
       onToggleFavorite,
       selectExercise,
+      tierLabels,
       theme.border,
       theme.card,
       theme.muted,
@@ -15842,6 +15872,38 @@ function ExercisePicker({
                   </Pressable>
                 );
               })}
+            </View>
+
+            <View style={styles.exerciseTierFilterPanel}>
+              <Pressable
+                accessibilityRole="button"
+                style={[styles.exerciseTierFilterToggle, { borderColor: theme.border, backgroundColor: theme.control }]}
+                onPress={() => setShowAdditionalExercises((current) => !current)}
+              >
+                <Text style={[styles.exerciseTierFilterToggleText, { color: theme.text }]}>
+                  {showAdditionalExercises ? hideAdditionalExercisesLabel : showMoreExercisesLabel}
+                </Text>
+                <Ionicons name={showAdditionalExercises ? "chevron-up" : "chevron-down"} size={18} color={theme.primary} />
+              </Pressable>
+              {showAdditionalExercises ? (
+                <View style={styles.exerciseTierFilterOptions}>
+                  {(["variation", "advanced", "sportSpecific", "rehab"] as const).map((tier) => {
+                    const enabled = enabledAdditionalTiers.has(tier);
+                    return (
+                      <Pressable
+                        key={tier}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: enabled }}
+                        style={[styles.exerciseTierFilterChip, { borderColor: theme.border, backgroundColor: enabled ? theme.primary : theme.secondaryBand }]}
+                        onPress={() => toggleAdditionalTier(tier)}
+                      >
+                        <Ionicons name={enabled ? "checkmark-circle" : "ellipse-outline"} size={18} color={enabled ? theme.white : theme.muted} />
+                        <Text style={[styles.exerciseTierFilterChipText, { color: enabled ? theme.white : theme.text }]}>{tierLabels[tier]}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ) : null}
             </View>
 
             <SectionList
@@ -16818,7 +16880,7 @@ function StepConfiguration({
       ? parentStageType
       : step.stageType;
   const filteredExerciseOptions = useMemo(
-    () => shouldShowExerciseFields ? getCachedExerciseOptionsForStageType(language, exerciseCatalogStageType) : [],
+    () => shouldShowExerciseFields ? getCachedExerciseOptionsForStageType(language, exerciseCatalogStageType, activeExerciseLibraryTiers) : [],
     [exerciseCatalogStageType, language, shouldShowExerciseFields]
   );
   const filteredExerciseOptionByValue = useMemo(
@@ -16891,7 +16953,7 @@ function StepConfiguration({
       (parentStageType === "warmup" || parentStageType === "recovery" || parentStageType === "cooldown")
         ? parentStageType
         : stageType;
-    const nextOptions = getCachedExerciseOptionsForStageType(language, nextExerciseCatalogStageType);
+    const nextOptions = getCachedExerciseOptionsForStageType(language, nextExerciseCatalogStageType, activeExerciseLibraryTiers);
     const hasCurrentExercise = nextOptions.some((option) => option.value === step.exerciseName);
 
     updateStep(step.id, {
@@ -16940,6 +17002,14 @@ function StepConfiguration({
               favoriteExerciseIds={favoriteExerciseIds}
               favoriteFilterAllLabel={t("favoriteExercisesAllFilter")}
               favoriteFilterOnlyLabel={t("favoriteExercisesOnlyFilter")}
+              hideAdditionalExercisesLabel={t("exercisePickerHideMore")}
+              showMoreExercisesLabel={t("exercisePickerShowMore")}
+              tierLabels={{
+                variation: t("exercisePickerTierVariation"),
+                advanced: t("exercisePickerTierAdvanced"),
+                sportSpecific: t("exercisePickerTierSportSpecific"),
+                rehab: t("exercisePickerTierRehab")
+              }}
               language={language}
               loadingText={t("exercisePickerLoading")}
               muscleFilterAllLabel={t("exerciseMuscleFilterAll")}
@@ -17956,6 +18026,42 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     textAlign: "center"
   },
+  exerciseTierFilterPanel: {
+    gap: 8,
+    marginBottom: 8,
+    marginHorizontal: 22
+  },
+  exerciseTierFilterToggle: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    minHeight: 40,
+    paddingHorizontal: 12
+  },
+  exerciseTierFilterToggleText: {
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  exerciseTierFilterOptions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  exerciseTierFilterChip: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 5,
+    minHeight: 36,
+    paddingHorizontal: 10
+  },
+  exerciseTierFilterChipText: {
+    fontSize: 13,
+    fontWeight: "700"
+  },
   exercisePickerSearchText: {
     fontSize: 16,
     paddingHorizontal: 14
@@ -17986,6 +18092,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "400",
     minWidth: 0
+  },
+  exercisePickerTierBadge: {
+    borderRadius: 6,
+    fontSize: 10,
+    fontWeight: "800",
+    overflow: "hidden",
+    paddingHorizontal: 6,
+    paddingVertical: 3
   },
   exercisePickerFavoriteButton: {
     alignItems: "center",
@@ -19032,7 +19146,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     justifyContent: "center",
     paddingTop: 7,
-    width: 112
+    width: 136
   },
   inlineWorkoutRepsHeader: {
     width: 136
@@ -19049,7 +19163,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 5,
     textAlign: "center",
-    width: 56
+    width: 68
   },
   inlineWorkoutRepsCell: {
     width: 68
@@ -20768,12 +20882,15 @@ const styles = StyleSheet.create({
     lineHeight: 20
   },
   termsBugCallout: {
-    alignItems: "center",
     borderRadius: 8,
     borderWidth: 1,
-    flexDirection: "row",
-    gap: 10,
+    gap: 12,
     padding: 12
+  },
+  termsBugCalloutHeader: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 10
   },
   termsBugCalloutText: {
     flex: 1,
@@ -20784,11 +20901,12 @@ const styles = StyleSheet.create({
   },
   termsInfoButton: {
     alignItems: "center",
+    alignSelf: "flex-end",
     borderRadius: 8,
     borderWidth: 1,
     justifyContent: "center",
     minHeight: 38,
-    paddingHorizontal: 10
+    paddingHorizontal: 12
   },
   termsInfoButtonText: {
     fontSize: 13,
@@ -20937,9 +21055,17 @@ const styles = StyleSheet.create({
     fontWeight: "700"
   },
   weeklyPlanTodayName: {
+    flex: 1,
     fontSize: 14,
     fontWeight: "900",
-    marginTop: 3
+    minWidth: 0
+  },
+  weeklyPlanTodayLink: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 2,
+    marginTop: 3,
+    minWidth: 0
   },
   weeklyPlanEmptyCard: {
     alignItems: "center",

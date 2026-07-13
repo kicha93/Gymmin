@@ -692,7 +692,7 @@ export const crunch = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-hollow-rock-253",
@@ -1511,7 +1511,7 @@ export const crunch = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-single-leg-reverse-crunch-274",
@@ -1574,7 +1574,7 @@ export const crunch = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-standing-cable-crunch-276",
@@ -1826,7 +1826,7 @@ export const crunch = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-swiss-ball-reverse-crunch-281",
@@ -1889,7 +1889,7 @@ export const crunch = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-swiss-ball-side-crunch-283",
@@ -1952,7 +1952,7 @@ export const crunch = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-toes-to-bar-285",

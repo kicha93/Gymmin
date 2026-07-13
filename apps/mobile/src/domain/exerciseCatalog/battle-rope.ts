@@ -62,7 +62,7 @@ export const battleRope = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "battle-rope-double-arm-slam-57",
@@ -125,7 +125,7 @@ export const battleRope = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "battle-rope-double-arm-wave-58",
@@ -188,7 +188,7 @@ export const battleRope = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "battle-rope-inside-circle-62",
@@ -377,6 +377,6 @@ export const battleRope = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   }
 ] satisfies readonly Exercise[];

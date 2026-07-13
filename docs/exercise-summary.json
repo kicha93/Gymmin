@@ -120,16 +120,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "banded-exercises-front-raise-14",
-    "polishName": "Wznosy ramion przodem (z gumą oporową)",
-    "englishName": "Banded Front Raise",
-    "exerciseType": "BANDED_EXERCISES",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "banded-exercises-glute-bridge-15",
     "polishName": "Mostek biodrowy (z gumą oporową)",
     "englishName": "Banded Glute Bridge",
@@ -337,7 +327,7 @@
     "requiredEquipment": [
       "band"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "banded-exercises-shoulder-flexion-to-90-degrees-37",
@@ -407,7 +397,7 @@
     "requiredEquipment": [
       "band"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "battle-rope-alternating-wave-50",
@@ -417,7 +407,7 @@
     "requiredEquipment": [
       "battleRope"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "battle-rope-double-arm-slam-57",
@@ -427,7 +417,7 @@
     "requiredEquipment": [
       "battleRope"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "battle-rope-double-arm-wave-58",
@@ -437,7 +427,7 @@
     "requiredEquipment": [
       "battleRope"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "battle-rope-inside-circle-62",
@@ -467,7 +457,7 @@
     "requiredEquipment": [
       "battleRope"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "bench-press-alternating-dumbbell-chest-press-74",
@@ -478,7 +468,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-alternating-dumbbell-chest-press-on-swiss-ball-75",
@@ -489,7 +479,7 @@
       "dumbbell",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-barbell-bench-press-76",
@@ -533,7 +523,7 @@
       "barbell",
       "bench"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-decline-dumbbell-bench-press-81",
@@ -641,7 +631,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-neutral-grip-dumbbell-incline-bench-press-90",
@@ -652,7 +642,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-one-arm-floor-press-91",
@@ -662,7 +652,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-partial-lockout-92",
@@ -684,7 +674,7 @@
       "barbell",
       "bench"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-reverse-grip-incline-bench-press-94",
@@ -695,7 +685,7 @@
       "barbell",
       "bench"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-single-arm-cable-chest-press-95",
@@ -705,7 +695,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-single-arm-dumbbell-bench-press-96",
@@ -716,7 +706,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-smith-machine-bench-press-97",
@@ -738,7 +728,7 @@
       "dumbbell",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-triple-stop-barbell-bench-press-99",
@@ -760,7 +750,7 @@
       "barbell",
       "bench"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bike-outdoor-bike-102",
@@ -786,7 +776,7 @@
     "englishName": "3-way Single-leg Calf Raise",
     "exerciseType": "CALF_RAISE",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-3-way-weighted-calf-raise-105",
@@ -806,7 +796,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-donkey-calf-raise-108",
@@ -835,7 +825,7 @@
     "englishName": "Single-leg Bent-knee Calf Raise",
     "exerciseType": "CALF_RAISE",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-single-leg-donkey-calf-raise-113",
@@ -845,7 +835,7 @@
     "requiredEquipment": [
       "other"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-single-leg-standing-calf-raise-115",
@@ -853,7 +843,7 @@
     "englishName": "Single-leg Standing Calf Raise",
     "exerciseType": "CALF_RAISE",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-single-leg-standing-dumbbell-calf-raise-116",
@@ -863,7 +853,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-standing-barbell-calf-raise-117",
@@ -927,7 +917,7 @@
     "requiredEquipment": [
       "jumpRope"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "cardio-jump-rope-128",
@@ -947,7 +937,7 @@
     "requiredEquipment": [
       "jumpRope"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "cardio-jump-rope-jog-130",
@@ -1287,7 +1277,7 @@
     "requiredEquipment": [
       "plate"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "core-alternating-slide-out-183",
@@ -1295,7 +1285,7 @@
     "englishName": "Alternating Slide-out",
     "exerciseType": "CORE",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "core-barbell-rollout-184",
@@ -1351,7 +1341,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "pull-up-hanging-hurdle-907",
@@ -1397,7 +1387,7 @@
     "requiredEquipment": [
       "kettlebell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "core-kneeling-ab-wheel-197",
@@ -1487,7 +1477,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "core-swiss-ball-pike-207",
@@ -1497,7 +1487,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "core-swiss-ball-rollout-208",
@@ -1507,7 +1497,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "core-toes-to-elbows-209",
@@ -1545,7 +1535,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "core-windmill-switches-236",
@@ -1553,7 +1543,7 @@
     "englishName": "Windmill Switches",
     "exerciseType": "CORE",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "crunch-bicycle-crunch-237",
@@ -1645,7 +1635,7 @@
     "englishName": "Hip Crossover",
     "exerciseType": "CRUNCH",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-hollow-rock-253",
@@ -1759,7 +1749,7 @@
     "englishName": "Seated Alternating Reverse Crunch",
     "exerciseType": "CRUNCH",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-single-leg-reverse-crunch-274",
@@ -1767,7 +1757,7 @@
     "englishName": "Single-leg Reverse Crunch",
     "exerciseType": "CRUNCH",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-standing-cable-crunch-276",
@@ -1805,7 +1795,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-swiss-ball-reverse-crunch-281",
@@ -1815,7 +1805,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-swiss-ball-side-crunch-283",
@@ -1825,7 +1815,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-toes-to-bar-285",
@@ -1845,7 +1835,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-alternating-dumbbell-biceps-curl-on-swiss-ball-324",
@@ -1856,7 +1846,7 @@
       "dumbbell",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-alternating-incline-dumbbell-biceps-curl-325",
@@ -1867,7 +1857,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-barbell-biceps-curl-326",
@@ -1877,7 +1867,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-barbell-reverse-wrist-curl-327",
@@ -1917,7 +1907,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-cable-biceps-curl-331",
@@ -1947,7 +1937,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "main"
   },
   {
     "id": "curl-close-grip-ez-bar-biceps-curl-334",
@@ -1957,7 +1947,7 @@
     "requiredEquipment": [
       "ezBar"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-cross-body-dumbbell-hammer-curl-335",
@@ -1968,6 +1958,17 @@
       "dumbbell"
     ],
     "libraryTier": "main"
+  },
+  {
+    "id": "curl-dead-hang-biceps-curl-337",
+    "polishName": "Uginanie ramion ze swobodnego zwisu",
+    "englishName": "Dead-hang Biceps Curl",
+    "exerciseType": "CURL",
+    "requiredEquipment": [
+      "ezBar",
+      "other"
+    ],
+    "libraryTier": "variation"
   },
   {
     "id": "curl-decline-hammer-curl-338",
@@ -2100,7 +2101,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-one-arm-preacher-curl-352",
@@ -2111,7 +2112,7 @@
       "dumbbell",
       "other"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-plate-pinch-curl-353",
@@ -2152,7 +2153,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-reverse-grip-wrist-curl-357",
@@ -2162,7 +2163,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-seated-alternating-dumbbell-biceps-curl-358",
@@ -2173,7 +2174,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-seated-dumbbell-biceps-curl-359",
@@ -2247,7 +2248,7 @@
       "other",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-twisting-standing-dumbbell-biceps-curl-369",
@@ -2267,27 +2268,7 @@
     "requiredEquipment": [
       "ezBar"
     ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "leg-curl-band-good-morning-571",
-    "polishName": "Ćwiczenie „dzień dobry” (z gumą oporową)",
-    "englishName": "Band Good Morning",
-    "exerciseType": "DEADLIFT",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "leg-curl-bar-good-morning-572",
-    "polishName": "Ćwiczenie „dzień dobry” z drążkiem",
-    "englishName": "Bar Good Morning",
-    "exerciseType": "DEADLIFT",
-    "requiredEquipment": [
-      "other"
-    ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "deadlift-barbell-deadlift-371",
@@ -2327,7 +2308,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "deadlift-dumbbell-straight-leg-deadlift-377",
@@ -2336,16 +2317,6 @@
     "exerciseType": "DEADLIFT",
     "requiredEquipment": [
       "dumbbell"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "leg-curl-good-morning-573",
-    "polishName": "Ćwiczenie „dzień dobry”",
-    "englishName": "Good Morning",
-    "exerciseType": "DEADLIFT",
-    "requiredEquipment": [
-      "barbell"
     ],
     "libraryTier": "main"
   },
@@ -2387,7 +2358,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "deadlift-rack-pull-382",
@@ -2421,17 +2392,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "leg-curl-seated-barbell-good-morning-575",
-    "polishName": "Dzień dobry ze sztangą siedząc",
-    "englishName": "Seated Barbell Good Morning",
-    "exerciseType": "DEADLIFT",
-    "requiredEquipment": [
-      "barbell",
-      "bench"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "deadlift-single-arm-deadlift-384",
     "polishName": "Martwy ciąg jednorącz",
     "englishName": "Single-arm Deadlift",
@@ -2439,7 +2399,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "deadlift-single-leg-barbell-deadlift-385",
@@ -2449,17 +2409,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "leg-curl-single-leg-barbell-good-morning-576",
-    "polishName": "Ćwiczenie „dzień dobry” ze sztangą jednonóż",
-    "englishName": "Single-leg Barbell Good Morning",
-    "exerciseType": "DEADLIFT",
-    "requiredEquipment": [
-      "barbell"
-    ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "deadlift-single-leg-barbell-straight-leg-deadlift-386",
@@ -2469,7 +2419,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "deadlift-single-leg-rdl-circuit-388",
@@ -2489,27 +2439,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "leg-curl-split-barbell-good-morning-579",
-    "polishName": "Dzień dobry ze sztangą ze stopą na podwyższeniu",
-    "englishName": "Split Barbell Good Morning",
-    "exerciseType": "DEADLIFT",
-    "requiredEquipment": [
-      "barbell"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "leg-curl-staggered-stance-good-morning-581",
-    "polishName": "Dzień dobry ze sztangą w wykroku",
-    "englishName": "Staggered-stance Good Morning",
-    "exerciseType": "DEADLIFT",
-    "requiredEquipment": [
-      "barbell"
-    ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "deadlift-straight-leg-deadlift-395",
@@ -2557,17 +2487,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "leg-curl-zercher-good-morning-584",
-    "polishName": "Ćwiczenie „dzień dobry” Zerchera",
-    "englishName": "Zercher Good Morning",
-    "exerciseType": "DEADLIFT",
-    "requiredEquipment": [
-      "barbell"
-    ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-seated-dumbbell-toe-raise-110",
@@ -2578,7 +2498,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "elliptical-elliptical-396",
@@ -2591,16 +2511,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "lateral-raise-rope-climb-557",
-    "polishName": "Wspinaczka po linie",
-    "englishName": "Rope Climb",
-    "exerciseType": "FLOOR_CLIMB",
-    "requiredEquipment": [
-      "rope"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "flye-cable-crossover-398",
     "polishName": "Rozpiętki na bramie",
     "englishName": "Cable Crossover",
@@ -2608,7 +2518,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "flye-decline-dumbbell-flye-399",
@@ -2702,7 +2612,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "flye-swiss-ball-dumbbell-flye-406",
@@ -2713,7 +2623,138 @@
       "dumbbell",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
+  },
+  {
+    "id": "banded-exercises-front-raise-14",
+    "polishName": "Wznosy ramion przodem (z gumą oporową)",
+    "englishName": "Banded Front Raise",
+    "exerciseType": "FRONT_RAISE",
+    "requiredEquipment": [
+      "band"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "lateral-raise-cable-front-raise-541",
+    "polishName": "Wznosy ramion przodem z linką wyciągu dolnego",
+    "englishName": "Cable Front Raise",
+    "exerciseType": "FRONT_RAISE",
+    "requiredEquipment": [
+      "cableMachine"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "shoulder-press-dumbbell-front-raise-1117",
+    "polishName": "Wznosy wyprostowanych ramion z hantlami przodem",
+    "englishName": "Dumbbell Front Raise",
+    "exerciseType": "FRONT_RAISE",
+    "requiredEquipment": [
+      "dumbbell"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "lateral-raise-front-raise-547",
+    "polishName": "Wznosy ramion przodem",
+    "englishName": "Front Raise",
+    "exerciseType": "FRONT_RAISE",
+    "requiredEquipment": [
+      "dumbbell"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "shoulder-press-weight-plate-front-raise-1135",
+    "polishName": "Wznosy talerza z przodu",
+    "englishName": "Weight-plate Front Raise",
+    "exerciseType": "FRONT_RAISE",
+    "requiredEquipment": [
+      "plate"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "leg-curl-band-good-morning-571",
+    "polishName": "Ćwiczenie „dzień dobry” (z gumą oporową)",
+    "englishName": "Band Good Morning",
+    "exerciseType": "GOOD_MORNING",
+    "requiredEquipment": [
+      "band"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "leg-curl-bar-good-morning-572",
+    "polishName": "Ćwiczenie „dzień dobry” z drążkiem",
+    "englishName": "Bar Good Morning",
+    "exerciseType": "GOOD_MORNING",
+    "requiredEquipment": [
+      "other"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "leg-curl-good-morning-573",
+    "polishName": "Ćwiczenie „dzień dobry”",
+    "englishName": "Good Morning",
+    "exerciseType": "GOOD_MORNING",
+    "requiredEquipment": [
+      "barbell"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "leg-curl-seated-barbell-good-morning-575",
+    "polishName": "Dzień dobry ze sztangą siedząc",
+    "englishName": "Seated Barbell Good Morning",
+    "exerciseType": "GOOD_MORNING",
+    "requiredEquipment": [
+      "barbell",
+      "bench"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "leg-curl-single-leg-barbell-good-morning-576",
+    "polishName": "Ćwiczenie „dzień dobry” ze sztangą jednonóż",
+    "englishName": "Single-leg Barbell Good Morning",
+    "exerciseType": "GOOD_MORNING",
+    "requiredEquipment": [
+      "barbell"
+    ],
+    "libraryTier": "variation"
+  },
+  {
+    "id": "leg-curl-split-barbell-good-morning-579",
+    "polishName": "Dzień dobry ze sztangą ze stopą na podwyższeniu",
+    "englishName": "Split Barbell Good Morning",
+    "exerciseType": "GOOD_MORNING",
+    "requiredEquipment": [
+      "barbell"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "leg-curl-staggered-stance-good-morning-581",
+    "polishName": "Dzień dobry ze sztangą w wykroku",
+    "englishName": "Staggered-stance Good Morning",
+    "exerciseType": "GOOD_MORNING",
+    "requiredEquipment": [
+      "barbell"
+    ],
+    "libraryTier": "variation"
+  },
+  {
+    "id": "leg-curl-zercher-good-morning-584",
+    "polishName": "Ćwiczenie „dzień dobry” Zerchera",
+    "englishName": "Zercher Good Morning",
+    "exerciseType": "GOOD_MORNING",
+    "requiredEquipment": [
+      "barbell"
+    ],
+    "libraryTier": "main"
   },
   {
     "id": "hip-raise-barbell-hip-thrust-on-floor-407",
@@ -2794,7 +2835,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-raise-hip-raise-with-head-on-swiss-ball-417",
@@ -2804,7 +2845,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-raise-hip-raise-with-knee-squeeze-418",
@@ -2866,7 +2907,7 @@
     "englishName": "Single-leg Hip Raise",
     "exerciseType": "HIP_RAISE",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-raise-single-leg-hip-raise-with-foot-on-bench-425",
@@ -2876,7 +2917,7 @@
     "requiredEquipment": [
       "bench"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-single-leg-hip-raise-with-knee-hold-114",
@@ -2884,7 +2925,7 @@
     "englishName": "Single-leg Hip Raise with Knee Hold",
     "exerciseType": "HIP_RAISE",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-stability-band-side-lying-leg-raise-451",
@@ -2972,7 +3013,7 @@
     "englishName": "Prone Hip Internal Rotation",
     "exerciseType": "HIP_STABILITY",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "hip-stability-quadruped-462",
@@ -3062,7 +3103,7 @@
     "englishName": "Supine Hip Internal Rotation",
     "exerciseType": "HIP_STABILITY",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "squat-squat-american-swing-1300",
@@ -3098,7 +3139,7 @@
     "englishName": "One-arm Swing",
     "exerciseType": "HIP_SWING",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-swing-single-arm-dumbbell-swing-489",
@@ -3108,7 +3149,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-swing-single-arm-kettlebell-swing-490",
@@ -3118,7 +3159,7 @@
     "requiredEquipment": [
       "kettlebell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-swing-step-out-swing-491",
@@ -3182,7 +3223,7 @@
     "requiredEquipment": [
       "machine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-spine-extension-508",
@@ -3218,7 +3259,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-swiss-ball-back-extension-512",
@@ -3228,7 +3269,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-swiss-ball-hyperextension-513",
@@ -3238,7 +3279,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-swiss-ball-opposite-arm-and-leg-lift-514",
@@ -3248,7 +3289,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "indoor-bike-air-bike-531",
@@ -3311,16 +3352,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "lateral-raise-cable-front-raise-541",
-    "polishName": "Wznosy ramion przodem z linką wyciągu dolnego",
-    "englishName": "Cable Front Raise",
-    "exerciseType": "LATERAL_RAISE",
-    "requiredEquipment": [
-      "cableMachine"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "lateral-raise-combo-shoulder-raise-543",
     "polishName": "Kombinacja wznosu barków",
     "englishName": "Combo Shoulder Raise",
@@ -3341,16 +3372,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "shoulder-press-dumbbell-front-raise-1117",
-    "polishName": "Wznosy wyprostowanych ramion z hantlami przodem",
-    "englishName": "Dumbbell Front Raise",
-    "exerciseType": "LATERAL_RAISE",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "lateral-raise-dumbbell-lateral-raise-545",
     "polishName": "Unoszenie hantli bokiem",
     "englishName": "Dumbbell Lateral Raise",
@@ -3364,16 +3385,6 @@
     "id": "lateral-raise-dumbbell-v-raise-546",
     "polishName": "Wznosy wyprostowanych ramion w pozycji litery „V” z hantlami",
     "englishName": "Dumbbell V Raise",
-    "exerciseType": "LATERAL_RAISE",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "lateral-raise-front-raise-547",
-    "polishName": "Wznosy ramion przodem",
-    "englishName": "Front Raise",
     "exerciseType": "LATERAL_RAISE",
     "requiredEquipment": [
       "dumbbell"
@@ -3408,7 +3419,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lateral-raise-overhand-grip-rear-lateral-raise-552",
@@ -3483,16 +3494,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "shoulder-press-weight-plate-front-raise-1135",
-    "polishName": "Wznosy talerza z przodu",
-    "englishName": "Weight-plate Front Raise",
-    "exerciseType": "LATERAL_RAISE",
-    "requiredEquipment": [
-      "plate"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "leg-curl-leg-curl-574",
     "polishName": "Uginanie nóg na maszynie",
     "englishName": "Leg Curl",
@@ -3530,7 +3531,7 @@
     "requiredEquipment": [
       "slidingDisc"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "leg-curl-sliding-leg-curl-578",
@@ -3558,7 +3559,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "crunch-leg-extensions-260",
@@ -3598,7 +3599,7 @@
     "requiredEquipment": [
       "pullupBar"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "leg-raise-kettlebell-leg-raises-588",
@@ -3616,16 +3617,6 @@
     "englishName": "Knee Raises",
     "exerciseType": "LEG_RAISE",
     "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "leg-raise-lateral-stepover-589",
-    "polishName": "Przechodzenie bokiem nad podwyższeniem",
-    "englishName": "Lateral Step-over",
-    "exerciseType": "LEG_RAISE",
-    "requiredEquipment": [
-      "bench"
-    ],
     "libraryTier": "main"
   },
   {
@@ -3686,7 +3677,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "leg-raise-single-leg-lowering-drill-597",
@@ -3694,7 +3685,7 @@
     "englishName": "Single-leg Lowering Drill",
     "exerciseType": "LEG_RAISE",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lunge-alternating-barbell-forward-lunge-608",
@@ -3704,7 +3695,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-alternating-box-dumbbell-step-ups-1247",
@@ -3715,7 +3706,7 @@
       "box",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lunge-alternating-dumbbell-lunge-609",
@@ -3725,7 +3716,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lunge-alternating-dumbbell-lunge-with-reach-610",
@@ -3735,7 +3726,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lunge-back-foot-elevated-dumbbell-split-squat-611",
@@ -3777,7 +3768,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lunge-barbell-front-split-squat-615",
@@ -3786,17 +3777,6 @@
     "exerciseType": "LUNGE",
     "requiredEquipment": [
       "barbell"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "squat-barbell-lateral-step-up-1256",
-    "polishName": "Wchodzenie boczne na podwyższenie ze sztangą na barkach",
-    "englishName": "Barbell Lateral Step-up",
-    "exerciseType": "LUNGE",
-    "requiredEquipment": [
-      "barbell",
-      "box"
     ],
     "libraryTier": "main"
   },
@@ -3841,44 +3821,11 @@
     "libraryTier": "main"
   },
   {
-    "id": "squat-barbell-stepover-1262",
-    "polishName": "Przechodzenie ze sztangą na barkach przez podwyższenie",
-    "englishName": "Barbell Step-over",
-    "exerciseType": "LUNGE",
-    "requiredEquipment": [
-      "barbell",
-      "box"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "squat-barbell-step-up-1261",
-    "polishName": "Wchodzenie ze sztangą na barkach na podwyższenie",
-    "englishName": "Barbell Step-up",
-    "exerciseType": "LUNGE",
-    "requiredEquipment": [
-      "barbell",
-      "box"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "lunge-core-control-rear-lunge-620",
     "polishName": "Zakroki ze stabilizacją tułowia",
     "englishName": "Core Control Rear Lunge",
     "exerciseType": "LUNGE",
     "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "squat-crossover-dumbbell-step-up-1268",
-    "polishName": "Obustronne wchodzenie na podwyższenie z hantlami bokiem",
-    "englishName": "Crossover Dumbbell Step-up",
-    "exerciseType": "LUNGE",
-    "requiredEquipment": [
-      "box",
-      "dumbbell"
-    ],
     "libraryTier": "main"
   },
   {
@@ -3925,7 +3872,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lunge-dumbbell-diagonal-lunge-627",
@@ -4008,28 +3955,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "squat-dumbbell-stepover-1276",
-    "polishName": "Przechodzenie z hantlami przez podwyższenie",
-    "englishName": "Dumbbell Step-over",
-    "exerciseType": "LUNGE",
-    "requiredEquipment": [
-      "box",
-      "dumbbell"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "squat-dumbbell-step-up-1275",
-    "polishName": "Wchodzenie na podwyższenie z hantlami",
-    "englishName": "Dumbbell Step-up",
-    "exerciseType": "LUNGE",
-    "requiredEquipment": [
-      "box",
-      "dumbbell"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "lunge-elevated-front-foot-barbell-split-squat-635",
     "polishName": "Przysiady wykroczne ze sztangą z uniesioną przednią stopą",
     "englishName": "Elevated Front-foot Barbell Split Squat",
@@ -4044,17 +3969,6 @@
     "id": "lunge-front-foot-elevated-dumbbell-split-squat-636",
     "polishName": "Przysiady wykroczne z hantlami z uniesioną przednią stopą",
     "englishName": "Elevated Front-foot Dumbbell Split Squat",
-    "exerciseType": "LUNGE",
-    "requiredEquipment": [
-      "box",
-      "dumbbell"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "squat-lateral-dumbbell-step-up-1284",
-    "polishName": "Wchodzenie boczne z hantlami na podwyższenie",
-    "englishName": "Lateral Dumbbell Step-up",
     "exerciseType": "LUNGE",
     "requiredEquipment": [
       "box",
@@ -4195,7 +4109,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lunge-reverse-barbell-box-lunge-654",
@@ -4237,7 +4151,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lunge-reverse-dumbbell-diagonal-lunge-658",
@@ -4316,7 +4230,7 @@
     "englishName": "Side and Crossover Lunge",
     "exerciseType": "LUNGE",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lunge-side-lunge-667",
@@ -4358,7 +4272,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lunge-sliding-lateral-lunge-675",
@@ -4367,16 +4281,6 @@
     "exerciseType": "LUNGE",
     "requiredEquipment": [
       "slidingDisc"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "squat-step-up-1305",
-    "polishName": "Wchodzenie na podwyższenie",
-    "englishName": "Step-up",
-    "exerciseType": "LUNGE",
-    "requiredEquipment": [
-      "box"
     ],
     "libraryTier": "main"
   },
@@ -4416,7 +4320,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "olympic-lift-clean-709",
@@ -4426,7 +4330,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-hang-power-clean-699",
@@ -4436,7 +4340,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-hang-power-snatch-700",
@@ -4446,7 +4350,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-hang-pull-701",
@@ -4456,7 +4360,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-hang-squat-clean-702",
@@ -4466,7 +4370,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-barbell-hang-squat-snatch-1255",
@@ -4476,7 +4380,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-high-pull-703",
@@ -4486,7 +4390,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-power-clean-704",
@@ -4496,7 +4400,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-power-snatch-705",
@@ -4506,7 +4410,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-snatch-706",
@@ -4516,7 +4420,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-split-jerk-707",
@@ -4526,7 +4430,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-barbell-squat-clean-708",
@@ -4536,7 +4440,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-barbell-squat-snatch-1259",
@@ -4546,7 +4450,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-clean-and-jerk-710",
@@ -4556,7 +4460,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-clean-and-press-711",
@@ -4566,7 +4470,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-clean-712",
@@ -4576,7 +4480,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-hang-pull-713",
@@ -4586,7 +4490,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-hang-snatch-714",
@@ -4596,7 +4500,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-jerk-715",
@@ -4606,7 +4510,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-push-press-716",
@@ -4616,7 +4520,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-strict-press-717",
@@ -4626,7 +4530,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-dumbbell-snatch-718",
@@ -4636,7 +4540,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-dumbbell-squat-clean-1273",
@@ -4646,7 +4550,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-dumbbell-squat-snatch-1274",
@@ -4656,7 +4560,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-medicine-ball-clean-719",
@@ -4666,7 +4570,7 @@
     "requiredEquipment": [
       "medicineBall"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-one-hand-dumbbell-split-snatch-720",
@@ -4676,7 +4580,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-push-jerk-721",
@@ -4686,7 +4590,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-single-arm-dumbbell-snatch-722",
@@ -4696,7 +4600,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-single-arm-hang-snatch-723",
@@ -4706,7 +4610,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-single-arm-kettlebell-snatch-724",
@@ -4716,7 +4620,7 @@
     "requiredEquipment": [
       "kettlebell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-snatch-727",
@@ -4724,7 +4628,7 @@
     "englishName": "Snatch",
     "exerciseType": "OLYMPIC_LIFT",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-split-jerk-725",
@@ -4734,7 +4638,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "olympic-lift-squat-clean-and-jerk-726",
@@ -4744,7 +4648,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "plank-45-degree-plank-728",
@@ -4988,7 +4892,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-plank-with-knee-to-elbow-758",
@@ -5088,7 +4992,7 @@
     "requiredEquipment": [
       "bosuBall"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-side-plank-with-feet-on-bench-770",
@@ -5138,7 +5042,7 @@
     "englishName": "Single-leg Elevated-feet Plank",
     "exerciseType": "PLANK",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-single-leg-flex-and-extend-776",
@@ -5146,7 +5050,7 @@
     "englishName": "Single-leg Flex and Extend",
     "exerciseType": "PLANK",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-single-leg-side-plank-777",
@@ -5154,7 +5058,7 @@
     "englishName": "Single-leg Side Plank",
     "exerciseType": "PLANK",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-spiderman-plank-778",
@@ -5188,7 +5092,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-swiss-ball-plank-leg-lift-782",
@@ -5198,7 +5102,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-swiss-ball-plank-leg-lift-and-hold-783",
@@ -5208,7 +5112,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-swiss-ball-plank-with-feet-on-bench-784",
@@ -5219,7 +5123,7 @@
       "bench",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-swiss-ball-prone-jackknife-785",
@@ -5229,7 +5133,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-swiss-ball-side-plank-786",
@@ -5239,7 +5143,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "plank-t-stabilization-787",
@@ -5275,7 +5179,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "plank-two-point-plank-791",
@@ -5331,7 +5235,7 @@
     "englishName": "Alternating Jump Lunge",
     "exerciseType": "PLYO",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "plyo-body-weight-jump-squat-861",
@@ -5508,7 +5412,7 @@
     "requiredEquipment": [
       "pullupBar"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "pull-up-chin-up-902",
@@ -5528,7 +5432,7 @@
     "requiredEquipment": [
       "pullupBar"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-close-grip-lat-pulldown-904",
@@ -5538,7 +5442,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-crossover-chin-up-905",
@@ -5548,7 +5452,7 @@
     "requiredEquipment": [
       "pullupBar"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-jumping-pull-ups-908",
@@ -5638,7 +5542,7 @@
     "requiredEquipment": [
       "pullupBar"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-pull-up-918",
@@ -5658,7 +5562,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lateral-raise-ring-muscle-up-556",
@@ -5668,7 +5572,7 @@
     "requiredEquipment": [
       "rings"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "pull-up-suspended-chin-up-922",
@@ -5699,7 +5603,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-wide-grip-pull-up-942",
@@ -5709,7 +5613,7 @@
     "requiredEquipment": [
       "pullupBar"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "pull-up-ez-bar-pullover-906",
@@ -5750,7 +5654,7 @@
       "ezBar",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-alternating-staggered-push-up-944",
@@ -5758,7 +5662,7 @@
     "englishName": "Alternating Staggered Push-up",
     "exerciseType": "PUSH_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-alternating-hands-medicine-ball-push-up-943",
@@ -5768,7 +5672,7 @@
     "requiredEquipment": [
       "medicineBall"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-biceps-push-up-945",
@@ -5804,7 +5708,7 @@
     "requiredEquipment": [
       "medicineBall"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-close-hands-push-up-950",
@@ -5846,7 +5750,7 @@
     "englishName": "Explosive Crossover Push-up",
     "exerciseType": "PUSH_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-explosive-push-up-955",
@@ -5880,7 +5784,7 @@
     "englishName": "Handstand Push-up",
     "exerciseType": "PUSH_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "push-up-hindu-push-up-959",
@@ -5968,7 +5872,7 @@
     "englishName": "One-arm Push-up",
     "exerciseType": "PUSH_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-parallette-handstand-push-up-969",
@@ -5978,7 +5882,7 @@
     "requiredEquipment": [
       "other"
     ],
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "push-up-pike-push-up-970",
@@ -6032,7 +5936,7 @@
     "requiredEquipment": [
       "rings"
     ],
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "push-up-ring-push-up-977",
@@ -6066,7 +5970,7 @@
     "englishName": "Single-leg Decline Push-up",
     "exerciseType": "PUSH_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-spiderman-push-up-981",
@@ -6090,7 +5994,7 @@
     "englishName": "Staggered-hands Push-up",
     "exerciseType": "PUSH_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "push-up-suspended-push-up-984",
@@ -6132,7 +6036,17 @@
     "englishName": "Wide-grip Push-up",
     "exerciseType": "PUSH_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
+  },
+  {
+    "id": "lateral-raise-rope-climb-557",
+    "polishName": "Wspinaczka po linie",
+    "englishName": "Rope Climb",
+    "exerciseType": "ROPE_CLIMB",
+    "requiredEquipment": [
+      "rope"
+    ],
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "row-alternating-dumbbell-row-1032",
@@ -6142,7 +6056,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-banded-face-pulls-1033",
@@ -6285,7 +6199,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "row-inverted-row-1047",
@@ -6308,7 +6222,7 @@
       "squatRack",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "row-kettlebell-row-1049",
@@ -6359,7 +6273,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-one-arm-bent-over-row-1052",
@@ -6370,7 +6284,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-one-arm-one-leg-row-502",
@@ -6380,7 +6294,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-one-arm-row-with-band-503",
@@ -6390,7 +6304,7 @@
     "requiredEquipment": [
       "band"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-one-legged-dumbbell-row-1053",
@@ -6420,7 +6334,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-ring-row-1056",
@@ -6481,7 +6395,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-single-arm-cable-row-and-rotation-1063",
@@ -6491,7 +6405,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-single-arm-inverted-row-1064",
@@ -6502,7 +6416,7 @@
       "barbell",
       "squatRack"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-single-arm-neutral-grip-dumbbell-row-1065",
@@ -6512,7 +6426,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-single-arm-neutral-grip-dumbbell-row-and-rotation-1066",
@@ -6522,7 +6436,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-suspended-inverted-row-1067",
@@ -6585,7 +6499,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "run-indoor-indoor-track-run-1088",
@@ -6645,7 +6559,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-bear-hug-squat-1093",
@@ -6655,7 +6569,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-clean-1094",
@@ -6665,7 +6579,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-clean-and-press-1095",
@@ -6675,7 +6589,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-curl-1096",
@@ -6685,7 +6599,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-front-carry-1097",
@@ -6695,7 +6609,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-front-squat-1098",
@@ -6705,7 +6619,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-lunge-1099",
@@ -6715,7 +6629,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-overhead-press-1100",
@@ -6725,7 +6639,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-row-1103",
@@ -6735,7 +6649,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-shouldering-1105",
@@ -6745,7 +6659,7 @@
     "requiredEquipment": [
       "sandbag"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "shoulder-press-alternating-dumbbell-shoulder-press-1110",
@@ -6755,7 +6669,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "shoulder-press-arnold-press-1111",
@@ -6805,7 +6719,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "shoulder-press-dumbbell-push-press-1119",
@@ -6861,7 +6775,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "shoulder-press-seated-barbell-shoulder-press-1127",
@@ -6893,18 +6807,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "shoulder-press-single-arm-step-up-and-press-1130",
-    "polishName": "Wyciskanie hantla jednorącz z wejściem na podwyższenie",
-    "englishName": "Single-arm Step-up and Press",
-    "exerciseType": "SHOULDER_PRESS",
-    "requiredEquipment": [
-      "box",
-      "dumbbell"
-    ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "shoulder-press-smith-machine-overhead-press-1131",
@@ -6935,7 +6838,7 @@
       "dumbbell",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "lateral-raise-45-degree-cable-external-rotation-536",
@@ -6945,7 +6848,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-90-degree-cable-external-rotation-1138",
@@ -6955,7 +6858,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-band-external-rotation-1139",
@@ -6965,7 +6868,7 @@
     "requiredEquipment": [
       "band"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-band-internal-rotation-1140",
@@ -6975,7 +6878,7 @@
     "requiredEquipment": [
       "band"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-bent-arm-lateral-raise-and-external-rotation-1141",
@@ -6985,7 +6888,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-cable-external-rotation-1142",
@@ -6995,7 +6898,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-cable-internal-rotation-1143",
@@ -7005,7 +6908,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-dumbbell-face-pull-with-external-rotation-1144",
@@ -7015,7 +6918,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "stage2-incline-bench-i-y-t-w-raise",
@@ -7025,7 +6928,7 @@
     "requiredEquipment": [
       "bench"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-lying-external-rotation-1153",
@@ -7033,7 +6936,7 @@
     "englishName": "Lying External Rotation",
     "exerciseType": "SHOULDER_STABILITY",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-lying-internal-rotation-1154",
@@ -7041,7 +6944,7 @@
     "englishName": "Lying Internal Rotation",
     "exerciseType": "SHOULDER_STABILITY",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "stage2-prone-i-y-t-raise",
@@ -7049,7 +6952,7 @@
     "englishName": "Prone I-Y-T Raise",
     "exerciseType": "SHOULDER_STABILITY",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-seated-dumbbell-external-rotation-1155",
@@ -7060,7 +6963,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-seated-dumbbell-internal-rotation-1156",
@@ -7071,7 +6974,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "stage2-swiss-ball-i-y-t-w-raise",
@@ -7081,7 +6984,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "rehab"
   },
   {
     "id": "lateral-raise-wall-slide-565",
@@ -7089,7 +6992,7 @@
     "englishName": "Wall Slide",
     "exerciseType": "SHOULDER_STABILITY",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shrug-barbell-jump-shrug-1175",
@@ -7221,7 +7124,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shrug-serratus-chair-shrug-1188",
@@ -7259,7 +7162,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "shrug-wide-grip-jump-shrug-1194",
@@ -7269,7 +7172,7 @@
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-alternating-sit-up-1196",
@@ -7277,7 +7180,7 @@
     "englishName": "Alternating Sit-up",
     "exerciseType": "SIT_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-bent-knee-v-up-1197",
@@ -7355,7 +7258,7 @@
     "requiredEquipment": [
       "medicineBall"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-medicine-ball-sit-up-1206",
@@ -7401,7 +7304,7 @@
     "englishName": "One-arm Full Sit-up",
     "exerciseType": "SIT_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-reverse-curl-up-1212",
@@ -7419,7 +7322,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-single-leg-swiss-ball-jackknife-1214",
@@ -7429,7 +7332,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "sit-up-sit-up-1215",
@@ -7447,7 +7350,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "sit-up-v-up-1220",
@@ -7465,7 +7368,7 @@
     "requiredEquipment": [
       "sled"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sled-chest-press-1238",
@@ -7475,7 +7378,7 @@
     "requiredEquipment": [
       "sled"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sled-forward-drag-1239",
@@ -7485,7 +7388,7 @@
     "requiredEquipment": [
       "sled"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sled-low-push-1240",
@@ -7495,7 +7398,7 @@
     "requiredEquipment": [
       "sled"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sled-push-1241",
@@ -7505,7 +7408,7 @@
     "requiredEquipment": [
       "sled"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sled-row-1242",
@@ -7515,7 +7418,7 @@
     "requiredEquipment": [
       "sled"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-back-squat-with-body-bar-1248",
@@ -7673,7 +7576,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-dumbbell-split-squat-1271",
@@ -7713,7 +7616,7 @@
     "requiredEquipment": [
       "box"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-figure-four-squats-1279",
@@ -7817,7 +7720,7 @@
     "englishName": "Partial Single-leg Squat",
     "exerciseType": "SQUAT",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-pistol-squat-1292",
@@ -7825,7 +7728,7 @@
     "englishName": "Pistol Squat",
     "exerciseType": "SQUAT",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "squat-plie-slides-1293",
@@ -7859,7 +7762,7 @@
     "requiredEquipment": [
       "bench"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-single-leg-bench-squat-1297",
@@ -7869,7 +7772,7 @@
     "requiredEquipment": [
       "bench"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "smith-machine-squat",
@@ -7906,7 +7809,7 @@
     "englishName": "Staggered Squat",
     "exerciseType": "SQUAT",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-suitcase-squats-1306",
@@ -7958,7 +7861,7 @@
     "englishName": "Sumo Squat with Rotation",
     "exerciseType": "SQUAT",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-swiss-ball-body-weight-wall-squat-1312",
@@ -7968,7 +7871,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-thrusters-1313",
@@ -7996,7 +7899,7 @@
     "requiredEquipment": [
       "medicineBall"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-wall-ball-squat-and-press-1317",
@@ -8006,7 +7909,7 @@
     "requiredEquipment": [
       "medicineBall"
     ],
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "squat-weighted-swiss-ball-wall-squat-1338",
@@ -8017,7 +7920,7 @@
       "plate",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "squat-weighted-wall-squat-1340",
@@ -8066,6 +7969,114 @@
     "exerciseType": "STAIR_STEPPER",
     "requiredEquipment": [
       "machine"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "squat-barbell-lateral-step-up-1256",
+    "polishName": "Wchodzenie boczne na podwyższenie ze sztangą na barkach",
+    "englishName": "Barbell Lateral Step-up",
+    "exerciseType": "STEP_UP",
+    "requiredEquipment": [
+      "barbell",
+      "box"
+    ],
+    "libraryTier": "variation"
+  },
+  {
+    "id": "squat-barbell-stepover-1262",
+    "polishName": "Przechodzenie ze sztangą na barkach przez podwyższenie",
+    "englishName": "Barbell Step-over",
+    "exerciseType": "STEP_UP",
+    "requiredEquipment": [
+      "barbell",
+      "box"
+    ],
+    "libraryTier": "variation"
+  },
+  {
+    "id": "squat-barbell-step-up-1261",
+    "polishName": "Wchodzenie ze sztangą na barkach na podwyższenie",
+    "englishName": "Barbell Step-up",
+    "exerciseType": "STEP_UP",
+    "requiredEquipment": [
+      "barbell",
+      "box"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "squat-crossover-dumbbell-step-up-1268",
+    "polishName": "Obustronne wchodzenie na podwyższenie z hantlami bokiem",
+    "englishName": "Crossover Dumbbell Step-up",
+    "exerciseType": "STEP_UP",
+    "requiredEquipment": [
+      "box",
+      "dumbbell"
+    ],
+    "libraryTier": "variation"
+  },
+  {
+    "id": "squat-dumbbell-stepover-1276",
+    "polishName": "Przechodzenie z hantlami przez podwyższenie",
+    "englishName": "Dumbbell Step-over",
+    "exerciseType": "STEP_UP",
+    "requiredEquipment": [
+      "box",
+      "dumbbell"
+    ],
+    "libraryTier": "variation"
+  },
+  {
+    "id": "squat-dumbbell-step-up-1275",
+    "polishName": "Wchodzenie na podwyższenie z hantlami",
+    "englishName": "Dumbbell Step-up",
+    "exerciseType": "STEP_UP",
+    "requiredEquipment": [
+      "box",
+      "dumbbell"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "squat-lateral-dumbbell-step-up-1284",
+    "polishName": "Wchodzenie boczne z hantlami na podwyższenie",
+    "englishName": "Lateral Dumbbell Step-up",
+    "exerciseType": "STEP_UP",
+    "requiredEquipment": [
+      "box",
+      "dumbbell"
+    ],
+    "libraryTier": "main"
+  },
+  {
+    "id": "leg-raise-lateral-stepover-589",
+    "polishName": "Przechodzenie bokiem nad podwyższeniem",
+    "englishName": "Lateral Step-over",
+    "exerciseType": "STEP_UP",
+    "requiredEquipment": [
+      "bench"
+    ],
+    "libraryTier": "variation"
+  },
+  {
+    "id": "shoulder-press-single-arm-step-up-and-press-1130",
+    "polishName": "Wyciskanie hantla jednorącz z wejściem na podwyższenie",
+    "englishName": "Single-arm Step-up and Press",
+    "exerciseType": "STEP_UP",
+    "requiredEquipment": [
+      "box",
+      "dumbbell"
+    ],
+    "libraryTier": "variation"
+  },
+  {
+    "id": "squat-step-up-1305",
+    "polishName": "Wchodzenie na podwyższenie",
+    "englishName": "Step-up",
+    "exerciseType": "STEP_UP",
+    "requiredEquipment": [
+      "box"
     ],
     "libraryTier": "main"
   },
@@ -8203,7 +8214,7 @@
     "requiredEquipment": [
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-bench-dip-1399",
@@ -8349,7 +8360,7 @@
       "barbell",
       "bench"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-overhead-dumbbell-triceps-extension-1412",
@@ -8380,7 +8391,7 @@
     "requiredEquipment": [
       "cableMachine"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "lateral-raise-ring-dip-554",
@@ -8444,7 +8455,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-single-arm-dumbbell-overhead-triceps-extension-1421",
@@ -8455,7 +8466,7 @@
       "bench",
       "dumbbell"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-single-dumbbell-seated-overhead-triceps-extension-1422",
@@ -8476,7 +8487,7 @@
     "requiredEquipment": [
       "bench"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-single-leg-dip-1424",
@@ -8486,7 +8497,7 @@
     "requiredEquipment": [
       "bench"
     ],
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-static-lying-triceps-extension-1425",
@@ -8518,7 +8529,7 @@
       "dumbbell",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "curl-swiss-ball-dumbbell-overhead-triceps-extension-367",
@@ -8529,7 +8540,7 @@
       "dumbbell",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-swiss-ball-ez-bar-lying-triceps-extension-1428",
@@ -8540,7 +8551,7 @@
       "ezBar",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-swiss-ball-ez-bar-overhead-triceps-extension-1429",
@@ -8551,7 +8562,7 @@
       "ezBar",
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-tabletop-dip-1430",
@@ -8634,7 +8645,7 @@
     "requiredEquipment": [
       "band"
     ],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "warm-up-ankle-internal-rotation-1482",
@@ -8642,7 +8653,7 @@
     "englishName": "Ankle Internal Rotation",
     "exerciseType": "WARM_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "warm-up-arm-circles-1483",
@@ -9068,7 +9079,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "warm-up-swiss-ball-reach-roll-and-lift-1502",
@@ -9078,7 +9089,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "warm-up-swiss-ball-windshield-wipers-1503",
@@ -9088,7 +9099,7 @@
     "requiredEquipment": [
       "swissBall"
     ],
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "warm-up-thoracic-rotation-1504",

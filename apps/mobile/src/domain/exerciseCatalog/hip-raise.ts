@@ -566,7 +566,7 @@ export const hipRaise = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-raise-hip-raise-with-head-on-swiss-ball-417",
@@ -629,7 +629,7 @@ export const hipRaise = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-raise-hip-raise-with-knee-squeeze-418",
@@ -1070,7 +1070,7 @@ export const hipRaise = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-raise-single-leg-hip-raise-with-foot-on-bench-425",
@@ -1133,7 +1133,7 @@ export const hipRaise = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-single-leg-hip-raise-with-knee-hold-114",
@@ -1196,6 +1196,6 @@ export const hipRaise = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

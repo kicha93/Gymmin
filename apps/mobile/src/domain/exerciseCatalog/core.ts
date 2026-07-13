@@ -62,7 +62,7 @@ export const core = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "core-alternating-slide-out-183",
@@ -125,7 +125,7 @@ export const core = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "core-barbell-rollout-184",
@@ -503,7 +503,7 @@ export const core = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "pull-up-hanging-hurdle-907",
@@ -818,7 +818,7 @@ export const core = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "core-kneeling-ab-wheel-197",
@@ -1448,7 +1448,7 @@ export const core = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "core-swiss-ball-pike-207",
@@ -1511,7 +1511,7 @@ export const core = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "core-swiss-ball-rollout-208",
@@ -1574,7 +1574,7 @@ export const core = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "core-toes-to-elbows-209",
@@ -1826,7 +1826,7 @@ export const core = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   },
   {
     "id": "core-windmill-switches-236",
@@ -1889,6 +1889,6 @@ export const core = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "advanced"
   }
 ] satisfies readonly Exercise[];

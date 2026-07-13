@@ -251,6 +251,6 @@ export const pullover = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

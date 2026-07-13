@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hasUserDefinedWorkouts } from "../workouts";
+import { createDefaultWorkout, createStep, hasUserDefinedWorkouts, normalizeWorkoutDraftExerciseIds } from "../workouts";
 
 describe("hasUserDefinedWorkouts", () => {
   it("keeps the homepage creator visible when only seeded examples exist", () => {
@@ -14,5 +14,14 @@ describe("hasUserDefinedWorkouts", () => {
 
   it("does not treat an empty workout list as user-defined workouts", () => {
     expect(hasUserDefinedWorkouts([])).toBe(false);
+  });
+});
+
+describe("normalizeWorkoutDraftExerciseIds", () => {
+  it("canonicalizes historical exercise ids when a saved workout is read", () => {
+    const draft = createDefaultWorkout();
+    draft.steps = [createStep({ exerciseId: "squat-back-squats-1249", exerciseName: "Back Squats" })];
+
+    expect(normalizeWorkoutDraftExerciseIds(draft).steps[0]?.exerciseId).toBe("squat-barbell-back-squat-1251");
   });
 });

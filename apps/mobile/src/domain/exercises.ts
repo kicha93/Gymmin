@@ -85,6 +85,7 @@ export type ExerciseOption = {
   exerciseId: string;
   garminCategory: GarminCategory;
   label: string;
+  libraryTier: ExerciseLibraryTier;
   muscleImpact: Record<MuscleKey, InfluenceScore>;
   value: string;
 };
@@ -147,21 +148,76 @@ export function getExerciseDisplayName(name: string, language: ExerciseLanguage)
   return language === "pl" ? exercise.polishName : exercise.name;
 }
 
-export function getExerciseOptions(language: ExerciseLanguage) {
+export const activeExerciseLibraryTiers: readonly ExerciseLibraryTier[] = [
+  "main", "variation", "advanced", "sportSpecific", "rehab"
+];
+export type AdditionalExerciseLibraryTier = Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">;
+
+export function filterExerciseOptionsForPicker(
+  options: readonly ExerciseOption[],
+  query: string,
+  enabledAdditionalTiers: ReadonlySet<AdditionalExerciseLibraryTier>
+) {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const enabledTiers = new Set<ExerciseLibraryTier>(["main", ...enabledAdditionalTiers]);
+  const activeOptions = normalizedQuery
+    ? options.filter((option) => option.libraryTier !== "deprecated" && option.libraryTier !== "progression")
+    : options.filter((option) => enabledTiers.has(option.libraryTier));
+  const matchingOptions = normalizedQuery
+    ? activeOptions.filter((option) => getNormalizedExerciseOptionLabel(option).includes(normalizedQuery))
+    : activeOptions;
+
+  return normalizedQuery
+    ? [...matchingOptions].sort((left, right) =>
+      (left.libraryTier === "main" ? 0 : 1) - (right.libraryTier === "main" ? 0 : 1) ||
+      left.label.localeCompare(right.label)
+    )
+    : matchingOptions;
+}
+
+const normalizedExerciseOptionLabelCache = new WeakMap<ExerciseOption, string>();
+
+function getNormalizedExerciseOptionLabel(option: ExerciseOption) {
+  const cachedLabel = normalizedExerciseOptionLabelCache.get(option);
+  if (cachedLabel !== undefined) {
+    return cachedLabel;
+  }
+
+  const normalizedLabel = option.label.toLocaleLowerCase();
+  normalizedExerciseOptionLabelCache.set(option, normalizedLabel);
+  return normalizedLabel;
+}
+
+export function getExerciseOptionTierBadge(option: ExerciseOption): AdditionalExerciseLibraryTier | null {
+  return option.libraryTier === "main" || option.libraryTier === "deprecated" || option.libraryTier === "progression"
+    ? null
+    : option.libraryTier;
+}
+
+export function getExerciseOptions(
+  language: ExerciseLanguage,
+  visibleTiers: readonly ExerciseLibraryTier[] = ["main"]
+) {
+  const allowedTiers = new Set(visibleTiers);
   return exercises
-    .filter(isExerciseVisibleInDefaultLibrary)
+    .filter((exercise) => allowedTiers.has(exercise.libraryTier ?? "main"))
     .map((exercise) => ({
       exerciseId: exercise.id,
       garminCategory: exercise.garminCategory,
       label: language === "pl" ? exercise.polishName : exercise.name,
+      libraryTier: exercise.libraryTier ?? "main",
       muscleImpact: exercise.muscleImpact,
       value: exercise.name
     }));
 }
 
-export function getExerciseOptionsForStageType(language: ExerciseLanguage, stageType: StageType | "") {
+export function getExerciseOptionsForStageType(
+  language: ExerciseLanguage,
+  stageType: StageType | "",
+  visibleTiers: readonly ExerciseLibraryTier[] = ["main"]
+) {
   if (!stageType || stageType === "other") {
-    return getExerciseOptions(language);
+    return getExerciseOptions(language, visibleTiers);
   }
 
   const allowedCategories = new Set(stageExerciseCategories[stageType]);
@@ -171,11 +227,12 @@ export function getExerciseOptionsForStageType(language: ExerciseLanguage, stage
   }
 
   return exercises
-    .filter((exercise) => allowedCategories.has(exercise.garminCategory) && isExerciseVisibleInDefaultLibrary(exercise))
+    .filter((exercise) => allowedCategories.has(exercise.garminCategory) && visibleTiers.includes(exercise.libraryTier ?? "main"))
     .map((exercise) => ({
       exerciseId: exercise.id,
       garminCategory: exercise.garminCategory,
       label: language === "pl" ? exercise.polishName : exercise.name,
+      libraryTier: exercise.libraryTier ?? "main",
       muscleImpact: exercise.muscleImpact,
       value: exercise.name
     }));
@@ -200,9 +257,10 @@ export function buildExerciseSections(
     key: string;
     title: string;
   }> = [];
+  const groupsByKey = new Map<string, (typeof groups)[number]>();
 
   function getOrCreateGroup(groupKey: string, title: string) {
-    const existingGroup = groups.find((group) => group.key === groupKey);
+    const existingGroup = groupsByKey.get(groupKey);
 
     if (existingGroup) {
       return existingGroup;
@@ -210,6 +268,7 @@ export function buildExerciseSections(
 
     const nextGroup = { data: [], key: groupKey, title };
     groups.push(nextGroup);
+    groupsByKey.set(groupKey, nextGroup);
     return nextGroup;
   }
 
@@ -250,7 +309,7 @@ export function buildExerciseSections(
     .sort((first, second) => first.title.localeCompare(second.title, language));
 }
 
-const exerciseOptionsCache = new Map<ExerciseLanguage, ExerciseOption[]>();
+const exerciseOptionsCache = new Map<string, ExerciseOption[]>();
 const stageExerciseOptionsCache = new Map<string, ExerciseOption[]>();
 const exerciseSectionsCache = new Map<string, ExerciseSection[]>();
 
@@ -260,27 +319,35 @@ export function clearExerciseCaches() {
   exerciseSectionsCache.clear();
 }
 
-export function getCachedExerciseOptions(language: ExerciseLanguage) {
-  const cachedOptions = exerciseOptionsCache.get(language);
+export function getCachedExerciseOptions(
+  language: ExerciseLanguage,
+  visibleTiers: readonly ExerciseLibraryTier[] = ["main"]
+) {
+  const cacheKey = `${language}:${visibleTiers.join(",")}`;
+  const cachedOptions = exerciseOptionsCache.get(cacheKey);
 
   if (cachedOptions) {
     return cachedOptions;
   }
 
-  const options = getExerciseOptions(language);
-  exerciseOptionsCache.set(language, options);
+  const options = getExerciseOptions(language, visibleTiers);
+  exerciseOptionsCache.set(cacheKey, options);
   return options;
 }
 
-export function getCachedExerciseOptionsForStageType(language: ExerciseLanguage, stageType: StageType | "") {
-  const cacheKey = `${language}:${stageType || "all"}`;
+export function getCachedExerciseOptionsForStageType(
+  language: ExerciseLanguage,
+  stageType: StageType | "",
+  visibleTiers: readonly ExerciseLibraryTier[] = ["main"]
+) {
+  const cacheKey = `${language}:${stageType || "all"}:${visibleTiers.join(",")}`;
   const cachedOptions = stageExerciseOptionsCache.get(cacheKey);
 
   if (cachedOptions) {
     return cachedOptions;
   }
 
-  const options = getExerciseOptionsForStageType(language, stageType);
+  const options = getExerciseOptionsForStageType(language, stageType, visibleTiers);
   stageExerciseOptionsCache.set(cacheKey, options);
   return options;
 }

@@ -818,7 +818,7 @@ export const shrug = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shrug-serratus-chair-shrug-1188",
@@ -1070,7 +1070,7 @@ export const shrug = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "shrug-wide-grip-jump-shrug-1194",
@@ -1133,6 +1133,6 @@ export const shrug = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

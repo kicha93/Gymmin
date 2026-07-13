@@ -62,7 +62,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-banded-face-pulls-1033",
@@ -944,7 +944,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "row-inverted-row-1047",
@@ -1070,7 +1070,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "row-kettlebell-row-1049",
@@ -1385,7 +1385,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-one-arm-bent-over-row-1052",
@@ -1448,7 +1448,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-one-arm-one-leg-row-502",
@@ -1511,7 +1511,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hyperextension-one-arm-row-with-band-503",
@@ -1574,7 +1574,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-one-legged-dumbbell-row-1053",
@@ -1763,7 +1763,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-ring-row-1056",
@@ -2141,7 +2141,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-single-arm-cable-row-and-rotation-1063",
@@ -2204,7 +2204,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-single-arm-inverted-row-1064",
@@ -2267,7 +2267,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-single-arm-neutral-grip-dumbbell-row-1065",
@@ -2330,7 +2330,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-single-arm-neutral-grip-dumbbell-row-and-rotation-1066",
@@ -2393,7 +2393,7 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "row-suspended-inverted-row-1067",
@@ -2771,6 +2771,6 @@ export const row = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

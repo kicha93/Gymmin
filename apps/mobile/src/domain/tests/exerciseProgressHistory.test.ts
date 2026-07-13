@@ -97,6 +97,11 @@ describe("exercise progress history", () => {
     expect(formatExerciseProgressSetCount(2, "en")).toBe("2 sets");
     expect(formatExerciseProgressSeriesValue("5", "80", 400, "pl")).toEqual({ load: "80 kg", repetitions: "5 powt.", volume: "obj. 400 kg" });
     expect(formatExerciseProgressSeriesValue("5", "80", 400, "en")).toEqual({ load: "80 kg", repetitions: "5 reps", volume: "vol. 400 kg" });
+    expect(formatExerciseProgressSeriesValue("12", "15.8", 189.60000000000002, "pl")).toEqual({
+      load: "15.8 kg",
+      repetitions: "12 powt.",
+      volume: "obj. 189,6 kg"
+    });
     expect(formatExerciseProgressSeriesValue("", "", null, "pl")).toEqual({ load: "—", repetitions: "—", volume: "obj. —" });
   });
 });

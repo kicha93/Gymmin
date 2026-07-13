@@ -13,6 +13,8 @@ import { deadlift } from "./deadlift";
 import { dorsiflexion } from "./dorsiflexion";
 import { elliptical } from "./elliptical";
 import { floorClimb } from "./floor-climb";
+import { frontRaise } from "./front-raise";
+import { goodMorning } from "./good-morning";
 import { flye } from "./flye";
 import { hipRaise } from "./hip-raise";
 import { hipStability } from "./hip-stability";
@@ -32,6 +34,7 @@ import { pullUp } from "./pull-up";
 import { pullover } from "./pullover";
 import { pushUp } from "./push-up";
 import { row } from "./row";
+import { ropeClimb } from "./rope-climb";
 import { run } from "./run";
 import { runIndoor } from "./run-indoor";
 import { sandbag } from "./sandbag";
@@ -42,6 +45,7 @@ import { sitUp } from "./sit-up";
 import { sled } from "./sled";
 import { sledgeHammer } from "./sledge-hammer";
 import { squat } from "./squat";
+import { stepUp } from "./step-up";
 import { stairStepper } from "./stair-stepper";
 import { suspension } from "./suspension";
 import { tire } from "./tire";
@@ -65,6 +69,8 @@ export const exercises = [
   ...dorsiflexion,
   ...elliptical,
   ...floorClimb,
+  ...frontRaise,
+  ...goodMorning,
   ...flye,
   ...hipRaise,
   ...hipStability,
@@ -84,6 +90,7 @@ export const exercises = [
   ...pullover,
   ...pushUp,
   ...row,
+  ...ropeClimb,
   ...run,
   ...runIndoor,
   ...sandbag,
@@ -94,6 +101,7 @@ export const exercises = [
   ...sled,
   ...sledgeHammer,
   ...squat,
+  ...stepUp,
   ...stairStepper,
   ...suspension,
   ...tire,
@@ -118,6 +126,8 @@ export const exercisesByGarminCategory = {
   "DORSIFLEXION": dorsiflexion,
   "ELLIPTICAL": elliptical,
   "FLOOR_CLIMB": floorClimb,
+  "FRONT_RAISE": frontRaise,
+  "GOOD_MORNING": goodMorning,
   "FLYE": flye,
   "HIP_RAISE": hipRaise,
   "HIP_STABILITY": hipStability,
@@ -137,6 +147,7 @@ export const exercisesByGarminCategory = {
   "PULLOVER": pullover,
   "PUSH_UP": pushUp,
   "ROW": row,
+  "ROPE_CLIMB": ropeClimb,
   "RUN": run,
   "RUN_INDOOR": runIndoor,
   "SANDBAG": sandbag,
@@ -147,6 +158,7 @@ export const exercisesByGarminCategory = {
   "SLED": sled,
   "SLEDGE_HAMMER": sledgeHammer,
   "SQUAT": squat,
+  "STEP_UP": stepUp,
   "STAIR_STEPPER": stairStepper,
   "SUSPENSION": suspension,
   "TIRE": tire,

@@ -39,9 +39,7 @@ const merges = [
   ["curl-standing-alternating-dumbbell-curls-362", "curl-alternating-dumbbell-biceps-curl-323", "same alternating standing dumbbell curl"],
   ["crunch-cable-crunch-238", "crunch-kneeling-cable-crunch-255", "generic record describes kneeling cable crunch"],
   ["triceps-extension-reverse-grip-pressdown-1414", "triceps-extension-reverse-grip-triceps-pressdown-1415", "same reverse-grip cable press-down"],
-  ["calf-raise-calf-raise-107", "calf-raise-standing-calf-raise-118", "same unweighted standing calf raise"],
-  ["stage2-back-extension", "hyperextension-hyperextension-496", "same equipment-free back extension"],
-  ["curl-dead-hang-biceps-curl-337", "curl-ez-bar-preacher-curl-344", "same EZ-bar preacher setup and muscle profile"]
+  ["calf-raise-calf-raise-107", "calf-raise-standing-calf-raise-118", "same unweighted standing calf raise"]
 ];
 
 const updates = {

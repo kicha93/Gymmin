@@ -118,7 +118,7 @@ build:
   - keyboard/input stability,
   - finish with incomplete values warning,
   - abandon/delete active session.
-- Workout history detail table, horizontal scroll and table orientation behavior.
+- Workout history detail table, horizontal scroll and native portrait/landscape auto-rotation behavior.
 - Exercise picker performance and favorite toggle.
 - Progress dashboard search, filters and exercise progress details.
 - Achievements unlock, sync, image popup and no re-lock after history delete.

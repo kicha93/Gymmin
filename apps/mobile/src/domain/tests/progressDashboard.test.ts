@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  formatProgressDashboardVolume,
   getProgressDashboardStats,
   getProgressSparklineValues,
   getSortedProgressItems,
@@ -48,6 +49,14 @@ function exerciseEntry(name: string, weight: number | null, reps: number | null)
 }
 
 describe("progressDashboard", () => {
+  it("formats monthly volume compactly without unnecessary decimals", () => {
+    expect(formatProgressDashboardVolume(379.6, "pl")).toBe("380 kg");
+    expect(formatProgressDashboardVolume(4000, "pl")).toBe("4 t");
+    expect(formatProgressDashboardVolume(16816.8, "pl")).toBe("16,8 t");
+    expect(formatProgressDashboardVolume(16816.8, "en")).toBe("16.8 t");
+    expect(formatProgressDashboardVolume(Number.NaN, "pl")).toBe("0 kg");
+  });
+
   it("calculates dashboard stats from completed current-month sessions only", () => {
     const sessions = [
       session({

@@ -251,7 +251,7 @@ export const hipSwing = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-swing-single-arm-dumbbell-swing-489",
@@ -314,7 +314,7 @@ export const hipSwing = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-swing-single-arm-kettlebell-swing-490",
@@ -377,7 +377,7 @@ export const hipSwing = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "hip-swing-step-out-swing-491",

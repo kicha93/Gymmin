@@ -62,7 +62,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-alternating-dumbbell-chest-press-on-swiss-ball-75",
@@ -125,7 +125,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-barbell-bench-press-76",
@@ -377,7 +377,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-decline-dumbbell-bench-press-81",
@@ -1007,7 +1007,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-neutral-grip-dumbbell-incline-bench-press-90",
@@ -1070,7 +1070,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-one-arm-floor-press-91",
@@ -1133,7 +1133,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-partial-lockout-92",
@@ -1259,7 +1259,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-reverse-grip-incline-bench-press-94",
@@ -1322,7 +1322,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-single-arm-cable-chest-press-95",
@@ -1385,7 +1385,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-single-arm-dumbbell-bench-press-96",
@@ -1448,7 +1448,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-smith-machine-bench-press-97",
@@ -1574,7 +1574,7 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "variation"
   },
   {
     "id": "bench-press-triple-stop-barbell-bench-press-99",
@@ -1700,6 +1700,6 @@ export const benchPress = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   }
 ] satisfies readonly Exercise[];

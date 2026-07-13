@@ -758,69 +758,6 @@ export const bandedExercises = [
     "libraryTier": "main"
   },
   {
-    "id": "banded-exercises-front-raise-14",
-    "name": "Banded Front Raise",
-    "polishName": "Wznosy ramion przodem (z gumą oporową)",
-    "garminCategory": "BANDED_EXERCISES",
-    "garminName": "FRONT_RAISE",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 1,
-      "traps": 2,
-      "triceps": 0
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 1,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    },
-    "libraryTier": "main"
-  },
-  {
     "id": "banded-exercises-glute-bridge-15",
     "name": "Banded Glute Bridge",
     "polishName": "Mostek biodrowy (z gumą oporową)",
@@ -2141,7 +2078,7 @@ export const bandedExercises = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "banded-exercises-shoulder-flexion-to-90-degrees-37",
@@ -2582,6 +2519,6 @@ export const bandedExercises = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   }
 ] satisfies readonly Exercise[];

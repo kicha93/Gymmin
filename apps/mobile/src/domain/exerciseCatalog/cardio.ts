@@ -251,7 +251,7 @@ export const cardio = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "cardio-jump-rope-128",
@@ -377,7 +377,7 @@ export const cardio = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "variation"
   },
   {
     "id": "cardio-jump-rope-jog-130",

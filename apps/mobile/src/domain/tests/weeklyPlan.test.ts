@@ -6,6 +6,7 @@ import {
   getDefaultWeeklyPlanSettings,
   getWeeklyPlanSummary,
   removeWeeklyPlanItem,
+  toggleWeeklyPlanItemDay,
   upsertWeeklyPlanItem
 } from "../weeklyPlan";
 import type { WorkoutSession } from "../workoutSessions";
@@ -65,12 +66,33 @@ describe("weeklyPlan", () => {
     expect(summary.completed).toBe(1);
   });
 
-  it("updates and removes plan items without duplicates", () => {
+  it("supports multiple weekdays for one workout without duplicating a day", () => {
     let plan = getDefaultWeeklyPlanSettings();
     plan = upsertWeeklyPlanItem(plan, "workout-a", "monday");
     plan = upsertWeeklyPlanItem(plan, "workout-a", "friday");
-    expect(plan.items).toHaveLength(1);
-    expect(plan.items[0].day).toBe("friday");
+    plan = upsertWeeklyPlanItem(plan, "workout-a", "friday");
+    expect(plan.items.map((item) => item.day)).toEqual(["monday", "friday"]);
+
+    plan = toggleWeeklyPlanItemDay(plan, "workout-a", "monday");
+    expect(plan.items.map((item) => item.day)).toEqual(["friday"]);
     expect(removeWeeklyPlanItem(plan, "workout-a").items).toEqual([]);
+  });
+
+  it("requires one completed session for each planned weekday occurrence", () => {
+    let plan = getDefaultWeeklyPlanSettings();
+    plan = upsertWeeklyPlanItem(plan, "workout-a", "monday");
+    plan = upsertWeeklyPlanItem(plan, "workout-a", "friday");
+
+    const oneCompletion = getWeeklyPlanSummary(plan, workouts, [session({ id: "first" })], new Date(2026, 5, 3, 12));
+    expect(oneCompletion.completed).toBe(1);
+    expect(oneCompletion.remaining).toBe(1);
+    expect(oneCompletion.total).toBe(2);
+
+    const twoCompletions = getWeeklyPlanSummary(plan, workouts, [
+      session({ id: "first" }),
+      session({ id: "second", startedAt: "2026-06-05T10:00:00.000Z" })
+    ], new Date(2026, 5, 3, 12));
+    expect(twoCompletions.completed).toBe(2);
+    expect(twoCompletions.remaining).toBe(0);
   });
 });

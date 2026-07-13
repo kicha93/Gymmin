@@ -62,7 +62,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-90-degree-cable-external-rotation-1138",
@@ -125,7 +125,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-band-external-rotation-1139",
@@ -188,7 +188,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-band-internal-rotation-1140",
@@ -251,7 +251,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-bent-arm-lateral-raise-and-external-rotation-1141",
@@ -314,7 +314,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-cable-external-rotation-1142",
@@ -377,7 +377,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-cable-internal-rotation-1143",
@@ -440,7 +440,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-dumbbell-face-pull-with-external-rotation-1144",
@@ -503,7 +503,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "stage2-incline-bench-i-y-t-w-raise",
@@ -566,7 +566,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-lying-external-rotation-1153",
@@ -629,7 +629,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-lying-internal-rotation-1154",
@@ -692,7 +692,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "stage2-prone-i-y-t-raise",
@@ -755,7 +755,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-seated-dumbbell-external-rotation-1155",
@@ -818,7 +818,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "shoulder-stability-seated-dumbbell-internal-rotation-1156",
@@ -881,7 +881,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   },
   {
     "id": "stage2-swiss-ball-i-y-t-w-raise",
@@ -944,7 +944,7 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "advanced"
+    "libraryTier": "rehab"
   },
   {
     "id": "lateral-raise-wall-slide-565",
@@ -1007,6 +1007,6 @@ export const shoulderStability = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "rehab"
   }
 ] satisfies readonly Exercise[];

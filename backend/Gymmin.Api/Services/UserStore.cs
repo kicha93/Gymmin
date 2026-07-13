@@ -17,6 +17,7 @@ public interface IUserStore
     bool ClearAvatar(string userId);
     void RevokeSession(string token);
     IReadOnlyList<AuthSessionResponse> ListSessions(string userId, string? currentSessionId);
+    bool UpdateSessionMetadata(string userId, string sessionId, AuthRequestMetadata metadata);
     bool RevokeSession(string userId, string sessionId, string reason);
     void RevokeAllSessions(string userId, string reason, string? exceptSessionId = null);
     AuthResult ChangePassword(string userId, string currentPassword, string newPassword, string? currentSessionId);
@@ -293,6 +294,43 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
                 .OrderByDescending(session => session.LastSeenAt)
                 .Select(session => ToSessionResponse(session, currentSessionId))
                 .ToList();
+        }
+    }
+
+    public bool UpdateSessionMetadata(string userId, string sessionId, AuthRequestMetadata metadata)
+    {
+        lock (_fileLock)
+        {
+            if (!_usersById.TryGetValue(userId, out var user))
+            {
+                return false;
+            }
+
+            var session = user.Sessions.FirstOrDefault(item => item.Id == sessionId);
+            var deviceName = !string.IsNullOrWhiteSpace(metadata.DeviceName)
+                ? NormalizeDeviceName(metadata.DeviceName, null)
+                : NeedsDeviceNameRepair(session?.DeviceName)
+                    ? NormalizeDeviceName(null, metadata.UserAgent)
+                    : null;
+            if (session is null || string.IsNullOrWhiteSpace(deviceName))
+            {
+                return false;
+            }
+
+            var changed = session.DeviceName != deviceName ||
+                (!string.IsNullOrWhiteSpace(metadata.UserAgent) && session.UserAgent != metadata.UserAgent) ||
+                (!string.IsNullOrWhiteSpace(metadata.IpAddress) && session.LastIpAddress != metadata.IpAddress);
+            if (!changed)
+            {
+                return true;
+            }
+
+            session.DeviceName = deviceName;
+            session.UserAgent = string.IsNullOrWhiteSpace(metadata.UserAgent) ? session.UserAgent : metadata.UserAgent;
+            session.LastIpAddress = string.IsNullOrWhiteSpace(metadata.IpAddress) ? session.LastIpAddress : metadata.IpAddress;
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+            SaveUsers();
+            return true;
         }
     }
 
@@ -580,7 +618,7 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
     {
         if (!string.IsNullOrWhiteSpace(deviceName))
         {
-            return deviceName.Trim();
+            return deviceName.Trim()[..Math.Min(deviceName.Trim().Length, 120)];
         }
 
         if (string.IsNullOrWhiteSpace(userAgent))
@@ -588,7 +626,8 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
             return null;
         }
 
-        if (userAgent.Contains("Android", StringComparison.OrdinalIgnoreCase))
+        if (userAgent.Contains("Android", StringComparison.OrdinalIgnoreCase) ||
+            userAgent.Contains("okhttp", StringComparison.OrdinalIgnoreCase))
         {
             return "Android";
         }
@@ -601,6 +640,10 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
 
         return "Unknown device";
     }
+
+    private static bool NeedsDeviceNameRepair(string? deviceName) =>
+        string.IsNullOrWhiteSpace(deviceName) ||
+        deviceName.Equals("Unknown device", StringComparison.OrdinalIgnoreCase);
 
     private void LoadUsers()
     {

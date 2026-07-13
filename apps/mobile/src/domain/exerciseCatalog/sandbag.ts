@@ -62,7 +62,7 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-bear-hug-squat-1093",
@@ -125,7 +125,7 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-clean-1094",
@@ -188,7 +188,7 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-clean-and-press-1095",
@@ -251,7 +251,7 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-curl-1096",
@@ -314,7 +314,7 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-front-carry-1097",
@@ -377,7 +377,7 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-front-squat-1098",
@@ -440,7 +440,7 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-lunge-1099",
@@ -503,7 +503,7 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-overhead-press-1100",
@@ -566,7 +566,7 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-row-1103",
@@ -629,7 +629,7 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   },
   {
     "id": "sandbag-shouldering-1105",
@@ -692,6 +692,6 @@ export const sandbag = [
       "trx": 0,
       "weightVest": 0
     },
-    "libraryTier": "main"
+    "libraryTier": "sportSpecific"
   }
 ] satisfies readonly Exercise[];

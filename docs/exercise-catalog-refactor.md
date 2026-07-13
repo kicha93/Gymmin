@@ -3,16 +3,17 @@
 ## Podsumowanie
 
 - Liczba ćwiczeń przed zmianami: **978**
-- Liczba ćwiczeń po zmianach: **963**
-- Scalonych duplikatów: **15**
+- Liczba ćwiczeń po zmianach: **964**
+- Scalonych duplikatów: **14**
 - Zmienionych pól nazw: **34**
 - Poprawionych wpisów sprzętu: **11**
-- Poprawionych kategorii: **44**
-- main: **900**
-- advanced: **49**
-- sportSpecific: **7**
-- rehab: **1**
-- variation: **3**
+- Poprawionych kategorii fazy 1: **44**
+- Poprawionych kategorii fazy 2: **24**
+- main: **683**
+- advanced: **16**
+- sportSpecific: **67**
+- rehab: **26**
+- variation: **169**
 - progression: **2**
 - deprecated: **1**
 
@@ -33,8 +34,13 @@
 | Cable Crunch (crunch-cable-crunch-238) | Kneeling Cable Crunch (crunch-kneeling-cable-crunch-255) | generic record describes kneeling cable crunch |
 | Reverse-grip Press-down (triceps-extension-reverse-grip-pressdown-1414) | Reverse-grip Triceps Press-down (triceps-extension-reverse-grip-triceps-pressdown-1415) | same reverse-grip cable press-down |
 | Calf Raise (calf-raise-calf-raise-107) | Standing Calf Raise (calf-raise-standing-calf-raise-118) | same unweighted standing calf raise |
-| Back Extension (stage2-back-extension) | Hyperextension (hyperextension-hyperextension-496) | same equipment-free back extension |
-| Dead-hang Biceps Curl (curl-dead-hang-biceps-curl-337) | EZ-Bar Preacher Curl (curl-ez-bar-preacher-curl-344) | same EZ-bar preacher setup and muscle profile |
+
+## Kontrola ryzykownych scaleń
+
+| Źródło | Cel | Decyzja | Dowody |
+|---|---|---|---|
+| curl-dead-hang-biceps-curl-337 | curl-ez-bar-preacher-curl-344 | reverted | Source has a Garmin identity and a forward free-hanging arm position; target is an EZ-bar preacher-bench curl. Position and support differ despite matching muscle/equipment flags. |
+| stage2-back-extension | hyperextension-hyperextension-496 | alias_removed_not_restored | No source catalog record, technique content, image or historical source payload exists in repository history; equivalence cannot be demonstrated and inventing a duplicate record would violate catalog validation. |
 
 ## Zmiany nazw
 
@@ -140,6 +146,86 @@
 | Hanging Hurdle (pull-up-hanging-hurdle-907) | PULL_UP | CORE |
 | GHD Back Extensions (core-ghd-back-extensions-192) | CORE | HYPEREXTENSION |
 
+### Faza kontrolna
+
+| Ćwiczenie | Przed | Po |
+|---|---|---|
+| Banded Front Raise (banded-exercises-front-raise-14) | BANDED_EXERCISES | FRONT_RAISE |
+| Band Good Morning (leg-curl-band-good-morning-571) | DEADLIFT | GOOD_MORNING |
+| Bar Good Morning (leg-curl-bar-good-morning-572) | DEADLIFT | GOOD_MORNING |
+| Good Morning (leg-curl-good-morning-573) | DEADLIFT | GOOD_MORNING |
+| Seated Barbell Good Morning (leg-curl-seated-barbell-good-morning-575) | DEADLIFT | GOOD_MORNING |
+| Single-leg Barbell Good Morning (leg-curl-single-leg-barbell-good-morning-576) | DEADLIFT | GOOD_MORNING |
+| Split Barbell Good Morning (leg-curl-split-barbell-good-morning-579) | DEADLIFT | GOOD_MORNING |
+| Staggered-stance Good Morning (leg-curl-staggered-stance-good-morning-581) | DEADLIFT | GOOD_MORNING |
+| Zercher Good Morning (leg-curl-zercher-good-morning-584) | DEADLIFT | GOOD_MORNING |
+| Rope Climb (lateral-raise-rope-climb-557) | FLOOR_CLIMB | ROPE_CLIMB |
+| Cable Front Raise (lateral-raise-cable-front-raise-541) | LATERAL_RAISE | FRONT_RAISE |
+| Dumbbell Front Raise (shoulder-press-dumbbell-front-raise-1117) | LATERAL_RAISE | FRONT_RAISE |
+| Front Raise (lateral-raise-front-raise-547) | LATERAL_RAISE | FRONT_RAISE |
+| Weight-plate Front Raise (shoulder-press-weight-plate-front-raise-1135) | LATERAL_RAISE | FRONT_RAISE |
+| Lateral Step-over (leg-raise-lateral-stepover-589) | LEG_RAISE | STEP_UP |
+| Barbell Lateral Step-up (squat-barbell-lateral-step-up-1256) | LUNGE | STEP_UP |
+| Barbell Step-over (squat-barbell-stepover-1262) | LUNGE | STEP_UP |
+| Barbell Step-up (squat-barbell-step-up-1261) | LUNGE | STEP_UP |
+| Crossover Dumbbell Step-up (squat-crossover-dumbbell-step-up-1268) | LUNGE | STEP_UP |
+| Dumbbell Step-over (squat-dumbbell-stepover-1276) | LUNGE | STEP_UP |
+| Dumbbell Step-up (squat-dumbbell-step-up-1275) | LUNGE | STEP_UP |
+| Lateral Dumbbell Step-up (squat-lateral-dumbbell-step-up-1284) | LUNGE | STEP_UP |
+| Step-up (squat-step-up-1305) | LUNGE | STEP_UP |
+| Single-arm Step-up and Press (shoulder-press-single-arm-step-up-and-press-1130) | SHOULDER_PRESS | STEP_UP |
+
+## Klasyfikacja libraryTier
+
+| Tier | Przed audytem | Po audycie |
+|---|---:|---:|
+| main | 900 | 682 |
+| advanced | 49 | 16 |
+| sportSpecific | 7 | 67 |
+| rehab | 1 | 26 |
+| variation | 3 | 170 |
+| progression | 2 | 2 |
+| deprecated | 1 | 1 |
+
+Pełna lista **263** zmian tierów wraz z przyczynami znajduje się w raporcie JSON.
+
+## Obsługa aliasów ID
+
+Centralny `resolveExerciseId(id)` jest używany przez:
+
+- lookup katalogu i wyszukiwanie rekordu;
+- normalizację zapisanych i synchronizowanych planów treningowych;
+- normalizację historii oraz aktywnych sesji;
+- progres i statystyki grupowane po ćwiczeniu;
+- ulubione wraz z synchronizacją;
+- treści techniczne ćwiczeń;
+- lookup obrazów i assetów.
+
+Backend przechowuje identyfikator jako wartość opaque; kanonizacja odbywa się w mobile na granicy odczytu i przed kolejnym zapisem/synchronizacją.
+
+## Picker ćwiczeń i libraryTier
+
+Picker domyślnie pokazuje wyłącznie ćwiczenia `main`. Użytkownik może lokalnie, dla bieżącego otwarcia pickera, włączyć niezależnie tiery `variation`, `advanced`, `sportSpecific` i `rehab`. `deprecated` oraz `progression` nie są oferowane przy tworzeniu ani edycji nowych planów.
+
+Po wpisaniu wyszukiwanej frazy picker przeszukuje wszystkie aktywne tiery, także niewłączone ręcznie, a wynik spoza `main` otrzymuje badge opisujący tier. Wyniki `main` są sortowane przed pozostałymi. Wybrane ćwiczenie zapisuje kanoniczne ID, a historyczne dane nadal korzystają z resolvera aliasów.
+
+## Testy fazy kontrolnej
+
+- rozdzielenie Dead-hang Biceps Curl i EZ-Bar Preacher Curl;
+- dedykowane kategorie front raise, step-up, good morning i rope climb;
+- kanonizacja ID w planach, sesjach, progresie, ulubionych i assetach;
+- brak cykli, wieloetapowych aliasów i brakujących celów w walidatorze;
+- domyślna biblioteka pokazuje tylko tier `main`.
+
+## Weryfikacja
+
+- catalogValidation: passed: 964 exercises, 13 aliases, 0 errors, 0 warnings
+- mobileTests: passed: 119/119
+- mobileTypecheck: passed
+- backendTests: passed: 73/73 (Release)
+- backendBuild: passed: Release, 0 warnings, 0 errors
+- androidBuild: not confirmed: Gradle 8.14.3 download/build did not finish within 8 minutes; no new APK was produced
+
 ## Przypadki pozostawione do decyzji produktowej
 
 - Band-assisted Pull-up vs Banded Pull-ups (Progression)
@@ -147,6 +233,6 @@
 - Body-weight Dip vs Incline Dip
 - Seated vs standing single-arm overhead dumbbell triceps extensions
 - Swiss-ball technical variants
+- Whether users should get an explicit UI toggle for advanced, sport-specific, rehab and variation tiers; default creation remains main-only.
 
 Pełny raport maszynowy znajduje się w `docs/reports/exercise-catalog-refactor.json`. Mapping kompatybilności znajduje się w `apps/mobile/src/domain/exerciseIdAliases.ts`.
-

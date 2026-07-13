@@ -11,7 +11,6 @@ import type { FallbackProps } from "react-error-boundary";
 import type { ReactNode } from "react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
-import { SvgXml } from "react-native-svg";
 import {
   Animated,
   AppState,
@@ -32,7 +31,7 @@ import {
   View,
   useWindowDimensions
 } from "react-native";
-import type { SectionListData, SectionListRenderItemInfo, StyleProp, TextInputProps, ViewStyle } from "react-native";
+import type { SectionListData, SectionListRenderItemInfo, TextInputProps } from "react-native";
 
 import { BUILD_API_BASE_URL } from "./src/config/buildConfig";
 import { exerciseImageSources } from "./src/exerciseImageSources";
@@ -72,6 +71,15 @@ import {
   hasUserDefinedWorkouts,
   normalizeWorkoutDraftExerciseIds
 } from "./src/domain/workouts";
+import {
+  areCreatorDraftsEqual,
+  cloneCreatorDraft,
+  workoutCreatorSections,
+  type LocalizedText,
+  type WorkoutCreatorDraft,
+  type WorkoutCreatorPhase,
+  type WorkoutCreatorProfile
+} from "./src/domain/workoutCreator";
 import {
   calculateEntryVolume,
   completeWorkoutSession,
@@ -226,15 +234,16 @@ import {
   shouldFetchSystemStatus,
   type SystemStatusState
 } from "./src/domain/systemStatus";
-import {
-  backBodyRegionMap,
-  backBodySvg,
-  frontBodyRegionMap,
-  frontBodySvg
-} from "./src/domain/bodyMaps";
 import { articles, getArticleTranslation } from "./src/domain/articles";
 import type { Article } from "./src/domain/articles";
 import { GymminLogo, GymminMark } from "./src/components/GymminLogo";
+import { CollapsiblePanel } from "./src/components/CollapsiblePanel";
+import {
+  ExerciseSummaryRow,
+  HumanMuscleFigure,
+  WorkoutMuscleOverviewContent,
+  type MuscleUsage
+} from "./src/components/WorkoutPresentation";
 import {
   AppButton,
   AppIconButton,
@@ -271,6 +280,8 @@ import {
   type WorkoutHistoryStatusFilter
 } from "./src/screens/WorkoutHistoryScreen";
 import { WorkoutSessionDetailScreen } from "./src/screens/WorkoutSessionDetailScreen";
+import { WorkoutDetailScreen } from "./src/screens/WorkoutDetailScreen";
+import { WorkoutCreatorScreen } from "./src/screens/WorkoutCreatorScreen";
 import { styles } from "./src/theme/appStyles";
 import { themes, type Theme, type ThemeName } from "./src/theme/theme";
 
@@ -1834,34 +1845,6 @@ type UserSession = {
   name: string;
   token: string;
 };
-type WorkoutCreatorPhase = "form" | "profilePrompt" | "submitted" | "waiting";
-type LocalizedText = {
-  en: string;
-  pl: string;
-};
-type WorkoutCreatorFieldKind = "text" | "textarea" | "singleChoice" | "multiChoice";
-type WorkoutCreatorValue = string | string[];
-type WorkoutCreatorDraft = Record<string, WorkoutCreatorValue>;
-type WorkoutCreatorField = {
-  defaultValue?: LocalizedText;
-  id: string;
-  kind: WorkoutCreatorFieldKind;
-  keyboardType?: TextInputProps["keyboardType"];
-  label: LocalizedText;
-  maxValue?: number;
-  options?: LocalizedText[];
-  placeholder?: LocalizedText;
-};
-type WorkoutCreatorSection = {
-  id: string;
-  title: LocalizedText;
-  fields: WorkoutCreatorField[];
-};
-type WorkoutCreatorProfile = {
-  draft: WorkoutCreatorDraft;
-  id: string;
-  name: string;
-};
 type WorkoutCreatorQuestionAnswer = {
   Question: string;
   Answer: string;
@@ -1960,253 +1943,6 @@ type LocalAuthStorage = {
   user: AuthUserResponse;
   version: 1;
 };
-
-const yesNoOptions: LocalizedText[] = [
-  { en: "Yes", pl: "Tak" },
-  { en: "No", pl: "Nie" }
-];
-
-const workoutCreatorSections: WorkoutCreatorSection[] = [
-  {
-    id: "goals",
-    title: { en: "Training goals", pl: "Cele treningowe" },
-    fields: [
-      {
-        id: "primaryGoal",
-        kind: "singleChoice",
-        label: { en: "What is your main training goal?", pl: "Jaki jest Twój główny cel treningowy?" },
-        options: [
-          { en: "Muscle gain", pl: "Budowa masy mięśniowej" },
-          { en: "Fat loss", pl: "Redukcja tkanki tłuszczowej" },
-          { en: "Strength increase", pl: "Zwiększenie siły" },
-          { en: "Conditioning", pl: "Poprawa kondycji" },
-          { en: "Health improvement", pl: "Poprawa zdrowia" },
-          { en: "Body recomposition", pl: "Sylwetka „rekompozycja”" }
-        ]
-      },
-      {
-        id: "secondaryGoals",
-        kind: "textarea",
-        label: { en: "What are your secondary goals?", pl: "Jakie są Twoje cele drugorzędne?" }
-      },
-      {
-        id: "targetDate",
-        kind: "text",
-        label: { en: "Do you have a specific deadline for the result?", pl: "Czy masz konkretną datę, do której chcesz osiągnąć określony rezultat?" },
-        placeholder: { en: "e.g. in 12 weeks, by September", pl: "np. za 12 tygodni, do września" }
-      },
-      {
-        id: "bodyPartsToDevelop",
-        kind: "text",
-        label: { en: "Which body parts do you want to develop most?", pl: "Jakie partie ciała najbardziej chciałbyś rozwinąć?" }
-      }
-    ]
-  },
-  {
-    id: "experience",
-    title: { en: "Training experience", pl: "Doświadczenie treningowe" },
-    fields: [
-      {
-        id: "age",
-        kind: "text",
-        keyboardType: "number-pad",
-        label: { en: "How old are you?", pl: "Ile masz lat?" }
-      },
-      {
-        id: "gender",
-        kind: "singleChoice",
-        label: { en: "What is your sex?", pl: "Płeć" },
-        options: [
-          { en: "Male", pl: "Mężczyzna" },
-          { en: "Female", pl: "Kobieta" }
-        ]
-      },
-      {
-        id: "height",
-        kind: "text",
-        keyboardType: "number-pad",
-        label: { en: "What is your height?", pl: "Jaki jest Twój wzrost?" },
-        placeholder: { en: "cm", pl: "cm" }
-      },
-      {
-        id: "bodyWeight",
-        kind: "text",
-        keyboardType: "decimal-pad",
-        label: { en: "What is your current body weight?", pl: "Jaka jest Twoja aktualna masa ciała?" },
-        placeholder: { en: "kg", pl: "kg" }
-      },
-      {
-        id: "strengthTrainingExperience",
-        kind: "text",
-        keyboardType: "number-pad",
-        label: { en: "How many years have you trained strength?", pl: "Jak długo trenujesz siłowo w latach?" },
-        maxValue: 70
-      },
-      {
-        id: "currentTrainingRegularity",
-        kind: "text",
-        keyboardType: "number-pad",
-        label: { en: "How many days per week do you currently train regularly?", pl: "Ile dni w tygodniu obecnie trenujesz regularnie?" },
-        maxValue: 7
-      },
-      {
-        id: "likedExercises",
-        kind: "textarea",
-        label: { en: "Which exercises do you like?", pl: "Jakie ćwiczenia lubisz wykonywać?" }
-      },
-      {
-        id: "dislikedExercises",
-        kind: "textarea",
-        label: { en: "Which exercises do you dislike or avoid?", pl: "Jakich ćwiczeń nie lubisz lub unikasz?" }
-      },
-      {
-        id: "currentStrengthResults",
-        kind: "textarea",
-        label: { en: "What are your current strength results in basic lifts?", pl: "Jakie są Twoje obecne wyniki siłowe w podstawowych ćwiczeniach (przysiad, martwy ciąg, wyciskanie)?" },
-        placeholder: { en: "Squat, deadlift, bench press", pl: "Przysiad, martwy ciąg, wyciskanie" }
-      }
-    ]
-  },
-  {
-    id: "health",
-    title: { en: "Health and limitations", pl: "Zdrowie i ograniczenia" },
-    fields: [
-      {
-        id: "injuries",
-        kind: "textarea",
-        label: { en: "Do you have any injuries?", pl: "Czy masz jakiekolwiek kontuzje lub urazy?" }
-      },
-      {
-        id: "jointPain",
-        kind: "textarea",
-        label: { en: "Do you feel joint, back, knee, shoulder or hip pain?", pl: "Czy odczuwasz bóle stawów, pleców, kolan, barków lub bioder?" }
-      },
-      {
-        id: "surgeries",
-        kind: "textarea",
-        label: { en: "Have you had any surgeries?", pl: "Czy przeszedłeś jakieś operacje?" }
-      },
-      {
-        id: "doctorLimitations",
-        kind: "textarea",
-        label: { en: "Has a doctor recommended limiting physical activity?", pl: "Czy lekarz zalecił Ci ograniczenie aktywności fizycznej?" }
-      },
-      {
-        id: "chronicDiseases",
-        kind: "singleChoice",
-        label: { en: "Do you have any chronic diseases?", pl: "Czy cierpisz na choroby przewlekłe?" },
-        options: [
-          { en: "Hypertension", pl: "Nadciśnienie" },
-          { en: "Diabetes", pl: "Cukrzyca" },
-          { en: "Heart disease", pl: "Choroby serca" },
-          { en: "Hormonal issues", pl: "Problemy hormonalne" }
-        ]
-      },
-      {
-        id: "medications",
-        kind: "textarea",
-        label: { en: "Do you take medications that may affect performance or recovery?", pl: "Czy przyjmujesz leki mogące wpływać na wydolność lub regenerację?" }
-      }
-    ]
-  },
-  {
-    id: "lifestyle",
-    title: { en: "Lifestyle", pl: "Styl życia" },
-    fields: [
-      {
-        id: "workType",
-        kind: "singleChoice",
-        label: { en: "What type of work do you do?", pl: "Jaki rodzaj pracy wykonujesz?" },
-        options: [
-          { en: "Sedentary", pl: "Siedząca" },
-          { en: "Physical", pl: "Fizyczna" },
-          { en: "Mixed", pl: "Mieszana" }
-        ]
-      },
-      {
-        id: "sittingHours",
-        kind: "text",
-        keyboardType: "decimal-pad",
-        label: { en: "How many hours per day do you spend sitting?", pl: "Ile godzin dziennie spędzasz siedząc?" }
-      },
-      {
-        id: "sleepHours",
-        kind: "text",
-        keyboardType: "decimal-pad",
-        label: { en: "How many hours do you sleep on average?", pl: "Ile średnio śpisz na dobę?" }
-      },
-      {
-        id: "sleepQuality",
-        kind: "text",
-        keyboardType: "number-pad",
-        label: { en: "How do you rate your sleep quality on a 1-10 scale?", pl: "Jak oceniasz jakość swojego snu w skali 1-10?" },
-        placeholder: { en: "1-10", pl: "1-10" }
-      },
-      {
-        id: "stressLevel",
-        kind: "text",
-        keyboardType: "number-pad",
-        label: { en: "What is your stress level on a 1-10 scale?", pl: "Jak wygląda Twój poziom stresu w skali 1-10?" },
-        placeholder: { en: "1-10", pl: "1-10" }
-      },
-      {
-        id: "dailySteps",
-        kind: "text",
-        keyboardType: "number-pad",
-        label: { en: "How many steps do you take on average per day?", pl: "Ile kroków wykonujesz przeciętnie dziennie?" }
-      }
-    ]
-  },
-  {
-    id: "logistics",
-    title: { en: "Training logistics", pl: "Logistyka treningów" },
-    fields: [
-      {
-        id: "trainingDaysPerWeek",
-        kind: "text",
-        keyboardType: "number-pad",
-        label: { en: "How many days per week can you realistically train?", pl: "Ile dni w tygodniu realnie możesz trenować?" }
-      },
-      {
-        id: "sessionDuration",
-        kind: "text",
-        keyboardType: "number-pad",
-        label: { en: "How much time can you spend on one workout in minutes?", pl: "Ile czasu możesz przeznaczyć na jeden trening w minutach?" },
-        maxValue: 1000,
-        placeholder: { en: "minutes", pl: "minuty" }
-      },
-      {
-        id: "gymAccess",
-        kind: "singleChoice",
-        label: { en: "Do you have access to a full gym?", pl: "Czy masz dostęp do pełnowymiarowej siłowni?" },
-        options: yesNoOptions
-      },
-      {
-        id: "homeTraining",
-        kind: "singleChoice",
-        label: { en: "Will you sometimes train at home?", pl: "Czy czasami będziesz trenować w domu?" },
-        options: yesNoOptions
-      },
-      {
-        id: "splitPreference",
-        kind: "singleChoice",
-        label: { en: "Do you prefer full-body training or a split?", pl: "Czy preferujesz trening całego ciała (FBW) czy podział na partie (split)?" },
-        options: [
-          { en: "Full body", pl: "FBW" },
-          { en: "Split", pl: "Split" },
-          { en: "No preference", pl: "Bez preferencji" }
-        ]
-      },
-      {
-        id: "readyWarmupSet",
-        kind: "singleChoice",
-        defaultValue: { en: "No", pl: "Nie" },
-        label: { en: "Do you want a ready warm-up set?", pl: "Czy chcesz gotowy zestaw rozgrzewki?" },
-        options: yesNoOptions
-      }
-    ]
-  }
-];
 
 const defaultCollapsedPanels: Record<string, boolean> = {
   "settings-account": true,
@@ -4232,6 +3968,11 @@ function GymminApp() {
   );
   const shouldShowWorkoutHeaderTime = activeScreen === "workoutSession" && Boolean(activeWorkoutSession);
 
+  const selectedWorkout = useMemo(
+    () => savedWorkouts.find((item) => item.id === selectedWorkoutId) ?? savedWorkouts[0] ?? null,
+    [savedWorkouts, selectedWorkoutId]
+  );
+
   const selectedWorkoutSessions = useMemo(
     () => visibleWorkoutSessions
       .filter((session) => session.sourceWorkoutId === selectedWorkoutId && session.status !== "active")
@@ -5288,6 +5029,22 @@ function GymminApp() {
     setActiveScreen("workoutAiRewrite");
   }
 
+  function handleWorkoutDetailAiRewrite(workoutId: string) {
+    if (!areOnlineFeaturesAvailable) {
+      showOnlineFeatureUnavailableDialog();
+      return;
+    }
+
+    if (user && aiCreditBalance.balance < aiCreditBalance.rewriteCost) {
+      setShowAiRewriteCreditTooltip(true);
+      setTimeout(() => setShowAiRewriteCreditTooltip(false), 3000);
+      return;
+    }
+
+    setShowAiRewriteCreditTooltip(false);
+    openWorkoutAiRewrite(workoutId);
+  }
+
   function startSelectedWorkoutSession(executionMode = resolveWorkoutStartExecutionMode(defaultWorkoutExecutionMode)) {
     const savedWorkout = savedWorkouts.find((item) => item.id === selectedWorkoutId);
 
@@ -5483,30 +5240,6 @@ function GymminApp() {
 
     setCreatorSubmitError("");
     setCreatorPhase("profilePrompt");
-  }
-
-  function cloneCreatorDraft(draft: WorkoutCreatorDraft): WorkoutCreatorDraft {
-    return Object.fromEntries(
-      Object.entries(draft).map(([key, value]) => [key, Array.isArray(value) ? [...value] : value])
-    );
-  }
-
-  function areCreatorValuesEqual(left: WorkoutCreatorValue | undefined, right: WorkoutCreatorValue | undefined) {
-    if (Array.isArray(left) || Array.isArray(right)) {
-      if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
-        return false;
-      }
-
-      return left.every((value, index) => value === right[index]);
-    }
-
-    return (left ?? "") === (right ?? "");
-  }
-
-  function areCreatorDraftsEqual(left: WorkoutCreatorDraft, right: WorkoutCreatorDraft) {
-    const fieldIds = workoutCreatorSections.flatMap((section) => section.fields.map((field) => field.id));
-
-    return fieldIds.every((fieldId) => areCreatorValuesEqual(left[fieldId], right[fieldId]));
   }
 
   function loadCreatorProfile(profile: WorkoutCreatorProfile) {
@@ -6037,49 +5770,9 @@ function GymminApp() {
     return typeof value === "string" ? value : "";
   }
 
-  function getCreatorFieldTextValue(field: WorkoutCreatorField) {
-    return getCreatorTextValue(field.id) || (field.defaultValue ? getCreatorLabel(field.defaultValue) : "");
-  }
-
   function wantsReadyWarmupSet() {
     const answer = getCreatorTextValue("readyWarmupSet").trim().toLowerCase();
     return answer === "tak" || answer === "yes";
-  }
-
-  function getCreatorMultiValue(fieldId: string) {
-    const value = creatorDraft[fieldId];
-    return Array.isArray(value) ? value : [];
-  }
-
-  function updateCreatorField(fieldId: string, value: WorkoutCreatorValue) {
-    setCreatorDraft((current) => ({ ...current, [fieldId]: value }));
-  }
-
-  function updateCreatorTextField(field: WorkoutCreatorField, value: string) {
-    if (field.keyboardType === "number-pad" && typeof field.maxValue === "number") {
-      const numericValue = value.replace(/\D/g, "");
-
-      if (!numericValue) {
-        updateCreatorField(field.id, "");
-        return;
-      }
-
-      updateCreatorField(field.id, String(Math.min(Number(numericValue), field.maxValue)));
-      return;
-    }
-
-    updateCreatorField(field.id, value);
-  }
-
-  function toggleCreatorMultiChoice(fieldId: string, option: string) {
-    setCreatorDraft((current) => {
-      const currentValues = Array.isArray(current[fieldId]) ? current[fieldId] : [];
-      const nextValues = currentValues.includes(option)
-        ? currentValues.filter((item) => item !== option)
-        : [...currentValues, option];
-
-      return { ...current, [fieldId]: nextValues };
-    });
   }
 
   function toggleCreatorSection(sectionId: string) {
@@ -7884,340 +7577,6 @@ function GymminApp() {
     );
   }
 
-  function renderWorkoutCreator() {
-    if (!user) {
-      return renderProfile();
-    }
-
-    const isWaiting = creatorPhase === "waiting";
-    const isSubmitted = creatorPhase === "submitted";
-    const isProfilePrompt = creatorPhase === "profilePrompt";
-    const selectedCreatorProfile = selectedCreatorProfileId
-      ? creatorProfiles.find((profile) => profile.id === selectedCreatorProfileId)
-      : null;
-
-    function renderCreatorField(field: WorkoutCreatorField) {
-      const label = getCreatorLabel(field.label);
-      const placeholder = field.placeholder ? getCreatorLabel(field.placeholder) : undefined;
-
-      if (field.kind === "textarea") {
-        return (
-          <View key={field.id} style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: theme.muted }]}>{label}</Text>
-            <AppTextarea
-              placeholder={placeholder ?? t("aiCreatorQuestionPlaceholder")}
-              style={styles.creatorTextarea}
-              theme={theme}
-              value={getCreatorTextValue(field.id)}
-              onChangeText={(value) => updateCreatorField(field.id, value)}
-            />
-          </View>
-        );
-      }
-
-      if (field.kind === "singleChoice") {
-        const options = (field.options ?? []).map((option) => {
-          const optionLabel = getCreatorLabel(option);
-          return { label: optionLabel, value: optionLabel };
-        });
-
-        return (
-          <View key={field.id} style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: theme.muted }]}>{label}</Text>
-            <SelectControl
-              options={options}
-              placeholder={t("select")}
-              theme={theme}
-              value={getCreatorFieldTextValue(field)}
-              onChange={(value) => updateCreatorField(field.id, value)}
-            />
-          </View>
-        );
-      }
-
-      if (field.kind === "multiChoice") {
-        const selectedValues = getCreatorMultiValue(field.id);
-
-        return (
-          <View key={field.id} style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: theme.muted }]}>{label}</Text>
-            <View style={styles.creatorChoiceList}>
-              {(field.options ?? []).map((option) => {
-                const optionLabel = getCreatorLabel(option);
-                const isSelected = selectedValues.includes(optionLabel);
-
-                return (
-                  <Pressable
-                    key={optionLabel}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isSelected }}
-                    style={[
-                      styles.creatorChoiceChip,
-                      {
-                        backgroundColor: isSelected ? theme.primary : theme.control,
-                        borderColor: isSelected ? theme.primary : theme.border
-                      }
-                    ]}
-                    onPress={() => toggleCreatorMultiChoice(field.id, optionLabel)}
-                  >
-                    <Text
-                      style={[
-                        styles.creatorChoiceText,
-                        { color: isSelected ? theme.white : theme.text }
-                      ]}
-                    >
-                      {optionLabel}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        );
-      }
-
-      return (
-        <View key={field.id} style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: theme.muted }]}>{label}</Text>
-          <AppInput
-            keyboardType={field.keyboardType}
-            placeholder={placeholder ?? t("aiCreatorQuestionPlaceholder")}
-            theme={theme}
-            value={getCreatorTextValue(field.id)}
-            onChangeText={(value) => updateCreatorTextField(field, value)}
-          />
-        </View>
-      );
-    }
-
-    return (
-      <>
-        <View style={[styles.creatorPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {!isProfilePrompt && !isSubmitted ? (
-            <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-              {isWaiting ? t("aiCreatorDoneCopy") : t("aiCreatorIntro")}
-            </Text>
-          ) : null}
-
-          {creatorPhase === "form" ? (
-            <View style={styles.creatorForm}>
-              {creatorProfiles.length ? (
-                <View style={styles.creatorProfilesBlock}>
-                  <Text style={[styles.creatorSectionTitle, { color: theme.text }]}>
-                    {t("aiCreatorProfiles")}
-                  </Text>
-                  <View style={styles.creatorProfileGrid}>
-                    {creatorProfiles.map((profile) => {
-                      const isSelected = selectedCreatorProfileId === profile.id;
-                      const goalValue = profile.draft.primaryGoal;
-                      const meta = typeof goalValue === "string" && goalValue ? goalValue : t("aiCreatorMeta");
-
-                      return (
-                        <Pressable
-                          key={profile.id}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: isSelected }}
-                          style={[
-                            styles.creatorProfileCard,
-                            {
-                              backgroundColor: isSelected ? theme.secondaryBand : theme.control,
-                              borderColor: isSelected ? theme.primary : theme.border
-                            }
-                          ]}
-                          onPress={() => loadCreatorProfile(profile)}
-                        >
-                          <View style={[styles.infoLinkIcon, { backgroundColor: theme.secondaryBand }]}>
-                            <Ionicons name="person-outline" size={21} color={theme.primary} />
-                          </View>
-                          <View style={styles.workoutInfo}>
-                            <Text style={[styles.workoutName, { color: theme.text }]}>{profile.name}</Text>
-                            <Text numberOfLines={1} style={[styles.workoutMeta, { color: theme.muted }]}>
-                              {isSelected ? t("aiCreatorProfileLoaded") : meta}
-                            </Text>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </View>
-              ) : null}
-
-              {workoutCreatorSections.map((section) => {
-                const isSectionCollapsed = creatorCollapsedSections[section.id] ?? false;
-
-                return (
-                  <View key={section.id} style={[styles.creatorSection, { borderColor: theme.border }]}>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityState={{ expanded: !isSectionCollapsed }}
-                      style={styles.creatorSectionHeader}
-                      onPress={() => toggleCreatorSection(section.id)}
-                    >
-                      <Text style={[styles.creatorSectionTitle, { color: theme.text }]}>
-                        {getCreatorLabel(section.title)}
-                      </Text>
-                      <Ionicons
-                        name={isSectionCollapsed ? "chevron-down" : "chevron-up"}
-                        size={20}
-                        color={theme.muted}
-                      />
-                    </Pressable>
-                    {!isSectionCollapsed ? (
-                      <View style={styles.creatorSectionFields}>
-                        {section.fields.map((field) => renderCreatorField(field))}
-                      </View>
-                    ) : null}
-                  </View>
-                );
-              })}
-              <View style={[styles.creatorPlanBox, { backgroundColor: theme.control, borderColor: theme.border }]}>
-                <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                  {t("aiCreditsGenerateNeed")}
-                </Text>
-                <Text style={[styles.workoutName, { color: theme.text }]}>
-                  {t("aiCreditsAvailable")}: {aiCreditBalance.balance}
-                </Text>
-                <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                  {t("aiCreditsCharged")}
-                </Text>
-                {aiCreditBalance.balance < aiCreditBalance.planCost ? (
-                  <AppButton
-                    icon="sparkles-outline"
-                    style={styles.secondaryButton}
-                    textStyle={styles.secondaryButtonText}
-                    theme={theme}
-                    variant="outline"
-                    onPress={() => {
-                      if (!areOnlineFeaturesAvailable) {
-                        showOnlineFeatureUnavailableDialog();
-                        return;
-                      }
-                      setActiveScreen("aiCredits");
-                    }}
-                  >
-                    {t("aiCreditsGoTo")}
-                  </AppButton>
-                ) : null}
-              </View>
-              <AppButton
-                disabled={isCreatorSubmitting || isCreatorJobPending || !areOnlineFeaturesAvailable || aiCreditBalance.balance < aiCreditBalance.planCost}
-                icon="sparkles-outline"
-                theme={theme}
-                onPress={submitWorkoutCreatorForm}
-              >
-                {t("aiCreatorSubmit")}
-              </AppButton>
-            </View>
-          ) : null}
-
-          {isProfilePrompt ? (
-            <View style={styles.creatorForm}>
-              <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>
-                {selectedCreatorProfile ? t("aiCreatorProfileUpdateTitle") : t("aiCreatorProfileSaveTitle")}
-              </Text>
-              <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-                {selectedCreatorProfile ? t("aiCreatorProfileUpdateCopy") : t("aiCreatorProfileSaveCopy")}
-              </Text>
-              <View style={styles.fieldGroup}>
-                <Text style={[styles.label, { color: theme.muted }]}>{t("aiCreatorProfileName")}</Text>
-                <AppInput
-                  placeholder={t("aiCreatorProfileNamePlaceholder")}
-                  theme={theme}
-                  value={creatorProfileName}
-                  onChangeText={setCreatorProfileName}
-                />
-              </View>
-              <View style={styles.creatorPromptActions}>
-                <AppButton
-                  disabled={isCreatorSubmitting || isCreatorJobPending || !areOnlineFeaturesAvailable}
-                  icon="save-outline"
-                  theme={theme}
-                  onPress={selectedCreatorProfile ? updateCreatorProfileAndSubmit : saveCreatorProfileAndSubmit}
-                >
-                  {isCreatorSubmitting
-                    ? t("aiCreatorSubmitting")
-                    : selectedCreatorProfile
-                      ? t("aiCreatorUpdateAndSubmit")
-                      : t("aiCreatorSaveAndSubmit")}
-                </AppButton>
-                <AppButton
-                  disabled={isCreatorSubmitting || isCreatorJobPending || !areOnlineFeaturesAvailable}
-                  icon="send-outline"
-                  theme={theme}
-                  variant="outline"
-                  onPress={() => void finishWorkoutCreatorRequest()}
-                >
-                  {isCreatorSubmitting ? t("aiCreatorSubmitting") : t("aiCreatorSendWithoutSaving")}
-                </AppButton>
-              </View>
-              {creatorSubmitError ? (
-                <Text style={[styles.authError, { color: theme.danger }]}>{creatorSubmitError}</Text>
-              ) : null}
-            </View>
-          ) : null}
-
-          {isSubmitted ? (
-            <View style={styles.creatorWaitingActions}>
-              <View style={[styles.bugSuccessBox, { backgroundColor: theme.secondaryBand }]}>
-                <Ionicons name="checkmark-circle-outline" size={22} color={theme.primary} />
-                <View style={styles.workoutInfo}>
-                  <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>
-                    {t("aiCreatorSentTitle")}
-                  </Text>
-                  <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-                    {isCreatorJobPending ? t("aiCreatorPendingCopy") : t("aiCreatorSentCopy")}
-                  </Text>
-                </View>
-              </View>
-              <AppButton
-                icon="checkmark-outline"
-                theme={theme}
-                onPress={returnToHomeFromCreator}
-              >
-                {t("aiCreatorSentOk")}
-              </AppButton>
-            </View>
-          ) : null}
-
-          {isWaiting ? (
-            <View style={styles.creatorWaitingActions}>
-              <View style={[styles.bugSuccessBox, { backgroundColor: theme.secondaryBand }]}>
-                <Ionicons name="checkmark-circle-outline" size={22} color={theme.primary} />
-                <View style={styles.workoutInfo}>
-                  <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>
-                    {creatorImportedWorkoutCount ? t("aiCreatorImportedTitle") : t("aiCreatorDoneTitle")}
-                  </Text>
-                  <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-                    {creatorImportedWorkoutCount
-                      ? `${formatCreatorImportedWorkoutCount(creatorImportedWorkoutCount)} ${t("aiCreatorImportedCopy")}`
-                      : t("aiCreatorDoneCopy")}
-                  </Text>
-                </View>
-              </View>
-              {creatorPlanText && !creatorImportedWorkoutCount ? (
-                <View style={[styles.creatorPlanBox, { backgroundColor: theme.control, borderColor: theme.border }]}>
-                  <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>
-                    {t("aiCreatorResultTitle")}
-                  </Text>
-                  <Text style={[styles.creatorPlanText, { color: theme.text }]}>
-                    {creatorPlanText}
-                  </Text>
-                </View>
-              ) : null}
-              <AppButton
-                icon="list-outline"
-                theme={theme}
-                onPress={() => setActiveScreen("workouts")}
-              >
-                {t("aiCreatorWaitingAction")}
-              </AppButton>
-            </View>
-          ) : null}
-        </View>
-      </>
-    );
-  }
-
   function renderArticleDetail() {
     const article = articles.find((item) => item.id === selectedArticleId) ?? articles[0];
 
@@ -8580,265 +7939,6 @@ function GymminApp() {
           )}
         </CollapsiblePanel>
       </View>
-    );
-  }
-
-  function renderWorkoutDetail() {
-    const selectedWorkout =
-      savedWorkouts.find((item) => item.id === selectedWorkoutId) ?? savedWorkouts[0];
-
-    if (!selectedWorkout) {
-      return (
-        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Ionicons name="barbell-outline" size={26} color={theme.primary} />
-          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>
-            {t("noWorkout")}
-          </Text>
-          <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>
-            {t("noWorkoutCopy")}
-          </Text>
-        </View>
-      );
-    }
-
-    const stageGroups = selectedWorkout.draft.steps
-      .filter((step) => step.kind === "stage" && step.stageType !== "warmup")
-      .map((stage) => ({
-        stage,
-        series: selectedWorkout.draft.steps
-          .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
-          .map((set) => ({
-            set,
-            elements: selectedWorkout.draft.steps.filter(
-              (step) => step.kind === "exercise" && step.parentSetId === set.id
-            )
-          }))
-      }));
-    const isAiRewriteCreditBlocked = Boolean(user && aiCreditBalance.balance < aiCreditBalance.rewriteCost);
-    const isAiRewriteOnlineBlocked = !areOnlineFeaturesAvailable;
-
-    return (
-      <>
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionHeaderCopy}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>{selectedWorkout.name}</Text>
-          </View>
-          <View style={styles.workoutDetailActions}>
-            <AppButton
-              icon="create-outline"
-              style={styles.builderBackButton}
-              textStyle={styles.builderBackButtonText}
-              theme={theme}
-              variant="outline"
-              onPress={() => openWorkoutEditor(selectedWorkout.id)}
-            >
-                {t("edit")}
-            </AppButton>
-            <AppButton
-              icon="trash-outline"
-              style={[styles.builderBackButton, { borderColor: theme.danger }]}
-              textStyle={[styles.builderBackButtonText, { color: theme.danger }]}
-              theme={theme}
-              variant="outline"
-              onPress={() => deleteWorkout(selectedWorkout.id)}
-            >
-                {t("delete")}
-            </AppButton>
-          </View>
-        </View>
-        {selectedWorkout.draft.notes ? (
-          <CollapsiblePanel
-            collapseLabel={t("collapse")}
-            expandLabel={t("expand")}
-            isCollapsed={isReadOnlyWorkoutPanelCollapsed("workout-notes")}
-            theme={theme}
-            title={t("workoutNotes")}
-            onToggle={() => toggleReadOnlyWorkoutPanel("workout-notes")}
-          >
-            <Text style={[styles.workoutDetailDescription, { color: theme.muted }]}>
-              {selectedWorkout.draft.notes}
-            </Text>
-          </CollapsiblePanel>
-        ) : null}
-
-        <AppButton
-          icon="play-outline"
-          theme={theme}
-          onPress={() => startSelectedWorkoutSession()}
-        >
-          {t("startWorkout")}
-        </AppButton>
-        {isAiRewriteCreditBlocked && showAiRewriteCreditTooltip ? (
-          <View style={[styles.inlineTooltip, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
-            <Text style={[styles.inlineTooltipText, { color: theme.text }]}>{t("aiCreditsInsufficient")}</Text>
-          </View>
-        ) : null}
-        <AppButton
-          icon="sparkles-outline"
-          style={isAiRewriteCreditBlocked || isAiRewriteOnlineBlocked ? styles.disabledActionButton : undefined}
-          textStyle={isAiRewriteCreditBlocked || isAiRewriteOnlineBlocked ? { color: theme.muted } : undefined}
-          theme={theme}
-          variant="outline"
-          onPress={() => {
-            if (isAiRewriteOnlineBlocked) {
-              showOnlineFeatureUnavailableDialog();
-              return;
-            }
-
-            if (isAiRewriteCreditBlocked) {
-              setShowAiRewriteCreditTooltip(true);
-              setTimeout(() => setShowAiRewriteCreditTooltip(false), 3000);
-              return;
-            }
-
-            setShowAiRewriteCreditTooltip(false);
-            openWorkoutAiRewrite(selectedWorkout.id);
-          }}
-        >
-          {t("aiRewriteAction")}
-        </AppButton>
-
-        <CollapsiblePanel
-          collapseLabel={t("collapse")}
-          expandLabel={t("expand")}
-          isCollapsed={isReadOnlyWorkoutPanelCollapsed("workout-overview")}
-          theme={theme}
-          title={t("overview")}
-          onToggle={() => toggleReadOnlyWorkoutPanel("workout-overview")}
-        >
-          <WorkoutMuscleOverviewContent language={language} theme={theme} workout={selectedWorkout.draft} />
-        </CollapsiblePanel>
-
-        <View style={styles.workoutDetailStages}>
-          {stageGroups.map(({ stage, series }, index) => {
-            const exerciseCount = series.reduce(
-              (total, item) => total + item.elements.filter((element) => !isRestTargetStep(element)).length,
-              0
-            );
-
-            return (
-              <CollapsiblePanel
-                actions={
-                  <View style={[styles.panelCountBadge, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                    <Text style={[styles.panelCountBadgeText, { color: theme.primary }]}>{exerciseCount}</Text>
-                  </View>
-                }
-                collapseLabel={t("collapse")}
-                expandLabel={t("expand")}
-                key={stage.id}
-                isCollapsed={isReadOnlyWorkoutPanelCollapsed(`workout-stage-${stage.id}`)}
-                theme={theme}
-                title={stage.label || `${t("stage")} ${index + 1}`}
-                onToggle={() => toggleReadOnlyWorkoutPanel(`workout-stage-${stage.id}`)}
-              >
-                {stage.notes ? (
-                  <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{stage.notes}</Text>
-                ) : null}
-
-                {series.length ? (
-                  <View style={styles.workoutDetailSeriesList}>
-                    {series.map(({ set, elements }, setIndex) => {
-                      const headerElement = elements.find((element) => !isRestTargetStep(element)) ?? elements[0];
-
-                      return (
-                        <View
-                          key={set.id}
-                          style={[
-                            styles.workoutDetailSeriesRow,
-                            { borderColor: theme.border },
-                            setIndex === series.length - 1 ? styles.workoutDetailSeriesRowLast : null
-                          ]}
-                        >
-                          <View style={styles.workoutInfo}>
-                            {elements.map((element) => (
-                              <View key={element.id} style={styles.workoutDetailElementRow}>
-                                <ExerciseSummaryRow
-                                  language={language}
-                                  pairedTargetText={
-                                    isRestTargetStep(element)
-                                      ? (() => {
-                                        const elementIndex = elements.findIndex((item) => item.id === element.id);
-                                        const previousExercise = [...elements]
-                                          .slice(0, Math.max(0, elementIndex))
-                                          .reverse()
-                                          .find((item) => !isRestTargetStep(item));
-
-                                        return previousExercise
-                                          ? formatExerciseSetTarget({ ...previousExercise, setCount: set.setCount || "1" })
-                                          : undefined;
-                                      })()
-                                      : undefined
-                                  }
-                                  seriesIndex={headerElement?.id === element.id ? setIndex + 1 : undefined}
-                                  step={element}
-                                  targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
-                                  theme={theme}
-                                  t={t}
-                                  onPressDetails={() => openExerciseDetail(element)}
-                                  onPressMuscles={() => openExerciseDetail(element)}
-                                />
-                                {element.notes ? (
-                                  <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
-                                    {element.notes}
-                                  </Text>
-                                ) : null}
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </View>
-                ) : null}
-              </CollapsiblePanel>
-            );
-          })}
-        </View>
-
-        <CollapsiblePanel
-          collapseLabel={t("collapse")}
-          expandLabel={t("expand")}
-          isCollapsed={isReadOnlyWorkoutPanelCollapsed("workout-history")}
-          theme={theme}
-          title={t("workoutHistory")}
-          onToggle={() => toggleReadOnlyWorkoutPanel("workout-history")}
-        >
-          {selectedWorkoutSessions.length ? (
-            <View style={styles.sessionHistoryList}>
-              {selectedWorkoutSessions.map((session) => {
-                const completedCount = session.entries.filter((entry) => entry.isCompleted).length;
-                const durationMs = session.finishedAt
-                  ? Date.parse(session.finishedAt) - Date.parse(session.startedAt)
-                  : 0;
-                const durationMinutes = durationMs > 0 ? Math.round(durationMs / 60000) : 0;
-                const modeLabel = getWorkoutExecutionModeOptions(t).find((item) => item.value === session.executionMode)?.label;
-
-                return (
-                  <Pressable key={session.id} accessibilityRole="button" style={[styles.sessionHistoryRow, { borderColor: theme.border }]} onPress={() => openWorkoutSessionDetail(session.id)}>
-                    <Text style={[styles.workoutName, { color: theme.text }]}>
-                      {new Date(session.startedAt).toLocaleDateString()}
-                    </Text>
-                    <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                      {getSessionStatusLabel(session.status)} · {modeLabel} · {completedCount}/{session.entries.length}
-                      {durationMinutes ? ` · ${durationMinutes} min` : ""}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-              <AppButton
-                icon="time-outline"
-                theme={theme}
-                variant="outline"
-                onPress={() => openWorkoutHistory(selectedWorkout.id)}
-              >
-                {t("viewFullHistory")}
-              </AppButton>
-            </View>
-          ) : (
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("empty")}</Text>
-          )}
-        </CollapsiblePanel>
-      </>
     );
   }
 
@@ -11146,10 +10246,68 @@ function GymminApp() {
             {activeScreen === "settings" && renderSettings()}
             {activeScreen === "articleDetail" && renderArticleDetail()}
             {activeScreen === "builder" && renderBuilder()}
-            {activeScreen === "workoutCreator" && renderWorkoutCreator()}
+            {activeScreen === "workoutCreator" && (
+              user ? (
+                <WorkoutCreatorScreen
+                  areOnlineFeaturesAvailable={areOnlineFeaturesAvailable}
+                  collapsedSections={creatorCollapsedSections}
+                  creditBalance={aiCreditBalance}
+                  draft={creatorDraft}
+                  formatImportedWorkoutCount={formatCreatorImportedWorkoutCount}
+                  importedWorkoutCount={creatorImportedWorkoutCount}
+                  isJobPending={isCreatorJobPending}
+                  isSubmitting={isCreatorSubmitting}
+                  language={language}
+                  phase={creatorPhase}
+                  planText={creatorPlanText}
+                  profileName={creatorProfileName}
+                  profiles={creatorProfiles}
+                  selectedProfileId={selectedCreatorProfileId}
+                  submitError={creatorSubmitError}
+                  t={t}
+                  theme={theme}
+                  onDraftFieldChange={(fieldId, value) => {
+                    setCreatorDraft((current) => ({ ...current, [fieldId]: value }));
+                  }}
+                  onLoadProfile={loadCreatorProfile}
+                  onOpenCredits={() => setActiveScreen("aiCredits")}
+                  onOpenWorkouts={() => setActiveScreen("workouts")}
+                  onProfileNameChange={setCreatorProfileName}
+                  onReturnHome={returnToHomeFromCreator}
+                  onSaveProfileAndSubmit={saveCreatorProfileAndSubmit}
+                  onSendWithoutSaving={() => void finishWorkoutCreatorRequest()}
+                  onShowOnlineUnavailable={showOnlineFeatureUnavailableDialog}
+                  onSubmit={submitWorkoutCreatorForm}
+                  onToggleSection={toggleCreatorSection}
+                  onUpdateProfileAndSubmit={updateCreatorProfileAndSubmit}
+                />
+              ) : renderProfile()
+            )}
             {activeScreen === "workoutAiRewrite" && renderWorkoutAiRewrite()}
             {activeScreen === "workoutAiProposal" && renderWorkoutAiProposal()}
-            {activeScreen === "workoutDetail" && renderWorkoutDetail()}
+            {activeScreen === "workoutDetail" && (
+              <WorkoutDetailScreen
+                getExecutionModeLabel={getExecutionModeLabel}
+                getSessionStatusLabel={getSessionStatusLabel}
+                isAiRewriteCreditBlocked={Boolean(user && aiCreditBalance.balance < aiCreditBalance.rewriteCost)}
+                isAiRewriteOnlineBlocked={!areOnlineFeaturesAvailable}
+                isPanelCollapsed={isReadOnlyWorkoutPanelCollapsed}
+                language={language}
+                sessions={selectedWorkoutSessions}
+                showAiRewriteCreditTooltip={showAiRewriteCreditTooltip}
+                t={t}
+                theme={theme}
+                workout={selectedWorkout}
+                onAiRewrite={handleWorkoutDetailAiRewrite}
+                onDeleteWorkout={deleteWorkout}
+                onEditWorkout={openWorkoutEditor}
+                onOpenExercise={openExerciseDetail}
+                onOpenHistory={openWorkoutHistory}
+                onOpenSession={openWorkoutSessionDetail}
+                onStartWorkout={() => startSelectedWorkoutSession()}
+                onTogglePanel={toggleReadOnlyWorkoutPanel}
+              />
+            )}
             {activeScreen === "workoutSession" && renderWorkoutSession()}
             {activeScreen === "weeklyPlan" && renderWeeklyPlan()}
             {activeScreen === "workoutHistory" && (
@@ -11486,73 +10644,6 @@ function GlobalErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   );
 }
 
-type MuscleUsage = Record<MuscleKey, 0 | 1 | 2>;
-
-function getWorkoutMuscleUsage(workout: WorkoutDraft): MuscleUsage {
-  const usage = Object.fromEntries(muscleKeys.map((muscle) => [muscle, 0])) as MuscleUsage;
-
-  workout.steps.forEach((step) => {
-    if (step.kind !== "exercise" || !step.exerciseName) {
-      return;
-    }
-
-    const exercise = findExerciseByName(step.exerciseName);
-
-    if (!exercise) {
-      return;
-    }
-
-    muscleKeys.forEach((muscle) => {
-      usage[muscle] = Math.max(usage[muscle], exercise.muscleImpact[muscle]) as 0 | 1 | 2;
-    });
-  });
-
-  return usage;
-}
-
-type WorkoutMuscleOverviewProps = {
-  language: LanguageCode;
-  theme: Theme;
-  workout: WorkoutDraft;
-};
-
-function WorkoutMuscleOverviewContent({ language, theme, workout }: WorkoutMuscleOverviewProps) {
-  const usage = useMemo(() => getWorkoutMuscleUsage(workout), [workout]);
-  const primaryCount = muscleKeys.filter((muscle) => usage[muscle] === 2).length;
-  const secondaryCount = muscleKeys.filter((muscle) => usage[muscle] === 1).length;
-  const colors = {
-    inactive: "#4a4d4c",
-    primary: "#ff3347",
-    secondary: "#ffc43d"
-  };
-
-  function fill(muscle: MuscleKey) {
-    if (usage[muscle] === 2) {
-      return colors.primary;
-    }
-
-    if (usage[muscle] === 1) {
-      return colors.secondary;
-    }
-
-    return colors.inactive;
-  }
-
-  return (
-    <>
-      <View style={styles.muscleOverviewFigures}>
-        <HumanMuscleFigure fill={fill} side="front" />
-        <HumanMuscleFigure fill={fill} side="back" />
-      </View>
-      <View style={styles.muscleOverviewLegend}>
-        <LegendItem color={colors.primary} label={`${translate(language, "primaryMuscles")} (${primaryCount})`} theme={theme} />
-        <LegendItem color={colors.secondary} label={`${translate(language, "secondaryMuscles")} (${secondaryCount})`} theme={theme} />
-        <LegendItem color={colors.inactive} label={translate(language, "inactiveMuscleGroups")} theme={theme} />
-      </View>
-    </>
-  );
-}
-
 type ExerciseMuscleModalProps = {
   language: LanguageCode;
   onClose: () => void;
@@ -11649,153 +10740,6 @@ function ExerciseMuscleModal({ language, onClose, onShowDetails, step, t, theme 
       </View>
     </Modal>
   );
-}
-
-type ExerciseSummaryRowProps = {
-  hideTitle?: boolean;
-  language: LanguageCode;
-  onPressDetails: () => void;
-  onPressMuscles: () => void;
-  pairedTargetText?: string;
-  seriesIndex?: number;
-  step: WorkoutStep;
-  t: (key: TranslationKey) => string;
-  targetText: string;
-  theme: Theme;
-};
-
-function ExerciseSummaryRow({ hideTitle = false, language, onPressDetails, onPressMuscles, pairedTargetText, seriesIndex, step, t, targetText, theme }: ExerciseSummaryRowProps) {
-  const isRestTarget = isRestTargetStep(step);
-  const target = isRestTarget ? targetText : "";
-  const [pairedSets, pairedTarget] = pairedTargetText ? pairedTargetText.split(" x ") : ["", ""];
-  const rawExerciseName = typeof step.exerciseName === "string" ? step.exerciseName : "";
-  const rawExerciseId = typeof step.exerciseId === "string" ? step.exerciseId : "";
-  const exerciseName = rawExerciseName
-    ? getExerciseDisplayName(rawExerciseName, language)
-    : step.stageType
-      ? t(stageTypeTranslationKeys[step.stageType])
-      : t("elementWithoutExercise");
-  const meta = step.loadKg ? `${step.loadKg} kg` : "";
-  const canShowMuscleButton = Boolean(rawExerciseId.trim() || rawExerciseName.trim());
-
-  if (isRestTarget) {
-    return (
-      <Pressable accessibilityRole="button" style={styles.exerciseSummaryRow} onPress={onPressDetails}>
-        <View style={styles.exerciseSummaryRestCopy}>
-          <Text style={[styles.workoutDetailExerciseName, { color: theme.text }]} numberOfLines={2}>
-            {exerciseName}
-          </Text>
-          <View style={[styles.exerciseSummaryTile, styles.exerciseSummarySingleTile, { backgroundColor: theme.secondaryBand }]}>
-            <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{target || "-"}</Text>
-          </View>
-        </View>
-        {pairedTargetText ? (
-          <View
-            style={styles.exerciseSummaryTiles}
-            accessibilityLabel={`${pairedSets || "-"} x ${pairedTarget || "-"}`}
-          >
-            <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
-              <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{pairedSets || "-"}</Text>
-            </View>
-            <Text style={[styles.exerciseSummaryTimes, { color: theme.muted }]}>x</Text>
-            <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
-              <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{pairedTarget || "-"}</Text>
-            </View>
-          </View>
-        ) : null}
-      </Pressable>
-    );
-  }
-
-  return (
-    <Pressable accessibilityRole="button" style={styles.exerciseSummaryRow} onPress={onPressDetails}>
-      <View style={styles.exerciseSummaryCopy}>
-        {hideTitle ? null : (
-          <View style={styles.exerciseSummaryTitleRow}>
-            {typeof seriesIndex === "number" ? (
-              <View style={[styles.workoutDetailSeriesBadge, { backgroundColor: theme.secondaryBand }]}>
-                <Text style={[styles.workoutDetailStageBadgeText, { color: theme.primary }]}>
-                  {seriesIndex}
-                </Text>
-              </View>
-            ) : null}
-            <Text style={[styles.workoutDetailExerciseName, styles.workoutDetailSeriesTitle, { color: theme.text }]} numberOfLines={2}>
-              {exerciseName}
-            </Text>
-          </View>
-        )}
-        {meta ? (
-          <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={1}>
-            {meta}
-          </Text>
-        ) : null}
-      </View>
-      {canShowMuscleButton ? (
-        <View style={styles.exerciseSummaryRight}>
-          <Pressable
-            accessibilityLabel={t("showDetails")}
-            accessibilityRole="button"
-            hitSlop={8}
-            style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-            onPress={(event) => {
-              event.stopPropagation();
-              onPressMuscles();
-            }}
-          >
-            <Ionicons name="body-outline" size={20} color={theme.primary} />
-          </Pressable>
-        </View>
-      ) : null}
-    </Pressable>
-  );
-}
-
-type LegendItemProps = {
-  color: string;
-  label: string;
-  theme: Theme;
-};
-
-function LegendItem({ color, label, theme }: LegendItemProps) {
-  return (
-    <View style={styles.muscleLegendItem}>
-      <View style={[styles.muscleLegendDot, { backgroundColor: color }]} />
-      <Text style={[styles.muscleLegendText, { color: theme.muted }]}>{label}</Text>
-    </View>
-  );
-}
-
-type HumanMuscleFigureProps = {
-  fill: (muscle: MuscleKey) => string;
-  side: "front" | "back";
-  style?: StyleProp<ViewStyle>;
-};
-
-function HumanMuscleFigure({ fill, side, style }: HumanMuscleFigureProps) {
-  const svgSource = side === "front" ? frontBodySvg : backBodySvg;
-  const regionMap = side === "front" ? frontBodyRegionMap : backBodyRegionMap;
-  const xml = useMemo(() => colorizeBodySvg(svgSource, regionMap, fill), [fill, regionMap, svgSource]);
-
-  return (
-    <View style={[styles.humanMuscleFigure, style]}>
-      <SvgXml height="100%" width="100%" xml={xml} />
-    </View>
-  );
-}
-
-function colorizeBodySvg(
-  svg: string,
-  regionMap: Record<string, MuscleKey>,
-  fill: (muscle: MuscleKey) => string
-) {
-  return Object.entries(regionMap).reduce((currentSvg, [regionId, muscle]) => {
-    const escapedId = regionId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regionPattern = new RegExp(`(<[^>]+\\bid="${escapedId}"[^>]*>)`, "g");
-
-    return currentSvg.replace(regionPattern, (tag) =>
-      tag.replace(/\bfill="[^"]*"/, `fill="${fill(muscle)}"`)
-    );
-  }, svg);
 }
 
 type ExercisePickerProps = {
@@ -12205,68 +11149,6 @@ type SettingsSectionProps = {
   theme: Theme;
   title: string;
 };
-
-type CollapsiblePanelProps = {
-  actions?: ReactNode;
-  children: ReactNode;
-  collapseLabel?: string;
-  expandLabel?: string;
-  isCollapsed: boolean;
-  leadingAccessory?: ReactNode;
-  onToggle: () => void;
-  theme: Theme;
-  title: string;
-};
-
-function CollapsiblePanel({
-  actions,
-  children,
-  collapseLabel = "Collapse",
-  expandLabel = "Expand",
-  isCollapsed,
-  leadingAccessory,
-  onToggle,
-  theme,
-  title
-}: CollapsiblePanelProps) {
-  return (
-    <View style={[styles.panel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Pressable
-        accessibilityLabel={`${isCollapsed ? expandLabel : collapseLabel}: ${title}`}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: !isCollapsed }}
-        style={[styles.panelHeader, { borderBottomColor: theme.border }]}
-        onPress={onToggle}
-      >
-        <View style={styles.panelTitleBlock}>
-          {leadingAccessory}
-          <Text style={[styles.panelTitle, { color: theme.text }]}>{title}</Text>
-        </View>
-        <View
-          style={styles.panelHeaderActions}
-          onStartShouldSetResponder={() => true}
-        >
-          {actions}
-          <Pressable
-            accessibilityLabel={`${isCollapsed ? expandLabel : collapseLabel}: ${title}`}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: !isCollapsed }}
-            hitSlop={8}
-            style={[styles.panelToggleButton, { borderColor: theme.border, backgroundColor: theme.card }]}
-            onPress={onToggle}
-          >
-            <Ionicons
-              name={isCollapsed ? "chevron-forward" : "chevron-down"}
-              size={20}
-              color={theme.primary}
-            />
-          </Pressable>
-        </View>
-      </Pressable>
-      {!isCollapsed && <View style={styles.panelBody}>{children}</View>}
-    </View>
-  );
-}
 
 type ArticleBlock =
   | { kind: "lead"; text: string }

@@ -71,6 +71,10 @@ Widok Progresu ćwiczenia również jest osobnym ekranem: prezentuje grid metryk
 
 Historia treningów i szczegóły wykonanej sesji są wydzielone do osobnych ekranów. Historia zachowuje podsumowanie, filtry, wyszukiwanie i usuwanie wpisów, a szczegóły zachowują kartę sesji oraz poziomo przewijaną tabelę ćwiczeń i serii z obsługą szerokości ekranu w orientacji poziomej. Dane, potwierdzenia operacji i nawigacja nadal są koordynowane przez `App.tsx`.
 
+Widok definicji treningu jest wydzielony do `WorkoutDetailScreen`. Ekran prezentuje notatki, start treningu, modyfikację AI, podsumowanie mięśni, zwijane etapy z seriami oraz skróconą historię. Wspólne elementy prezentacji ćwiczeń i panel zwijany zostały przeniesione do `src/components`, natomiast operacje na danych i nawigacja pozostają w `App.tsx`.
+
+Formularz Kreatora AI jest wydzielony do `WorkoutCreatorScreen`, a definicja ankiety i helpery profili do `src/domain/workoutCreator.ts`. Ekran zachowuje profile, zwijane sekcje, kontrolę salda kredytów i wszystkie fazy prezentacji, natomiast wysyłanie ankiety, polling joba, import treningów i account-scoped storage są nadal koordynowane przez `App.tsx`.
+
 ### Logowanie i rejestracja
 
 Działa backendowe logowanie i rejestracja:

@@ -74,7 +74,6 @@ import {
 } from "./src/domain/workouts";
 import {
   calculateEntryVolume,
-  calculateSessionVolume,
   completeWorkoutSession,
   createWorkoutSessionFromWorkout,
   getActiveWorkoutSessionsForUi,
@@ -102,7 +101,6 @@ import {
   getWorkoutProgress
 } from "./src/domain/workoutSessionUi";
 import type {
-  ExerciseProgressItem,
   WorkoutExecutionMode,
   WorkoutSession,
   WorkoutSessionEntry,
@@ -211,20 +209,7 @@ import {
 } from "./src/domain/aiCredits";
 import type { AiCreditBalance, AiCreditPack, AiCreditTransaction } from "./src/domain/aiCredits";
 import {
-  formatProgressDashboardVolume,
-  getProgressDashboardStats,
-  getProgressSparklineValues,
-  getSortedProgressItems,
-  getSparklinePolylinePoints,
-  type ProgressDashboardFilter
-} from "./src/domain/progressDashboard";
-import {
-  filterExerciseProgressHistoryGroups,
-  formatExerciseProgressSeriesValue,
-  formatExerciseProgressSetCount,
-  getExerciseProgressHistoryGroups,
-  type ExerciseProgressHistoryGroup,
-  type ExerciseProgressHistoryRange
+  getExerciseProgressHistoryGroups
 } from "./src/domain/exerciseProgressHistory";
 import { buildProfileAccountDetails, getProfileDisplayEmail, getProfileDisplayName } from "./src/domain/profile";
 import {
@@ -278,7 +263,14 @@ import {
 import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { AiCreditsScreen } from "./src/screens/AiCreditsScreen";
+import { ExerciseProgressScreen } from "./src/screens/ExerciseProgressScreen";
+import { ProgressScreen } from "./src/screens/ProgressScreen";
 import { TermsScreen } from "./src/screens/TermsScreen";
+import {
+  WorkoutHistoryScreen,
+  type WorkoutHistoryStatusFilter
+} from "./src/screens/WorkoutHistoryScreen";
+import { WorkoutSessionDetailScreen } from "./src/screens/WorkoutSessionDetailScreen";
 import { styles } from "./src/theme/appStyles";
 import { themes, type Theme, type ThemeName } from "./src/theme/theme";
 
@@ -1809,7 +1801,6 @@ type ScreenKey =
   | "workoutDetail"
   | "workoutSession"
   | "weeklyPlan";
-type WorkoutHistoryStatusFilter = "all" | "completed" | "active";
 type AppDialogAction = {
   label: string;
   onPress?: () => void;
@@ -2302,12 +2293,7 @@ function GymminApp() {
   const [workoutHistoryFilter, setWorkoutHistoryFilter] = useState<WorkoutHistoryStatusFilter>("all");
   const [workoutHistorySearch, setWorkoutHistorySearch] = useState("");
   const [workoutHistoryWorkoutIdFilter, setWorkoutHistoryWorkoutIdFilter] = useState<string | null>(null);
-  const [progressSearch, setProgressSearch] = useState("");
-  const [progressFilter, setProgressFilter] = useState<ProgressDashboardFilter>("all");
   const [selectedExerciseProgressKey, setSelectedExerciseProgressKey] = useState<string | null>(null);
-  const [exerciseProgressHistoryRange, setExerciseProgressHistoryRange] = useState<ExerciseProgressHistoryRange>("all");
-  const [exerciseProgressHistoryVisibleCount, setExerciseProgressHistoryVisibleCount] = useState(5);
-  const [expandedExerciseProgressHistoryKeys, setExpandedExerciseProgressHistoryKeys] = useState<Record<string, boolean>>({});
   const [sessionEntryIndex, setSessionEntryIndex] = useState(0);
   const [isPostWorkoutFillMode, setIsPostWorkoutFillMode] = useState(false);
   const [appDialog, setAppDialog] = useState<AppDialogState | null>(null);
@@ -4336,22 +4322,6 @@ function GymminApp() {
   const exerciseProgressItems = useMemo(
     () => getExerciseProgressItems(visibleWorkoutSessions),
     [visibleWorkoutSessions]
-  );
-
-  const filteredExerciseProgressItems = useMemo(() => {
-    const phrase = progressSearch.trim().toLowerCase();
-    const searchedItems = phrase
-      ? exerciseProgressItems.filter((item) => {
-          return item.exerciseName.toLowerCase().includes(phrase) || item.exerciseKey.toLowerCase().includes(phrase);
-        })
-      : exerciseProgressItems;
-
-    return getSortedProgressItems(searchedItems, progressFilter);
-  }, [exerciseProgressItems, progressFilter, progressSearch]);
-
-  const progressDashboardStats = useMemo(
-    () => getProgressDashboardStats(exerciseProgressItems, visibleWorkoutSessions),
-    [exerciseProgressItems, visibleWorkoutSessions]
   );
 
   const selectedWorkoutSession = useMemo(
@@ -7465,18 +7435,6 @@ function GymminApp() {
     showInfoDialog(wasFavorite ? t("favoriteExerciseRemoved") : t("favoriteExerciseAdded"));
   }
 
-  function getSessionCompletedCount(session: WorkoutSession) {
-    return session.entries.filter((entry) => entry.isCompleted).length;
-  }
-
-  function getSessionExerciseCount(session: WorkoutSession) {
-    return new Set(
-      session.entries
-        .filter((entry) => entry.exerciseName && entry.type !== "rest")
-        .map((entry) => entry.exerciseName?.trim().toLowerCase())
-    ).size;
-  }
-
   function formatEntryActual(entry: WorkoutSessionEntry) {
     const values = [
       entry.actualReps ? `${entry.actualReps} ${t("repetitionsSuffix")}` : "",
@@ -7503,9 +7461,6 @@ function GymminApp() {
 
   function openExerciseProgress(exerciseKey: string) {
     setSelectedExerciseProgressKey(exerciseKey);
-    setExerciseProgressHistoryRange("all");
-    setExerciseProgressHistoryVisibleCount(5);
-    setExpandedExerciseProgressHistoryKeys({});
     setActiveScreen("exerciseProgress");
   }
 
@@ -8372,759 +8327,25 @@ function GymminApp() {
     );
   }
 
-  function renderWorkoutHistoryStatusFilters() {
-    const filters: Array<{ label: string; value: WorkoutHistoryStatusFilter }> = [
-      { label: t("historyAll"), value: "all" },
-      { label: t("completedStatus"), value: "completed" },
-      { label: t("activeStatus"), value: "active" }
-    ];
-
-    return (
-      <View style={styles.segmentedControl}>
-        {filters.map((filter) => {
-          const selected = workoutHistoryFilter === filter.value;
-
-          return (
-            <Pressable
-              key={filter.value}
-              accessibilityRole="button"
-              style={[
-                styles.segmentButton,
-                { backgroundColor: selected ? theme.primary : theme.segment }
-              ]}
-              onPress={() => setWorkoutHistoryFilter(filter.value)}
-            >
-              <Text style={[styles.segmentButtonText, { color: selected ? theme.white : theme.text }]}>
-                {filter.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    );
-  }
-
-  function renderHistorySummaryPanel() {
-    const metrics = [
-      { label: t("workoutsThisWeek"), value: String(workoutHistorySummary.workoutsThisWeek) },
-      { label: t("workoutsThisMonth"), value: String(workoutHistorySummary.workoutsThisMonth) },
-      { label: t("totalTime"), value: formatDurationMs(workoutHistorySummary.totalDurationMs || null) },
-      { label: t("completedWorkouts"), value: String(workoutHistorySummary.completedWorkouts) },
-      { label: t("abandonedWorkouts"), value: String(workoutHistorySummary.abandonedWorkouts) }
-    ];
-
-    return (
-      <View style={[styles.statsPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        {metrics.map((metric) => (
-          <View key={metric.label} style={styles.statTile}>
-            <Text style={[styles.statValue, { color: theme.text }]}>{metric.value}</Text>
-            <Text style={[styles.statLabel, { color: theme.muted }]}>{metric.label}</Text>
-          </View>
-        ))}
-      </View>
-    );
-  }
-
-  function renderWorkoutHistoryScreen() {
-    return (
-      <View style={styles.historyScreen}>
-        {renderHistorySummaryPanel()}
-        {renderWorkoutHistoryStatusFilters()}
-
-        <Input style={[styles.searchBox, { backgroundColor: theme.control, borderColor: theme.border }]}>
-          <Ionicons name="search" size={20} color={theme.muted} />
-          <InputField
-            placeholder={t("searchWorkoutHistory")}
-            placeholderTextColor={theme.muted}
-            style={[styles.searchInput, { color: theme.inputText }]}
-            value={workoutHistorySearch}
-            onChangeText={setWorkoutHistorySearch}
-          />
-        </Input>
-
-        {filteredWorkoutHistorySessions.length ? (
-          <View style={styles.sessionList}>
-            {filteredWorkoutHistorySessions.map((session) => {
-              const completedCount = getSessionCompletedCount(session);
-              const volume = calculateSessionVolume(session);
-
-              return (
-                <Pressable
-                  key={session.id}
-                  accessibilityRole="button"
-                  style={[styles.sessionEntryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                  onPress={() => openWorkoutSessionDetail(session.id)}
-                >
-                  <View style={styles.sessionEntryHeader}>
-                    <View style={styles.workoutInfo}>
-                      <Text style={[styles.workoutName, { color: theme.text }]}>
-                        {getWorkoutSessionDisplayName(session)}
-                      </Text>
-                      <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                        {formatSessionDateTime(session)}
-                      </Text>
-                    </View>
-                    <View style={styles.sessionEntryActions}>
-                      <Pressable
-                        accessibilityLabel={t("deleteHistoryEntryTitle")}
-                        accessibilityRole="button"
-                        style={[styles.sessionDeleteButton, { borderColor: theme.border }]}
-                        onPress={(event) => {
-                          event.stopPropagation();
-                          deleteWorkoutHistoryEntry(session.id);
-                        }}
-                      >
-                        <Ionicons name="trash-outline" size={18} color={theme.danger} />
-                      </Pressable>
-                      <Ionicons name="chevron-forward" size={20} color={theme.muted} />
-                    </View>
-                  </View>
-                  <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                    {getSessionStatusLabel(session.status)} · {getExecutionModeLabel(session.executionMode)}
-                  </Text>
-                  <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                    {t("duration")}: {formatSessionDuration(session)}
-                  </Text>
-                  <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                    {t("completedItems")}: {completedCount} / {session.entries.length} · {getSessionExerciseCount(session)} {t("exercise").toLowerCase()}
-                  </Text>
-                  {volume > 0 ? (
-                    <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                      {t("volume")}: {formatNumber(volume, "kg")}
-                    </Text>
-                  ) : null}
-                </Pressable>
-              );
-            })}
-          </View>
-        ) : (
-          <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Ionicons name="time-outline" size={26} color={theme.primary} />
-            <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>{t("emptyWorkoutHistoryTitle")}</Text>
-            <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("emptyWorkoutHistoryCopy")}</Text>
-          </View>
-        )}
-      </View>
-    );
-  }
-
   function renderWorkoutSessionDetail() {
-    const session = selectedWorkoutSession;
-
-    if (!session) {
-      return (
-        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>{t("noData")}</Text>
-        </View>
-      );
-    }
-
-    const visibleSessionEntries = session.entries.filter((entry) => entry.type !== "rest" && entry.type !== "warmup");
     const historyTableMinWidth = isLandscape
       ? Math.max(windowSize.width - insets.left - insets.right - 44, 552)
       : undefined;
-    const groupedSessionEntries = visibleSessionEntries.reduce<
-      { key: string; title: string; entries: WorkoutSessionEntry[] }[]
-    >((groups, entry) => {
-      const title = formatSessionEntryTitle(entry);
-      const normalizedTitle = title.trim().toLowerCase();
-      const key = entry.exerciseId ? `id:${entry.exerciseId}` : `name:${normalizedTitle || entry.id}`;
-      const existingGroup = groups.find((group) => group.key === key);
-
-      if (existingGroup) {
-        existingGroup.entries.push(entry);
-        return groups;
-      }
-
-      groups.push({
-        key,
-        title,
-        entries: [entry]
-      });
-
-      return groups;
-    }, []);
 
     return (
-      <View style={styles.historyScreen}>
-        <View style={[styles.sessionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.sessionEntryHeader}>
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>{getWorkoutSessionDisplayName(session)}</Text>
-            </View>
-            <Pressable
-              accessibilityLabel={t("deleteHistoryEntryTitle")}
-              accessibilityRole="button"
-              style={[styles.sessionDeleteButton, { borderColor: theme.border }]}
-              onPress={() => deleteWorkoutHistoryEntry(session.id)}
-            >
-              <Ionicons name="trash-outline" size={18} color={theme.danger} />
-            </Pressable>
-          </View>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatSessionDateTime(session)}</Text>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {t("duration")}: {formatSessionDuration(session)}
-          </Text>
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {t("sessionStartedAt")}: {formatSessionTime(session.startedAt)} · {t("sessionFinishedAt")}: {formatSessionTime(session.finishedAt)}
-          </Text>
-          {session.notes ? (
-            <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{session.notes}</Text>
-          ) : null}
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator
-          style={styles.workoutSessionDetailTableScroll}
-          contentContainerStyle={styles.workoutSessionDetailTableScrollContent}
-        >
-          <View style={[styles.workoutSessionDetailTable, historyTableMinWidth ? { minWidth: historyTableMinWidth } : null, { borderColor: theme.border }]}>
-            <View
-              style={[
-                styles.workoutSessionDetailTableHeader,
-                { backgroundColor: theme.secondaryBand, borderBottomColor: theme.border }
-              ]}
-            >
-              <View
-                style={[
-                  styles.workoutSessionDetailHeaderCell,
-                  styles.workoutSessionDetailExerciseCell,
-                  { borderRightColor: theme.border }
-                ]}
-              >
-                <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("exercise")}</Text>
-              </View>
-              <View
-                style={[
-                  styles.workoutSessionDetailHeaderCell,
-                  styles.workoutSessionDetailSetCell,
-                  { borderRightColor: theme.border }
-                ]}
-              >
-                <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("set")}</Text>
-              </View>
-              <View style={[styles.workoutSessionDetailRepsHeader, { borderRightColor: theme.border }]}>
-                <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("actualReps")}</Text>
-                <View style={[styles.workoutSessionDetailRepsSubHeader, { borderTopColor: theme.border }]}>
-                  <Text
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.88}
-                    numberOfLines={1}
-                    style={[
-                      styles.workoutSessionDetailHeaderText,
-                      styles.workoutSessionDetailRepsCell,
-                      { color: theme.primary, borderRightColor: theme.border }
-                    ]}
-                  >
-                    {t("repsDone")}
-                  </Text>
-                  <Text
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.88}
-                    numberOfLines={1}
-                    style={[
-                      styles.workoutSessionDetailHeaderText,
-                      styles.workoutSessionDetailRepsCell,
-                      { color: theme.primary, borderRightWidth: 0 }
-                    ]}
-                  >
-                    {t("repsPlanned")}
-                  </Text>
-                </View>
-              </View>
-              <View
-                style={[
-                  styles.workoutSessionDetailHeaderCell,
-                  styles.workoutSessionDetailWeightCell,
-                  { borderRightColor: theme.border }
-                ]}
-              >
-                <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("weight")}</Text>
-              </View>
-              <View style={[styles.workoutSessionDetailHeaderCell, styles.workoutSessionDetailVolumeCell, styles.workoutSessionDetailLastHeaderCell]}>
-                <Text style={[styles.workoutSessionDetailHeaderText, { color: theme.primary }]}>{t("volume")}</Text>
-              </View>
-            </View>
-            {groupedSessionEntries.map((group, groupIndex) => (
-              <View
-                key={group.key}
-                style={[
-                  styles.workoutSessionDetailExerciseGroup,
-                  { borderBottomColor: theme.border },
-                  groupIndex === groupedSessionEntries.length - 1 ? styles.workoutSessionDetailExerciseGroupLast : null
-                ]}
-              >
-                <View style={[styles.workoutSessionDetailExerciseCell, { borderRightColor: theme.border }]}>
-                  <Text style={[styles.workoutDetailTableExerciseName, { color: theme.text }]} numberOfLines={3}>
-                    {group.title}
-                  </Text>
-                </View>
-                <View style={styles.workoutSessionDetailSetsCell}>
-                  {group.entries.map((entry, entryIndex) => {
-                    const volume = calculateEntryVolume(entry);
-                    const plannedReps = entry.plannedTargetType === "repetitions" ? entry.plannedTarget : "";
-
-                    return (
-                      <View
-                        key={entry.id}
-                        style={[
-                          styles.workoutSessionDetailSetRow,
-                          { borderBottomColor: theme.border },
-                          entryIndex === group.entries.length - 1 ? styles.workoutSessionDetailSetRowLast : null
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.workoutDetailTableValue,
-                            styles.workoutSessionDetailSetCell,
-                            { color: theme.text, borderRightColor: theme.border }
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {getSessionEntryIterationLabel(entry)}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.workoutDetailTableValue,
-                            styles.workoutSessionDetailRepsCell,
-                            { color: theme.text, borderRightColor: theme.border }
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {entry.actualReps?.trim() || "-"}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.workoutDetailTableValue,
-                            styles.workoutSessionDetailRepsCell,
-                            { color: theme.text, borderRightColor: theme.border }
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {plannedReps?.trim() || "-"}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.workoutDetailTableValue,
-                            styles.workoutSessionDetailWeightCell,
-                            { color: theme.text, borderRightColor: theme.border }
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {entry.actualWeight?.trim() ? `${entry.actualWeight.trim()} kg` : "-"}
-                        </Text>
-                        <Text style={[styles.workoutDetailTableValue, styles.workoutSessionDetailVolumeCell, { color: theme.text }]} numberOfLines={1}>
-                          {volume ? formatNumber(volume, "kg") : "-"}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
-    );
-  }
-
-  function renderExerciseProgressHistoryGroup(group: ExerciseProgressHistoryGroup, index: number) {
-    const isExpanded = expandedExerciseProgressHistoryKeys[group.key] ?? index === 0;
-    const entryCount = group.entries.length;
-
-    return (
-      <View key={group.key} style={[styles.exerciseProgressHistoryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Pressable
-          accessibilityRole="button"
-          style={styles.exerciseProgressHistoryHeader}
-          onPress={() => setExpandedExerciseProgressHistoryKeys((current) => ({ ...current, [group.key]: !isExpanded }))}
-        >
-          <View style={[styles.exerciseProgressHistoryCalendar, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="calendar-outline" size={19} color={theme.primary} />
-          </View>
-          <View style={styles.exerciseProgressHistoryTitleBlock}>
-            <Text style={[styles.exerciseProgressHistoryDate, { color: theme.text }]}>{formatSessionDateTime(group.session)}</Text>
-            <Text style={[styles.exerciseProgressHistoryWorkout, { color: theme.muted }]} numberOfLines={2}>
-              {getWorkoutSessionDisplayName(group.session)}
-            </Text>
-          </View>
-          <View style={styles.exerciseProgressHistoryHeaderRight}>
-            <View style={[styles.exerciseProgressHistoryBadge, { backgroundColor: isExpanded ? theme.primary : theme.secondaryBand }]}>
-                <Text style={[styles.exerciseProgressHistoryBadgeText, { color: isExpanded ? theme.white : theme.primary }]}>
-                {formatExerciseProgressSetCount(entryCount, language)}
-              </Text>
-            </View>
-            <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={19} color={theme.primary} />
-          </View>
-        </Pressable>
-
-        {isExpanded ? (
-          <View style={[styles.exerciseProgressTable, { borderColor: theme.border }]}>
-            {group.entries.map((result, entryIndex) => {
-              const entry = result.entry;
-              const setNumber = entry.setIteration > 0 ? entry.setIteration : entryIndex + 1;
-              const values = formatExerciseProgressSeriesValue(entry.actualReps, entry.actualWeight, result.volume, language);
-              return (
-                <View key={entry.id} style={[styles.exerciseProgressSeriesRow, { borderBottomColor: theme.border }]}>
-                  <View style={[styles.exerciseProgressSetBadge, { backgroundColor: theme.secondaryBand }]}>
-                    <Text style={[styles.exerciseProgressSetBadgeText, { color: theme.primary }]}>{setNumber}</Text>
-                  </View>
-                  <Text style={[styles.exerciseProgressSeriesValue, { color: theme.text }]}>{values.repetitions}</Text>
-                  <Text style={[styles.exerciseProgressSeriesValue, { color: theme.text }]}>{values.load}</Text>
-                  <Text style={[styles.exerciseProgressSeriesVolume, { color: theme.muted }]}>{values.volume}</Text>
-                </View>
-              );
-            })}
-            <View style={[styles.exerciseProgressTotalRow, { backgroundColor: theme.control }]}>
-              <View style={styles.exerciseProgressTotalLabel}>
-                <Text style={[styles.exerciseProgressTotalText, { color: theme.text }]}>{t("totalVolume")}</Text>
-              </View>
-              <Text style={[styles.exerciseProgressTotalValue, { color: theme.primary }]}>{formatProgressNumber(group.totalVolume, "kg")}</Text>
-            </View>
-          </View>
-        ) : (
-          <View style={[styles.exerciseProgressHistorySummary, { borderTopColor: theme.border }]}>
-            <View>
-              <Text style={[styles.exerciseProgressHistorySummaryLabel, { color: theme.muted }]}>{t("bestWeight")}</Text>
-              <Text style={[styles.exerciseProgressHistorySummaryValue, { color: theme.text }]}>{formatProgressNumber(group.bestWeight, "kg")}</Text>
-            </View>
-            <View>
-              <Text style={[styles.exerciseProgressHistorySummaryLabel, { color: theme.muted }]}>{t("mostReps")}</Text>
-              <Text style={[styles.exerciseProgressHistorySummaryValue, { color: theme.text }]}>{formatProgressNumber(group.bestReps)}</Text>
-            </View>
-            <View>
-              <Text style={[styles.exerciseProgressHistorySummaryLabel, { color: theme.muted }]}>{t("volume")}</Text>
-              <Text style={[styles.exerciseProgressHistorySummaryValue, { color: theme.text }]}>{formatProgressNumber(group.totalVolume, "kg")}</Text>
-            </View>
-          </View>
-        )}
-      </View>
-    );
-  }
-
-  function formatProgressWorkoutCount(count: number) {
-    if (language === "en") {
-      return `${count} ${count === 1 ? "workout" : "workouts"}`;
-    }
-
-    if (count === 1) {
-      return "1 trening";
-    }
-
-    const lastTwoDigits = count % 100;
-    const lastDigit = count % 10;
-    if (lastTwoDigits < 12 || lastTwoDigits > 14) {
-      if (lastDigit >= 2 && lastDigit <= 4) {
-        return `${count} treningi`;
-      }
-    }
-
-    return `${count} treningów`;
-  }
-
-  function formatProgressNumber(value: number | null | undefined, suffix = "") {
-    if (value === null || value === undefined || !Number.isFinite(value)) {
-      return "—";
-    }
-
-    return formatNumber(value, suffix);
-  }
-
-  function formatProgressLatestResult(entry: WorkoutSessionEntry) {
-    const reps = entry.actualReps ? `${entry.actualReps} ${language === "en" ? "reps" : "powt."}` : "";
-    const weight = entry.actualWeight ? `${entry.actualWeight} kg` : "";
-    const duration = entry.actualDuration ? entry.actualDuration : "";
-    const calories = entry.actualCalories ? `${entry.actualCalories} ${t("caloriesSuffix")}` : "";
-    const values = [reps, weight, duration, calories].filter(Boolean);
-
-    return values.length ? values.join(", ") : "—";
-  }
-
-  function renderProgressSparkline(item: ExerciseProgressItem) {
-    const values = getProgressSparklineValues(item);
-    const points = getSparklinePolylinePoints(values, 112, 38, 4);
-
-    if (!points) {
-      return null;
-    }
-
-    const xml = `
-      <svg width="112" height="38" viewBox="0 0 112 38" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 32 C28 24 54 32 108 6" stroke="${theme.secondaryBand}" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.8"/>
-        <polyline points="${points}" stroke="${theme.primary}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        ${points.split(" ").map((point) => `<circle cx="${point.split(",")[0]}" cy="${point.split(",")[1]}" r="2.4" fill="${theme.primary}"/>`).join("")}
-      </svg>
-    `;
-
-    return (
-      <View style={styles.progressSparkline}>
-        <SvgXml xml={xml} width={112} height={38} />
-      </View>
-    );
-  }
-
-  function renderProgressStatCard(
-    icon: keyof typeof Ionicons.glyphMap,
-    title: string,
-    value: string,
-    caption: string
-  ) {
-    return (
-      <View style={[styles.progressStatCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={[styles.progressStatIcon, { backgroundColor: theme.secondaryBand }]}>
-          <Ionicons name={icon} size={22} color={theme.primary} />
-        </View>
-        <View style={styles.progressStatCopy}>
-          <Text style={[styles.progressStatTitle, { color: theme.muted }]}>{title}</Text>
-          <Text
-            adjustsFontSizeToFit
-            minimumFontScale={0.65}
-            numberOfLines={1}
-            style={[styles.progressStatValue, { color: theme.text }]}
-          >
-            {value}
-          </Text>
-          <Text style={[styles.progressStatCaption, { color: theme.muted }]}>{caption}</Text>
-        </View>
-      </View>
-    );
-  }
-
-  function renderProgressMetric(
-    icon: keyof typeof Ionicons.glyphMap,
-    label: string,
-    value: string
-  ) {
-    return (
-      <View style={styles.progressMetric}>
-        <View style={[styles.progressMetricIcon, { backgroundColor: theme.secondaryBand }]}>
-          <Ionicons name={icon} size={20} color={theme.primary} />
-        </View>
-        <View style={styles.progressMetricCopy}>
-          <Text style={[styles.progressMetricLabel, { color: theme.muted }]} numberOfLines={1}>{label}</Text>
-          <Text style={[styles.progressMetricValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
-        </View>
-      </View>
-    );
-  }
-
-  function renderProgressExerciseCard(item: ExerciseProgressItem) {
-    return (
-      <Pressable
-        key={item.exerciseKey}
-        accessibilityRole="button"
-        style={[styles.progressExerciseCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-        onPress={() => openExerciseProgress(item.exerciseKey)}
-      >
-        <View style={styles.progressExerciseHeader}>
-          <View style={styles.progressExerciseTitleBlock}>
-            <Text style={[styles.workoutName, { color: theme.text }]} numberOfLines={2}>
-              {getExerciseDisplayName(item.exerciseName, language)}
-            </Text>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>{formatProgressWorkoutCount(item.sessionCount)}</Text>
-          </View>
-          <View style={styles.progressExerciseHeaderRight}>
-            {renderProgressSparkline(item)}
-            <Ionicons name="chevron-forward" size={22} color={theme.muted} />
-          </View>
-        </View>
-
-        <View style={[styles.progressMetricsRow, { borderTopColor: theme.border }]}>
-          {renderProgressMetric("time-outline", t("last"), formatProgressLatestResult(item.lastResult.entry))}
-          <View style={[styles.progressMetricDivider, { backgroundColor: theme.border }]} />
-          {renderProgressMetric("radio-button-on-outline", t("bestWeight"), formatProgressNumber(item.bestWeight, "kg"))}
-          <View style={[styles.progressMetricDivider, { backgroundColor: theme.border }]} />
-          {renderProgressMetric("server-outline", t("bestVolume"), formatProgressNumber(item.bestVolumeSingleEntry, "kg"))}
-        </View>
-      </Pressable>
-    );
-  }
-
-  function renderProgressScreen() {
-    const progressFilterOptions: Array<{ label: string; value: ProgressDashboardFilter }> = [
-      { label: t("progressFilterAll"), value: "all" },
-      { label: t("progressFilterStrength"), value: "strength" },
-      { label: t("progressFilterVolume"), value: "volume" }
-    ];
-    const hasAnyProgress = exerciseProgressItems.length > 0;
-
-    return (
-      <View style={styles.historyScreen}>
-        <Input style={[styles.searchBox, { backgroundColor: theme.control, borderColor: theme.border }]}>
-          <Ionicons name="search" size={20} color={theme.muted} />
-          <InputField
-            placeholder={t("searchExerciseProgress")}
-            placeholderTextColor={theme.muted}
-            style={[styles.searchInput, { color: theme.inputText }]}
-            value={progressSearch}
-            onChangeText={setProgressSearch}
-          />
-        </Input>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.progressStatsRow}
-        >
-          {renderProgressStatCard(
-            "barbell-outline",
-            t("progressExercises"),
-            String(progressDashboardStats.trackedExercises),
-            t("progressTracked")
-          )}
-          {renderProgressStatCard(
-            "trophy-outline",
-            t("progressRecords"),
-            String(progressDashboardStats.beatenRecords),
-            t("progressBeaten")
-          )}
-          {renderProgressStatCard(
-            "server-outline",
-            t("volume"),
-            formatProgressDashboardVolume(progressDashboardStats.monthlyVolume, language),
-            t("progressThisMonth")
-          )}
-        </ScrollView>
-
-        <View style={styles.progressFilterRow}>
-          {progressFilterOptions.map((option) => {
-            const selected = progressFilter === option.value;
-
-            return (
-              <Pressable
-                key={option.value}
-                accessibilityRole="button"
-                style={[
-                  styles.progressFilterChip,
-                  {
-                    backgroundColor: selected ? theme.primary : theme.card,
-                    borderColor: selected ? theme.primary : theme.border
-                  }
-                ]}
-                onPress={() => setProgressFilter(option.value)}
-              >
-                <Text style={[styles.progressFilterChipText, { color: selected ? theme.white : theme.text }]}>
-                  {option.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {filteredExerciseProgressItems.length ? (
-          <View style={styles.progressExerciseList}>
-            {filteredExerciseProgressItems.map(renderProgressExerciseCard)}
-          </View>
-        ) : (
-          <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Ionicons name="trending-up-outline" size={26} color={theme.primary} />
-            <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>
-              {hasAnyProgress ? t("noProgressSearchResults") : t("emptyProgressTitle")}
-            </Text>
-            {!hasAnyProgress ? (
-              <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("emptyProgressCopy")}</Text>
-            ) : null}
-          </View>
-        )}
-      </View>
-    );
-  }
-
-  function renderExerciseProgressScreen() {
-    const summary = selectedExerciseProgressSummary;
-
-    if (!summary) {
-      return (
-        <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.emptyBuilderTitle, { color: theme.text }]}>{t("emptyProgressTitle")}</Text>
-        </View>
-      );
-    }
-
-    const latestGroup = selectedExerciseProgressHistoryGroups[0];
-    const filteredGroups = filterExerciseProgressHistoryGroups(selectedExerciseProgressHistoryGroups, exerciseProgressHistoryRange);
-    const visibleGroups = filteredGroups.slice(0, exerciseProgressHistoryVisibleCount);
-    const rangeOptions: Array<{ label: string; value: ExerciseProgressHistoryRange }> = [
-      { label: t("progressHistoryAll"), value: "all" },
-      { label: t("progressHistory3Months"), value: "3m" },
-      { label: t("progressHistory6Months"), value: "6m" },
-      { label: t("progressHistory1Year"), value: "1y" }
-    ];
-
-    return (
-      <View style={styles.historyScreen}>
-        <View style={[styles.exerciseProgressOverviewCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.exerciseProgressOverviewTop}>
-            <View style={[styles.exerciseProgressOverviewIcon, { backgroundColor: theme.secondaryBand }]}>
-              <Ionicons name="barbell-outline" size={26} color={theme.primary} />
-            </View>
-            <View style={styles.exerciseProgressOverviewTitleBlock}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]} numberOfLines={2}>{getExerciseDisplayName(summary.exerciseName, language)}</Text>
-              <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={2}>
-                {latestGroup ? getWorkoutSessionDisplayName(latestGroup.session) : "—"}
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.exerciseProgressOverviewMetrics, { borderTopColor: theme.border }]}>
-            {[
-              ["barbell-outline", t("bestWeight"), formatProgressNumber(summary.bestWeight, "kg")],
-              ["repeat-outline", t("mostReps"), formatProgressNumber(summary.bestReps)],
-              ["server-outline", t("bestVolume"), formatProgressNumber(summary.totalVolumeBySession[0]?.volume ?? summary.bestVolumeSingleEntry, "kg")],
-              ["speedometer-outline", t("estimatedOneRepMax"), formatProgressNumber(summary.estimatedOneRepMax, "kg")]
-            ].map(([icon, label, value]) => (
-              <View key={String(label)} style={styles.exerciseProgressOverviewMetric}>
-                <View style={[styles.exerciseProgressOverviewMetricIcon, { backgroundColor: theme.secondaryBand }]}>
-                  <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color={theme.primary} />
-                </View>
-                <View style={styles.exerciseProgressOverviewMetricCopy}>
-                  <Text style={[styles.exerciseProgressOverviewMetricLabel, { color: theme.muted }]} numberOfLines={1}>{label}</Text>
-                  <Text style={[styles.exerciseProgressOverviewMetricValue, { color: theme.text }]} numberOfLines={1}>{value}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View style={[styles.exerciseProgressHistoryPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.exerciseProgressHistoryPanelHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("resultHistory")}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.exerciseProgressRangeChips}>
-              {rangeOptions.map((option) => {
-                const selected = exerciseProgressHistoryRange === option.value;
-                return (
-                  <Pressable
-                    key={option.value}
-                    accessibilityRole="button"
-                    style={[styles.exerciseProgressRangeChip, { backgroundColor: selected ? theme.primary : theme.control, borderColor: selected ? theme.primary : theme.border }]}
-                    onPress={() => {
-                      setExerciseProgressHistoryRange(option.value);
-                      setExerciseProgressHistoryVisibleCount(5);
-                    }}
-                  >
-                    <Text style={[styles.exerciseProgressRangeChipText, { color: selected ? theme.white : theme.text }]}>{option.label}</Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-          <View style={styles.exerciseProgressHistoryList}>
-            {visibleGroups.length ? visibleGroups.map(renderExerciseProgressHistoryGroup) : (
-              <Text style={[styles.exerciseProgressHistoryEmpty, { color: theme.muted }]}>{t("exerciseHistoryEmpty")}</Text>
-            )}
-          </View>
-          {visibleGroups.length < filteredGroups.length ? (
-            <Pressable
-              accessibilityRole="button"
-              style={styles.exerciseProgressOlderButton}
-              onPress={() => setExerciseProgressHistoryVisibleCount((count) => count + 5)}
-            >
-              <Text style={[styles.exerciseProgressOlderButtonText, { color: theme.primary }]}>{t("showOlderResults")}</Text>
-              <Ionicons name="chevron-down" size={18} color={theme.primary} />
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
+      <WorkoutSessionDetailScreen
+        formatNumber={formatNumber}
+        formatSessionDateTime={formatSessionDateTime}
+        formatSessionDuration={formatSessionDuration}
+        formatSessionEntryTitle={formatSessionEntryTitle}
+        formatSessionTime={formatSessionTime}
+        getSessionEntryIterationLabel={getSessionEntryIterationLabel}
+        historyTableMinWidth={historyTableMinWidth}
+        session={selectedWorkoutSession}
+        t={t}
+        theme={theme}
+        onDeleteSession={deleteWorkoutHistoryEntry}
+      />
     );
   }
 
@@ -11931,11 +11152,48 @@ function GymminApp() {
             {activeScreen === "workoutDetail" && renderWorkoutDetail()}
             {activeScreen === "workoutSession" && renderWorkoutSession()}
             {activeScreen === "weeklyPlan" && renderWeeklyPlan()}
-            {activeScreen === "workoutHistory" && renderWorkoutHistoryScreen()}
+            {activeScreen === "workoutHistory" && (
+              <WorkoutHistoryScreen
+                filter={workoutHistoryFilter}
+                formatDurationMs={formatDurationMs}
+                formatNumber={formatNumber}
+                formatSessionDateTime={formatSessionDateTime}
+                formatSessionDuration={formatSessionDuration}
+                getExecutionModeLabel={getExecutionModeLabel}
+                getSessionStatusLabel={getSessionStatusLabel}
+                search={workoutHistorySearch}
+                sessions={filteredWorkoutHistorySessions}
+                summary={workoutHistorySummary}
+                t={t}
+                theme={theme}
+                onDeleteSession={deleteWorkoutHistoryEntry}
+                onFilterChange={setWorkoutHistoryFilter}
+                onOpenSession={openWorkoutSessionDetail}
+                onSearchChange={setWorkoutHistorySearch}
+              />
+            )}
             {activeScreen === "workoutSessionDetail" && renderWorkoutSessionDetail()}
-            {activeScreen === "progress" && renderProgressScreen()}
+            {activeScreen === "progress" && (
+              <ProgressScreen
+                language={language}
+                progressItems={exerciseProgressItems}
+                sessions={visibleWorkoutSessions}
+                t={t}
+                theme={theme}
+                onOpenExercise={openExerciseProgress}
+              />
+            )}
             {activeScreen === "exerciseDetail" && renderExerciseDetailScreen()}
-            {activeScreen === "exerciseProgress" && renderExerciseProgressScreen()}
+            {activeScreen === "exerciseProgress" && (
+              <ExerciseProgressScreen
+                formatSessionDateTime={formatSessionDateTime}
+                groups={selectedExerciseProgressHistoryGroups}
+                language={language}
+                summary={selectedExerciseProgressSummary}
+                t={t}
+                theme={theme}
+              />
+            )}
             {activeScreen === "favoriteExercises" && renderFavoriteExercises()}
             {activeScreen === "aiCredits" && (
               user ? (

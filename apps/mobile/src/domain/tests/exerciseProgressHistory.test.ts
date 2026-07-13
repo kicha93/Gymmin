@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   filterExerciseProgressHistoryGroups,
+  formatExerciseProgressMetric,
   formatExerciseProgressSeriesValue,
   formatExerciseProgressSetCount,
   getExerciseProgressHistoryGroups
@@ -40,6 +41,13 @@ function session(id: string, startedAt: string, entries: WorkoutSessionEntry[], 
 }
 
 describe("exercise progress history", () => {
+  it("formats metrics with a localized decimal separator and missing-data fallback", () => {
+    expect(formatExerciseProgressMetric(15.8, "kg", "pl")).toBe("15,8 kg");
+    expect(formatExerciseProgressMetric(15.8, "kg", "en")).toBe("15.8 kg");
+    expect(formatExerciseProgressMetric(80, "kg", "pl")).toBe("80 kg");
+    expect(formatExerciseProgressMetric(null, "kg", "pl")).toBe("—");
+  });
+
   it("groups sets from one exercise execution within a session", () => {
     const groups = getExerciseProgressHistoryGroups([
       session("one", "2026-07-08T15:30:00.000Z", [

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatProgressDashboardVolume,
+  formatProgressWorkoutCount,
   getProgressDashboardStats,
   getProgressSparklineValues,
   getSortedProgressItems,
@@ -49,6 +50,15 @@ function exerciseEntry(name: string, weight: number | null, reps: number | null)
 }
 
 describe("progressDashboard", () => {
+  it("formats workout counts in Polish and English", () => {
+    expect(formatProgressWorkoutCount(1, "pl")).toBe("1 trening");
+    expect(formatProgressWorkoutCount(2, "pl")).toBe("2 treningi");
+    expect(formatProgressWorkoutCount(5, "pl")).toBe("5 treningów");
+    expect(formatProgressWorkoutCount(12, "pl")).toBe("12 treningów");
+    expect(formatProgressWorkoutCount(1, "en")).toBe("1 workout");
+    expect(formatProgressWorkoutCount(2, "en")).toBe("2 workouts");
+  });
+
   it("formats monthly volume compactly without unnecessary decimals", () => {
     expect(formatProgressDashboardVolume(379.6, "pl")).toBe("380 kg");
     expect(formatProgressDashboardVolume(4000, "pl")).toBe("4 t");

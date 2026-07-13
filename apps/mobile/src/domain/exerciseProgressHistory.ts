@@ -17,6 +17,21 @@ export type ExerciseProgressHistoryGroup = {
   totalVolume: number | null;
 };
 
+export function formatExerciseProgressMetric(
+  value: number | null | undefined,
+  suffix: string,
+  language: "pl" | "en"
+) {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return "—";
+  }
+
+  const rounded = Math.round((value + Number.EPSILON) * 10) / 10;
+  const raw = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  const formatted = language === "pl" ? raw.replace(".", ",") : raw;
+  return suffix ? `${formatted} ${suffix}` : formatted;
+}
+
 export function formatExerciseProgressSetCount(count: number, language: "pl" | "en") {
   const safeCount = Math.max(0, Math.floor(Number.isFinite(count) ? count : 0));
 

@@ -14,6 +14,24 @@ export type ProgressDashboardStats = {
   trackedExercises: number;
 };
 
+export function formatProgressWorkoutCount(count: number, language: "pl" | "en") {
+  if (language === "en") {
+    return `${count} ${count === 1 ? "workout" : "workouts"}`;
+  }
+
+  if (count === 1) {
+    return "1 trening";
+  }
+
+  const lastTwoDigits = count % 100;
+  const lastDigit = count % 10;
+  if ((lastTwoDigits < 12 || lastTwoDigits > 14) && lastDigit >= 2 && lastDigit <= 4) {
+    return `${count} treningi`;
+  }
+
+  return `${count} treningów`;
+}
+
 export function formatProgressDashboardVolume(value: number, language: "pl" | "en") {
   if (!Number.isFinite(value) || value <= 0) {
     return "0 kg";

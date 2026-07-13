@@ -65,6 +65,12 @@ Warstwa widoku Osiągnięć jest wydzielona z głównego `App.tsx`: ekran utrzym
 
 Warstwa widoku Kredytów jest wydzielona z `App.tsx`: ekran prezentuje saldo, koszty, pakiety, trzy ostatnie transakcje z lokalną akcją `Zobacz wszystkie`, informacje oraz warunkowe odtwarzanie zakupów. Backend nadal jest źródłem prawdy dla salda, a zakup i weryfikacja Google Play nie zostały przeniesione do UI.
 
+Warstwa dashboardu Postępu jest wydzielona z `App.tsx`: ekran utrzymuje lokalną frazę wyszukiwania i filtr `Wszystkie/Siła/Objętość`, pokazuje statystyki miesiąca, kompaktowe karty ćwiczeń oraz sparklines. Dane nadal są wyliczane local-first z ukończonych `WorkoutSession`, a otwarcie szczegółów progresu pozostaje częścią głównej nawigacji aplikacji.
+
+Widok Progresu ćwiczenia również jest osobnym ekranem: prezentuje grid metryk, filtry zakresu, pogrupowane sesje treningowe, zwijane wiersze serii oraz przyrostowe pokazywanie starszych wyników. Stan prezentacyjny jest lokalny dla ekranu, natomiast grupowanie i filtrowanie danych korzysta z testowanych helperów domenowych.
+
+Historia treningów i szczegóły wykonanej sesji są wydzielone do osobnych ekranów. Historia zachowuje podsumowanie, filtry, wyszukiwanie i usuwanie wpisów, a szczegóły zachowują kartę sesji oraz poziomo przewijaną tabelę ćwiczeń i serii z obsługą szerokości ekranu w orientacji poziomej. Dane, potwierdzenia operacji i nawigacja nadal są koordynowane przez `App.tsx`.
+
 ### Logowanie i rejestracja
 
 Działa backendowe logowanie i rejestracja:

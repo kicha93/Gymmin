@@ -3590,32 +3590,11 @@ export const styles = StyleSheet.create({
   aiCreditsScreen: {
     gap: 16
   },
-  aiCreditsBackButton: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 6,
-    minHeight: 38,
-    paddingHorizontal: 12
-  },
-  aiCreditsBackText: {
-    fontSize: 14,
-    fontWeight: "900"
-  },
   aiCreditsBalanceCard: {
     borderRadius: 8,
     borderWidth: 1,
     gap: 12,
     padding: 18
-  },
-  aiCreditsRefreshButton: {
-    alignItems: "center",
-    alignSelf: "flex-end",
-    flexDirection: "row",
-    gap: 6,
-    minHeight: 32
   },
   aiCreditsRefreshFooterButton: {
     alignItems: "center",

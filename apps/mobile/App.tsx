@@ -203,9 +203,6 @@ import {
 } from "./src/domain/appDiagnostics";
 import {
   emptyAiCreditBalance,
-  formatAiCreditPackName,
-  getAiCreditPackDescription,
-  getRecentAiCreditTransactions,
   isInsufficientAiCreditsError,
   normalizeAiCreditPurchaseVerifyResponse,
   normalizeAiCreditBalance,
@@ -280,6 +277,7 @@ import {
 } from "./src/screens/AuthScreens";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
+import { AiCreditsScreen } from "./src/screens/AiCreditsScreen";
 import { TermsScreen } from "./src/screens/TermsScreen";
 import { styles } from "./src/theme/appStyles";
 import { themes, type Theme, type ThemeName } from "./src/theme/theme";
@@ -2339,7 +2337,6 @@ function GymminApp() {
   const [canRestoreAiCreditPurchases, setCanRestoreAiCreditPurchases] = useState(false);
   const [isAiCreditsLoading, setIsAiCreditsLoading] = useState(false);
   const [isAiCreditPurchaseLoading, setIsAiCreditPurchaseLoading] = useState(false);
-  const [showAllAiCreditTransactions, setShowAllAiCreditTransactions] = useState(false);
   const [userAchievements, setUserAchievements] = useState<UserAchievement[]>([]);
   const [appUsageStats, setAppUsageStats] = useState<AppUsageStats>(() => getDefaultAppUsageStats());
   const [achievementsSyncState, setAchievementsSyncState] = useState<AchievementsSyncState>({});
@@ -7357,48 +7354,6 @@ function GymminApp() {
     });
   }
 
-  function formatAiCreditTransactionDate(value: string) {
-    const date = new Date(value);
-    if (!Number.isFinite(date.getTime())) {
-      return t("noData");
-    }
-
-    return date.toLocaleString(language === "pl" ? "pl-PL" : "en-US", {
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
-  }
-
-  function formatAiCreditTransactionTitle(transaction: AiCreditTransaction) {
-    const reason = (transaction.reason ?? "").toLowerCase();
-
-    if (reason.includes("rewrite")) {
-      return language === "pl" ? "Modyfikacja treningu" : "Workout modification";
-    }
-
-    if (reason.includes("plan")) {
-      return language === "pl" ? "Wygenerowanie planu" : "Plan generation";
-    }
-
-    if (transaction.type.toLowerCase() === "purchase" || reason.includes("purchase")) {
-      const credits = Math.abs(transaction.amount);
-      return language === "pl" ? `Zakup pakietu ${credits} kredytów` : `${credits} credit package purchase`;
-    }
-
-    return transaction.amount < 0 ? t("aiCreditsUsed") : t("aiCreditsAdded");
-  }
-
-  function formatAiCreditAmount(amount: number) {
-    const suffix = Math.abs(amount) === 1
-      ? (language === "pl" ? "kredyt" : "credit")
-      : (language === "pl" ? "kredytów" : "credits");
-
-    return `${amount > 0 ? "+" : ""}${amount} ${suffix}`;
-  }
-
   function formatSessionTime(value?: string) {
     if (!value) {
       return t("noData");
@@ -10191,178 +10146,6 @@ function GymminApp() {
     );
   }
 
-  function renderAiCredits() {
-    if (!user) {
-      return renderProfile();
-    }
-
-    const isDevBuild = typeof __DEV__ !== "undefined" && __DEV__;
-    const recentTransactions = showAllAiCreditTransactions
-      ? aiCreditTransactions
-      : getRecentAiCreditTransactions(aiCreditTransactions, 3);
-
-    return (
-      <View style={styles.aiCreditsScreen}>
-        <View style={[styles.aiCreditsBalanceCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.panelHeroHeader}>
-            <View style={[styles.aiCreditsHeroIcon, { backgroundColor: theme.secondaryBand }]}>
-              <Ionicons name="sparkles-outline" size={26} color={theme.primary} />
-            </View>
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>{t("aiCredits")}</Text>
-              <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-                {t("aiCreditsDescription")}
-              </Text>
-            </View>
-          </View>
-
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("aiCreditsAvailable")}</Text>
-          <Text style={[styles.aiCreditsBalanceValue, { color: theme.primary }]}>{aiCreditBalance.balance}</Text>
-          <View style={[styles.aiCreditsDivider, { backgroundColor: theme.border }]} />
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {t("aiCreditsPlanCost")}: {aiCreditBalance.planCost} · {t("aiCreditsRewriteCost")}: {aiCreditBalance.rewriteCost}
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            disabled={isAiCreditsLoading || isAiCreditPurchaseLoading}
-            style={styles.aiCreditsRefreshFooterButton}
-            onPress={() => void fetchAiCredits(user)}
-          >
-            <Ionicons name="refresh-outline" size={18} color={theme.primary} />
-            <Text style={[styles.aiCreditsRefreshText, { color: theme.primary }]}>
-              {isAiCreditsLoading ? t("aiCreatorSubmitting") : t("refresh")}
-            </Text>
-          </Pressable>
-        </View>
-
-        {aiCreditsError ? (
-          <Text style={[styles.authError, { color: theme.danger }]}>{aiCreditsError}</Text>
-        ) : null}
-        {aiCreditsPurchaseMessage ? (
-          <Text style={[styles.workoutMeta, { color: theme.primary }]}>{aiCreditsPurchaseMessage}</Text>
-        ) : null}
-
-        {isDevBuild ? (
-          <AppButton
-            disabled={isAiCreditsLoading || isAiCreditPurchaseLoading}
-            icon="add-circle-outline"
-            theme={theme}
-            variant="outline"
-            onPress={() => void grantDevAiCredits()}
-          >
-            {t("aiCreditsDevGrant")}
-          </AppButton>
-        ) : null}
-
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.creatorSectionTitle, { color: theme.text }]}>{t("aiCreditsPackages")}</Text>
-          {aiCreditPacks.length ? (
-            <View style={styles.aiCreditsPackageList}>
-              {aiCreditPacks.slice(0, 3).map((pack) => (
-                <View key={pack.productId} style={[styles.aiCreditsPackageCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                  <View style={[styles.aiCreditsPackageBadge, { backgroundColor: theme.secondaryBand }]}>
-                    <Text style={[styles.aiCreditsPackageBadgeText, { color: theme.primary }]}>{pack.credits}</Text>
-                  </View>
-                  <View style={styles.workoutInfo}>
-                    <Text style={[styles.aiCreditsPackageTitle, { color: theme.text }]}>{formatAiCreditPackName(pack.credits, language)}</Text>
-                    <Text style={[styles.aiCreditsPackageDescription, { color: theme.muted }]}>
-                      {getAiCreditPackDescription(pack.credits, language)}
-                    </Text>
-                  </View>
-                  <View style={styles.aiCreditsPackageAction}>
-                    {pack.localizedPrice ? (
-                      <Text style={[styles.aiCreditsPackagePrice, { color: theme.text }]}>{pack.localizedPrice}</Text>
-                    ) : null}
-                  <Pressable
-                    accessibilityRole="button"
-                    disabled={isAiCreditPurchaseLoading || !pack.active}
-                    style={({ pressed }) => [
-                      styles.aiCreditsPackageButton,
-                      { backgroundColor: theme.primary, opacity: pressed || isAiCreditPurchaseLoading || !pack.active ? 0.72 : 1 }
-                    ]}
-                    onPress={() => void buyAiCreditPack(pack)}
-                  >
-                    <Text style={[styles.aiCreditsPackageButtonText, { color: theme.white }]}>
-                      {isAiCreditPurchaseLoading ? t("aiCreditsProcessingPurchase") : t("aiCreditsBuyNow")}
-                    </Text>
-                  </Pressable>
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("aiCreditsPurchaseSoon")}</Text>
-          )}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <View style={styles.aiCreditsSectionHeader}>
-            <Text style={[styles.creatorSectionTitle, { color: theme.text }]}>{t("aiCreditsRecentTransactions")}</Text>
-            {aiCreditTransactions.length > 3 && !showAllAiCreditTransactions ? (
-              <Pressable accessibilityRole="button" onPress={() => setShowAllAiCreditTransactions(true)}>
-                <Text style={[styles.aiCreditsViewAllText, { color: theme.primary }]}>{t("aiCreditsViewAll")}</Text>
-              </Pressable>
-            ) : null}
-          </View>
-          {recentTransactions.length ? (
-            <View style={[styles.aiCreditsTransactionsCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              {recentTransactions.map((transaction, index) => (
-                <View
-                  key={transaction.id}
-                  style={[
-                    styles.aiCreditsTransactionRow,
-                    { borderBottomColor: theme.border },
-                    index === recentTransactions.length - 1 ? styles.aiCreditsTransactionRowLast : null
-                  ]}
-                >
-                  <View style={[styles.aiCreditsTransactionIcon, { backgroundColor: theme.primary }]}>
-                    <Ionicons name="sparkles-outline" size={17} color={theme.white} />
-                  </View>
-                  <View style={styles.workoutInfo}>
-                    <Text style={[styles.workoutName, { color: theme.text }]}>
-                      {formatAiCreditTransactionTitle(transaction)}
-                    </Text>
-                    <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-                      {formatAiCreditTransactionDate(transaction.createdAt)}
-                    </Text>
-                  </View>
-                  <Text style={[styles.workoutName, { color: transaction.amount < 0 ? theme.danger : theme.primary }]}>
-                    {formatAiCreditAmount(transaction.amount)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={[styles.aiCreditsTransactionsCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("aiCreditsNoTransactions")}</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={[styles.aiCreditsInfoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.creatorSectionTitle, { color: theme.text }]}>{t("aiCreditsInfo")}</Text>
-          {[t("aiCreditsInfoAccount"), t("aiCreditsInfoUsage"), t("aiCreditsInfoRefund")].map((item) => (
-            <View key={item} style={styles.aiCreditsInfoRow}>
-              <View style={[styles.aiCreditsInfoBullet, { backgroundColor: theme.primary }]} />
-              <Text style={[styles.workoutMeta, styles.aiCreditsInfoText, { color: theme.muted }]}>{item}</Text>
-            </View>
-          ))}
-          {canRestoreAiCreditPurchases ? (
-            <Pressable
-              accessibilityRole="button"
-              disabled={isAiCreditPurchaseLoading || !aiCreditPacks.length}
-              style={styles.aiCreditsRestoreLink}
-              onPress={() => void restorePendingAiCreditPurchases()}
-            >
-              <Ionicons name="reload-outline" size={16} color={theme.primary} />
-              <Text style={[styles.aiCreditsViewAllText, { color: theme.primary }]}>{t("aiCreditsRestorePurchases")}</Text>
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
-    );
-  }
-
   function renderFavoriteExercises() {
     const favoriteCatalogExercises = getFavoriteCatalogExercises(favoriteExercises);
     const searchPhrase = favoriteExercisesSearch.trim().toLowerCase();
@@ -12154,7 +11937,36 @@ function GymminApp() {
             {activeScreen === "exerciseDetail" && renderExerciseDetailScreen()}
             {activeScreen === "exerciseProgress" && renderExerciseProgressScreen()}
             {activeScreen === "favoriteExercises" && renderFavoriteExercises()}
-            {activeScreen === "aiCredits" && renderAiCredits()}
+            {activeScreen === "aiCredits" && (
+              user ? (
+                <AiCreditsScreen
+                  balance={aiCreditBalance}
+                  canRestorePurchases={canRestoreAiCreditPurchases}
+                  error={aiCreditsError}
+                  isDevBuild={typeof __DEV__ !== "undefined" && __DEV__}
+                  isLoading={isAiCreditsLoading}
+                  isPurchaseLoading={isAiCreditPurchaseLoading}
+                  language={language}
+                  packs={aiCreditPacks}
+                  purchaseMessage={aiCreditsPurchaseMessage}
+                  t={t}
+                  theme={theme}
+                  transactions={aiCreditTransactions}
+                  onBuyPack={(pack) => {
+                    void buyAiCreditPack(pack);
+                  }}
+                  onGrantDevCredits={() => {
+                    void grantDevAiCredits();
+                  }}
+                  onRefresh={() => {
+                    void fetchAiCredits(user);
+                  }}
+                  onRestorePurchases={() => {
+                    void restorePendingAiCreditPurchases();
+                  }}
+                />
+              ) : renderProfile()
+            )}
             {activeScreen === "achievements" && (
               <AchievementsScreen
                 formatDateTime={formatDateTime}

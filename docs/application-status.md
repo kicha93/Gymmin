@@ -51,6 +51,7 @@ Aplikacja ma prostą nawigację opartą o stan aktywnego ekranu. Główne widoki
 - Historia treningów.
 - Progres.
 - Osiągnięcia.
+- Kredyty.
 - Ulubione ćwiczenia.
 - Artykuły.
 - Regulamin.
@@ -61,6 +62,8 @@ Aplikacja ma prostą nawigację opartą o stan aktywnego ekranu. Główne widoki
 Android back button jest obsłużony i prowadzi użytkownika krokami w stronę ekranu głównego.
 
 Warstwa widoku Osiągnięć jest wydzielona z głównego `App.tsx`: ekran utrzymuje lokalny filtr `Wszystkie/Odblokowane/Zablokowane`, sortuje odblokowane po dacie i obsługuje pełnoekranowy podgląd grafik. Metryki, zapis per konto, synchronizacja i toast po lokalnym odblokowaniu nadal korzystają z istniejącego systemu domenowego.
+
+Warstwa widoku Kredytów jest wydzielona z `App.tsx`: ekran prezentuje saldo, koszty, pakiety, trzy ostatnie transakcje z lokalną akcją `Zobacz wszystkie`, informacje oraz warunkowe odtwarzanie zakupów. Backend nadal jest źródłem prawdy dla salda, a zakup i weryfikacja Google Play nie zostały przeniesione do UI.
 
 ### Logowanie i rejestracja
 

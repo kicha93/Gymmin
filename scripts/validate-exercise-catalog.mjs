@@ -47,7 +47,13 @@ for(const [source,target] of Object.entries(aliases)){
   else if(!validNames.has(current))errors.push({code:"missing_name_alias_target",source,target,resolved:current});
 }
 
-const report={generatedAt:new Date().toISOString(),exerciseCount:exercises.length,idMappingCount:Object.keys(idAliases).length,errors,warnings};
-await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`,`utf8`);
+const reportData={exerciseCount:exercises.length,idMappingCount:Object.keys(idAliases).length,errors,warnings};
+let previousReport;
+try { previousReport=JSON.parse(await readFile(reportPath,"utf8")); } catch { previousReport=undefined; }
+const previousData=previousReport?{exerciseCount:previousReport.exerciseCount,idMappingCount:previousReport.idMappingCount,errors:previousReport.errors,warnings:previousReport.warnings}:undefined;
+const reportUnchanged=previousData&&JSON.stringify(previousData)===JSON.stringify(reportData);
+const report={generatedAt:reportUnchanged&&previousReport.generatedAt?previousReport.generatedAt:new Date().toISOString(),...reportData};
+const serializedReport=`${JSON.stringify(report,null,2)}\n`;
+if(!reportUnchanged)await writeFile(reportPath,serializedReport,"utf8");
 console.log(JSON.stringify({exerciseCount:report.exerciseCount,idMappingCount:report.idMappingCount,errorCount:errors.length,warningCount:warnings.length},null,2));
 if(errors.length)process.exitCode=1;

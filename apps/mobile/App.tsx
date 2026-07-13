@@ -20,7 +20,6 @@ import {
   Image,
   Keyboard,
   KeyboardAvoidingView,
-  Linking,
   Modal,
   NativeModules,
   Platform,
@@ -37,7 +36,6 @@ import type { ImageSourcePropType, SectionListData, SectionListRenderItemInfo, S
 
 import { BUILD_API_BASE_URL } from "./src/config/buildConfig";
 import { exerciseImageSources } from "./src/exerciseImageSources";
-import { buildContactMailUrl, GYMMIN_CONTACT_EMAIL } from "./src/domain/contact";
 import { applyAvatarResponse, buildAvatarImageSource, type AvatarResponse } from "./src/domain/avatar";
 import {
   achievementDefinitions,
@@ -271,7 +269,11 @@ import {
   SessionValueInput,
   WorkoutHeaderElapsedTime
 } from "./src/components/WorkoutSessionControls";
+import { LegalPage } from "./src/components/LegalContent";
 import { translate, type LanguageCode, type TranslationKey } from "./src/i18n/translations";
+import { ContactScreen } from "./src/screens/ContactScreen";
+import { BugReportScreen, BugReportSuccessScreen } from "./src/screens/BugReportScreen";
+import { TermsScreen } from "./src/screens/TermsScreen";
 import { styles } from "./src/theme/appStyles";
 import { themes, type Theme, type ThemeName } from "./src/theme/theme";
 
@@ -544,11 +546,6 @@ type ApiWorkout = {
   steps: ApiWorkoutStep[];
 };
 
-type ApiSyncWorkoutsResponse = {
-  serverTime: string;
-  workouts: ApiWorkout[];
-};
-
 type ApiUserSettings = {
   collapsedPanels?: Record<string, boolean>;
   defaultSetCount?: string;
@@ -562,13 +559,6 @@ type ApiUserSettings = {
   themeName?: ThemeName;
   updatedAt?: string;
   workoutReminders?: WorkoutReminderSettings;
-};
-
-type ApiFavoriteExercise = {
-  exerciseId: string;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
 };
 
 type ApiFavoriteExercisesResponse = {
@@ -1524,15 +1514,6 @@ function getAuthDeviceName() {
   return label.slice(0, 120) || (Platform.OS === "ios" ? "iOS device" : "Android device");
 }
 
-function createNotesWithRest(notes: string, restSeconds?: number) {
-  if (!restSeconds) {
-    return notes;
-  }
-
-  const restText = `Odpoczynek między seriami: ${restSeconds} s.`;
-  return [notes, restText].filter(Boolean).join("\n");
-}
-
 function formatSecondsAsTimeTarget(totalSeconds: number) {
   const normalizedSeconds = Math.max(0, Math.round(totalSeconds));
   const hours = Math.floor(normalizedSeconds / 3600);
@@ -2349,7 +2330,6 @@ function GymminApp() {
   const [exerciseDetailReturnScreen, setExerciseDetailReturnScreen] = useState<ScreenKey>("workoutDetail");
   const [exerciseDetailMuscleSide, setExerciseDetailMuscleSide] = useState<"front" | "back">("front");
   const [exerciseDetailCollapsedPanels, setExerciseDetailCollapsedPanels] = useState<Record<string, boolean>>({});
-  const [expandedTermsSections, setExpandedTermsSections] = useState<Record<string, boolean>>({});
   const [workoutHistoryFilter, setWorkoutHistoryFilter] = useState<WorkoutHistoryStatusFilter>("all");
   const [workoutHistorySearch, setWorkoutHistorySearch] = useState("");
   const [workoutHistoryWorkoutIdFilter, setWorkoutHistoryWorkoutIdFilter] = useState<string | null>(null);
@@ -7576,15 +7556,6 @@ function GymminApp() {
     ).size;
   }
 
-  function formatEntryPlan(entry: WorkoutSessionEntry) {
-    const values = [
-      entry.plannedTarget,
-      entry.plannedWeight ? `${entry.plannedWeight} kg` : ""
-    ].filter(Boolean);
-
-    return values.length ? values.join(", ") : t("noData");
-  }
-
   function formatEntryActual(entry: WorkoutSessionEntry) {
     const values = [
       entry.actualReps ? `${entry.actualReps} ${t("repetitionsSuffix")}` : "",
@@ -8019,7 +7990,6 @@ function GymminApp() {
             email={email}
             isAuthSubmitting={isAuthSubmitting}
             logIn={logIn}
-            logOut={logOut}
             password={password}
             passwordConfirm={passwordConfirm}
             register={register}
@@ -8164,17 +8134,14 @@ function GymminApp() {
     return (
       <>
         <WorkoutBuilder
-          addStep={addStep}
           defaultSetCount={defaultSetCount}
           defaultStageType={defaultStageType}
           defaultWeight={defaultWeight}
           isEditing={Boolean(editingWorkoutId)}
-          isDarkMode={isDarkMode}
           favoriteExerciseIds={getValidFavoriteExerciseIds(favoriteExercises)}
           language={language}
           moveStep={moveStep}
           onToggleFavoriteExercise={toggleCatalogExerciseFavorite}
-          onBack={() => setActiveScreen(editingWorkoutId ? "workoutDetail" : "home")}
           removeStep={removeStep}
           t={t}
           theme={theme}
@@ -8530,10 +8497,8 @@ function GymminApp() {
     return (
       <ArticleDetail
         article={article}
-        backLabel={t("backToStart")}
         language={language}
         theme={theme}
-        onBack={() => setActiveScreen("home")}
       />
     );
   }
@@ -10670,280 +10635,55 @@ function GymminApp() {
   }
 
   function renderTerms() {
-    const summaryItems: Array<{ icon: keyof typeof Ionicons.glyphMap; text: TranslationKey; title: TranslationKey }> = [
-      { icon: "bookmark-outline", text: "termsPurposeText", title: "termsPurposeTitle" },
-      { icon: "person-outline", text: "termsUserResponsibilityText", title: "termsUserResponsibilityTitle" },
-      { icon: "alert-circle-outline", text: "termsNoSpecialistsText", title: "termsNoSpecialistsTitle" }
-    ];
-    const detailedSections: Array<{ icon: keyof typeof Ionicons.glyphMap; id: string; text: TranslationKey; title: TranslationKey }> = [
-      { icon: "document-text-outline", id: "general", text: "termsGeneralText", title: "termsGeneralTitle" },
-      { icon: "person-outline", id: "account", text: "termsAccountText", title: "termsAccountTitle" },
-      { icon: "barbell-outline", id: "usage", text: "termsUsageText", title: "termsUsageTitle" },
-      { icon: "save-outline", id: "workout-data", text: "termsWorkoutDataText", title: "termsWorkoutDataTitle" },
-      { icon: "shield-checkmark-outline", id: "safety", text: "termsResponsibilitySafetyText", title: "termsResponsibilitySafetyTitle" },
-      { icon: "bug-outline", id: "issues", text: "termsReportingIssuesText", title: "termsReportingIssuesTitle" },
-      { icon: "refresh-outline", id: "changes", text: "termsChangesText", title: "termsChangesTitle" }
-    ];
-    const areAllTermsExpanded = detailedSections.every((section) => expandedTermsSections[section.id]);
-
     return (
-      <View style={styles.termsScreen}>
-        <View style={[styles.termsHeroCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.termsHeroTop}>
-            <View style={[styles.termsHeroIcon, { backgroundColor: theme.secondaryBand }]}>
-              <Ionicons name="shield-checkmark-outline" size={40} color={theme.primary} />
-            </View>
-            <View style={styles.termsHeroCopy}>
-              <Text style={[styles.termsHeroTitle, { color: theme.text }]}>{t("termsHeroTitle")}</Text>
-              <Text style={[styles.termsHeroDescription, { color: theme.muted }]}>{t("termsHeroDescription")}</Text>
-            </View>
-          </View>
-          <View style={[styles.termsBenefits, { borderTopColor: theme.border }]}>
-            {[
-              ["barbell-outline", "termsBenefitWorkouts"],
-              ["trending-up-outline", "termsBenefitProgress"],
-              ["shield-checkmark-outline", "termsBenefitResponsibly"]
-            ].map(([icon, label]) => (
-              <View key={String(label)} style={styles.termsBenefit}>
-                <View style={[styles.termsBenefitIcon, { backgroundColor: theme.secondaryBand }]}>
-                  <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={19} color={theme.primary} />
-                </View>
-                <Text style={[styles.termsBenefitText, { color: theme.text }]}>{t(label as TranslationKey)}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <Text style={[styles.termsSectionTitle, { color: theme.text }]}>{t("termsInShort")}</Text>
-        <View style={[styles.termsSummaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {summaryItems.map((item, index) => (
-            <View
-              key={item.title}
-              style={[styles.termsSummaryRow, { borderBottomColor: theme.border }, index === summaryItems.length - 1 ? styles.termsSummaryRowLast : null]}
-            >
-              <View style={[styles.termsSummaryIcon, { backgroundColor: theme.secondaryBand }]}>
-                <Ionicons name={item.icon} size={22} color={theme.primary} />
-              </View>
-              <View style={styles.termsSummaryCopy}>
-                <Text style={[styles.termsSummaryTitle, { color: theme.text }]}>{t(item.title)}</Text>
-                <Text style={[styles.termsSummaryText, { color: theme.muted }]}>{t(item.text)}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        <View style={[styles.termsBugCallout, { backgroundColor: theme.control, borderColor: theme.border }]}>
-          <View style={styles.termsBugCalloutHeader}>
-            <View style={[styles.termsSummaryIcon, { backgroundColor: theme.secondaryBand }]}>
-              <Ionicons name="information-circle-outline" size={25} color={theme.primary} />
-            </View>
-            <Text style={[styles.termsBugCalloutText, { color: theme.text }]}>{t("termsBugCallout")}</Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.termsInfoButton, { borderColor: theme.primary }]}
-            onPress={() => {
-              setActiveScreen("settings");
-              setTimeout(() => mainScrollRef.current?.scrollToEnd({ animated: true }), 150);
-            }}
-          >
-            <Text style={[styles.termsInfoButtonText, { color: theme.primary }]}>{t("termsGoToInfo")}</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.termsDetailedHeader}>
-          <Text style={[styles.termsSectionTitle, { color: theme.text }]}>{t("termsDetailedRules")}</Text>
-          <Pressable
-            accessibilityRole="button"
-            style={styles.termsExpandAllButton}
-            onPress={() => setExpandedTermsSections(Object.fromEntries(detailedSections.map((section) => [section.id, !areAllTermsExpanded])))}
-          >
-            <Text style={[styles.termsExpandAllText, { color: theme.primary }]}>
-              {areAllTermsExpanded ? t("termsCollapseAll") : t("termsExpandAll")}
-            </Text>
-            <Ionicons name={areAllTermsExpanded ? "chevron-up" : "chevron-down"} size={18} color={theme.primary} />
-          </Pressable>
-        </View>
-        <View style={[styles.termsAccordion, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {detailedSections.map((section, index) => {
-            const isExpanded = expandedTermsSections[section.id] === true;
-
-            return (
-              <View key={section.id} style={[styles.termsAccordionItem, { borderBottomColor: theme.border }, index === detailedSections.length - 1 ? styles.termsAccordionItemLast : null]}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: isExpanded }}
-                  style={styles.termsAccordionHeader}
-                  onPress={() => setExpandedTermsSections((current) => ({ ...current, [section.id]: !isExpanded }))}
-                >
-                  <View style={[styles.termsAccordionIcon, { backgroundColor: theme.secondaryBand }]}>
-                    <Ionicons name={section.icon} size={19} color={theme.primary} />
-                  </View>
-                  <Text style={[styles.termsAccordionTitle, { color: theme.text }]}>{`${index + 1}. ${t(section.title)}`}</Text>
-                  <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color={theme.primary} />
-                </Pressable>
-                {isExpanded ? <Text style={[styles.termsAccordionText, { color: theme.muted }]}>{t(section.text)}</Text> : null}
-              </View>
-            );
-          })}
-        </View>
-      </View>
+      <TermsScreen
+        t={t}
+        theme={theme}
+        onOpenInfo={() => {
+          setActiveScreen("settings");
+          setTimeout(() => mainScrollRef.current?.scrollToEnd({ animated: true }), 150);
+        }}
+      />
     );
   }
 
   function renderContact() {
-    const openContactEmail = async () => {
-      try {
-        const url = buildContactMailUrl();
-        const canOpenMail = await Linking.canOpenURL(url);
-        if (!canOpenMail) {
-          throw new Error("No mail client is available");
-        }
-        await Linking.openURL(url);
-      } catch {
-        showInfoDialog(t("contact"), `${t("contactEmailOpenError")} ${GYMMIN_CONTACT_EMAIL}`);
-      }
-    };
-
     return (
-      <LegalPage
-        icon="mail-outline"
-        title={t("contact")}
+      <ContactScreen
+        t={t}
         theme={theme}
-        backLabel={t("backToSettings")}
         onBack={() => setActiveScreen("settings")}
-      >
-        <View style={styles.contactIntroBlock}>
-          <Text style={[styles.contactIntroTitle, { color: theme.text }]}>{t("contactIntro")}</Text>
-          <Text style={[styles.contactIntroCopy, { color: theme.muted }]}>{t("contactEmailIntro")}</Text>
-        </View>
-        <View style={[styles.contactBox, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
-          <Text style={[styles.contactLabel, { color: theme.muted }]}>{t("contactEmailLabel")}</Text>
-          <Text selectable style={[styles.contactValue, { color: theme.text }]}>{GYMMIN_CONTACT_EMAIL}</Text>
-          <AppButton icon="mail-outline" theme={theme} onPress={() => { void openContactEmail(); }}>
-            {t("contactEmailCta")}
-          </AppButton>
-        </View>
-        <View style={[styles.contactInfoPill, { backgroundColor: theme.control, borderColor: theme.border }]}>
-          <View style={[styles.contactCalloutIcon, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="time-outline" size={20} color={theme.primary} />
-          </View>
-          <Text style={[styles.contactInfoPillText, { color: theme.muted }]}>{t("contactResponseTime")}</Text>
-        </View>
-        <View style={[styles.contactBugCallout, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={[styles.contactCalloutIcon, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="bug-outline" size={22} color={theme.primary} />
-          </View>
-          <View style={styles.contactBugCalloutCopy}>
-            <Text style={[styles.contactBugCalloutText, { color: theme.muted }]}>{t("contactBugInfo")}</Text>
-            <Pressable accessibilityRole="button" style={styles.contactBugAction} onPress={() => setActiveScreen("bugReport")}>
-              <Text style={[styles.contactBugActionText, { color: theme.primary }]}>{t("contactBugAction")}</Text>
-              <Ionicons name="arrow-forward" size={16} color={theme.primary} />
-            </Pressable>
-          </View>
-        </View>
-        <Text style={[styles.contactFaqTitle, { color: theme.text }]}>{t("faq")}</Text>
-        <FaqItem
-          answer={t("contactFaqBugAnswer")}
-          initiallyExpanded
-          question={t("contactFaqBugQuestion")}
-          theme={theme}
-        />
-        <FaqItem
-          answer={t("contactFaqIdeaAnswer")}
-          question={t("contactFaqIdeaQuestion")}
-          theme={theme}
-        />
-        <FaqItem
-          answer={t("contactFaqWorkoutAnswer")}
-          question={t("contactFaqWorkoutQuestion")}
-          theme={theme}
-        />
-      </LegalPage>
+        onOpenBugReport={() => setActiveScreen("bugReport")}
+        onShowInfo={showInfoDialog}
+      />
     );
   }
 
   function renderBugReport() {
     return (
-      <LegalPage
-        icon="bug-outline"
-        title={t("bugReport")}
+      <BugReportScreen
+        description={bugDescription}
+        error={bugFormError}
+        isSubmitting={isBugSubmitting}
+        t={t}
         theme={theme}
-        backLabel={t("backToSettings")}
+        title={bugTitle}
         onBack={() => setActiveScreen("settings")}
-      >
-        <Text style={[styles.legalText, { color: theme.muted }]}>
-          {t("bugIntro")}
-        </Text>
-        <View style={styles.bugReportForm}>
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: theme.text }]}>{t("bugTitle")}</Text>
-            <AppInput
-              placeholder={t("bugTitlePlaceholder")}
-              theme={theme}
-              value={bugTitle}
-              onChangeText={setBugTitle}
-            />
-          </View>
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: theme.text }]}>{t("bugDescription")}</Text>
-            <AppTextarea
-              placeholder={t("bugDescriptionPlaceholder")}
-              style={styles.bugReportTextarea}
-              theme={theme}
-              value={bugDescription}
-              onChangeText={setBugDescription}
-            />
-          </View>
-          {bugFormError ? (
-            <Text style={[styles.authError, { color: theme.danger }]}>{bugFormError}</Text>
-          ) : null}
-          <AppButton
-            disabled={isBugSubmitting}
-            icon="send-outline"
-            theme={theme}
-            onPress={() => void submitBugReport()}
-          >
-            {isBugSubmitting ? t("bugSubmitting") : t("submitBug")}
-          </AppButton>
-        </View>
-      </LegalPage>
+        onChangeDescription={setBugDescription}
+        onChangeTitle={setBugTitle}
+        onSubmit={() => void submitBugReport()}
+      />
     );
   }
 
   function renderBugReportSuccess() {
     return (
-      <LegalPage
-        icon="checkmark-circle-outline"
-        title={t("bugReport")}
+      <BugReportSuccessScreen
+        reportId={bugSubmittedId}
+        t={t}
         theme={theme}
-        backLabel={t("backToStart")}
-        onBack={() => setActiveScreen("home")}
-      >
-        <View style={[styles.bugSuccessBox, { backgroundColor: theme.secondaryBand }]}>
-          <View style={styles.bugSuccessHeader}>
-            <View style={[styles.bugSuccessIcon, { backgroundColor: theme.card }]}>
-              <Ionicons name="checkmark-circle-outline" size={28} color={theme.primary} />
-            </View>
-            <Text style={[styles.bugSuccessText, { color: theme.text }]}>
-              {t("bugAccepted")}
-            </Text>
-          </View>
-          {bugSubmittedId ? (
-            <View style={[styles.bugSuccessIdBox, { backgroundColor: theme.card }]}>
-              <Text style={[styles.contactLabel, { color: theme.muted }]}>
-                ID
-              </Text>
-              <Text selectable style={[styles.bugSuccessIdText, { color: theme.text }]}>
-                {bugSubmittedId}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-        <AppButton icon="checkmark-outline" theme={theme} onPress={() => setActiveScreen("home")}>
-          {t("bugSuccessOk")}
-        </AppButton>
-      </LegalPage>
+        onDone={() => setActiveScreen("home")}
+      />
     );
   }
 
@@ -10958,7 +10698,6 @@ function GymminApp() {
             email={email}
             isAuthSubmitting={isAuthSubmitting}
             logIn={logIn}
-            logOut={logOut}
             password={password}
             passwordConfirm={passwordConfirm}
             register={register}
@@ -11897,25 +11636,6 @@ function GymminApp() {
     return entry.type === "rest" ? t("stageRest") : t("elementWithoutExercise");
   }
 
-  function formatWorkoutStepSummaryTitle(step: WorkoutStep) {
-    if (step.exerciseName) {
-      return getExerciseDisplayName(step.exerciseName, language);
-    }
-
-    return step.stageType
-      ? t(stageTypeTranslationKeys[step.stageType])
-      : t("elementWithoutExercise");
-  }
-
-  function formatSessionEntryMeta(entry: WorkoutSessionEntry) {
-    const parts = [
-      entry.sourceStageName,
-      `${t("set")} ${entry.seriesIndex + 1}`,
-      `${t("setsPlural")} ${entry.setIteration}`
-    ].filter(Boolean);
-    return parts.join(" · ");
-  }
-
   function getSessionEntryIterationLabel(entry: WorkoutSessionEntry) {
     const iteration = Number.isFinite(entry.setIteration) && entry.setIteration > 0
       ? entry.setIteration
@@ -12013,86 +11733,6 @@ function GymminApp() {
 
     const nextIndex = groups.findIndex((group) => group.firstIndex >= entryIndex);
     return nextIndex >= 0 ? nextIndex : Math.max(0, groups.length - 1);
-  }
-
-  function renderSessionEntryInputs(entry: WorkoutSessionEntry) {
-    const toggleCompleted = () => {
-      if (entry.isCompleted) {
-        updateWorkoutSessionEntry(entry.id, {
-          actualCalories: undefined,
-          actualDuration: undefined,
-          actualHeartRate: undefined,
-          actualReps: undefined,
-          actualTarget: undefined,
-          actualWeight: undefined,
-          completedAt: undefined,
-          isCompleted: false,
-          notes: undefined
-        });
-        return;
-      }
-
-      updateWorkoutSessionEntry(entry.id, {
-        completedAt: new Date().toISOString(),
-        isCompleted: true
-      });
-    };
-
-    return (
-      <View style={styles.sessionInputGrid}>
-        <Pressable
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: entry.isCompleted }}
-          style={styles.sessionCheckboxRow}
-          onPress={toggleCompleted}
-        >
-          <View
-            style={[
-              styles.sessionCheckbox,
-              {
-                backgroundColor: entry.isCompleted ? theme.primary : theme.control,
-                borderColor: entry.isCompleted ? theme.primary : theme.border
-              }
-            ]}
-          >
-            {entry.isCompleted ? <Ionicons name="checkmark" size={16} color={theme.white} /> : null}
-          </View>
-          <Text style={[styles.sessionCheckboxText, { color: theme.text }]}>{t("done")}</Text>
-        </Pressable>
-        {entry.isCompleted ? (
-          <>
-            <View style={styles.sessionInlineFields}>
-              <View style={styles.sessionInlineInput}>
-                <SessionValueInput
-                  keyboardType="decimal-pad"
-                  placeholder={t("actualWeight")}
-                  suffix="kg"
-                  theme={theme}
-                  value={entry.actualWeight ?? ""}
-                  onChangeText={(actualWeight) => updateWorkoutSessionEntry(entry.id, { actualWeight })}
-                />
-              </View>
-              <View style={styles.sessionInlineInput}>
-                <SessionValueInput
-                  keyboardType="number-pad"
-                  placeholder={t("actualReps")}
-                  theme={theme}
-                  value={entry.actualReps ?? ""}
-                  onChangeText={(actualReps) => updateWorkoutSessionEntry(entry.id, { actualReps })}
-                />
-              </View>
-            </View>
-            <AppTextarea
-              placeholder={t("note")}
-              style={styles.sessionNoteInput}
-              theme={theme}
-              value={entry.notes ?? ""}
-              onChangeText={(notes) => updateWorkoutSessionEntry(entry.id, { notes })}
-            />
-          </>
-        ) : null}
-      </View>
-    );
   }
 
   function toggleWorkoutSessionEntryCompleted(entry: WorkoutSessionEntry) {
@@ -13421,46 +13061,6 @@ type WorkoutMuscleOverviewProps = {
   workout: WorkoutDraft;
 };
 
-function WorkoutMuscleOverview({ language, theme, workout }: WorkoutMuscleOverviewProps) {
-  const usage = useMemo(() => getWorkoutMuscleUsage(workout), [workout]);
-  const primaryCount = muscleKeys.filter((muscle) => usage[muscle] === 2).length;
-  const secondaryCount = muscleKeys.filter((muscle) => usage[muscle] === 1).length;
-  const colors = {
-    inactive: "#4a4d4c",
-    primary: "#ff3347",
-    secondary: "#ffc43d"
-  };
-
-  function fill(muscle: MuscleKey) {
-    if (usage[muscle] === 2) {
-      return colors.primary;
-    }
-
-    if (usage[muscle] === 1) {
-      return colors.secondary;
-    }
-
-    return colors.inactive;
-  }
-
-  return (
-    <View style={[styles.muscleOverviewPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Text style={[styles.muscleOverviewTitle, { color: theme.text }]}>
-        {translate(language, "overview")}
-      </Text>
-      <View style={styles.muscleOverviewFigures}>
-        <HumanMuscleFigure fill={fill} side="front" />
-        <HumanMuscleFigure fill={fill} side="back" />
-      </View>
-      <View style={styles.muscleOverviewLegend}>
-        <LegendItem color={colors.primary} label={`${translate(language, "primaryMuscles")} (${primaryCount})`} theme={theme} />
-        <LegendItem color={colors.secondary} label={`${translate(language, "secondaryMuscles")} (${secondaryCount})`} theme={theme} />
-        <LegendItem color={colors.inactive} label={translate(language, "inactiveMuscleGroups")} theme={theme} />
-      </View>
-    </View>
-  );
-}
-
 function WorkoutMuscleOverviewContent({ language, theme, workout }: WorkoutMuscleOverviewProps) {
   const usage = useMemo(() => getWorkoutMuscleUsage(workout), [workout]);
   const primaryCount = muscleKeys.filter((muscle) => usage[muscle] === 2).length;
@@ -14335,13 +13935,11 @@ function capitalizeFirstLetter(value: string) {
 
 type ArticleDetailProps = {
   article: Article;
-  backLabel: string;
   language: LanguageCode;
-  onBack: () => void;
   theme: Theme;
 };
 
-function ArticleDetail({ article, backLabel, language, onBack, theme }: ArticleDetailProps) {
+function ArticleDetail({ article, language, theme }: ArticleDetailProps) {
   const translation = getArticleTranslation(article, language);
   const blocks = useMemo(() => parseArticleMarkdown(translation.content), [translation.content]);
 
@@ -14509,69 +14107,6 @@ function InfoLinkRow({ icon, label, meta, onPress, theme }: InfoLinkRowProps) {
   );
 }
 
-type LegalPageProps = {
-  backLabel?: string;
-  children: ReactNode;
-  icon: keyof typeof Ionicons.glyphMap;
-  onBack: () => void;
-  theme: Theme;
-  title: string;
-};
-
-function LegalPage({ children, theme }: LegalPageProps) {
-  return (
-    <>
-      <View style={[styles.legalPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.legalContent}>{children}</View>
-      </View>
-    </>
-  );
-}
-
-type LegalSectionProps = {
-  text: string;
-  theme: Theme;
-  title: string;
-};
-
-function LegalSection({ text, theme, title }: LegalSectionProps) {
-  return (
-    <View style={styles.legalSection}>
-      <Text style={[styles.legalSectionTitle, { color: theme.text }]}>{title}</Text>
-      <Text style={[styles.legalText, { color: theme.muted }]}>{text}</Text>
-    </View>
-  );
-}
-
-type FaqItemProps = {
-  answer: string;
-  initiallyExpanded?: boolean;
-  question: string;
-  theme: Theme;
-};
-
-function FaqItem({ answer, initiallyExpanded = false, question, theme }: FaqItemProps) {
-  const [isExpanded, setIsExpanded] = useState(initiallyExpanded);
-
-  return (
-    <View style={[styles.faqItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ expanded: isExpanded }}
-        style={styles.faqHeader}
-        onPress={() => setIsExpanded((current) => !current)}
-      >
-        <View style={[styles.faqIcon, { backgroundColor: theme.secondaryBand }]}>
-          <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color={theme.primary} />
-        </View>
-        <Text style={[styles.faqQuestion, { color: theme.text }]}>{question}</Text>
-        <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color={theme.primary} />
-      </Pressable>
-      {isExpanded ? <Text style={[styles.faqAnswer, { color: theme.muted }]}>{answer}</Text> : null}
-    </View>
-  );
-}
-
 type LoginPanelProps = {
   authError: string;
   authMode: AuthMode;
@@ -14579,7 +14114,6 @@ type LoginPanelProps = {
   email: string;
   isAuthSubmitting: boolean;
   logIn: () => void;
-  logOut: () => void;
   password: string;
   passwordConfirm: string;
   register: () => void;
@@ -14605,7 +14139,6 @@ function LoginPanel({
   email,
   isAuthSubmitting,
   logIn,
-  logOut,
   password,
   passwordConfirm,
   register,
@@ -14828,17 +14361,14 @@ function LoginPanel({
 }
 
 type WorkoutBuilderProps = {
-  addStep: (kind: WorkoutStepKind) => void;
   defaultSetCount: string;
   defaultStageType: StageType | "";
   defaultWeight: string;
   favoriteExerciseIds: ReadonlySet<string>;
   isEditing: boolean;
-  isDarkMode: boolean;
   language: LanguageCode;
   moveStep: (stepId: string, direction: -1 | 1) => void;
   onToggleFavoriteExercise: (exerciseId: string) => void;
-  onBack: () => void;
   removeStep: (stepId: string) => void;
   setWorkout: React.Dispatch<React.SetStateAction<WorkoutDraft>>;
   t: (key: TranslationKey) => string;
@@ -15292,17 +14822,14 @@ function StepConfiguration({
 }
 
 function WorkoutBuilder({
-  addStep,
   defaultSetCount,
   defaultStageType,
   defaultWeight,
   favoriteExerciseIds,
   isEditing,
-  isDarkMode,
   language,
   moveStep,
   onToggleFavoriteExercise,
-  onBack,
   removeStep,
   setWorkout,
   t,

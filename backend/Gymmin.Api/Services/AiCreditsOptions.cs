@@ -33,4 +33,12 @@ public sealed class GooglePlayOptions
     public string ServiceAccountJsonBase64 { get; set; } = "";
     public bool ValidatePurchases { get; set; } = true;
     public bool ConsumePurchases { get; set; } = true;
+    public bool RtdnEnabled { get; set; }
+    public string RtdnAudience { get; set; } = "";
+    public string RtdnServiceAccountEmail { get; set; } = "";
+    public bool VoidedPurchasesEnabled { get; set; }
+    public int VoidedPurchasesPollMinutes { get; set; } = 60;
+    public int VoidedPurchasesInitialLookbackDays { get; set; } = 30;
+    public int VoidedPurchasesOverlapMinutes { get; set; } = 120;
+    public bool AutoClawbackUnusedCredits { get; set; } = true;
 }

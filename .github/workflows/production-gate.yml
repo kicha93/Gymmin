@@ -1,0 +1,73 @@
+name: Production gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: gymmin_test
+          POSTGRES_PASSWORD: gymmin_test_password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gymmin_test -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      GYMMIN_TEST_POSTGRES: Host=127.0.0.1;Port=5432;Database=postgres;Username=gymmin_test;Password=gymmin_test_password
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj
+      - run: dotnet build backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj --configuration Release --no-restore --warnaserror
+      - run: dotnet test backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj --configuration Release --no-restore
+      - run: dotnet tool restore
+      - run: dotnet tool run dotnet-ef migrations has-pending-model-changes --project backend/Gymmin.Api/Gymmin.Api.csproj --startup-project backend/Gymmin.Api/Gymmin.Api.csproj --configuration Release
+        env:
+          Gymmin__Storage__Provider: Database
+          Gymmin__Storage__DatabaseProvider: SQLite
+      - run: dotnet list backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj package --vulnerable --include-transitive
+
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npx expo-doctor
+      - run: npx expo export --platform android --output-dir .expo-ci-export
+      - run: npm audit --audit-level=high

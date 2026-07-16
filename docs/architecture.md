@@ -17,11 +17,17 @@ ASP.NET Core API
   -> auth i bearer tokeny
   -> settings / workouts / favorites / workout sessions sync
   -> AI creator plan/rewrite jobs
-  -> SMTP bug reports
+  -> durable bug report storage + SMTP notifications
   -> File albo Database storage
 ```
 
 ## Mobile
+
+Warstwa natywna mobile jest obecnie oparta o Expo SDK 57, React Native 0.86,
+React 19.2, Hermes i obowiazkowa New Architecture. Projekt Android jest
+przechowywany w repozytorium i aktualizowany recznie; dlatego kontrola Expo
+dotyczaca automatycznej synchronizacji pol app config z katalogiem natywnym jest
+wylaczona, natomiast pozostale kontrole `expo-doctor` pozostaja aktywne.
 
 Mobile odpowiada za:
 
@@ -137,7 +143,9 @@ Authorization: Bearer {token}
 
 Rejestracja ma potwierdzenie hasła i podgląd hasła po stronie UI. Backend nadal przyjmuje tylko `email`, `password`, `name`.
 
-Auth hardening obejmuje wygasanie tokenów, `RevokedAt`, listę aktywnych sesji, wylogowanie pojedynczej sesji, logout-all, zmianę hasła i reset hasła przez email/token. Token resetu hasła jest zapisywany wyłącznie jako hash. Po zmianie hasła aktywna zostaje tylko bieżąca sesja; po resecie hasła unieważniane są wszystkie sesje użytkownika.
+Auth hardening obejmuje wygasanie tokenów, `RevokedAt`, listę aktywnych sesji, wylogowanie pojedynczej sesji, logout-all, zmianę hasła i reset hasła przez email/token. Mobile przechowuje bearer token w OS SecureStore/Keychain, a nie w AsyncStorage. Nowe konta wymagają weryfikacji emaila przed AI. Kody resetu i weryfikacji są zapisywane wyłącznie jako hash. Limity rejestracji i AI są współdzielone między replikami przez PostgreSQL. Po zmianie hasła aktywna zostaje tylko bieżąca sesja; po resecie hasła unieważniane są wszystkie sesje użytkownika.
+
+Operacje destrukcyjne stosują step-up authentication: usunięcie konta wymaga ponownej weryfikacji aktualnego hasła po stronie API oraz limitu prób per użytkownik/IP. Warstwa HTTP ogranicza rozmiary requestów i kolekcji synchronizacji, a Production rozdziela allowlistę CORS od szerokiej polityki Development/Testing.
 
 ### Profile avatar
 
@@ -151,8 +159,8 @@ Anonymous users keep the default profile icon.
 
 The Profile screen uses a compact account-dashboard layout. A single profile
 card combines avatar, name, email and avatar actions; achievements are surfaced
-directly below it; quick actions link to credits, password change, active
-sessions and bug reports; logout lives at the bottom of the Account section.
+directly below it; quick actions link to credits, password change, sessions and
+bug reports; logout lives at the bottom of the Account section.
 
 Account deletion is an authenticated destructive action in `Profile -> Account`.
 Mobile requires the localized confirmation phrase (`USUŃ` / `DELETE`) before
@@ -198,9 +206,11 @@ Backend trzyma:
 - idempotency scoped po uzytkowniku, typie operacji i `X-Idempotency-Key`,
 - idempotentny refund powiazany z jobem,
 - Google Play purchase records w `AiCreditPurchases`,
-- server-side Google Play purchase validation i consume dla produktow consumable.
+- server-side Google Play purchase validation i consume dla produktow consumable,
+- `GooglePlayVoidedPurchases` oraz `IntegrationCheckpoints` dla refund/chargeback
+  reconciliation bez przechowywania jawnego purchase tokena.
 
-Mobile tylko wyswietla saldo i koszt. Backend zawsze decyduje, czy konto ma wystarczajace saldo. Brak salda zwraca `402 insufficient_ai_credits`. Przy zakupie mobile uruchamia Google Play Billing i wysyla `purchaseToken` do backendu; kredyty sa naliczane dopiero po pozytywnej walidacji backendowej. `purchaseToken` nie jest przechowywany plaintext ani zwracany w API.
+Mobile tylko wyswietla saldo i koszt. Backend zawsze decyduje, czy konto ma wystarczajace saldo. Brak salda zwraca `402 insufficient_ai_credits`. Przy zakupie mobile uruchamia Google Play Billing, przekazuje Google nieosobowy identyfikator konta i wysyla `purchaseToken` do backendu; kredyty sa naliczane dopiero po pozytywnej walidacji backendowej. `purchaseToken` nie jest przechowywany plaintext ani zwracany w API.
 
 File provider zachowuje poprawne zachowanie dev w pojedynczym procesie, ale produkcyjne kredyty AI powinny uzywac Database/PostgreSQL. In-memory lock nie jest glownym zabezpieczeniem salda.
 
@@ -230,7 +240,12 @@ Backend odpowiada za:
 - favorite exercises sync,
 - workout sessions sync,
 - AI creator plan/rewrite jobs,
-- SMTP bug reports and password reset emails,
+- durable bug report storage with optional account linkage, idempotent intake, rate/size limits and a persistent SMTP retry worker,
+- authenticated Google Play RTDN inbox and known-purchase reconciliation,
+- optional admin bug-report API with immutable rewards and append-only audit events,
+- liveness/readiness probes, JSON production logs and automatic cleanup of expired security data,
+- schema-aware database readiness with a short cache and production startup
+  rejection when EF migrations are pending,
 - placeholder Garmin sync. Integracja Garmin pozostaje poza aktualnym zakresem prac.
 
 ## Testy
@@ -247,7 +262,7 @@ Pokryte obszary:
 - favorite exercises sync/tombstones,
 - workout sessions sync/tombstones,
 - AI creator auth i owner check,
-- bug reports.
+- bug reports, RTDN identity/idempotency, admin authorization/audit and production request hardening.
 
 Komenda:
 
@@ -276,7 +291,7 @@ Mobile ma też typecheck jako automatyczną kontrolę:
 npm --prefix apps/mobile run typecheck
 ```
 
-TODO: dodać mobile UI tests i E2E. File provider wymaga jeszcze osobnego smoke suite.
+Pozostaje dodać mobile UI tests i E2E. File-provider persistence and atomic replacement are covered by a dedicated backend test.
 
 ## Diagnostyka i logowanie
 
@@ -294,11 +309,12 @@ Globalny exception handler zwraca bezpieczny JSON:
 }
 ```
 
-Stack trace zostaje tylko w logach backendu. Logi requestów zawierają method, path, statusCode, elapsedMs i userId, jeśli został ustalony przez bearer token. Endpoint `/api/diagnostics` jest dostępny tylko w development/testing albo po jawnym włączeniu konfiguracją i nie pokazuje sekretów.
+Stack trace zostaje tylko w logach backendu. Logi requestów zawierają method, path, statusCode, elapsedMs i userId, jeśli został ustalony przez bearer token. Produkcja używa JSON console logs, a endpoint `/api/diagnostics` jest dostępny wyłącznie w development/testing. Liveness i readiness są rozdzielone na `/health/live` oraz `/health/ready`.
 
 Mobile ma lekki ring buffer diagnostyczny w pamięci. Zapisuje ostatnie zdarzenia API/UI oraz correlation ids bez haseł, bearer tokenów i reset tokenów. Bug reporty dołączają snapshot diagnostyczny, żeby powiązać zgłoszenie z logami backendu.
 
-TODO: dodać produkcyjną agregację logów i zewnętrzny crash/error monitoring, np. Sentry/Crashlytics.
+Produkcja emituje strukturalne JSON console logs. Pozostaje podłączyć wybrany
+collector oraz zewnętrzny mobile crash/error monitoring i skonfigurować alerty.
 
 ## Storage backendu
 
@@ -320,6 +336,7 @@ Przykładowe pliki:
 - `favorite-exercises.json`
 - `workout-sessions.json`
 - `workout-creator-jobs.json`
+- `bug-reports.json`
 
 ### Database provider
 
@@ -352,7 +369,9 @@ Database provider obejmuje glowne prywatne dane konta i moduly backendowe:
 - profile avatar metadata,
 - achievements and app usage stats,
 - AI credit accounts, ledger transactions and purchase records,
-- bug reports and diagnostics metadata where applicable.
+- bug reports with workflow, email-delivery, admin-response and immutable reward metadata,
+- Google Play RTDN inbox and admin audit events,
+- distributed abuse-rate buckets and ephemeral authentication artifacts covered by retention cleanup.
 
 Workout plans i workout sessions są w dużej części przechowywane jako JSON z metadanymi sync w osobnych kolumnach. To jest świadomy etap pośredni: najpierw trwałość i sync, potem ewentualna normalizacja.
 
@@ -430,20 +449,20 @@ Ngrok i Cloudflare są fallbackiem, ale GitHub Release jest preferowany, bo pobi
 ## Ograniczenia
 
 - Brak produkcyjnego hostingu DB.
-- Brak potwierdzania emaila, OAuth/social login i 2FA.
+- Brak OAuth/social login i 2FA; potwierdzanie emaila przed AI jest wdrożone.
 - Brak zaawansowanego UX konfliktów.
 - Brak backendowych statystyk progresu.
 - Garmin sync pozostaje placeholderem i jest poza aktualnym torem developmentu.
 - Brak CMS dla artykułów.
-- Backend ma testy integracyjne API dla krytycznych ścieżek; mobile ma unit tests dla krytycznych helperów; brakuje jeszcze pełnych mobile UI/E2E i osobnego smoke suite dla File provider.
+- Backend ma testy integracyjne API dla krytycznych ścieżek oraz test trwałości File provider; mobile ma unit tests dla krytycznych helperów. Brakuje jeszcze pełnych mobile UI/E2E.
 
 ## Najbliższe kroki techniczne
 
 1. Mobile UI tests i krytyczne E2E.
-2. Produkcyjny hosting DB.
-3. Monitoring błędów i logów produkcyjnych.
+2. Produkcyjny hosting PostgreSQL, harmonogram backupu i okresowy test restore.
+3. Podłączenie JSON logów i mobile crash reportingu do wybranego providera.
 4. UX konfliktów multi-device.
-5. Potwierdzanie emaila, OAuth/social login i 2FA jako osobne przyszłe etapy.
+5. OAuth/social login i 2FA jako osobne przyszłe etapy.
 6. Garmin integration pozostaje placeholderem i jest poza aktualnym zakresem prac.
 
 ## Achievements architecture note

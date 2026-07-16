@@ -232,6 +232,63 @@ public sealed class AuthHardeningTests : IClassFixture<GymminApiFactory>
         Assert.False(limiter.TryConsume("Login", key));
     }
 
+    [Fact]
+    public async Task Unverified_user_cannot_use_ai_and_can_confirm_owned_code()
+    {
+        using var client = _factory.CreateClient();
+        var users = _factory.Services.GetRequiredService<IUserStore>();
+        var registration = users.Register(new RegisterRequest($"verify-{Guid.NewGuid():N}@example.com", "pass1234", "Verify User"));
+        Assert.True(registration.Success);
+        Assert.False(registration.Response!.User.EmailVerified);
+        var verification = users.CreateEmailVerificationCode(registration.Response.User.Id);
+        Assert.NotNull(verification);
+
+        client.Authorize(registration.Response.Token);
+        var blocked = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
+            [new WorkoutCreatorQuestionAnswer("Goal", "Strength")], "en", null));
+        Assert.Equal(HttpStatusCode.Forbidden, blocked.StatusCode);
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync(
+            "/api/auth/email-verification/confirm", new EmailVerificationConfirmRequest("000000"))).StatusCode);
+        var confirmed = await client.PostAsJsonAsync(
+            "/api/auth/email-verification/confirm", new EmailVerificationConfirmRequest(verification!.Code));
+        Assert.Equal(HttpStatusCode.OK, confirmed.StatusCode);
+        Assert.True((await confirmed.Content.ReadFromJsonAsync<AuthUserResponse>())!.EmailVerified);
+    }
+
+    [Fact]
+    public void Production_abuse_limits_cover_registration_and_ai()
+    {
+        var limiter = new AuthRateLimiter(new ConfigurationBuilder().Build());
+        for (var attempt = 0; attempt < 10; attempt++) Assert.True(limiter.TryConsume("RegisterIp", "registration-client"));
+        Assert.False(limiter.TryConsume("RegisterIp", "registration-client"));
+        for (var attempt = 0; attempt < 10; attempt++) Assert.True(limiter.TryConsume("WorkoutCreatorUser", "verified-user"));
+        Assert.False(limiter.TryConsume("WorkoutCreatorUser", "verified-user"));
+        for (var attempt = 0; attempt < 5; attempt++) Assert.True(limiter.TryConsume("AccountDeletionUser", "delete-user"));
+        Assert.False(limiter.TryConsume("AccountDeletionUser", "delete-user"));
+        for (var attempt = 0; attempt < 10; attempt++) Assert.True(limiter.TryConsume("AvatarUploadUser", "avatar-user"));
+        Assert.False(limiter.TryConsume("AvatarUploadUser", "avatar-user"));
+    }
+
+    [Fact]
+    public void Database_rate_limit_is_shared_between_backend_instances()
+    {
+        var dbFactory = _factory.Services.GetRequiredService<IDbContextFactory<GymminDbContext>>();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Gymmin:Storage:Provider"] = "Database",
+            ["Gymmin:Auth:RateLimits:SharedSmoke:Limit"] = "2",
+            ["Gymmin:Auth:RateLimits:SharedSmoke:WindowMinutes"] = "5"
+        }).Build();
+        var firstInstance = new AuthRateLimiter(configuration, dbFactory);
+        var secondInstance = new AuthRateLimiter(configuration, dbFactory);
+        var key = $"shared-{Guid.NewGuid():N}";
+
+        Assert.True(firstInstance.TryConsume("SharedSmoke", key));
+        Assert.True(secondInstance.TryConsume("SharedSmoke", key));
+        Assert.False(firstInstance.TryConsume("SharedSmoke", key));
+    }
+
     private async Task MutateCurrentSessionAsync(string userId, Action<UserSessionEntity> mutate)
     {
         await using var scope = _factory.Services.CreateAsyncScope();

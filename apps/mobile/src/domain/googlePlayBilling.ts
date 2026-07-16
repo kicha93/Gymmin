@@ -58,17 +58,27 @@ export async function getAiCreditProducts(productIds: string[]): Promise<Billing
   });
 }
 
-export async function purchaseAiCreditPack(productId: string): Promise<BillingPurchase> {
+export function buildGooglePlayObfuscatedAccountId(userId: string): string {
+  const normalized = userId.trim().toLowerCase();
+  if (!/^[a-f0-9]{32}$/.test(normalized)) {
+    throw createBillingError("billing_account_id_invalid", "The signed-in account identifier is invalid.");
+  }
+
+  return `gymmin_${normalized}`;
+}
+
+export async function purchaseAiCreditPack(productId: string, userId: string): Promise<BillingPurchase> {
   const iap = getIapModule();
   if (!iap || Platform.OS !== "android") {
     throw createBillingError("billing_unavailable", "Google Play Billing is unavailable in this build.");
   }
 
+  const obfuscatedAccountId = buildGooglePlayObfuscatedAccountId(userId);
   await iap.initConnection?.();
   const result = await iap.requestPurchase?.({
     request: {
-      android: { skus: [productId] },
-      google: { skus: [productId] },
+      android: { obfuscatedAccountId, skus: [productId] },
+      google: { obfuscatedAccountId, skus: [productId] },
       ios: { sku: productId }
     },
     skus: [productId],

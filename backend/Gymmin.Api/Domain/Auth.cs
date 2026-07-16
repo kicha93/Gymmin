@@ -20,6 +20,10 @@ public sealed record PasswordResetConfirmRequest(
     string Token,
     string NewPassword);
 
+public sealed record EmailVerificationConfirmRequest(string Code);
+
+public sealed record DeleteAccountRequest(string Password);
+
 public sealed record LogoutAllRequest(
     bool ExceptCurrent);
 
@@ -30,7 +34,8 @@ public sealed record AuthUserResponse(
     string? AvatarUrl = null,
     DateTimeOffset? AvatarUpdatedAt = null,
     DateTimeOffset? CreatedOn = null,
-    DateTimeOffset? ModifiedOn = null);
+    DateTimeOffset? ModifiedOn = null,
+    bool EmailVerified = false);
 
 public sealed record AuthResponse(
     string Token,

@@ -50,6 +50,7 @@ Dane są w `backend/Gymmin.Api/App_Data`:
 - `user-achievements.json`
 - `user-app-usage-stats.json`
 - `workout-creator-jobs.json`
+- `bug-reports.json`
 - `avatars/` for profile avatar image files
 
 ### Database provider
@@ -275,6 +276,14 @@ Reset hasła jest dwuetapowy:
 2. `POST /api/auth/password-reset/confirm` przyjmuje token/kod resetu i nowe hasło.
 
 Reset token jest przechowywany wyłącznie jako hash. Po poprawnym resecie hasła wszystkie aktywne sesje użytkownika są unieważniane. Email resetu używa SMTP (`Auth:Smtp`, fallback do `BugReports:Smtp`). W testach używany jest fake sender. Deeplink resetu hasła jest TODO; mobile MVP pozwala ręcznie wkleić token/kod z emaila.
+
+Nowe konta otrzymują sześciocyfrowy kod weryfikacji emaila. Kod jest przechowywany wyłącznie jako hash, wygasa domyślnie po 30 minutach i może zostać potwierdzony tylko przez sesję tego samego konta przez `POST /api/auth/email-verification/confirm`. Do czasu potwierdzenia endpointy AI zwracają `403 email_not_verified`. Istniejące konta są oznaczane jako zweryfikowane podczas migracji. Mobile przechowuje bearer token w `expo-secure-store`; AsyncStorage zawiera wyłącznie cache profilu, a legacy token jest jednorazowo przenoszony i usuwany.
+
+Limity rejestracji i kreatora AI są liczone osobno per IP oraz per email/użytkownik. W Database provider liczniki są atomowo współdzielone przez tabelę `AbuseRateLimitBuckets`, dzięki czemu obowiązują pomiędzy replikami backendu. File provider używa lokalnego limitera wyłącznie jako fallback developerski.
+
+Usunięcie konta wymaga jednocześnie ważnej sesji i ponownego podania aktualnego hasła w body `DELETE /api/account` (`{ "password": "..." }`). Próby są limitowane per konto i IP; fraza `USUŃ`/`DELETE` pozostaje dodatkowym zabezpieczeniem UX, ale backend nie polega na niej jako dowodzie tożsamości.
+
+Warstwa HTTP nakłada limit 4 MiB na request domyślny, około 2 MiB na avatar, 64 KiB na zgłoszenie błędu i 512 KiB na AI. Synchronizacja ma osobne limity liczby elementów i częstotliwości per użytkownik. Produkcja używa allowlisty `Gymmin:Cors:AllowedOrigins`, HSTS, HTTPS redirect oraz nagłówków bezpieczeństwa API.
 
 ## Settings sync
 
@@ -614,12 +623,14 @@ Backend:
 - hashuje `purchaseToken` i nie zapisuje go plaintext w DB,
 - waliduje zakup przez Google Play Developer API,
 - sprawdza stan zakupu i dopasowanie produktu,
+- porownuje zwrocony przez Google `obfuscatedExternalAccountId` z zalogowanym
+  kontem, jezeli pole jest dostepne,
 - idempotentnie dodaje `AiCredits` transakcja `Purchase`,
 - po naliczeniu probuje wykonac server-side consume,
 - retry tego samego `purchaseToken` nie nalicza tokenow drugi raz,
 - ten sam `purchaseToken` u innego usera zwraca konflikt.
 
-Mobile uzywa `react-native-iap` oraz `react-native-nitro-modules` jako natywnego stacka Google Play Billing. Jezeli Billing/Play Store nie jest dostepny w danym buildzie lub na urzadzeniu, ekran `Kredyty` pokazuje kontrolowany fallback i nie crashuje aplikacji.
+Mobile uzywa `react-native-iap` oraz `react-native-nitro-modules` jako natywnego stacka Google Play Billing. Do zakupu przekazuje stabilny, nieosobowy identyfikator `gymmin_{userId}`, co pomaga Google wykrywac naduzycia i pozwala backendowi sprawdzic przypisanie zakupu. Jezeli Billing/Play Store nie jest dostepny w danym buildzie lub na urzadzeniu, ekran `Kredyty` pokazuje kontrolowany fallback i nie crashuje aplikacji.
 
 Success:
 
@@ -645,15 +656,21 @@ Duplicate/idempotent success:
 }
 ```
 
-Zakupy sa zapisywane w `AiCreditPurchases`. Tabela trzyma hash tokena zakupu, ostatnie znaki tokena do diagnostyki, `GoogleOrderId`, status przetwarzania i powiazana transakcje ledger. `purchaseToken` nie trafia do response, logow ani metadata transakcji.
+Zakupy sa zapisywane w `AiCreditPurchases`. Tabela trzyma hash tokena zakupu, ostatnie znaki tokena do diagnostyki, `GoogleOrderId`, status przetwarzania i powiazana transakcje ledger. `purchaseToken` nie trafia do response, logow ani metadata transakcji. Diagnostyczny JSON zwrocony przez Google jest sanitizowany przed zapisem: `purchaseToken` i `developerPayload` sa redagowane.
 
-TODO po 12B:
+Stan po 12B:
 
-- dodac Real-time Developer Notifications przez Google Pub/Sub,
-- obsluzyc refund/chargeback/cancel lifecycle z Google Play,
+- RTDN przez Google Pub/Sub jest obsługiwane przez uwierzytelniony push OIDC,
+- `messageId` jest idempotentny, package name jest walidowany, a jawny purchase token nie jest utrwalany,
+- znane zakupy są ponownie walidowane po RTDN; nieznane trafiają do inbox jako `unmatched`,
+- refund/chargeback jest cyklicznie uzgadniany przez Voided Purchases API z
+  trwalym checkpointem i oknem overlap,
+- znany zakup jest oznaczany jako `Voided`; worker odbiera tylko niewykorzystane
+  kredyty, nie tworzy ujemnego salda, a brakujaca kwote zapisuje jako
+  `UnrecoveredCredits` do obslugi administracyjnej,
 - wykonac manualny test w Play Console internal testing/license testers; kod, backend verify i AAB build sa gotowe, ale realny zakup wymaga konfiguracji Play Console i service account,
 - utrzymywac Android build smoke dla `react-native-iap` / `react-native-nitro-modules` po zmianach natywnych zaleznosci,
-- dodac CI/manual smoke dla produkcyjnej konfiguracji Google Play API.
+- wykonac manualny smoke produkcyjnej konfiguracji Google Play API, RTDN i refundu.
 
 ## AI creator jobs
 
@@ -688,10 +705,39 @@ Endpoint:
 POST /api/bug-reports
 ```
 
-Request zawiera tytuł, opis i kontekst urządzenia. Backend wysyła mail SMTP z tematem:
+Production contract:
+
+- request body is limited to 64 KiB,
+- the default rate limit is 10 submissions per reporter/IP per 60 minutes,
+- mobile sends a retry-stable `X-Idempotency-Key`; repeated delivery returns the original report id,
+- `202 Accepted` includes a working `Location`, readable at `GET /api/bug-reports/{id}` with owner scoping for linked reports,
+- SMTP is delivered asynchronously from a persistent lease-based outbox with five attempts and backoff,
+- account deletion removes both `ReporterUserId` and account identifiers nested in stored diagnostics,
+- `BugReportRewardTransactions` provides a unique, auditable one-reward-per-report ledger used by the admin API and future graphical panel.
+
+Request zawiera tytuł, opis i kontekst urządzenia. Backend najpierw zapisuje zgłoszenie w `bug-reports.json` (File provider) albo tabeli `BugReports` (Database provider), a następnie próbuje wysłać powiadomienie SMTP. Awaria SMTP nie usuwa zgłoszenia i nie zmienia przyjętego requestu w błąd `503`; rekord otrzymuje `EmailDeliveryStatus=failed`.
+
+Jeśli mobile wysyła poprawny bearer token, `ReporterUserId` jest ustalany po stronie backendu. Wartość autora nie jest przyjmowana z payloadu ani diagnostyki. Zgłoszenia anonimowe mają `ReporterUserId=null`. Usunięcie konta anonimizuje powiązanie, ale zachowuje raport.
+
+Rekord jest obsługiwany przez admin API i przygotowany pod przyszły graficzny panel; zawiera m.in.:
+
+- `Status` (początkowo `new`),
+- `AdminResponse` i `AdminRespondedAt`,
+- `RewardPoints` i `RewardedAt`,
+- `EmailDeliveryStatus` i bezpiecznie ograniczony opis błędu dostarczenia,
+- diagnostykę, daty utworzenia i aktualizacji.
+
+Backendowa warstwa administracyjna jest dostępna opcjonalnie pod `/api/admin/bug-reports`.
+Używa klucza przekazywanego w nagłówku, ale przechowuje w konfiguracji wyłącznie
+jego SHA256. Dostęp jest limitowany per IP; zmiany statusu, odpowiedzi i pojedyncza
+niezmienna nagroda są zapisywane razem z append-only `AdminAuditEvents`. Graficzny
+panel administratora pozostaje przyszłym klientem tych endpointów.
+
+Powiadomienie SMTP używa tematu:
 
 ```text
-Błąd {GUID}
+[Gymmin][Błąd] {Tytuł}
+[Gymmin][Bug] {Title}
 ```
 
 SMTP wymaga konfiguracji:
@@ -717,7 +763,7 @@ Etap 9A dodaje własny lekki fundament diagnostyczny, bez zewnętrznego SaaS:
 - global exception handler zwraca bezpieczny JSON `internal_error` z `correlationId` i nie ujawnia stack trace,
 - rate limit auth zwraca `429` z kodem `rate_limited`,
 - mobile trzyma ostatnie correlation ids i zdarzenia diagnostyczne w lekkim ring bufferze,
-- bug report dołącza diagnostic context: app/platform/screen/language/storage owner, ostatni API error, ostatnie correlation ids i ostatnie zdarzenia diagnostyczne.
+- bug report dołącza diagnostic context: app/platform/screen/language, ostatni API error, ostatnie correlation ids i ostatnie zdarzenia diagnostyczne; identyfikatory konta i storage owner nie są zapisywane.
 
 Format globalnego błędu 500:
 
@@ -731,9 +777,12 @@ Format globalnego błędu 500:
 }
 ```
 
-`GET /api/diagnostics` jest dostępny tylko w development/testing albo po ustawieniu `Gymmin:Diagnostics:Enabled=true`. Endpoint pokazuje status konfiguracji typu storage/OpenAI/SMTP i czas serwera, ale nie ujawnia sekretów, tokenów ani connection stringów.
+`GET /api/diagnostics` jest dostępny tylko w development/testing. Produkcja odmawia
+startu, jeżeli diagnostyka zostanie włączona. `/health/live` jest lekkim liveness,
+a `/health/ready` zwraca `503`, gdy skonfigurowana baza nie jest osiągalna.
 
-TODO: podłączyć produkcyjną agregację logów i zewnętrzny crash/error monitoring, np. Sentry/Crashlytics.
+Produkcja emituje JSON console logs. Pozostaje podłączenie wybranego collectora i
+mobile crash reportingu oraz weryfikacja alertów syntetycznych.
 
 ## Backend API tests
 
@@ -747,6 +796,13 @@ Uruchomienie:
 
 ```powershell
 dotnet test backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj
+```
+
+Opcjonalny smoke migracji na realnym PostgreSQL tworzy i usuwa wyłącznie tymczasową bazę:
+
+```powershell
+$env:GYMMIN_TEST_POSTGRES = "Host=localhost;Port=5432;Database=postgres;Username=...;Password=..."
+dotnet test backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj --filter FullyQualifiedName~PostgreSqlMigrationSmokeTests
 ```
 
 Testy używają `Microsoft.AspNetCore.Mvc.Testing` i izolowanego SQLite w trybie Database provider. Każdy test factory dostaje osobną tymczasową bazę danych. Testy nie używają produkcyjnego/dev `App_Data`.
@@ -764,11 +820,25 @@ Pokrycie:
 - favorite exercises GET/PUT/sync/tombstones/validation/user isolation,
 - workout sessions GET/PUT/DELETE/sync/tombstones/validation/limit/user isolation,
 - AI creator plan/rewrite auth i owner check,
-- bug reports success path i walidacja.
+- bug reports: trwały zapis, powiązanie autora z bearer tokena, zachowanie rekordu przy awarii SMTP, anonimizacja po usunięciu konta i walidacja,
+- account deletion z aktualnym hasłem, email verification i produkcyjne limity requestów,
+- Google Play RTDN OIDC/package/idempotency oraz brak jawnego purchase tokena,
+- admin bug reports: hashowany klucz, pojedyncza nagroda i audit event,
+- osobny liveness/readiness i bezpieczne correlation ids.
 
-TODO:
+Workflow `.github/workflows/production-gate.yml` uruchamia ten zestaw na release
+oraz realny smoke wszystkich migracji z PostgreSQL 16 service container.
 
-- File provider smoke tests,
+Readiness produkcyjny nie ogranicza sie do `CanConnect`. Backend sprawdza rowniez
+`GetPendingMigrations`, zwraca bezpieczne `schemaCurrent` i liczbe oczekujacych
+migracji, a Production z `RequireCurrentSchema=true` odmawia startu na nieaktualnym
+schemacie. Wynik readiness jest krotko cache'owany, aby czeste probe hostingu nie
+obciazaly bazy. Odpowiedzi `/api` domyslnie maja `no-store` i `no-cache`;
+jawnie prywatny cache z ETag, np. avatar, zachowuje polityke `private`.
+
+Pozostałe testy:
+
+- rozszerzenie File provider testów o symulowane awarie systemu plików,
 - rozszerzenie mobile unit tests poza aktualne helpery sync/local-first/reminders/diagnostics,
 - mobile UI/E2E.
 
@@ -784,9 +854,10 @@ To nadal placeholder. Nie ma jeszcze adaptera Garmin, OAuth Garmin ani eksportu 
 
 ## Ograniczenia
 
-- Brak resetu hasła.
-- Brak wygasania tokenów.
 - Brak produkcyjnego hostingu DB.
+- Brak wybranego zewnętrznego collectora logów i mobile crash reportingu.
+- Brak produkcyjnie uruchomionego harmonogramu backup/restore; worker Voided
+  Purchases jest gotowy w kodzie, ale wymaga wlaczenia i monitoringu na hostingu.
 - Brak zaawansowanego UX konfliktów.
 - Brak backendowych statystyk progresu.
 - Testy backend API pokrywają krytyczne ścieżki, ale nie mają jeszcze pełnego pokrycia wszystkich edge case'ów.

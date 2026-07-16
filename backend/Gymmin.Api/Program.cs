@@ -1,16 +1,60 @@
 using Gymmin.Api.Data;
 using Gymmin.Api.Domain;
 using Gymmin.Api.Services;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(180);
+});
+
+if (builder.Environment.IsProduction() && builder.Configuration.GetValue("Gymmin:Logging:JsonConsole", true))
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddJsonConsole(options =>
+    {
+        options.IncludeScopes = true;
+        options.UseUtcTimestamp = true;
+        options.TimestampFormat = "O";
+    });
+}
 
 var storage = GymminStorageConfigurationReader.Read(builder.Configuration);
 var storageProvider = storage.StorageProvider;
 var databaseProvider = storage.DatabaseProvider;
 var useDatabaseStorage = storage.UsesDatabase;
+var forwardedHeadersEnabled = builder.Configuration.GetValue("Gymmin:Proxy:ForwardedHeadersEnabled", false);
+var allowAnyCorsOrigin = builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing");
+var corsAllowedOrigins = builder.Configuration.GetSection("Gymmin:Cors:AllowedOrigins").Get<string[]>()
+    ?.Where(origin => Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https")
+    .Select(origin => origin.TrimEnd('/'))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray() ?? [];
+
+if (forwardedHeadersEnabled)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = Math.Clamp(builder.Configuration.GetValue("Gymmin:Proxy:ForwardLimit", 1), 1, 5);
+        foreach (var configuredProxy in builder.Configuration.GetSection("Gymmin:Proxy:KnownProxies").Get<string[]>() ?? [])
+        {
+            if (!IPAddress.TryParse(configuredProxy, out var proxyAddress))
+            {
+                throw new InvalidOperationException($"Gymmin:Proxy:KnownProxies contains an invalid IP address: {configuredProxy}");
+            }
+            options.KnownProxies.Add(proxyAddress);
+        }
+    });
+}
 
 if (useDatabaseStorage)
 {
@@ -26,7 +70,13 @@ if (useDatabaseStorage)
     builder.Services.AddSingleton<IAchievementStore, EfAchievementStore>();
     builder.Services.AddSingleton<IAiCreditService, EfAiCreditService>();
     builder.Services.AddSingleton<IAiCreditPurchaseService, EfAiCreditPurchaseService>();
+    builder.Services.AddSingleton<IBugReportStore, EfBugReportStore>();
     builder.Services.AddSingleton<IAccountDeletionService, EfAccountDeletionService>();
+    builder.Services.AddSingleton<DatabaseReadinessProbe>();
+    builder.Services.AddSingleton<DataRetentionWorker>();
+    builder.Services.AddHostedService(services => services.GetRequiredService<DataRetentionWorker>());
+    builder.Services.AddSingleton<GooglePlayVoidedPurchasesWorker>();
+    builder.Services.AddHostedService(services => services.GetRequiredService<GooglePlayVoidedPurchasesWorker>());
 }
 else
 {
@@ -39,29 +89,36 @@ else
     builder.Services.AddSingleton<IAchievementStore, FileBackedAchievementStore>();
     builder.Services.AddSingleton<IAiCreditService, FileBackedAiCreditService>();
     builder.Services.AddSingleton<IAiCreditPurchaseService, FileBackedAiCreditPurchaseService>();
+    builder.Services.AddSingleton<IBugReportStore, FileBackedBugReportStore>();
     builder.Services.AddSingleton<IAccountDeletionService, FileBackedAccountDeletionService>();
 }
 
 builder.Services.Configure<AiCreditsOptions>(builder.Configuration.GetSection("Gymmin:AiCredits"));
 builder.Services.Configure<GooglePlayOptions>(builder.Configuration.GetSection("Gymmin:GooglePlay"));
-builder.Services.AddHttpClient<IWorkoutPlanGenerator, OpenAiWorkoutPlanGenerator>();
-builder.Services.AddHttpClient<IGooglePlayPurchaseValidator, GooglePlayPurchaseValidator>();
+var externalHttpTimeout = TimeSpan.FromSeconds(Math.Clamp(
+    builder.Configuration.GetValue("Gymmin:Security:ExternalHttpTimeoutSeconds", 120), 10, 300));
+builder.Services.AddHttpClient<IWorkoutPlanGenerator, OpenAiWorkoutPlanGenerator>(client => client.Timeout = externalHttpTimeout);
+builder.Services.AddHttpClient<IGooglePlayPurchaseValidator, GooglePlayPurchaseValidator>(client => client.Timeout = externalHttpTimeout);
+builder.Services.AddSingleton<IPubSubOidcTokenValidator, GooglePubSubOidcTokenValidator>();
+builder.Services.AddSingleton<GooglePlayRtdnService>();
 builder.Services.AddSingleton<IBugReportEmailSender, SmtpBugReportEmailSender>();
+builder.Services.AddHostedService<BugReportEmailDeliveryWorker>();
 builder.Services.AddSingleton<IPasswordResetEmailSender, SmtpPasswordResetEmailSender>();
+builder.Services.AddSingleton<IEmailVerificationEmailSender, SmtpEmailVerificationEmailSender>();
 builder.Services.AddSingleton<IUserAvatarStorage, FileSystemUserAvatarStorage>();
 builder.Services.AddSingleton<AuthRateLimiter>();
+builder.Services.AddSingleton<AdminBugReportService>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
 });
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("mobile-dev", policy =>
+    options.AddPolicy("app", policy =>
     {
-        policy
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowAnyOrigin();
+        policy.AllowAnyHeader().AllowAnyMethod();
+        if (allowAnyCorsOrigin) policy.AllowAnyOrigin();
+        else if (corsAllowedOrigins.Length > 0) policy.WithOrigins(corsAllowedOrigins);
     });
 });
 builder.Services.AddEndpointsApiExplorer();
@@ -69,14 +126,61 @@ builder.Services.AddEndpointsApiExplorer();
 var app = builder.Build();
 var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
 
+if (forwardedHeadersEnabled)
+{
+    app.UseForwardedHeaders();
+}
+
+if (app.Environment.IsProduction())
+{
+    app.UseHsts();
+    if (app.Configuration.GetValue("Gymmin:Security:HttpsRedirectionEnabled", true)) app.UseHttpsRedirection();
+}
+
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+        context.Response.Headers.TryAdd("X-Frame-Options", "DENY");
+        context.Response.Headers.TryAdd("Referrer-Policy", "no-referrer");
+        context.Response.Headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+        context.Response.Headers.TryAdd("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
+        context.Response.Headers.TryAdd("Cross-Origin-Resource-Policy", "same-site");
+        context.Response.Headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");
+        if (context.Request.Path.StartsWithSegments("/api") &&
+            string.IsNullOrWhiteSpace(context.Response.Headers.CacheControl))
+        {
+            context.Response.Headers.CacheControl = "no-store";
+            context.Response.Headers.Pragma = "no-cache";
+        }
+        return Task.CompletedTask;
+    });
+    try
+    {
+        await next();
+    }
+    catch (BadHttpRequestException error) when (error.StatusCode == StatusCodes.Status413PayloadTooLarge && !context.Response.HasStarted)
+    {
+        context.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
+        await context.Response.WriteAsJsonAsync(new { error = "Request payload is too large." });
+    }
+});
+
 if (app.Environment.IsProduction() && app.Configuration.GetValue("Gymmin:Storage:ApplyMigrationsOnStartup", false))
 {
-    startupLogger.LogWarning("ApplyMigrationsOnStartup is enabled in Production. Prefer running migrations explicitly before deployment.");
+    throw new InvalidOperationException("ApplyMigrationsOnStartup must be false in Production. Run migrations as an explicit deployment step.");
 }
 
 if (app.Environment.IsProduction() && app.Configuration.GetValue("Gymmin:Diagnostics:Enabled", false))
 {
-    startupLogger.LogWarning("Diagnostics endpoint is explicitly enabled in Production. Ensure access is protected.");
+    throw new InvalidOperationException("Gymmin:Diagnostics:Enabled must be false in Production.");
+}
+
+if (app.Environment.IsProduction() && app.Configuration.GetValue("Gymmin:Security:EnforcePostgreSqlProduction", true) &&
+    (!useDatabaseStorage || !string.Equals(databaseProvider, "PostgreSQL", StringComparison.OrdinalIgnoreCase)))
+{
+    throw new InvalidOperationException("Production requires Gymmin Storage Provider=Database and DatabaseProvider=PostgreSQL.");
 }
 
 if (string.IsNullOrWhiteSpace(app.Configuration["BugReports:Smtp:Host"]) ||
@@ -85,10 +189,30 @@ if (string.IsNullOrWhiteSpace(app.Configuration["BugReports:Smtp:Host"]) ||
     startupLogger.LogWarning("Bug report SMTP configuration is incomplete. Bug report email delivery may fail.");
 }
 
-var openAiConfiguredAtStartup = !string.IsNullOrWhiteSpace(app.Configuration["OpenAI:ApiKey"]) ||
-    !string.IsNullOrWhiteSpace(app.Configuration["OpenAi:ApiKey"]) ||
-    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
-if (!openAiConfiguredAtStartup)
+var authSmtpConfigured = HasSmtpCredentials(app.Configuration, "Auth:Smtp") ||
+    HasSmtpCredentials(app.Configuration, "BugReports:Smtp");
+if (app.Environment.IsProduction() && !authSmtpConfigured)
+{
+    throw new InvalidOperationException("Email verification is required in Production, but Auth:Smtp (or the BugReports:Smtp fallback) is not fully configured.");
+}
+if (!authSmtpConfigured)
+{
+    startupLogger.LogWarning("Authentication SMTP configuration is incomplete. Verification and password-reset emails cannot be delivered.");
+}
+
+var openAiConfiguredAtStartup = !string.IsNullOrWhiteSpace(OpenAiConfiguration.GetApiKey(app.Configuration));
+var aiEnabled = app.Configuration.GetValue("Gymmin:Features:AiEnabled", true);
+if (app.Environment.IsProduction() && aiEnabled && !openAiConfiguredAtStartup)
+{
+    throw new InvalidOperationException("AI is enabled in Production, but the OpenAI API key is missing.");
+}
+if (app.Environment.IsProduction() && app.Configuration.GetValue("Gymmin:AiCredits:DevGrantEnabled", true))
+{
+    throw new InvalidOperationException("Gymmin:AiCredits:DevGrantEnabled must be false in Production.");
+}
+ValidateGooglePlayProductionConfiguration(app.Environment, app.Configuration);
+ValidateAdminProductionConfiguration(app.Environment, app.Configuration);
+if (aiEnabled && !openAiConfiguredAtStartup)
 {
     startupLogger.LogWarning("OpenAI API key is not configured. Workout creator jobs will fail until configured.");
 }
@@ -107,14 +231,45 @@ if (useDatabaseStorage)
     {
         await scope.ServiceProvider.GetRequiredService<AppDataDatabaseImporter>().ImportAsync();
     }
+
+    if (app.Environment.IsProduction() &&
+        app.Configuration.GetValue("Gymmin:Storage:RequireCurrentSchema", true))
+    {
+        var database = await app.Services.GetRequiredService<DatabaseReadinessProbe>().CheckAsync(forceRefresh: true);
+        if (database.CanConnect != true)
+            throw new InvalidOperationException("Production database is unavailable during startup readiness validation.");
+        if (database.SchemaCurrent != true)
+            throw new InvalidOperationException($"Production database has {database.PendingMigrationCount ?? 0} pending EF migration(s). Apply migrations before starting the API.");
+    }
 }
 
-app.UseCors("mobile-dev");
+app.UseCors("app");
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ApiExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestDiagnosticsLoggingMiddleware>();
+app.Use(async (context, next) =>
+{
+    var maxRequestBytes = GetMaxRequestBodyBytes(context.Request.Path, app.Configuration);
+    var sizeFeature = context.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpMaxRequestBodySizeFeature>();
+    if (sizeFeature is { IsReadOnly: false }) sizeFeature.MaxRequestBodySize = maxRequestBytes;
+    if (context.Request.ContentLength > maxRequestBytes)
+    {
+        context.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
+        await context.Response.WriteAsJsonAsync(new { error = "Request payload is too large." });
+        return;
+    }
+    await next();
+});
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/health/ready", async (IServiceProvider services, ILogger<Program> logger) =>
+{
+    var database = await GetDatabaseHealthAsync(useDatabaseStorage, services, logger);
+    return !IsDatabaseReady(database)
+        ? Results.Json(new { status = "not_ready" }, statusCode: StatusCodes.Status503ServiceUnavailable)
+        : Results.Ok(new { status = "ready" });
+});
 app.MapGet("/api/system/status", (IConfiguration configuration) =>
 {
     var kind = SystemStatusKinds.Normalize(configuration["SystemStatus:Kind"]);
@@ -129,13 +284,20 @@ app.MapGet("/api/system/status", (IConfiguration configuration) =>
             string.IsNullOrWhiteSpace(messageEn) ? null : messageEn) : null,
         DateTimeOffset.UtcNow));
 });
-app.MapGet("/api/health", async (IServiceProvider services, ILogger<Program> logger) => Results.Ok(new
+app.MapGet("/api/health", async (IServiceProvider services, ILogger<Program> logger) =>
 {
-    status = "ok",
-    storageProvider,
-    databaseProvider = useDatabaseStorage ? databaseProvider : null,
-    database = await GetDatabaseHealthAsync(useDatabaseStorage, services, logger)
-}));
+    var database = await GetDatabaseHealthAsync(useDatabaseStorage, services, logger);
+    var response = new
+    {
+        status = IsDatabaseReady(database) ? "ok" : "not_ready",
+        storageProvider,
+        databaseProvider = useDatabaseStorage ? databaseProvider : null,
+        database
+    };
+    return !IsDatabaseReady(database)
+        ? Results.Json(response, statusCode: StatusCodes.Status503ServiceUnavailable)
+        : Results.Ok(response);
+});
 app.MapGet("/api/diagnostics", async (HttpRequest request, IWebHostEnvironment environment, IConfiguration configuration, IUserStore users, IServiceProvider services, ILogger<Program> logger) =>
 {
     var enabled = environment.IsDevelopment() ||
@@ -152,9 +314,7 @@ app.MapGet("/api/diagnostics", async (HttpRequest request, IWebHostEnvironment e
         return Results.Unauthorized();
     }
 
-    var openAiConfigured = !string.IsNullOrWhiteSpace(configuration["OpenAI:ApiKey"]) ||
-        !string.IsNullOrWhiteSpace(configuration["OpenAi:ApiKey"]) ||
-        !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+    var openAiConfigured = !string.IsNullOrWhiteSpace(OpenAiConfiguration.GetApiKey(configuration));
     var smtpConfigured = !string.IsNullOrWhiteSpace(configuration["BugReports:Smtp:Host"]) &&
         !string.IsNullOrWhiteSpace(configuration["BugReports:Smtp:Username"]);
 
@@ -179,9 +339,28 @@ if (app.Environment.IsEnvironment("Testing"))
     });
 }
 
-app.MapPost("/api/auth/register", (RegisterRequest body, HttpRequest request, IUserStore users) =>
+app.MapPost("/api/auth/register", async (RegisterRequest body, HttpRequest request, IUserStore users, IEmailVerificationEmailSender emailSender, AuthRateLimiter rateLimiter, IWebHostEnvironment environment, ILogger<Program> logger, CancellationToken cancellationToken) =>
 {
+    if (!rateLimiter.TryConsume("RegisterIp", AuthRateLimiter.BuildKey(GetClientIpAddress(request))) ||
+        !rateLimiter.TryConsume("RegisterEmail", AuthRateLimiter.BuildKey(body.Email))) return RateLimited(request);
     var result = users.Register(body, GetAuthMetadata(request));
+    if (result.Success && result.Response is { } response)
+    {
+        var verification = users.CreateEmailVerificationCode(response.User.Id);
+        if (verification is not null)
+        {
+            if (environment.IsEnvironment("Testing"))
+            {
+                var verifiedUser = users.ConfirmEmailVerification(response.User.Id, verification.Code);
+                if (verifiedUser is not null) result = result with { Response = new AuthResponse(response.Token, verifiedUser) };
+            }
+            else
+            {
+                try { await emailSender.SendAsync(verification.Email, verification.Code, verification.ExpiresAt, cancellationToken); }
+                catch (Exception error) { logger.LogWarning(error, "Registration verification email could not be sent."); }
+            }
+        }
+    }
     return result.Success
         ? Results.Ok(result.Response)
         : Results.Json(new { error = result.Error }, statusCode: result.StatusCode);
@@ -214,7 +393,6 @@ app.MapGet("/api/profile/avatar", (HttpRequest request, IUserStore users, IUserA
     {
         return Results.Unauthorized();
     }
-
     var avatar = users.GetAvatarMetadata(context.User.Id);
     if (avatar is null)
     {
@@ -235,6 +413,7 @@ app.MapPost("/api/profile/avatar", async (
     HttpRequest request,
     IUserStore users,
     IUserAvatarStorage avatars,
+    AuthRateLimiter rateLimiter,
     CancellationToken cancellationToken) =>
 {
     var context = GetBearerSession(request, users);
@@ -242,6 +421,7 @@ app.MapPost("/api/profile/avatar", async (
     {
         return Results.Unauthorized();
     }
+    if (!rateLimiter.TryConsume("AvatarUploadUser", AuthRateLimiter.BuildKey(context.User.Id))) return RateLimited(request);
 
     if (!request.HasFormContentType)
     {
@@ -279,12 +459,19 @@ app.MapDelete("/api/profile/avatar", (HttpRequest request, IUserStore users, IUs
     return Results.Ok(new { avatarUrl = (string?)null, avatarUpdatedAt = (DateTimeOffset?)null });
 });
 
-app.MapDelete("/api/account", (HttpRequest request, IUserStore users, IAccountDeletionService accountDeletion) =>
+app.MapDelete("/api/account", ([FromBody] DeleteAccountRequest? body, HttpRequest request, IUserStore users, IAccountDeletionService accountDeletion, AuthRateLimiter rateLimiter) =>
 {
     var context = GetBearerSession(request, users);
     if (context is null)
     {
         return Results.Unauthorized();
+    }
+
+    if (!rateLimiter.TryConsume("AccountDeletionUser", AuthRateLimiter.BuildKey(context.User.Id)) ||
+        !rateLimiter.TryConsume("AccountDeletionIp", AuthRateLimiter.BuildKey(GetClientIpAddress(request)))) return RateLimited(request);
+    if (!users.VerifyPassword(context.User.Id, body?.Password ?? ""))
+    {
+        return Results.Json(new { error = new { code = "invalid_credentials", message = "Current password is invalid." } }, statusCode: StatusCodes.Status403Forbidden);
     }
 
     return accountDeletion.DeleteAccount(context.User.Id)
@@ -401,6 +588,33 @@ app.MapPost("/api/auth/password-reset/confirm", (PasswordResetConfirmRequest bod
         : Results.Json(new { error = result.Error }, statusCode: result.StatusCode);
 });
 
+app.MapPost("/api/auth/email-verification/request", async (HttpRequest request, IUserStore users, IEmailVerificationEmailSender emailSender, AuthRateLimiter rateLimiter, ILogger<Program> logger, CancellationToken cancellationToken) =>
+{
+    var context = GetBearerSession(request, users);
+    if (context is null) return Results.Unauthorized();
+    if (context.User.EmailVerified) return Results.NoContent();
+    if (!rateLimiter.TryConsume("EmailVerificationRequestUser", AuthRateLimiter.BuildKey(context.User.Id)) ||
+        !rateLimiter.TryConsume("EmailVerificationRequestIp", AuthRateLimiter.BuildKey(GetClientIpAddress(request)))) return RateLimited(request);
+    var verification = users.CreateEmailVerificationCode(context.User.Id);
+    if (verification is not null)
+    {
+        try { await emailSender.SendAsync(verification.Email, verification.Code, verification.ExpiresAt, cancellationToken); }
+        catch (Exception error) { logger.LogWarning(error, "Verification email could not be sent."); }
+    }
+    return Results.NoContent();
+});
+
+app.MapPost("/api/auth/email-verification/confirm", (EmailVerificationConfirmRequest body, HttpRequest request, IUserStore users, AuthRateLimiter rateLimiter) =>
+{
+    var context = GetBearerSession(request, users);
+    if (context is null) return Results.Unauthorized();
+    if (!rateLimiter.TryConsume("EmailVerificationConfirmUser", AuthRateLimiter.BuildKey(context.User.Id)) ||
+        !rateLimiter.TryConsume("EmailVerificationConfirmIp", AuthRateLimiter.BuildKey(GetClientIpAddress(request)))) return RateLimited(request);
+    if (string.IsNullOrWhiteSpace(body.Code) || body.Code.Trim().Length != 6) return Results.BadRequest(new { error = "Invalid verification code." });
+    var user = users.ConfirmEmailVerification(context.User.Id, body.Code.Trim());
+    return user is null ? Results.BadRequest(new { error = "Invalid or expired verification code." }) : Results.Ok(user);
+});
+
 app.MapGet("/api/settings", (HttpRequest request, IUserStore users, IUserSettingsStore settingsStore) =>
 {
     var userId = GetUserId(request, users);
@@ -424,6 +638,9 @@ app.MapPut("/api/settings", (
     {
         return Results.Unauthorized();
     }
+
+    var validationError = ValidateUserSettings(body);
+    if (validationError is not null) return Results.BadRequest(new { error = validationError });
 
     return Results.Ok(settingsStore.Upsert(userId, body));
 });
@@ -523,13 +740,17 @@ workouts.MapPost("/{clientWorkoutId}/garmin-sync", (string clientWorkoutId, Http
     });
 });
 
-app.MapPost("/api/sync/workouts", (SyncWorkoutsRequest body, HttpRequest request, IWorkoutStore store, IUserStore users) =>
+app.MapPost("/api/sync/workouts", (SyncWorkoutsRequest body, HttpRequest request, IWorkoutStore store, IUserStore users, AuthRateLimiter rateLimiter) =>
 {
     var userId = GetUserId(request, users);
     if (userId is null)
     {
         return Results.Unauthorized();
     }
+
+    if (!rateLimiter.TryConsume("DataSyncUser", AuthRateLimiter.BuildKey(userId))) return RateLimited(request);
+    var validationError = ValidateWorkoutSync(body);
+    if (validationError is not null) return Results.BadRequest(new { error = validationError });
 
     return Results.Ok(store.Sync(userId, body));
 });
@@ -570,13 +791,16 @@ app.MapPost("/api/sync/favorite-exercises", (
     SyncFavoriteExercisesRequest body,
     HttpRequest request,
     IFavoriteExerciseStore store,
-    IUserStore users) =>
+    IUserStore users,
+    AuthRateLimiter rateLimiter) =>
 {
     var userId = GetBearerUserId(request, users);
     if (userId is null)
     {
         return Results.Unauthorized();
     }
+
+    if (!rateLimiter.TryConsume("DataSyncUser", AuthRateLimiter.BuildKey(userId))) return RateLimited(request);
 
     var validationError = ValidateFavoriteExercises(body.Favorites, body.DeletedExerciseIds);
     if (validationError is not null)
@@ -663,13 +887,16 @@ app.MapPost("/api/sync/workout-sessions", (
     SyncWorkoutSessionsRequest body,
     HttpRequest request,
     IWorkoutSessionStore store,
-    IUserStore users) =>
+    IUserStore users,
+    AuthRateLimiter rateLimiter) =>
 {
     var userId = GetBearerUserId(request, users);
     if (userId is null)
     {
         return Results.Unauthorized();
     }
+
+    if (!rateLimiter.TryConsume("DataSyncUser", AuthRateLimiter.BuildKey(userId))) return RateLimited(request);
 
     var validationError = ValidateWorkoutSessionSync(body);
     if (validationError is not null)
@@ -695,13 +922,16 @@ app.MapPost("/api/sync/achievements", (
     SyncAchievementsRequest body,
     HttpRequest request,
     IAchievementStore store,
-    IUserStore users) =>
+    IUserStore users,
+    AuthRateLimiter rateLimiter) =>
 {
     var userId = GetBearerUserId(request, users);
     if (userId is null)
     {
         return Results.Unauthorized();
     }
+
+    if (!rateLimiter.TryConsume("DataSyncUser", AuthRateLimiter.BuildKey(userId))) return RateLimited(request);
 
     var validationError = ValidateAchievementsSync(body);
     if (validationError is not null)
@@ -823,23 +1053,44 @@ aiCredits.MapPost("/purchases/google-play/verify", async (
     return Results.BadRequest(error);
 });
 
+app.MapPost("/api/integrations/google-play/rtdn", async (
+    PubSubPushEnvelope? body,
+    HttpRequest request,
+    GooglePlayRtdnService service,
+    CancellationToken cancellationToken) =>
+{
+    var result = await service.ReceiveAsync(request.Headers.Authorization.ToString(), body, cancellationToken);
+    return result.StatusCode == StatusCodes.Status204NoContent
+        ? Results.NoContent()
+        : Results.Json(new { error = result.ErrorCode }, statusCode: result.StatusCode);
+});
+
 app.MapPost("/api/workout-creator/plan", (
     CreateWorkoutPlanRequest body,
     HttpRequest request,
     IUserStore users,
     IWorkoutPlanJobStore jobs,
     IConfiguration configuration,
+    AuthRateLimiter rateLimiter,
     ILogger<Program> logger) =>
 {
-    var userId = GetBearerUserId(request, users);
-    if (userId is null)
+    var context = GetBearerSession(request, users);
+    if (context is null)
     {
         return Results.Unauthorized();
     }
+    var userId = context.User.Id;
+    if (!context.User.EmailVerified) return EmailVerificationRequired(request);
+    if (!rateLimiter.TryConsume("WorkoutCreatorUser", AuthRateLimiter.BuildKey(userId)) ||
+        !rateLimiter.TryConsume("WorkoutCreatorIp", AuthRateLimiter.BuildKey(GetClientIpAddress(request)))) return RateLimited(request);
 
-    if (body.QuestionsAndAnswers is null || body.QuestionsAndAnswers.Count == 0)
+    if (body.QuestionsAndAnswers is null || body.QuestionsAndAnswers.Count is 0 or > 30 ||
+        body.QuestionsAndAnswers.Any(item => item is null ||
+            string.IsNullOrWhiteSpace(item.Question) ||
+            item.Question.Length > 1_000 ||
+            (item.Answer?.Length ?? 0) > 2_000))
     {
-        return Results.BadRequest(new { error = "QuestionsAndAnswers is required." });
+        return Results.BadRequest(new { error = "QuestionsAndAnswers is invalid or too large." });
     }
 
     var cost = Math.Max(0, configuration.GetValue("Gymmin:AiCredits:PlanCost", 1));
@@ -874,15 +1125,20 @@ app.MapPost("/api/workout-creator/rewrite", (
     IUserStore users,
     IWorkoutPlanJobStore jobs,
     IConfiguration configuration,
+    AuthRateLimiter rateLimiter,
     ILogger<Program> logger) =>
 {
-    var userId = GetBearerUserId(request, users);
-    if (userId is null)
+    var context = GetBearerSession(request, users);
+    if (context is null)
     {
         return Results.Unauthorized();
     }
+    var userId = context.User.Id;
+    if (!context.User.EmailVerified) return EmailVerificationRequired(request);
+    if (!rateLimiter.TryConsume("WorkoutCreatorUser", AuthRateLimiter.BuildKey(userId)) ||
+        !rateLimiter.TryConsume("WorkoutCreatorIp", AuthRateLimiter.BuildKey(GetClientIpAddress(request)))) return RateLimited(request);
 
-    if (string.IsNullOrWhiteSpace(body.Instruction))
+    if (string.IsNullOrWhiteSpace(body.Instruction) || body.Instruction.Length > 2_000)
     {
         return Results.BadRequest(new { error = "Instruction is required." });
     }
@@ -891,6 +1147,7 @@ app.MapPost("/api/workout-creator/rewrite", (
     {
         return Results.BadRequest(new { error = "Workout is required." });
     }
+    if (body.Workout.GetRawText().Length > 100_000) return Results.BadRequest(new { error = "Workout is too large." });
 
     var cost = Math.Max(0, configuration.GetValue("Gymmin:AiCredits:RewriteCost", 1));
     var idempotencyKey = GetIdempotencyKey(request);
@@ -953,31 +1210,73 @@ app.MapGet("/api/workout-creator/jobs/{jobId}", (
     return job is null ? Results.NotFound(new { error = "Workout creator job not found." }) : Results.Ok(job);
 });
 
-app.MapPost("/api/bug-reports", async (
+app.MapPost("/api/bug-reports", (
     CreateBugReportRequest body,
-    IBugReportEmailSender emailSender,
-    ILogger<Program> logger,
-    CancellationToken cancellationToken) =>
+    HttpRequest request,
+    IUserStore users,
+    IBugReportStore reports,
+    AuthRateLimiter rateLimiter,
+    ILogger<Program> logger) =>
 {
+    var reporterUserId = GetBearerUserId(request, users);
+    if (!rateLimiter.TryConsume("BugReport", AuthRateLimiter.BuildKey(reporterUserId ?? GetClientIpAddress(request))))
+    {
+        return RateLimited(request);
+    }
+
     var validationError = ValidateBugReport(body);
     if (validationError is not null)
     {
         return Results.BadRequest(new { error = validationError });
     }
 
-    var reportId = Guid.NewGuid();
-
+    BugReportCreateResult created;
     try
     {
-        await emailSender.SendAsync(reportId, body, cancellationToken);
-        logger.LogInformation("Bug report {ReportId} accepted. Screen={Screen} Language={Language}", reportId, body.Screen, body.Language);
-        return Results.Accepted($"/api/bug-reports/{reportId}", new BugReportResponse(reportId, "sent"));
+        created = reports.CreateOrGet(Guid.NewGuid(), GetIdempotencyKey(request), reporterUserId, body);
     }
-    catch (InvalidOperationException error)
+    catch (InvalidBugReportIdempotencyKeyException)
     {
-        logger.LogWarning(error, "Bug report {ReportId} could not be sent because SMTP is not configured.", reportId);
-        return Results.Problem(error.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
+        return Results.BadRequest(new ApiErrorResponse(new ApiError(
+            "invalid_idempotency_key",
+            $"X-Idempotency-Key must be {BugReportStoreMapper.MaxIdempotencyKeyLength} characters or fewer.",
+            DiagnosticsContext.GetCorrelationId(request.HttpContext))));
     }
+
+    logger.LogInformation("Bug report {ReportId} {Action}. Screen={Screen} Language={Language}", created.Report.Id, created.Created ? "stored" : "deduplicated", body.Screen, body.Language);
+    return Results.Accepted($"/api/bug-reports/{created.Report.Id}", new BugReportResponse(
+        created.Report.Id, "received", created.Report.EmailDeliveryStatus));
+});
+
+app.MapGet("/api/bug-reports/{reportId:guid}", (Guid reportId, HttpRequest request, IUserStore users, IBugReportStore reports) =>
+{
+    var report = reports.Get(reportId);
+    if (report is null) return Results.NotFound();
+    var userId = GetBearerUserId(request, users);
+    if (report.ReporterUserId is not null && report.ReporterUserId != userId) return Results.NotFound();
+    return Results.Ok(new BugReportStatusResponse(report.Id, report.Status, report.EmailDeliveryStatus,
+        report.ReporterUserId is null ? null : report.AdminResponse,
+        report.ReporterUserId is null ? null : report.AdminRespondedAt,
+        report.RewardPoints, report.RewardedAt, report.CreatedAt, report.UpdatedAt));
+});
+
+app.MapGet("/api/admin/bug-reports", async (int? skip, int? take, HttpRequest request, AdminBugReportService admin,
+    AuthRateLimiter rateLimiter, CancellationToken cancellationToken) =>
+{
+    if (!rateLimiter.TryConsume("AdminAuthIp", AuthRateLimiter.BuildKey(GetClientIpAddress(request)))) return RateLimited(request);
+    if (!admin.TryAuthenticate(request.Headers["X-Gymmin-Admin-Key"].ToString(), out _)) return Results.NotFound();
+    return Results.Ok(await admin.ListAsync(skip ?? 0, take ?? 50, cancellationToken));
+});
+
+app.MapPut("/api/admin/bug-reports/{reportId:guid}", async (Guid reportId, AdminBugReportUpdateRequest body,
+    HttpRequest request, AdminBugReportService admin, AuthRateLimiter rateLimiter, CancellationToken cancellationToken) =>
+{
+    if (!rateLimiter.TryConsume("AdminAuthIp", AuthRateLimiter.BuildKey(GetClientIpAddress(request)))) return RateLimited(request);
+    if (!admin.TryAuthenticate(request.Headers["X-Gymmin-Admin-Key"].ToString(), out var actorKeyId)) return Results.NotFound();
+    var result = await admin.UpdateAsync(reportId, body, actorKeyId, DiagnosticsContext.GetCorrelationId(request.HttpContext), cancellationToken);
+    return result.StatusCode == StatusCodes.Status200OK
+        ? Results.Ok(result.Report)
+        : Results.Json(new { error = result.ErrorCode }, statusCode: result.StatusCode);
 });
 
 app.Run();
@@ -1054,26 +1353,79 @@ static AuthRequestMetadata GetAuthMetadata(HttpRequest request)
 static string? GetClientIpAddress(HttpRequest request) =>
     request.HttpContext.Connection.RemoteIpAddress?.ToString();
 
-static async Task<object> GetDatabaseHealthAsync(bool useDatabaseStorage, IServiceProvider services, ILogger logger)
+static bool HasSmtpCredentials(IConfiguration configuration, string section) =>
+    !string.IsNullOrWhiteSpace(configuration[$"{section}:Host"]) &&
+    !string.IsNullOrWhiteSpace(configuration[$"{section}:Username"]) &&
+    !string.IsNullOrWhiteSpace(configuration[$"{section}:Password"]);
+
+static void ValidateGooglePlayProductionConfiguration(IWebHostEnvironment environment, IConfiguration configuration)
+{
+    if (!environment.IsProduction() || !configuration.GetValue("Gymmin:GooglePlay:Enabled", false)) return;
+    if (!configuration.GetValue("Gymmin:GooglePlay:ValidatePurchases", true) ||
+        !configuration.GetValue("Gymmin:GooglePlay:ConsumePurchases", true))
+        throw new InvalidOperationException("Production Google Play must validate and consume purchases on the backend.");
+    if (string.IsNullOrWhiteSpace(configuration["Gymmin:GooglePlay:PackageName"]))
+        throw new InvalidOperationException("Production Google Play PackageName is missing.");
+
+    var base64 = configuration["Gymmin:GooglePlay:ServiceAccountJsonBase64"];
+    var path = configuration["Gymmin:GooglePlay:ServiceAccountJsonPath"];
+    if (string.IsNullOrWhiteSpace(base64) && (string.IsNullOrWhiteSpace(path) || !File.Exists(path)))
+        throw new InvalidOperationException("Production Google Play service-account credentials are missing.");
+    try
+    {
+        var credentialsJson = !string.IsNullOrWhiteSpace(base64)
+            ? Encoding.UTF8.GetString(Convert.FromBase64String(base64))
+            : File.ReadAllText(path!);
+        using var credentials = JsonDocument.Parse(credentialsJson);
+        var root = credentials.RootElement;
+        if (!root.TryGetProperty("client_email", out var email) || string.IsNullOrWhiteSpace(email.GetString()) ||
+            !root.TryGetProperty("private_key", out var privateKey) || string.IsNullOrWhiteSpace(privateKey.GetString()))
+            throw new InvalidOperationException("Google Play service-account credentials are missing required fields.");
+    }
+    catch (Exception error) when (error is FormatException or JsonException)
+    {
+        throw new InvalidOperationException("Google Play service-account credentials are invalid.", error);
+    }
+    if (!configuration.GetValue("Gymmin:GooglePlay:RtdnEnabled", false))
+        throw new InvalidOperationException("Google Play RTDN must be enabled for Production purchases.");
+    if (string.IsNullOrWhiteSpace(configuration["Gymmin:GooglePlay:RtdnAudience"]) ||
+        string.IsNullOrWhiteSpace(configuration["Gymmin:GooglePlay:RtdnServiceAccountEmail"]))
+        throw new InvalidOperationException("Google Play RTDN requires its exact OIDC audience and Pub/Sub service-account email.");
+    if (!configuration.GetValue("Gymmin:GooglePlay:VoidedPurchasesEnabled", false))
+        throw new InvalidOperationException("Google Play Voided Purchases reconciliation must be enabled for Production purchases.");
+    if (!configuration.GetValue("Gymmin:GooglePlay:AutoClawbackUnusedCredits", true))
+        throw new InvalidOperationException("Production Google Play must automatically claw back unused credits from voided purchases.");
+}
+
+static void ValidateAdminProductionConfiguration(IWebHostEnvironment environment, IConfiguration configuration)
+{
+    if (!environment.IsProduction() || !configuration.GetValue("Gymmin:Admin:Enabled", false)) return;
+    var hash = configuration["Gymmin:Admin:ApiKeySha256"]?.Trim() ?? "";
+    var keyId = configuration["Gymmin:Admin:KeyId"]?.Trim() ?? "";
+    if (hash.Length != 64 || !hash.All(Uri.IsHexDigit) || keyId.Length is 0 or > 100)
+        throw new InvalidOperationException("Enabled Production admin API requires a SHA256 API-key hash and a bounded KeyId.");
+}
+
+static async Task<DatabaseHealth> GetDatabaseHealthAsync(bool useDatabaseStorage, IServiceProvider services, ILogger logger)
 {
     if (!useDatabaseStorage)
     {
-        return new { configured = false, canConnect = (bool?)null };
+        return new DatabaseHealth(false, null, null, null);
     }
 
     try
     {
-        await using var scope = services.CreateAsyncScope();
-        var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<GymminDbContext>>();
-        await using var db = await dbFactory.CreateDbContextAsync();
-        return new { configured = true, canConnect = await db.Database.CanConnectAsync() };
+        return await services.GetRequiredService<DatabaseReadinessProbe>().CheckAsync();
     }
     catch (Exception error)
     {
         logger.LogWarning(error, "Database health check failed.");
-        return new { configured = true, canConnect = false };
+        return new DatabaseHealth(true, false, false, null);
     }
 }
+
+static bool IsDatabaseReady(DatabaseHealth database) =>
+    !database.Configured || database is { CanConnect: true, SchemaCurrent: not false };
 
 static IResult RateLimited(HttpRequest request) =>
     Results.Json(
@@ -1091,6 +1443,9 @@ static IResult InsufficientAiCredits(HttpRequest request) =>
             DiagnosticsContext.GetCorrelationId(request.HttpContext))),
         statusCode: StatusCodes.Status402PaymentRequired);
 
+static IResult EmailVerificationRequired(HttpRequest request) =>
+    Results.Json(new ApiErrorResponse(new ApiError("email_not_verified", "Verify your email before using AI features.", DiagnosticsContext.GetCorrelationId(request.HttpContext))), statusCode: StatusCodes.Status403Forbidden);
+
 static string? GetIdempotencyKey(HttpRequest request)
 {
     var key = request.Headers.TryGetValue("X-Idempotency-Key", out var value)
@@ -1101,16 +1456,63 @@ static string? GetIdempotencyKey(HttpRequest request)
 
 static string? ValidateWorkout(UpsertWorkoutRequest request)
 {
-    if (string.IsNullOrWhiteSpace(request.ClientWorkoutId))
+    const int maxSteps = 500;
+    if (string.IsNullOrWhiteSpace(request.ClientWorkoutId) || request.ClientWorkoutId.Length > 160)
     {
-        return "ClientWorkoutId is required.";
+        return "ClientWorkoutId is invalid.";
     }
 
-    if (string.IsNullOrWhiteSpace(request.Name))
+    if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length > 250)
     {
-        return "Name is required.";
+        return "Name is invalid.";
     }
 
+    if ((request.Notes?.Length ?? 0) > 10_000 || request.Steps is null || request.Steps.Count > maxSteps)
+        return "Workout content is too large.";
+
+    foreach (var step in request.Steps)
+    {
+        if (step is null || string.IsNullOrWhiteSpace(step.ClientStepId) || step.ClientStepId.Length > 160 ||
+            (step.Label?.Length ?? 0) > 500 || (step.ExerciseName?.Length ?? 0) > 500 ||
+            (step.Notes?.Length ?? 0) > 2_000 || (step.TargetValue?.Length ?? 0) > 100 ||
+            (step.LoadKg?.Length ?? 0) > 100 || (step.SetCount?.Length ?? 0) > 100)
+            return "Workout step is invalid or too large.";
+    }
+
+    return null;
+}
+
+static string? ValidateWorkoutSync(SyncWorkoutsRequest request)
+{
+    const int maxItems = 250;
+    if (request.Workouts is null || request.DeletedClientWorkoutIds is null ||
+        request.Workouts.Count > maxItems || request.DeletedClientWorkoutIds.Count > maxItems)
+        return "Too many workouts in one sync request.";
+    foreach (var workout in request.Workouts)
+    {
+        if (workout is null) return "Workout is required.";
+        var error = ValidateWorkout(workout);
+        if (error is not null) return error;
+    }
+    if (request.DeletedClientWorkoutIds.Any(id => string.IsNullOrWhiteSpace(id) || id.Length > 160))
+        return "Deleted ClientWorkoutId is invalid.";
+    return null;
+}
+
+static string? ValidateUserSettings(UpsertUserSettingsRequest request)
+{
+    if ((request.Language?.Length ?? 0) > 16 || (request.ThemeName?.Length ?? 0) > 32 ||
+        (request.DefaultSetCount?.Length ?? 0) > 32 || (request.DefaultWeight?.Length ?? 0) > 32 ||
+        (request.DefaultWorkoutExecutionMode?.Length ?? 0) > 64 ||
+        (request.DefaultWorkoutTableOrientation?.Length ?? 0) > 20 ||
+        (request.CollapsedPanels?.Count ?? 0) > 250)
+        return "Settings are too large.";
+    if ((request.CollapsedPanels ?? new Dictionary<string, bool>()).Keys.Any(key => string.IsNullOrWhiteSpace(key) || key.Length > 160))
+        return "Collapsed panel key is invalid.";
+    if (request.WorkoutReminders is { } reminders &&
+        ((reminders.Message?.Length ?? 0) > 500 || (reminders.Description?.Length ?? 0) > 1_000 ||
+         (reminders.DaysOfWeek?.Count ?? 0) > 7 || (reminders.WeeklySchedule?.Count ?? 0) > 7))
+        return "Workout reminder settings are too large.";
     return null;
 }
 
@@ -1119,6 +1521,25 @@ static string? ValidateBugReport(CreateBugReportRequest request)
     if (string.IsNullOrWhiteSpace(request.Description))
     {
         return "Description is required.";
+    }
+
+    if ((request.Title?.Length ?? 0) > 250 || request.Description.Length > 10_000)
+    {
+        return "Bug report content is too long.";
+    }
+
+    if ((request.Device?.Length ?? 0) > 1_000 ||
+        (request.Screen?.Length ?? 0) > 200 ||
+        (request.Language?.Length ?? 0) > 16 ||
+        (request.AppVersion?.Length ?? 0) > 50)
+    {
+        return "Bug report metadata is too long.";
+    }
+
+    if (request.Diagnostics is { ValueKind: not JsonValueKind.Null and not JsonValueKind.Undefined } diagnostics &&
+        diagnostics.GetRawText().Length > 50_000)
+    {
+        return "Bug report diagnostics are too long.";
     }
 
     return null;
@@ -1170,7 +1591,7 @@ static string? ValidateWorkoutSessionSync(SyncWorkoutSessionsRequest request)
 
 static string? ValidateWorkoutSession(UpsertWorkoutSessionRequest request)
 {
-    if (string.IsNullOrWhiteSpace(request.ClientSessionId))
+    if (string.IsNullOrWhiteSpace(request.ClientSessionId) || request.ClientSessionId.Length > 160)
     {
         return "ClientSessionId is required.";
     }
@@ -1178,6 +1599,11 @@ static string? ValidateWorkoutSession(UpsertWorkoutSessionRequest request)
     if (request.Session.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
     {
         return "Session is required.";
+    }
+
+    if (request.Session.GetRawText().Length > 512_000)
+    {
+        return "Workout session is too large.";
     }
 
     if (!TryGetJsonString(request.Session, "status", out var status) ||
@@ -1265,4 +1691,35 @@ static bool TryGetJsonString(JsonElement element, string propertyName, out strin
     return !string.IsNullOrWhiteSpace(value);
 }
 
+static long GetMaxRequestBodyBytes(PathString path, IConfiguration configuration)
+{
+    var key = path.StartsWithSegments("/api/profile/avatar")
+        ? "AvatarBytes"
+        : path.StartsWithSegments("/api/bug-reports")
+            ? "BugReportBytes"
+            : path.StartsWithSegments("/api/integrations/google-play/rtdn")
+                ? "IntegrationBytes"
+            : path.StartsWithSegments("/api/workout-creator")
+                ? "AiBytes"
+                : "DefaultBytes";
+    var fallback = key switch
+    {
+        "AvatarBytes" => 2 * 1024 * 1024 + 64 * 1024,
+        "BugReportBytes" => 64 * 1024,
+        "IntegrationBytes" => 64 * 1024,
+        "AiBytes" => 512 * 1024,
+        _ => 4 * 1024 * 1024
+    };
+    return Math.Clamp(
+        configuration.GetValue($"Gymmin:Security:RequestLimits:{key}", fallback),
+        16 * 1024,
+        16 * 1024 * 1024);
+}
+
 public partial class Program;
+
+public sealed record DatabaseHealth(
+    bool Configured,
+    bool? CanConnect,
+    bool? SchemaCurrent,
+    int? PendingMigrationCount);

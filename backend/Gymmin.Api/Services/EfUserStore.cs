@@ -10,12 +10,14 @@ public sealed class EfUserStore : IUserStore
     private readonly IDbContextFactory<GymminDbContext> _dbFactory;
     private readonly int _sessionLifetimeDays;
     private readonly int _resetTokenMinutes;
+    private readonly int _emailVerificationCodeMinutes;
 
     public EfUserStore(IDbContextFactory<GymminDbContext> dbFactory, IConfiguration configuration)
     {
         _dbFactory = dbFactory;
         _sessionLifetimeDays = Math.Clamp(configuration.GetValue("Gymmin:Auth:SessionLifetimeDays", 30), 1, 365);
         _resetTokenMinutes = Math.Clamp(configuration.GetValue("Gymmin:Auth:PasswordResetTokenMinutes", 30), 5, 240);
+        _emailVerificationCodeMinutes = Math.Clamp(configuration.GetValue("Gymmin:Auth:EmailVerificationCodeMinutes", 30), 5, 240);
     }
 
     public AuthResult Register(RegisterRequest request, AuthRequestMetadata? metadata = null)
@@ -24,7 +26,7 @@ public sealed class EfUserStore : IUserStore
         var name = request.Name?.Trim() ?? "";
         var password = request.Password ?? "";
 
-        if (!IsValidEmail(email) || password.Length < 4 || string.IsNullOrWhiteSpace(name))
+        if (!IsValidEmail(email) || !AuthSecurity.IsValidNewPassword(password) || string.IsNullOrWhiteSpace(name))
         {
             return new AuthResult(false, null, "Invalid registration data.", StatusCodes.Status400BadRequest);
         }
@@ -280,6 +282,16 @@ public sealed class EfUserStore : IUserStore
         return new AuthResult(true, null, null, StatusCodes.Status204NoContent);
     }
 
+    public bool VerifyPassword(string userId, string password)
+    {
+        if (string.IsNullOrEmpty(password)) return false;
+        using var db = _dbFactory.CreateDbContext();
+        var user = db.Users.AsNoTracking().FirstOrDefault(item => item.Id == userId);
+        return user is not null && AuthSecurity.VerifyPassword(
+            password,
+            new PersistedPassword(user.PasswordHash, user.PasswordIterations, user.PasswordSalt));
+    }
+
     public PasswordResetIssue? CreatePasswordResetToken(string email, AuthRequestMetadata? metadata = null)
     {
         var normalizedEmail = NormalizeEmail(email);
@@ -348,6 +360,39 @@ public sealed class EfUserStore : IUserStore
         return new AuthResult(true, null, null, StatusCodes.Status204NoContent);
     }
 
+    public EmailVerificationIssue? CreateEmailVerificationCode(string userId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var user = db.Users.FirstOrDefault(item => item.Id == userId);
+        if (user is null || user.EmailVerifiedAt is not null) return null;
+
+        var now = DateTimeOffset.UtcNow;
+        var code = AuthSecurity.CreateVerificationCode();
+        user.EmailVerificationCodeHash = AuthSecurity.HashToken(code);
+        user.EmailVerificationCodeExpiresAt = now.AddMinutes(_emailVerificationCodeMinutes);
+        user.EmailVerificationSentAt = now;
+        user.UpdatedAt = now;
+        db.SaveChanges();
+        return new EmailVerificationIssue(user.Email, code, user.EmailVerificationCodeExpiresAt.Value);
+    }
+
+    public AuthUserResponse? ConfirmEmailVerification(string userId, string code)
+    {
+        var codeHash = AuthSecurity.HashToken(code);
+        using var db = _dbFactory.CreateDbContext();
+        var now = DateTimeOffset.UtcNow;
+        var user = db.Users.FirstOrDefault(item => item.Id == userId);
+        if (user is null || user.EmailVerifiedAt is not null) return user is null ? null : ToResponse(user);
+        if (string.IsNullOrWhiteSpace(codeHash) || user.EmailVerificationCodeHash != codeHash || user.EmailVerificationCodeExpiresAt <= now) return null;
+
+        user.EmailVerifiedAt = now;
+        user.EmailVerificationCodeHash = null;
+        user.EmailVerificationCodeExpiresAt = null;
+        user.UpdatedAt = now;
+        db.SaveChanges();
+        return ToResponse(user);
+    }
+
     private static AuthResult AuthSuccess(UserEntity user, string token)
     {
         return new AuthResult(true, new AuthResponse(token, ToResponse(user)), null, StatusCodes.Status200OK);
@@ -363,7 +408,8 @@ public sealed class EfUserStore : IUserStore
             FileSystemUserAvatarStorage.BuildAvatarUrl(avatar),
             avatar?.UpdatedAt,
             user.CreatedAt,
-            user.UpdatedAt);
+            user.UpdatedAt,
+            user.EmailVerifiedAt is not null);
     }
 
     private static UserAvatarMetadata? ToAvatarMetadata(UserEntity user)

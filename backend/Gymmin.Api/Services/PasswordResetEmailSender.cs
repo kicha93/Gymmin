@@ -49,8 +49,10 @@ public sealed class SmtpPasswordResetEmailSender(IConfiguration configuration, I
             EnableSsl = enableSsl
         };
 
-        using var registration = cancellationToken.Register(client.SendAsyncCancel);
-        await client.SendMailAsync(message, cancellationToken);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(configuration.GetValue("Gymmin:Security:SmtpTimeoutSeconds", 30), 5, 120)));
+        using var registration = timeout.Token.Register(client.SendAsyncCancel);
+        await client.SendMailAsync(message, timeout.Token);
     }
 
     private static string BuildBody(string token, DateTimeOffset expiresAt)

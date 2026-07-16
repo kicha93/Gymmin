@@ -23,7 +23,6 @@ $androidRoot = Join-Path $mobileRoot "android"
 $workspaceSdk = Join-Path $repoRoot ".android-sdk"
 $artifactsRoot = Join-Path $repoRoot ".artifacts"
 $downloadUrlFile = Join-Path $artifactsRoot "latest-apk-download-url.txt"
-$mobileBuildConfigPath = Join-Path $mobileRoot "src\config\buildConfig.ts"
 $shortRoot = $ShortBuildRoot.TrimEnd("\")
 $shortRepoRoot = Join-Path $shortRoot "repo"
 $shortMarkerPath = Join-Path $shortRoot ".gymmin-apk-build-root"
@@ -36,7 +35,8 @@ function Write-Step {
 function Write-MobileBuildConfig {
   param(
     [string]$ApiUrl,
-    [string]$ConfigPath = $mobileBuildConfigPath
+    [Parameter(Mandatory = $true)]
+    [string]$ConfigPath
   )
 
   $encodedApiUrl = $ApiUrl | ConvertTo-Json -Compress
@@ -253,7 +253,6 @@ if (-not $SkipTypecheck) {
 New-Item -ItemType Directory -Path $artifactsRoot -Force | Out-Null
 $env:EXPO_PUBLIC_API_BASE_URL = $normalizedApiBaseUrl
 $env:NODE_ENV = "production"
-Write-MobileBuildConfig -ApiUrl $normalizedApiBaseUrl
 
 Copy-RepoToShortBuildPath
 

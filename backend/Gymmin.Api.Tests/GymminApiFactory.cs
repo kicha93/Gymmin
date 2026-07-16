@@ -21,6 +21,7 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
     public FakePasswordResetEmailSender PasswordResetEmailSender { get; } = new();
     internal FakeWorkoutPlanGenerator WorkoutPlanGenerator { get; } = new();
     internal FakeGooglePlayPurchaseValidator GooglePlayPurchaseValidator { get; } = new();
+    internal FakePubSubOidcTokenValidator PubSubOidcTokenValidator { get; } = new();
 
     public GymminApiFactory()
     {
@@ -40,6 +41,20 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
                 ["Gymmin:Storage:ApplyMigrationsOnStartup"] = "true",
                 ["Gymmin:GooglePlay:Enabled"] = "true",
                 ["Gymmin:GooglePlay:PackageName"] = "com.gymmin.app",
+                ["Gymmin:GooglePlay:RtdnEnabled"] = "true",
+                ["Gymmin:GooglePlay:RtdnAudience"] = "https://api.gymmin.test/api/integrations/google-play/rtdn",
+                ["Gymmin:GooglePlay:RtdnServiceAccountEmail"] = "gymmin-pubsub@example.iam.gserviceaccount.com",
+                ["Gymmin:Admin:Enabled"] = "true",
+                ["Gymmin:Admin:KeyId"] = "test-key-1",
+                ["Gymmin:Admin:ApiKeySha256"] = "944650a7cd0f9e14d5c4fb15edbffb7fa45fb9ed36a4fa9be3d7e5476ae51bd9",
+                ["Gymmin:Auth:RateLimits:BugReport:Limit"] = "1000",
+                ["Gymmin:Auth:RateLimits:RegisterIp:Limit"] = "1000",
+                ["Gymmin:Auth:RateLimits:RegisterEmail:Limit"] = "1000",
+                ["Gymmin:Auth:RateLimits:EmailVerificationConfirmUser:Limit"] = "1000",
+                ["Gymmin:Auth:RateLimits:EmailVerificationConfirmIp:Limit"] = "1000",
+                ["Gymmin:Auth:RateLimits:WorkoutCreatorUser:Limit"] = "1000",
+                ["Gymmin:Auth:RateLimits:WorkoutCreatorIp:Limit"] = "1000",
+                ["BugReports:EmailDelivery:PollSeconds"] = "1",
                 ["ConnectionStrings:DefaultConnection"] = $"Data Source={_databasePath}"
             });
         });
@@ -54,6 +69,7 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IAchievementStore>();
             services.RemoveAll<IWorkoutPlanJobStore>();
             services.RemoveAll<IAiCreditService>();
+            services.RemoveAll<IBugReportStore>();
             services.RemoveAll<IAccountDeletionService>();
             services.AddDbContextFactory<GymminDbContext>(options => options.UseSqlite($"Data Source={_databasePath}"));
             services.AddSingleton<IUserStore, EfUserStore>();
@@ -64,11 +80,16 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IAchievementStore, EfAchievementStore>();
             services.AddSingleton<IWorkoutPlanJobStore, EfWorkoutPlanJobStore>();
             services.AddSingleton<IAiCreditService, EfAiCreditService>();
+            services.AddSingleton<IBugReportStore, EfBugReportStore>();
             services.AddSingleton<IAccountDeletionService, EfAccountDeletionService>();
             services.RemoveAll<IAiCreditPurchaseService>();
             services.AddSingleton<IAiCreditPurchaseService, EfAiCreditPurchaseService>();
             services.RemoveAll<IGooglePlayPurchaseValidator>();
             services.AddSingleton<IGooglePlayPurchaseValidator>(GooglePlayPurchaseValidator);
+            services.RemoveAll<IPubSubOidcTokenValidator>();
+            services.AddSingleton<IPubSubOidcTokenValidator>(PubSubOidcTokenValidator);
+            services.AddSingleton<GooglePlayVoidedPurchasesWorker>();
+            services.AddSingleton<DataRetentionWorker>();
             services.AddHostedService<TestDatabaseInitializer>();
             services.RemoveAll<IWorkoutPlanGenerator>();
             services.AddSingleton<IWorkoutPlanGenerator>(WorkoutPlanGenerator);
@@ -95,6 +116,14 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
             // Best-effort cleanup only; a locked temp DB should not hide test results.
         }
     }
+}
+
+internal sealed class FakePubSubOidcTokenValidator : IPubSubOidcTokenValidator
+{
+    public bool IsValid { get; set; } = true;
+
+    public Task<bool> ValidateAsync(string token, string audience, string expectedEmail, CancellationToken cancellationToken) =>
+        Task.FromResult(IsValid && token == "valid-pubsub-token");
 }
 
 internal sealed class TestDatabaseInitializer : IHostedService
@@ -174,8 +203,10 @@ internal sealed class FakeGooglePlayPurchaseValidator : IGooglePlayPurchaseValid
     public bool ConsumeIsRetryable { get; set; } = true;
     public string PurchaseState { get; set; } = GooglePlayPurchaseStates.Purchased;
     public string? ProductIdOverride { get; set; }
+    public string? ObfuscatedExternalAccountId { get; set; }
     public int ValidateCalls { get; private set; }
     public int ConsumeCalls { get; private set; }
+    public List<GooglePlayVoidedPurchase> VoidedPurchases { get; } = [];
 
     public Task<GooglePlayPurchaseValidationResult> ValidateOneTimeProductAsync(string productId, string purchaseToken, CancellationToken cancellationToken)
     {
@@ -192,7 +223,8 @@ internal sealed class FakeGooglePlayPurchaseValidator : IGooglePlayPurchaseValid
             "PL",
             """{"sanitized":true}""",
             IsValid ? null : "invalid_google_play_purchase",
-            IsValid ? null : "Purchase could not be verified"));
+            IsValid ? null : "Purchase could not be verified",
+            ObfuscatedExternalAccountId));
     }
 
     public Task<GooglePlayConsumeResult> ConsumeOneTimeProductAsync(string productId, string purchaseToken, CancellationToken cancellationToken)
@@ -203,6 +235,13 @@ internal sealed class FakeGooglePlayPurchaseValidator : IGooglePlayPurchaseValid
             : new GooglePlayConsumeResult(true, false, null, null));
     }
 
+    public Task<GooglePlayVoidedPurchasesResult> ListVoidedPurchasesAsync(
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        string? pageToken,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(new GooglePlayVoidedPurchasesResult(true, false, VoidedPurchases.ToList(), null, null, null));
+
     public void Reset()
     {
         IsValid = true;
@@ -211,18 +250,27 @@ internal sealed class FakeGooglePlayPurchaseValidator : IGooglePlayPurchaseValid
         ConsumeIsRetryable = true;
         PurchaseState = GooglePlayPurchaseStates.Purchased;
         ProductIdOverride = null;
+        ObfuscatedExternalAccountId = null;
         ValidateCalls = 0;
         ConsumeCalls = 0;
+        VoidedPurchases.Clear();
     }
 }
 
 internal sealed class FakeBugReportEmailSender : IBugReportEmailSender
 {
+    public bool FailNextSend { get; set; }
     public Guid? LastReportId { get; private set; }
     public CreateBugReportRequest? LastReport { get; private set; }
 
     public Task SendAsync(Guid reportId, CreateBugReportRequest report, CancellationToken cancellationToken)
     {
+        if (FailNextSend)
+        {
+            FailNextSend = false;
+            throw new InvalidOperationException("Synthetic SMTP failure.");
+        }
+
         LastReportId = reportId;
         LastReport = report;
         return Task.CompletedTask;

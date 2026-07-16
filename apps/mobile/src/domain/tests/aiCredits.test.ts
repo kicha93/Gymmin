@@ -12,7 +12,7 @@ import {
   normalizeAiCreditPurchaseVerifyResponse,
   normalizeAiCreditTransactions
 } from "../aiCredits";
-import { mapBillingError } from "../googlePlayBilling";
+import { buildGooglePlayObfuscatedAccountId, mapBillingError } from "../googlePlayBilling";
 
 describe("aiCredits", () => {
   it("normalizes balance response with safe fallbacks", () => {
@@ -141,5 +141,12 @@ describe("aiCredits", () => {
       isCancelled: true,
       message: "User cancelled purchase"
     });
+  });
+
+  it("builds a stable non-PII Google Play account identifier", () => {
+    expect(buildGooglePlayObfuscatedAccountId("A1234567890BCDEF1234567890ABCDEF"))
+      .toBe("gymmin_a1234567890bcdef1234567890abcdef");
+    expect(() => buildGooglePlayObfuscatedAccountId("user@example.com"))
+      .toThrow("account identifier is invalid");
   });
 });

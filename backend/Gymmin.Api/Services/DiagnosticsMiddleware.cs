@@ -14,6 +14,15 @@ public static class DiagnosticsContext
         context.Items.TryGetValue(CorrelationIdItem, out var value) && value is string id && !string.IsNullOrWhiteSpace(id)
             ? id
             : Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("D");
+
+    public static string NormalizeRequestedCorrelationId(string? value)
+    {
+        var normalized = value?.Trim() ?? "";
+        return normalized.Length is > 0 and <= 128 && normalized.All(character =>
+            char.IsLetterOrDigit(character) || character is '-' or '_' or '.')
+            ? normalized
+            : Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("D");
+    }
 }
 
 public sealed class CorrelationIdMiddleware
@@ -30,9 +39,7 @@ public sealed class CorrelationIdMiddleware
         var requestedId = context.Request.Headers.TryGetValue(DiagnosticsContext.CorrelationIdHeader, out var headerValue)
             ? headerValue.ToString().Trim()
             : "";
-        var correlationId = string.IsNullOrWhiteSpace(requestedId)
-            ? Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("D")
-            : requestedId;
+        var correlationId = DiagnosticsContext.NormalizeRequestedCorrelationId(requestedId);
 
         context.Items[DiagnosticsContext.CorrelationIdItem] = correlationId;
         context.Response.OnStarting(() =>

@@ -80,6 +80,22 @@ function Assert-ReleaseSigningConfigured {
   }
 }
 
+function Assert-ProductionApiBaseUrl {
+  param([Parameter(Mandatory = $true)][string]$Url)
+
+  $uri = $null
+  if (-not [System.Uri]::TryCreate($Url, [System.UriKind]::Absolute, [ref]$uri) -or $uri.Scheme -ne "https") {
+    throw "Store ApiBaseUrl must be an absolute HTTPS URL. Received: $Url"
+  }
+
+  $hostName = $uri.DnsSafeHost.ToLowerInvariant()
+  $forbiddenHosts = @("localhost", "127.0.0.1", "10.0.2.2")
+  $forbiddenSuffixes = @(".trycloudflare.com", ".ngrok-free.app", ".ngrok.app", ".ngrok.io", ".loca.lt")
+  if ($hostName -in $forbiddenHosts -or ($forbiddenSuffixes | Where-Object { $hostName.EndsWith($_) })) {
+    throw "Store builds cannot use a temporary tunnel or local backend URL: $Url"
+  }
+}
+
 function Write-MobileBuildConfig {
   param(
     [Parameter(Mandatory = $true)]
@@ -124,6 +140,7 @@ $normalizedApiBaseUrl = $ApiBaseUrl.Trim().TrimEnd("/")
 if (-not ($normalizedApiBaseUrl -match "^https?://")) {
   throw "ApiBaseUrl must start with http:// or https://. Received: $ApiBaseUrl"
 }
+Assert-ProductionApiBaseUrl -Url $normalizedApiBaseUrl
 
 Assert-Command "java" "Install JDK 17, for example: winget install EclipseAdoptium.Temurin.17.JDK"
 Assert-ReleaseSigningConfigured

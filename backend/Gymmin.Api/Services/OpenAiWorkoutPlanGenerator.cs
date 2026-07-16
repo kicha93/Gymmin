@@ -64,14 +64,14 @@ public sealed class OpenAiWorkoutPlanGenerator : IWorkoutPlanGenerator
         string developerPrompt,
         CancellationToken cancellationToken)
     {
-        var apiKey = _configuration["OPENAI_API_KEY"];
+        var apiKey = OpenAiConfiguration.GetApiKey(_configuration);
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException("OPENAI_API_KEY is not configured.");
         }
 
-        var model = _configuration["OPENAI_MODEL"] ?? "gpt-5.5";
-        var reasoningEffort = _configuration["OPENAI_REASONING_EFFORT"] ?? "low";
+        var model = OpenAiConfiguration.GetModel(_configuration);
+        var reasoningEffort = OpenAiConfiguration.GetReasoningEffort(_configuration);
         var openAiRequest = new
         {
             model,

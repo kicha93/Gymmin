@@ -34,6 +34,12 @@ public sealed class EfAccountDeletionService : IAccountDeletionService
         }
 
         _avatars.Delete(userId);
+        foreach (var report in db.BugReports.Where(report => report.ReporterUserId == userId))
+        {
+            report.ReporterUserId = null;
+            report.DiagnosticsJson = BugReportDiagnosticsSanitizer.RemoveAccountIdentifiers(report.DiagnosticsJson, userId);
+            report.UpdatedAt = DateTimeOffset.UtcNow;
+        }
         db.Users.Remove(user);
         db.SaveChanges();
         return true;
@@ -55,7 +61,8 @@ public sealed class FileBackedAccountDeletionService : IAccountDeletionService
         IWorkoutSessionStore workoutSessions,
         IAchievementStore achievements,
         IAiCreditService credits,
-        IAiCreditPurchaseService purchases)
+        IAiCreditPurchaseService purchases,
+        IBugReportStore bugReports)
     {
         _avatars = avatars;
         _stores =
@@ -68,6 +75,7 @@ public sealed class FileBackedAccountDeletionService : IAccountDeletionService
             achievements,
             credits,
             purchases,
+            bugReports,
             users
         ];
     }

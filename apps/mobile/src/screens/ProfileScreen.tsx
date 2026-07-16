@@ -191,12 +191,6 @@ export function ProfileScreen({
           onPress={onOpenAccountDetails}
         />
         <ProfileAccountRow
-          icon="phone-portrait-outline"
-          label={t("activeSessions")}
-          theme={theme}
-          onPress={onOpenActiveSessions}
-        />
-        <ProfileAccountRow
           danger
           icon="trash-outline"
           label={t("deleteAccount")}

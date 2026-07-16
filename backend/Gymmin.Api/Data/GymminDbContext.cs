@@ -24,6 +24,13 @@ public sealed class GymminDbContext : DbContext
     public DbSet<AiCreditPurchaseEntity> AiCreditPurchases => Set<AiCreditPurchaseEntity>();
     public DbSet<UserAchievementEntity> UserAchievements => Set<UserAchievementEntity>();
     public DbSet<UserAppUsageStatsEntity> UserAppUsageStats => Set<UserAppUsageStatsEntity>();
+    public DbSet<BugReportEntity> BugReports => Set<BugReportEntity>();
+    public DbSet<BugReportRewardTransactionEntity> BugReportRewardTransactions => Set<BugReportRewardTransactionEntity>();
+    public DbSet<AbuseRateLimitBucketEntity> AbuseRateLimitBuckets => Set<AbuseRateLimitBucketEntity>();
+    public DbSet<GooglePlayRtdnEventEntity> GooglePlayRtdnEvents => Set<GooglePlayRtdnEventEntity>();
+    public DbSet<AdminAuditEventEntity> AdminAuditEvents => Set<AdminAuditEventEntity>();
+    public DbSet<GooglePlayVoidedPurchaseEntity> GooglePlayVoidedPurchases => Set<GooglePlayVoidedPurchaseEntity>();
+    public DbSet<IntegrationCheckpointEntity> IntegrationCheckpoints => Set<IntegrationCheckpointEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,6 +45,7 @@ public sealed class GymminDbContext : DbContext
             entity.Property(user => user.PasswordSalt).IsRequired();
             entity.Property(user => user.AvatarFileName).HasMaxLength(260);
             entity.Property(user => user.AvatarContentType).HasMaxLength(80);
+            entity.Property(user => user.EmailVerificationCodeHash).HasMaxLength(64);
             entity.HasIndex(user => user.NormalizedEmail).IsUnique();
         });
 
@@ -55,6 +63,16 @@ public sealed class GymminDbContext : DbContext
                 .WithMany(user => user.Sessions)
                 .HasForeignKey(session => session.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AbuseRateLimitBucketEntity>(entity =>
+        {
+            entity.ToTable("AbuseRateLimitBuckets");
+            entity.HasKey(bucket => bucket.Id);
+            entity.Property(bucket => bucket.Id).HasMaxLength(64);
+            entity.Property(bucket => bucket.Action).HasMaxLength(64).IsRequired();
+            entity.Property(bucket => bucket.KeyHash).HasMaxLength(64).IsRequired();
+            entity.HasIndex(bucket => bucket.ExpiresAt);
         });
 
         modelBuilder.Entity<PasswordResetTokenEntity>(entity =>
@@ -211,6 +229,7 @@ public sealed class GymminDbContext : DbContext
             entity.Property(purchase => purchase.PurchaseState).HasMaxLength(40).IsRequired();
             entity.Property(purchase => purchase.ProcessStatus).HasMaxLength(40).IsRequired();
             entity.Property(purchase => purchase.RelatedTransactionId).HasMaxLength(80);
+            entity.Property(purchase => purchase.ClawbackTransactionId).HasMaxLength(80);
             entity.Property(purchase => purchase.ErrorCode).HasMaxLength(120);
             entity.Property(purchase => purchase.ErrorMessage).HasMaxLength(500);
             entity.HasIndex(purchase => purchase.UserId);
@@ -221,6 +240,59 @@ public sealed class GymminDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(purchase => purchase.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<GooglePlayRtdnEventEntity>(entity =>
+        {
+            entity.ToTable("GooglePlayRtdnEvents");
+            entity.HasKey(notification => notification.MessageId);
+            entity.Property(notification => notification.MessageId).HasMaxLength(200);
+            entity.Property(notification => notification.PackageName).HasMaxLength(250).IsRequired();
+            entity.Property(notification => notification.NotificationKind).HasMaxLength(80).IsRequired();
+            entity.Property(notification => notification.ProductId).HasMaxLength(120);
+            entity.Property(notification => notification.PurchaseTokenHash).HasMaxLength(64);
+            entity.Property(notification => notification.ProcessingStatus).HasMaxLength(40).IsRequired();
+            entity.Property(notification => notification.ErrorCode).HasMaxLength(120);
+            entity.HasIndex(notification => notification.ReceivedAt);
+            entity.HasIndex(notification => notification.PurchaseTokenHash);
+            entity.HasIndex(notification => notification.ProcessingStatus);
+        });
+
+        modelBuilder.Entity<AdminAuditEventEntity>(entity =>
+        {
+            entity.ToTable("AdminAuditEvents");
+            entity.HasKey(audit => audit.Id);
+            entity.Property(audit => audit.ActorKeyId).HasMaxLength(100).IsRequired();
+            entity.Property(audit => audit.Action).HasMaxLength(120).IsRequired();
+            entity.Property(audit => audit.TargetType).HasMaxLength(80).IsRequired();
+            entity.Property(audit => audit.TargetId).HasMaxLength(160).IsRequired();
+            entity.Property(audit => audit.CorrelationId).HasMaxLength(128);
+            entity.HasIndex(audit => audit.CreatedAt);
+            entity.HasIndex(audit => new { audit.TargetType, audit.TargetId });
+        });
+
+        modelBuilder.Entity<GooglePlayVoidedPurchaseEntity>(entity =>
+        {
+            entity.ToTable("GooglePlayVoidedPurchases");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Id).HasMaxLength(64);
+            entity.Property(item => item.PurchaseTokenHash).HasMaxLength(64).IsRequired();
+            entity.Property(item => item.GoogleOrderId).HasMaxLength(160);
+            entity.Property(item => item.PurchaseId).HasMaxLength(160);
+            entity.Property(item => item.UserId).HasMaxLength(160);
+            entity.Property(item => item.ProcessingStatus).HasMaxLength(40).IsRequired();
+            entity.Property(item => item.ClawbackTransactionId).HasMaxLength(80);
+            entity.HasIndex(item => item.PurchaseTokenHash);
+            entity.HasIndex(item => item.GoogleOrderId);
+            entity.HasIndex(item => item.ReceivedAt);
+            entity.HasIndex(item => item.ProcessingStatus);
+        });
+
+        modelBuilder.Entity<IntegrationCheckpointEntity>(entity =>
+        {
+            entity.ToTable("IntegrationCheckpoints");
+            entity.HasKey(checkpoint => checkpoint.Id);
+            entity.Property(checkpoint => checkpoint.Id).HasMaxLength(100);
         });
 
         modelBuilder.Entity<UserAchievementEntity>(entity =>
@@ -246,6 +318,44 @@ public sealed class GymminDbContext : DbContext
                 .WithOne()
                 .HasForeignKey<UserAppUsageStatsEntity>(stats => stats.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<BugReportEntity>(entity =>
+        {
+            entity.ToTable("BugReports");
+            entity.HasKey(report => report.Id);
+            entity.Property(report => report.IdempotencyKey).HasMaxLength(160);
+            entity.Property(report => report.Title).HasMaxLength(250).IsRequired();
+            entity.Property(report => report.Description).IsRequired();
+            entity.Property(report => report.Device).HasMaxLength(1_000);
+            entity.Property(report => report.Screen).HasMaxLength(200);
+            entity.Property(report => report.Language).HasMaxLength(16);
+            entity.Property(report => report.AppVersion).HasMaxLength(50);
+            entity.Property(report => report.Status).HasMaxLength(32).IsRequired();
+            entity.Property(report => report.EmailDeliveryStatus).HasMaxLength(32).IsRequired();
+            entity.Property(report => report.EmailDeliveryError).HasMaxLength(500);
+            entity.Property(report => report.EmailLeaseId).HasMaxLength(80);
+            entity.HasIndex(report => report.IdempotencyKey).IsUnique();
+            entity.HasIndex(report => report.ReporterUserId);
+            entity.HasIndex(report => report.Status);
+            entity.HasIndex(report => report.CreatedAt);
+            entity.HasIndex(report => new { report.EmailDeliveryStatus, report.EmailNextAttemptAt });
+            entity.HasOne(report => report.ReporterUser)
+                .WithMany()
+                .HasForeignKey(report => report.ReporterUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<BugReportRewardTransactionEntity>(entity =>
+        {
+            entity.ToTable("BugReportRewardTransactions");
+            entity.HasKey(transaction => transaction.Id);
+            entity.Property(transaction => transaction.Reason).HasMaxLength(500);
+            entity.Property(transaction => transaction.AwardedBy).HasMaxLength(160).IsRequired();
+            entity.HasIndex(transaction => transaction.BugReportId).IsUnique();
+            entity.HasIndex(transaction => transaction.UserId);
+            entity.HasOne(transaction => transaction.BugReport).WithMany().HasForeignKey(transaction => transaction.BugReportId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(transaction => transaction.User).WithMany().HasForeignKey(transaction => transaction.UserId).OnDelete(DeleteBehavior.SetNull);
         });
 
         ApplyTextCompatibleConverters(modelBuilder);
@@ -305,6 +415,10 @@ public sealed class UserEntity
     public string? AvatarFileName { get; set; }
     public string? AvatarContentType { get; set; }
     public DateTimeOffset? AvatarUpdatedAt { get; set; }
+    public DateTimeOffset? EmailVerifiedAt { get; set; }
+    public string? EmailVerificationCodeHash { get; set; }
+    public DateTimeOffset? EmailVerificationCodeExpiresAt { get; set; }
+    public DateTimeOffset? EmailVerificationSentAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public List<UserSessionEntity> Sessions { get; set; } = [];
@@ -324,6 +438,16 @@ public sealed class UserSessionEntity
     public string? LastIpAddress { get; set; }
     public string? RevokedReason { get; set; }
     public UserEntity? User { get; set; }
+}
+
+public sealed class AbuseRateLimitBucketEntity
+{
+    public string Id { get; set; } = "";
+    public string Action { get; set; } = "";
+    public string KeyHash { get; set; } = "";
+    public int AttemptCount { get; set; }
+    public DateTimeOffset WindowStartedAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
 }
 
 public sealed class PasswordResetTokenEntity
@@ -474,8 +598,69 @@ public sealed class AiCreditPurchaseEntity
     public DateTimeOffset? VerifiedAt { get; set; }
     public DateTimeOffset? CreditedAt { get; set; }
     public DateTimeOffset? ConsumedAt { get; set; }
+    public DateTimeOffset? VoidedAt { get; set; }
+    public int? VoidedReason { get; set; }
+    public int? VoidedSource { get; set; }
+    public int ClawbackCredits { get; set; }
+    public int UnrecoveredCredits { get; set; }
+    public string? ClawbackTransactionId { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public UserEntity? User { get; set; }
+}
+
+public sealed class GooglePlayRtdnEventEntity
+{
+    public string MessageId { get; set; } = "";
+    public string PackageName { get; set; } = "";
+    public string NotificationKind { get; set; } = "";
+    public int? NotificationType { get; set; }
+    public string? ProductId { get; set; }
+    public string? PurchaseTokenHash { get; set; }
+    public string ProcessingStatus { get; set; } = "received";
+    public string? ErrorCode { get; set; }
+    public DateTimeOffset? EventTime { get; set; }
+    public DateTimeOffset? PublishedAt { get; set; }
+    public DateTimeOffset ReceivedAt { get; set; }
+    public DateTimeOffset ProcessedAt { get; set; }
+}
+
+public sealed class AdminAuditEventEntity
+{
+    public Guid Id { get; set; }
+    public string ActorKeyId { get; set; } = "";
+    public string Action { get; set; } = "";
+    public string TargetType { get; set; } = "";
+    public string TargetId { get; set; } = "";
+    public string? CorrelationId { get; set; }
+    public string? DetailsJson { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class GooglePlayVoidedPurchaseEntity
+{
+    public string Id { get; set; } = "";
+    public string PurchaseTokenHash { get; set; } = "";
+    public string? GoogleOrderId { get; set; }
+    public string? PurchaseId { get; set; }
+    public string? UserId { get; set; }
+    public int VoidedReason { get; set; }
+    public int VoidedSource { get; set; }
+    public int VoidedQuantity { get; set; }
+    public int ClawbackCredits { get; set; }
+    public int UnrecoveredCredits { get; set; }
+    public string ProcessingStatus { get; set; } = "received";
+    public string? ClawbackTransactionId { get; set; }
+    public DateTimeOffset? PurchaseTime { get; set; }
+    public DateTimeOffset VoidedTime { get; set; }
+    public DateTimeOffset ReceivedAt { get; set; }
+    public DateTimeOffset ProcessedAt { get; set; }
+}
+
+public sealed class IntegrationCheckpointEntity
+{
+    public string Id { get; set; } = "";
+    public DateTimeOffset LastSuccessfulAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 }
 
 public sealed class UserAchievementEntity
@@ -495,5 +680,48 @@ public sealed class UserAppUsageStatsEntity
     public string UserId { get; set; } = "";
     public long TotalForegroundSeconds { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public UserEntity? User { get; set; }
+}
+
+public sealed class BugReportEntity
+{
+    public Guid Id { get; set; }
+    public string? IdempotencyKey { get; set; }
+    public string? ReporterUserId { get; set; }
+    public string Title { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string? Device { get; set; }
+    public string? Screen { get; set; }
+    public string? Language { get; set; }
+    public string? AppVersion { get; set; }
+    public string? DiagnosticsJson { get; set; }
+    public string Status { get; set; } = "new";
+    public string EmailDeliveryStatus { get; set; } = "pending";
+    public string? EmailDeliveryError { get; set; }
+    public int EmailAttemptCount { get; set; }
+    public DateTimeOffset? EmailLastAttemptAt { get; set; }
+    public DateTimeOffset? EmailNextAttemptAt { get; set; }
+    public DateTimeOffset? EmailSentAt { get; set; }
+    public string? EmailLeaseId { get; set; }
+    public DateTimeOffset? EmailLeaseExpiresAt { get; set; }
+    public string? AdminResponse { get; set; }
+    public DateTimeOffset? AdminRespondedAt { get; set; }
+    public int RewardPoints { get; set; }
+    public DateTimeOffset? RewardedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public UserEntity? ReporterUser { get; set; }
+}
+
+public sealed class BugReportRewardTransactionEntity
+{
+    public Guid Id { get; set; }
+    public Guid BugReportId { get; set; }
+    public string? UserId { get; set; }
+    public int Points { get; set; }
+    public string? Reason { get; set; }
+    public string AwardedBy { get; set; } = "";
+    public DateTimeOffset CreatedAt { get; set; }
+    public BugReportEntity? BugReport { get; set; }
     public UserEntity? User { get; set; }
 }

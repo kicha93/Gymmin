@@ -47,14 +47,16 @@ async function main() {
     .join(",\n");
 
   await mkdir(path.dirname(domainOutputPath), { recursive: true });
-  await writeFile(domainOutputPath, `export type ExerciseImageAssetKey = string;
+  await writeFile(domainOutputPath, `import { resolveExerciseId } from "./exercises";
+
+export type ExerciseImageAssetKey = string;
 
 const exerciseImageAssetKeysById: Record<string, ExerciseImageAssetKey[]> = {
 ${domainEntries}
 };
 
 export function getExerciseImageAssetKeys(exerciseId: string): ExerciseImageAssetKey[] {
-  return exerciseImageAssetKeysById[exerciseId] ?? [];
+  return exerciseImageAssetKeysById[resolveExerciseId(exerciseId)] ?? [];
 }
 `, "utf8");
 

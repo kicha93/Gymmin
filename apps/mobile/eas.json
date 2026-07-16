@@ -12,6 +12,7 @@
       "env": {}
     },
     "production": {
+      "distribution": "store",
       "android": {
         "buildType": "app-bundle"
       },
@@ -19,5 +20,3 @@
     }
   }
 }
-
-

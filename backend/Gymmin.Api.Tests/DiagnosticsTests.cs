@@ -40,6 +40,21 @@ public sealed class DiagnosticsTests : IClassFixture<GymminApiFactory>
     }
 
     [Fact]
+    public async Task Invalid_or_oversized_correlation_id_is_not_echoed_or_logged()
+    {
+        using var client = _factory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/health");
+        var untrusted = new string('x', 200);
+        request.Headers.TryAddWithoutValidation("X-Correlation-Id", untrusted);
+
+        var response = await client.SendAsync(request);
+        var returned = response.Headers.GetValues("X-Correlation-Id").Single();
+
+        Assert.NotEqual(untrusted, returned);
+        Assert.InRange(returned.Length, 1, 128);
+    }
+
+    [Fact]
     public async Task Global_exception_handler_returns_safe_error_response()
     {
         using var client = _factory.CreateClient();
@@ -103,12 +118,25 @@ public sealed class DiagnosticsTests : IClassFixture<GymminApiFactory>
         var response = await client.GetAsync("/api/health");
         var json = await response.Content.ReadAsStringAsync();
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.StatusCode == HttpStatusCode.OK, $"Status={response.StatusCode}; Body={json}");
         Assert.Contains("storageProvider", json);
         Assert.Contains("databaseProvider", json);
         Assert.Contains("canConnect", json);
+        Assert.Contains("schemaCurrent", json);
+        Assert.Contains("pendingMigrationCount", json);
         Assert.DoesNotContain("ConnectionStrings", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Data Source", json, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Liveness_and_readiness_are_separate_and_ready_database_returns_200()
+    {
+        using var client = _factory.CreateClient();
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health/live")).StatusCode);
+        var readiness = await client.GetAsync("/health/ready");
+        Assert.True(readiness.StatusCode == HttpStatusCode.OK,
+            $"Status={readiness.StatusCode}; Body={await readiness.Content.ReadAsStringAsync()}");
     }
 
     [Fact]
@@ -131,8 +159,28 @@ public sealed class DiagnosticsTests : IClassFixture<GymminApiFactory>
             }
         });
 
-        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
-        Assert.NotNull(_factory.BugReportEmailSender.LastReport);
-        Assert.Equal(JsonValueKind.Object, _factory.BugReportEmailSender.LastReport!.Diagnostics?.ValueKind);
+        var responseJson = await response.Content.ReadAsStringAsync();
+        Assert.True(
+            response.StatusCode == HttpStatusCode.Accepted,
+            $"Expected Accepted but received {response.StatusCode}: {responseJson}");
+        var accepted = await response.Content.ReadFromJsonAsync<BugReportResponse>(TestJson.Options);
+        var delivered = await WaitForBugReportEmailAsync(accepted!.Id);
+        Assert.Equal(JsonValueKind.Object, delivered.Diagnostics?.ValueKind);
+    }
+
+    private async Task<CreateBugReportRequest> WaitForBugReportEmailAsync(Guid reportId)
+    {
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            if (_factory.BugReportEmailSender.LastReportId == reportId &&
+                _factory.BugReportEmailSender.LastReport is { } report)
+            {
+                return report;
+            }
+
+            await Task.Delay(200);
+        }
+
+        throw new TimeoutException($"Bug report {reportId} was not delivered by the background worker.");
     }
 }

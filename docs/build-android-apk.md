@@ -36,8 +36,13 @@ npm run mobile:build:android-apk:local -- -ApiBaseUrl "https://your-backend-url.
 Expected output:
 
 ```text
-apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+.artifacts/Gymmin-arm64-v8a-debug-local.apk
 ```
+
+The helper mirrors the repository to `C:\gymmin-local-apk\repo` by default and
+clears native caches before Gradle runs. This is required on Windows because
+Expo Modules, Nitro and IAP C++ paths can exceed CMake/Ninja limits in a deep
+workspace. Override the location with `-ShortBuildRoot "D:\g"`.
 
 Build release APK locally:
 
@@ -394,6 +399,7 @@ npm run mobile:build:android-apk -- -ApiBaseUrl "https://your-backend-url.exampl
 - Direct APK sideload is useful for app QA, but real Google Play purchase lifecycle should be verified through Play Console internal testing or another Google-supported test track.
 - `react-native-iap` and its peer dependency `react-native-nitro-modules` are the native Google Play Billing stack. After changing either dependency, rebuild Android; Expo Go will only show the controlled billing-unavailable fallback.
 - Local Android build smoke requires `ANDROID_HOME` or `ANDROID_SDK_ROOT`. On this machine Android SDK command-line tools were installed under `%LOCALAPPDATA%\Android\Sdk`, and Android APK plus release AAB build smoke were verified after adding the Billing/Nitro stack.
-- The verified smoke build used `react-native-iap@15.3.4`, `react-native-nitro-modules@0.35.x`, package `com.gymmin.app`, Android billing permission `com.android.vending.BILLING`, and the OpenIAP Google dependency.
-- `react-dom@19.1.0` is also installed because release bundling pulls a React Aria utility through Gluestack that imports `react-dom`.
+- The verified Expo SDK 57 smoke build used React Native 0.86, React/React DOM 19.2.3, `react-native-iap@15.5.0`, `react-native-nitro-modules@0.35.10`, package `com.gymmin.app` and Android billing permission `com.android.vending.BILLING`.
+- OpenIAP is supplied transitively by `react-native-iap`; do not pin a second OpenIAP Google dependency in `android/app/build.gradle`.
+- `react-native-web` is installed together with `react-dom` to satisfy Expo Doctor and the web peer stack used by Expo/transitive React Aria and Gluestack code.
 - If no emulator or physical device is connected, the build smoke can confirm native linking only. Runtime purchase checks still require an Android device/build with Google Play services; real purchases require Play Console internal testing.

@@ -7,6 +7,7 @@ public static class AiCreditTransactionTypes
     public const string Consume = "Consume";
     public const string Refund = "Refund";
     public const string AdminAdjustment = "AdminAdjustment";
+    public const string PurchaseClawback = "PurchaseClawback";
     public const string DevGrant = "DevGrant";
 }
 
@@ -16,6 +17,7 @@ public static class AiCreditReasons
     public const string WorkoutCreatorRewrite = "WorkoutCreatorRewrite";
     public const string TechnicalFailureRefund = "TechnicalFailureRefund";
     public const string GooglePlayPurchase = "GooglePlayPurchase";
+    public const string GooglePlayVoidedPurchase = "GooglePlayVoidedPurchase";
 }
 
 public sealed record AiCreditBalanceResponse(
@@ -116,6 +118,7 @@ public static class AiCreditPurchaseStatuses
     public const string Consumed = "Consumed";
     public const string Failed = "Failed";
     public const string Duplicate = "Duplicate";
+    public const string Voided = "Voided";
 }
 
 public static class GooglePlayPurchaseStates

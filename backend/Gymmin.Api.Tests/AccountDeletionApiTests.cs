@@ -45,7 +45,7 @@ public sealed class AccountDeletionApiTests : IClassFixture<GymminApiFactory>
         await SeedUserDataAsync(client, "kept-workout", "kept-session", "exercise-b", "five_workouts");
 
         client.Authorize(userA.Token);
-        var delete = await client.DeleteAsync("/api/account");
+        var delete = await DeleteAccountAsync(client, "pass1234");
         Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
 
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me")).StatusCode);
@@ -73,8 +73,20 @@ public sealed class AccountDeletionApiTests : IClassFixture<GymminApiFactory>
         var user = await TestPayloads.RegisterAsync(client, "delete-empty");
         client.Authorize(user.Token);
 
-        Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync("/api/account")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await DeleteAccountAsync(client, "pass1234")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_account_requires_current_password()
+    {
+        using var client = _factory.CreateClient();
+        var user = await TestPayloads.RegisterAsync(client, "delete-reauth");
+        client.Authorize(user.Token);
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await DeleteAccountAsync(client, "wrong-password")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await DeleteAccountAsync(client, "pass1234")).StatusCode);
     }
 
     private static async Task SeedUserDataAsync(
@@ -136,5 +148,14 @@ public sealed class AccountDeletionApiTests : IClassFixture<GymminApiFactory>
         file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
         form.Add(file, "avatar", "avatar.png");
         return form;
+    }
+
+    private static Task<HttpResponseMessage> DeleteAccountAsync(HttpClient client, string password)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Delete, "/api/account")
+        {
+            Content = JsonContent.Create(new DeleteAccountRequest(password))
+        };
+        return client.SendAsync(request);
     }
 }

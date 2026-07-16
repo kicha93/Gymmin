@@ -233,13 +233,13 @@ export function WeeklyPlanHomeCard({
     .replace("{completed}", String(summary.completed))
     .replace("{total}", String(summary.total));
   const dayKeys: Record<ReturnType<typeof getWeeklyPlanDay>, TranslationKey> = {
-    monday: "mondayShort",
-    tuesday: "tuesdayShort",
-    wednesday: "wednesdayShort",
-    thursday: "thursdayShort",
-    friday: "fridayShort",
-    saturday: "saturdayShort",
-    sunday: "sundayShort"
+    monday: "monday",
+    tuesday: "tuesday",
+    wednesday: "wednesday",
+    thursday: "thursday",
+    friday: "friday",
+    saturday: "saturday",
+    sunday: "sunday"
   };
 
   return (
@@ -265,21 +265,9 @@ export function WeeklyPlanHomeCard({
         <Ionicons name="chevron-forward" size={22} color={theme.muted} />
       </View>
       <View style={[styles.weeklyPlanHomeStats, { borderTopColor: theme.border }]}>
-        <View style={styles.weeklyPlanHomeStat}>
-          <Ionicons name="checkmark-circle" size={21} color={theme.primary} />
-          <Text style={[styles.weeklyPlanStatNumber, { color: theme.text }]}>{summary.completed}</Text>
-          <Text style={[styles.weeklyPlanStatLabel, { color: theme.muted }]}>{t("completed")}</Text>
-        </View>
-        <View style={[styles.weeklyPlanStatDivider, { backgroundColor: theme.border }]} />
-        <View style={styles.weeklyPlanHomeStat}>
-          <Ionicons name="ellipse-outline" size={21} color={theme.secondaryBand} />
-          <Text style={[styles.weeklyPlanStatNumber, { color: theme.text }]}>{summary.remaining}</Text>
-          <Text style={[styles.weeklyPlanStatLabel, { color: theme.muted }]}>{t("toDo")}</Text>
-        </View>
-        <View style={[styles.weeklyPlanStatDivider, { backgroundColor: theme.border }]} />
         <View style={styles.weeklyPlanToday}>
-          <Text style={[styles.weeklyPlanTodayLabel, { color: theme.muted }]}>
-            {`${t("today")}: ${t(dayKeys[getWeeklyPlanDay(new Date())])}`}
+          <Text style={[styles.weeklyPlanTodayLabel, { color: theme.text }]}>
+            {t(dayKeys[getWeeklyPlanDay(new Date())])}
           </Text>
           {todayItem ? (
             <Pressable
@@ -299,7 +287,7 @@ export function WeeklyPlanHomeCard({
             </Pressable>
           ) : (
             <Text style={[styles.weeklyPlanTodayName, { color: theme.text }]} numberOfLines={1}>
-              {t("todayNoWorkout")}
+              {t("noWorkout")}
             </Text>
           )}
         </View>

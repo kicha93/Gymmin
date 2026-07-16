@@ -51,6 +51,25 @@ describe("exercise catalog cleanup", () => {
     expect(getExerciseImageAssetKeys("lying-leg-curl")).toHaveLength(0);
   });
 
+  it("registers every image pair from the July exercise package", () => {
+    const exerciseIds = [
+      "curl-cable-biceps-curl-331",
+      "lateral-raise-dumbbell-lateral-raise-545",
+      "leg-curl-leg-curl-574",
+      "leg-raise-hanging-knee-raise-585",
+      "lunge-dumbbell-bulgarian-split-squat-625",
+      "row-face-pull-1044",
+      "shoulder-press-seated-dumbbell-shoulder-press-1128",
+      "squat-barbell-front-squat-1253",
+      "squat-leg-press-1285",
+      "triceps-extension-cable-overhead-triceps-extension-1403"
+    ];
+
+    for (const exerciseId of exerciseIds) {
+      expect(getExerciseImageAssetKeys(exerciseId), exerciseId).toHaveLength(2);
+    }
+  });
+
   it("preserves old Stage 2 exercise names as aliases to focused catalog entries", () => {
     expect(findExerciseByName("Battle Rope")?.name).toBe("Battle Rope Alternating Wave");
     expect(findExerciseByName("Floor I Raise")?.name).toBe("Prone I-Y-T Raise");

@@ -12,8 +12,10 @@ type DeleteAccountScreenProps = {
   confirmationPhrase: string;
   error: string;
   isDeleting: boolean;
+  password: string;
   onCancel: () => void;
   onChangeConfirmation: (value: string) => void;
+  onChangePassword: (value: string) => void;
   onDelete: () => void;
   t: (key: TranslationKey) => string;
   theme: Theme;
@@ -25,8 +27,10 @@ export function DeleteAccountScreen({
   confirmationPhrase,
   error,
   isDeleting,
+  password,
   onCancel,
   onChangeConfirmation,
+  onChangePassword,
   onDelete,
   t,
   theme
@@ -58,6 +62,20 @@ export function DeleteAccountScreen({
           theme={theme}
           value={confirmation}
           onChangeText={onChangeConfirmation}
+        />
+        <Text style={[styles.workoutMeta, styles.deleteAccountCopy, { color: theme.text }]}>
+          {t("deleteAccountPasswordConfirmation")}
+        </Text>
+        <AppInput
+          autoCapitalize="none"
+          autoCorrect={false}
+          editable={!isDeleting}
+          placeholder={t("currentPassword")}
+          secureTextEntry
+          style={{ borderColor: theme.border }}
+          theme={theme}
+          value={password}
+          onChangeText={onChangePassword}
         />
         {error ? <Text style={[styles.authError, { color: theme.danger }]}>{error}</Text> : null}
         <View style={styles.deleteAccountActions}>

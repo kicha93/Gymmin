@@ -17,6 +17,86 @@ namespace Gymmin.Api.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.11");
 
+            modelBuilder.Entity("Gymmin.Api.Data.AbuseRateLimitBucketEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ExpiresAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("KeyHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WindowStartedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.ToTable("AbuseRateLimitBuckets", (string)null);
+                });
+
+            modelBuilder.Entity("Gymmin.Api.Data.AdminAuditEventEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ActorKeyId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DetailsJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("TargetType", "TargetId");
+
+                    b.ToTable("AdminAuditEvents", (string)null);
+                });
+
             modelBuilder.Entity("Gymmin.Api.Data.AiCreditAccountEntity", b =>
                 {
                     b.Property<string>("UserId")
@@ -45,6 +125,13 @@ namespace Gymmin.Api.Data.Migrations
 
                     b.Property<int?>("AcknowledgementState")
                         .HasColumnType("INTEGER");
+
+                    b.Property<int>("ClawbackCredits")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ClawbackTransactionId")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ConsumedAt")
                         .HasColumnType("TEXT");
@@ -110,6 +197,9 @@ namespace Gymmin.Api.Data.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("UnrecoveredCredits")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("UpdatedAt")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -120,6 +210,15 @@ namespace Gymmin.Api.Data.Migrations
 
                     b.Property<string>("VerifiedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("VoidedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("VoidedReason")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("VoidedSource")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -200,6 +299,310 @@ namespace Gymmin.Api.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("AiCreditTransactions", (string)null);
+                });
+
+            modelBuilder.Entity("Gymmin.Api.Data.BugReportEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AdminRespondedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AdminResponse")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AppVersion")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Device")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DiagnosticsJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmailAttemptCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EmailDeliveryError")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailDeliveryStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailLastAttemptAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailLeaseExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailLeaseId")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailNextAttemptAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailSentAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Language")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReporterUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RewardPoints")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RewardedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Screen")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("ReporterUserId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("EmailDeliveryStatus", "EmailNextAttemptAt");
+
+                    b.ToTable("BugReports", (string)null);
+                });
+
+            modelBuilder.Entity("Gymmin.Api.Data.BugReportRewardTransactionEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AwardedBy")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BugReportId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BugReportId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BugReportRewardTransactions", (string)null);
+                });
+
+            modelBuilder.Entity("Gymmin.Api.Data.GooglePlayRtdnEventEntity", b =>
+                {
+                    b.Property<string>("MessageId")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EventTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NotificationKind")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("NotificationType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PackageName")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProcessedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProcessingStatus")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProductId")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PublishedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PurchaseTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReceivedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("MessageId");
+
+                    b.HasIndex("ProcessingStatus");
+
+                    b.HasIndex("PurchaseTokenHash");
+
+                    b.HasIndex("ReceivedAt");
+
+                    b.ToTable("GooglePlayRtdnEvents", (string)null);
+                });
+
+            modelBuilder.Entity("Gymmin.Api.Data.GooglePlayVoidedPurchaseEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ClawbackCredits")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ClawbackTransactionId")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GoogleOrderId")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProcessedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProcessingStatus")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PurchaseId")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PurchaseTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PurchaseTokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReceivedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UnrecoveredCredits")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VoidedQuantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("VoidedReason")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("VoidedSource")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("VoidedTime")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoogleOrderId");
+
+                    b.HasIndex("ProcessingStatus");
+
+                    b.HasIndex("PurchaseTokenHash");
+
+                    b.HasIndex("ReceivedAt");
+
+                    b.ToTable("GooglePlayVoidedPurchases", (string)null);
+                });
+
+            modelBuilder.Entity("Gymmin.Api.Data.IntegrationCheckpointEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastSuccessfulAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IntegrationCheckpoints", (string)null);
                 });
 
             modelBuilder.Entity("Gymmin.Api.Data.PasswordResetTokenEntity", b =>
@@ -329,6 +732,19 @@ namespace Gymmin.Api.Data.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(254)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailVerificationCodeExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailVerificationCodeHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailVerificationSentAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailVerifiedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -487,9 +903,6 @@ namespace Gymmin.Api.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("ShowRestTimer")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("IsAuthPanelDismissed")
                         .HasColumnType("INTEGER");
 
@@ -497,6 +910,9 @@ namespace Gymmin.Api.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(16)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("ShowRestTimer")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("ThemeName")
                         .IsRequired()
@@ -766,6 +1182,34 @@ namespace Gymmin.Api.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gymmin.Api.Data.BugReportEntity", b =>
+                {
+                    b.HasOne("Gymmin.Api.Data.UserEntity", "ReporterUser")
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ReporterUser");
+                });
+
+            modelBuilder.Entity("Gymmin.Api.Data.BugReportRewardTransactionEntity", b =>
+                {
+                    b.HasOne("Gymmin.Api.Data.BugReportEntity", "BugReport")
+                        .WithMany()
+                        .HasForeignKey("BugReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Gymmin.Api.Data.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("BugReport");
 
                     b.Navigation("User");
                 });

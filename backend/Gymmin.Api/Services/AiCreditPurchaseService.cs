@@ -85,6 +85,13 @@ public sealed class EfAiCreditPurchaseService : IAiCreditPurchaseService
         var pack = GetActivePack(productId)!;
 
         await using var precheckDb = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        if (await precheckDb.GooglePlayVoidedPurchases.AsNoTracking()
+            .AnyAsync(item => item.PurchaseTokenHash == tokenHash, cancellationToken))
+        {
+            return new VerifyGooglePlayPurchaseResult(
+                false, true, false, "google_play_purchase_voided",
+                "This Google Play purchase was voided and cannot grant credits.", null);
+        }
         var existing = await precheckDb.AiCreditPurchases
             .AsNoTracking()
             .FirstOrDefaultAsync(purchase => purchase.PurchaseTokenHash == tokenHash, cancellationToken);
@@ -109,6 +116,21 @@ public sealed class EfAiCreditPurchaseService : IAiCreditPurchaseService
         if (!string.Equals(google.ProductId, productId, StringComparison.Ordinal))
         {
             return new VerifyGooglePlayPurchaseResult(false, false, false, "google_play_product_mismatch", "Google Play product id did not match the requested pack.", null);
+        }
+
+        if (!string.IsNullOrWhiteSpace(google.ObfuscatedExternalAccountId) &&
+            !string.Equals(
+                google.ObfuscatedExternalAccountId,
+                BuildGooglePlayObfuscatedAccountId(userId),
+                StringComparison.Ordinal))
+        {
+            return new VerifyGooglePlayPurchaseResult(
+                false,
+                true,
+                false,
+                "google_play_account_mismatch",
+                "This Google Play purchase belongs to another Gymmin account.",
+                null);
         }
 
         (string PurchaseId, VerifyGooglePlayPurchaseResponse Response) credited;
@@ -420,6 +442,9 @@ public sealed class EfAiCreditPurchaseService : IAiCreditPurchaseService
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(purchaseToken));
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
+
+    internal static string BuildGooglePlayObfuscatedAccountId(string userId) =>
+        $"gymmin_{userId.Trim().ToLowerInvariant()}";
 
     private static VerifyGooglePlayPurchaseResult BadRequest(string code, string message) =>
         new(false, false, false, code, message, null);

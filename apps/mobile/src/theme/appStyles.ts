@@ -350,7 +350,7 @@ export const styles = StyleSheet.create({
     justifyContent: "flex-end"
   },
   selectSheetBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     opacity: 0.5
   },
   selectSheetHandleWrap: {
@@ -3415,42 +3415,24 @@ export const styles = StyleSheet.create({
     right: 0
   },
   weeklyPlanHomeStats: {
-    alignItems: "center",
     borderTopWidth: 1,
-    flexDirection: "row",
-    padding: 12
-  },
-  weeklyPlanHomeStat: {
-    alignItems: "center",
-    flex: 0.8,
-    gap: 2
-  },
-  weeklyPlanStatNumber: {
-    fontSize: 17,
-    fontWeight: "900"
-  },
-  weeklyPlanStatLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    textAlign: "center"
-  },
-  weeklyPlanStatDivider: {
-    height: 44,
-    width: 1
+    paddingHorizontal: 14,
+    paddingVertical: 12
   },
   weeklyPlanToday: {
-    flex: 1.45,
     minWidth: 0,
-    paddingLeft: 10
+    width: "100%"
   },
   weeklyPlanTodayLabel: {
-    fontSize: 12,
-    fontWeight: "700"
+    fontSize: 15,
+    fontWeight: "900",
+    lineHeight: 20
   },
   weeklyPlanTodayName: {
     flex: 1,
     fontSize: 14,
-    fontWeight: "900",
+    fontWeight: "700",
+    lineHeight: 19,
     minWidth: 0
   },
   weeklyPlanTodayLink: {
@@ -4077,7 +4059,7 @@ export const styles = StyleSheet.create({
     justifyContent: "flex-end"
   },
   bottomSheetBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0, 0, 0, 0.52)"
   },
   bottomSheetPanel: {

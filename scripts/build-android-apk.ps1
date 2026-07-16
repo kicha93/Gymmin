@@ -18,6 +18,22 @@ function Write-Step {
   Write-Host "[apk] $Message"
 }
 
+function Assert-ProductionApiBaseUrl {
+  param([Parameter(Mandatory = $true)][string]$Url)
+
+  $uri = $null
+  if (-not [System.Uri]::TryCreate($Url, [System.UriKind]::Absolute, [ref]$uri) -or $uri.Scheme -ne "https") {
+    throw "Production ApiBaseUrl must be an absolute HTTPS URL. Received: $Url"
+  }
+
+  $hostName = $uri.DnsSafeHost.ToLowerInvariant()
+  $forbiddenHosts = @("localhost", "127.0.0.1", "10.0.2.2")
+  $forbiddenSuffixes = @(".trycloudflare.com", ".ngrok-free.app", ".ngrok.app", ".ngrok.io", ".loca.lt")
+  if ($hostName -in $forbiddenHosts -or ($forbiddenSuffixes | Where-Object { $hostName.EndsWith($_) })) {
+    throw "Production builds cannot use a temporary tunnel or local backend URL: $Url"
+  }
+}
+
 if (-not (Test-Path $easJsonPath)) {
   throw "Missing EAS config: $easJsonPath"
 }
@@ -26,7 +42,11 @@ $normalizedApiBaseUrl = $ApiBaseUrl.Trim().TrimEnd("/")
 if (-not ($normalizedApiBaseUrl -match "^https?://")) {
   throw "ApiBaseUrl must start with http:// or https://. Received: $ApiBaseUrl"
 }
+if ($Profile -eq "production") {
+  Assert-ProductionApiBaseUrl -Url $normalizedApiBaseUrl
+}
 
+$easJsonBackupBytes = [System.IO.File]::ReadAllBytes($easJsonPath)
 $easJsonBackup = Get-Content $easJsonPath -Raw
 
 try {
@@ -88,6 +108,6 @@ try {
     Pop-Location
   }
 } finally {
-  Set-Content -Path $easJsonPath -Value $easJsonBackup -Encoding UTF8
+  [System.IO.File]::WriteAllBytes($easJsonPath, $easJsonBackupBytes)
   Write-Step "Restored eas.json."
 }

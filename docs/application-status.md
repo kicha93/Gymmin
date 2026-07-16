@@ -1,6 +1,6 @@
 # Gymmin - stan aplikacji
 
-Ten dokument opisuje aktualny zakres aplikacji Gymmin i powinien być traktowany jako szybki przegląd: co działa, co jest częściowe i czego jeszcze brakuje.
+Ten dokument opisuje aktualny zakres aplikacji Gymmin po audycie produkcyjnym i audycie aktualizacji Expo z 16 lipca 2026. Powinien być traktowany jako szybki przegląd: co działa, co jest częściowe i czego jeszcze brakuje.
 
 ## Cel aplikacji
 
@@ -13,10 +13,10 @@ Docelowo Gymmin ma być przygotowany pod synchronizację z Garminem, dlatego ćw
 ### Mobile
 
 - Standalone Android APK jako podstawowy tryb testowania na telefonie.
-- Expo SDK 54 jako warstwa natywna projektu.
-- React Native 0.81, React 19, TypeScript.
+- Expo SDK 57 jako warstwa natywna projektu.
+- React Native 0.86, React 19.2, TypeScript 6.
 - Gluestack UI, Ionicons, React Native SVG.
-- AsyncStorage jako lokalny storage.
+- AsyncStorage jako lokalny storage danych local-first; bearer tokeny są w OS SecureStore/Keychain.
 - Expo Notifications dla lokalnych przypomnień treningowych w standalone APK.
 - React Error Boundary.
 - GitHub Release jako domyślny kanał dystrybucji APK.
@@ -32,7 +32,9 @@ Uwaga: nie testujemy już głównego przepływu przez Expo Go. Expo nadal jest c
 - File provider jako fallback developerski.
 - EF Core database provider z migracjami, lokalnym SQLite i PostgreSQL pod staging/production.
 - OpenAI Responses API dla kreatora i modyfikowania treningów.
-- SMTP dla zgłoszeń błędów.
+- SMTP dla weryfikacji emaila, resetu hasła i powiadomień o zgłoszeniach.
+- Google Play Developer API oraz uwierzytelniony Pub/Sub RTDN.
+- Produkcyjne health probes, JSON logs, retencja danych technicznych i opcjonalne admin API.
 
 ## Najważniejsze moduły mobile
 
@@ -112,6 +114,11 @@ Hasła są haszowane na backendzie przez PBKDF2, a tokeny sesji są zapisywane j
 Działa:
 
 - reset hasła przez email/token,
+- sześciocyfrowa weryfikacja emaila wymagana przed AI, z kodem przechowywanym wyłącznie jako hash,
+- token sesji mobile w OS SecureStore/Keychain z migracją legacy AsyncStorage,
+- współdzielone limity rejestracji i AI per IP/użytkownik w Database provider,
+- usunięcie konta z ponownym potwierdzeniem aktualnym hasłem i limitem prób,
+- produkcyjne limity rozmiaru requestów/kolekcji oraz allowlista CORS i nagłówki bezpieczeństwa,
 - zmiana hasła,
 - lista aktywnych sesji,
 - wylogowanie pojedynczej sesji,
@@ -327,13 +334,18 @@ Aktualnie dziala:
 - production-grade safety dla Database provider: atomowy consume tokena na poziomie bazy i idempotentny refund,
 - unikalny constraint dla `UserId + operation type + IdempotencyKey`, zeby retry nie pobieral drugiego tokena,
 - Google Play purchase validation po stronie backendu dla aktualnych paczek `ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10` odpowiadajacych 1/3/10 kredytom,
+- uwierzytelniony RTDN/Pub/Sub push z kontrolą OIDC audience, konta usługi, package name i idempotencją `messageId`,
+- techniczny inbox `GooglePlayRtdnEvents`, który przechowuje wyłącznie hash purchase tokena,
 - tabela `AiCreditPurchases` z hashem purchase tokena, statusem przetwarzania i powiazaniem do ledger transaction,
 - endpoint `POST /api/ai-credits/purchases/google-play/verify`,
+- cykliczne uzgadnianie refundow i chargebackow przez Voided Purchases API z trwalym checkpointem, idempotentnym clawbackiem i kolejka manualnej obslugi,
+- `obfuscatedAccountId` w mobilnym Billing flow oraz backendowa kontrola przypisania zakupu do konta, gdy Google zwraca ten identyfikator,
 - idempotentne naliczanie zakupow: ponowne wyslanie tego samego purchase tokena nie dodaje tokenow drugi raz,
 - server-side consume po poprawnym naliczeniu zakupu,
 - natywne zaleznosci mobile `react-native-iap` i `react-native-nitro-modules` oraz Android permission `com.android.vending.BILLING`,
 - Android debug APK build smoke przechodzi z natywnym Google Play Billing stackiem,
 - release AAB build smoke przechodzi przez skrypt `mobile:store:aab`, ktory buduje z krotkiej sciezki roboczej dla Windows/CMake,
+- po aktualizacji Expo 57 potwierdzono `expo-doctor` 19/19, eksport Hermes dla Androida, debug APK oraz czysty `bundleRelease` dla `arm64-v8a`,
 - build smoke wymaga Android SDK (`ANDROID_HOME` / `ANDROID_SDK_ROOT`); bez podlaczonego emulatora lub telefonu potwierdza linkowanie natywne, ale nie runtime UI,
 - widok mobile `Kredyty` z saldem, kosztami, kompaktowymi kartami pakietow, ostatnimi transakcjami, informacjami i akcja zakupu/restore pending purchases,
 - dev/test grant poza Production.
@@ -407,9 +419,15 @@ Homepage pokazuje kompaktowy panel aktywnego planu tygodnia. Plan jest local-fir
 
 Kontakt ma zwarty układ: główny CTA otwiera klienta poczty dla `kontakt@gymmin.app`, informacja o czasie odpowiedzi jest krótkim paskiem, a problemy z aplikacją prowadzą do istniejącego formularza „Zgłoś błąd”. FAQ zawiera trzy zwijane odpowiedzi, dzięki czemu ekran nie powtarza długich bloków tekstu.
 
-Zgłoszenie błędu idzie do backendu przez `POST /api/bug-reports`. Aplikacja dołącza w tle informacje o urządzeniu, systemie, języku i ekranie. Backend wysyła mail SMTP z tematem `[Gymmin][Błąd] {Tytuł}` albo `[Gymmin][Bug] {Title}`. Jeśli tytuł jest pusty, backend używa bezpiecznego fallbacku.
+Zgłoszenie błędu idzie do backendu przez `POST /api/bug-reports`. Aplikacja dołącza informacje o urządzeniu, systemie, języku i ekranie, bearer token oraz stabilny dla retry `X-Idempotency-Key`. Backend zapisuje raport przed dostarczeniem maila; trwały worker SMTP używa lease, retry i backoff. Request ma limit 64 KiB oraz domyślnie 10 zgłoszeń na użytkownika/IP na godzinę. `GET /api/bug-reports/{id}` zwraca status z kontrolą właściciela. Usunięcie konta usuwa powiązanie i identyfikatory z zagnieżdżonej diagnostyki. Opcjonalne endpointy admina obsługują status, odpowiedź i pojedynczą niezmienną nagrodę; klucz jest weryfikowany po SHA256, próby są limitowane per IP, a operacje zapisują `AdminAuditEvents`. Osobnym etapem pozostaje graficzny panel.
 
 ### Diagnostyka i monitoring
+
+Readiness rozroznia dzialajacy proces od gotowej aplikacji: kontroluje polaczenie
+z baza oraz brak oczekujacych migracji EF. Production domyslnie odmawia startu na
+nieaktualnym schemacie. Odpowiedzi `/api` domyslnie blokuja cache HTTP; endpointy
+z kontrolowanym prywatnym cache i ETag zachowuja `private`. Backend nie ujawnia
+naglowka wersji serwera Kestrel.
 
 Etap 9A dodaje lekki fundament diagnostyki bez zewnętrznego SaaS:
 
@@ -420,9 +438,9 @@ Etap 9A dodaje lekki fundament diagnostyki bez zewnętrznego SaaS:
 - rate limit auth zwraca spójny błąd `rate_limited`,
 - mobile wysyła `X-Correlation-Id` na requestach API i przechowuje ostatnie correlation ids,
 - mobile ma lekki ring buffer ostatnich zdarzeń diagnostycznych,
-- bug report dołącza kontekst: wersję, platformę, ekran, język, owner storage, ostatnie correlation ids, ostatni API error i ostatnie zdarzenia diagnostyczne.
+- bug report dołącza kontekst: wersję, platformę, ekran, język, ostatnie correlation ids, ostatni API error i ostatnie zdarzenia diagnostyczne; nie zapisuje ownera storage ani identyfikatora konta w diagnostyce.
 
-`GET /api/diagnostics` jest dostępny tylko w development/testing albo po jawnym włączeniu konfiguracją `Gymmin:Diagnostics:Enabled`. Endpoint nie ujawnia sekretów ani connection stringów.
+`GET /api/diagnostics` jest dostępny tylko w development/testing; produkcja odmawia startu z włączoną diagnostyką. `/health/live` sprawdza proces, `/health/ready` dostępność bazy, a produkcja emituje strukturalne logi JSON.
 
 ## Local-first i per-user storage
 
@@ -452,12 +470,25 @@ Zmiana konta nie wykonuje silent merge danych poprzedniego konta. Po loginie, je
 ## Backend - aktualne endpointy
 
 - `GET /health`
+- `GET /health/live`
+- `GET /health/ready`
 - `GET /api/health`
-- `GET /api/diagnostics` tylko development/testing albo `Gymmin:Diagnostics:Enabled=true`
+- `GET /api/diagnostics` tylko development/testing
+- `GET /api/system/status`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 - `POST /api/auth/logout`
+- `GET /api/auth/sessions`
+- `DELETE /api/auth/sessions/{sessionId}`
+- `POST /api/auth/logout-all`
+- `POST /api/auth/change-password`
+- `POST /api/auth/password-reset/request`
+- `POST /api/auth/password-reset/confirm`
+- `POST /api/auth/email-verification/request`
+- `POST /api/auth/email-verification/confirm`
+- `DELETE /api/account`
+- `GET|POST|DELETE /api/profile/avatar`
 - `GET /api/settings`
 - `PUT /api/settings`
 - `GET /api/workouts`
@@ -474,12 +505,23 @@ Zmiana konta nie wykonuje silent merge danych poprzedniego konta. Po loginie, je
 - `PUT /api/workout-sessions/{clientSessionId}`
 - `DELETE /api/workout-sessions/{clientSessionId}`
 - `POST /api/sync/workout-sessions`
+- `GET /api/achievements`
+- `POST /api/sync/achievements`
+- `GET /api/ai-credits/balance`
+- `GET /api/ai-credits/transactions`
+- `GET /api/ai-credits/packs`
+- `GET /api/ai-credits/purchases`
+- `POST /api/ai-credits/purchases/google-play/verify`
+- `POST /api/integrations/google-play/rtdn`
 - `POST /api/workout-creator/plan`
 - `POST /api/workout-creator/rewrite`
 - `GET /api/workout-creator/plan/{jobId}`
 - `GET /api/workout-creator/jobs/{jobId}`
 - `POST /api/workouts/{clientWorkoutId}/garmin-sync`
 - `POST /api/bug-reports`
+- `GET /api/bug-reports/{reportId}`
+- `GET /api/admin/bug-reports` (opcjonalne, wymaga klucza admina)
+- `PUT /api/admin/bug-reports/{reportId}` (opcjonalne, audytowane)
 
 ## Testy automatyczne
 
@@ -497,7 +539,10 @@ Zakres testów backend API:
 - favorite exercises: zapis/odczyt, tombstone, walidacja pustego `exerciseId`, limit sync i izolacja userów,
 - workout sessions: zapis/odczyt, tombstone, walidacja statusu/trybu, limit sync i izolacja userów,
 - AI creator: 401 bez tokenu, owner check dla jobów plan/rewrite,
-- bug reports: success path z fake senderem i walidacja pustego payloadu.
+- bug reports: zapis w bazie i pliku, idempotency, rate/size limits, owner-scoped status, trwały SMTP retry, anonimizacja diagnostyki po usunięciu konta i walidacja payloadu,
+- produkcyjne zabezpieczenia requestów, account deletion z hasłem, email verification i współdzielone limity nadużyć,
+- RTDN: uwierzytelnienie, package validation, idempotentny inbox i brak jawnego purchase tokena,
+- admin bug reports: hashowany klucz, niezmienna nagroda i audit event.
 
 Testy backendu używają izolowanego SQLite w trybie Database provider. OpenAI i SMTP są fake/mockowane, więc testy nie wymagają prawdziwego klucza OpenAI i nie wysyłają maili.
 
@@ -529,7 +574,7 @@ Mobile ma także typecheck:
 npm --prefix apps/mobile run typecheck
 ```
 
-Brakuje jeszcze mobile UI tests i E2E. File provider ma status fallback/dev i nie ma jeszcze osobnego smoke suite.
+Brakuje jeszcze mobile UI tests i E2E. File provider pozostaje fallbackiem dev; jego trwałość, deduplikację i atomową podmianę pliku pokrywa dedykowany test backendu.
 
 ## Co jest częściowe
 
@@ -539,7 +584,7 @@ Brakuje jeszcze mobile UI tests i E2E. File provider ma status fallback/dev i ni
 - Garmin sync jest placeholderem i pozostaje poza aktualnym zakresem prac.
 - AI import/rewrite może zostawić ćwiczenie bez `exerciseId`, jeśli best-effort mapowanie do katalogu się nie powiedzie. Nie tworzy to custom exercise, ale przed releasem warto wymusić review/replacement albo mocniej pokazać ten fallback w UI.
 - Artykuły są lokalne, bez CMS.
-- Nie ma potwierdzania emaila, OAuth/social login ani 2FA.
+- Potwierdzanie emaila działa dla nowych kont przed użyciem AI; nie ma jeszcze OAuth/social login ani 2FA.
 - Testy backend API pokrywają krytyczne ścieżki, mobile ma unit tests helperów, ale brakuje pełnych testów mobile UI/E2E oraz osobnego smoke suite dla File provider.
 
 ## Najbliższe logiczne kroki
@@ -547,10 +592,10 @@ Brakuje jeszcze mobile UI tests i E2E. File provider ma status fallback/dev i ni
 Aktualny tor produkcyjny dla backendu: PostgreSQL provider, jawne migracje i deployment checklist są opisane w `docs/deployment.md`.
 
 1. Rozszerzyć testy mobile o UI tests i krytyczne E2E.
-2. Uruchomić produkcyjny hosting DB na PostgreSQL według `docs/deployment.md`.
-3. Dodać monitoring błędów i logów produkcyjnych.
+2. Uruchomić produkcyjny PostgreSQL, backup poza hostem i okresowy test restore według `docs/deployment.md`.
+3. Podłączyć gotowy strumień JSON logów i mobile crash reporting do wybranego providera.
 4. Dopracować UX konfliktów synchronizacji i scenariusze multi-device.
-5. Potwierdzanie emaila, OAuth/social login i 2FA zostają osobnymi przyszłymi etapami.
+5. OAuth/social login i 2FA zostają osobnymi przyszłymi etapami.
 6. Garmin integration pozostaje placeholderem i jest poza aktualnym zakresem prac.
 
 ## Osiagniecia / achievements

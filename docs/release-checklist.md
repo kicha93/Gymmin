@@ -22,13 +22,33 @@ Testing release.
   manager, not committed config.
 - EF migrations are run explicitly before app startup.
 - `Gymmin:Storage:ApplyMigrationsOnStartup=false`.
-- `/health` and `/api/health` are checked after deployment.
+- `Gymmin:Storage:RequireCurrentSchema=true`; a deliberately outdated test
+  database produces startup failure and readiness `503`.
+- `/health/live` returns `200` and `/health/ready` returns `200` after deployment;
+  alerting treats readiness `503` as unavailable without restarting a live process.
+  Readiness covers both database connectivity and pending EF migrations.
 - `/api/diagnostics` is disabled or protected in Production.
 - HTTPS/reverse proxy is configured.
+- Forwarded headers are enabled only for explicitly trusted proxy IPs, so registration and AI rate limits use the real client IP.
+- Authentication SMTP is configured and a real registration/verification email has been delivered; Production intentionally fails startup without complete SMTP credentials.
 - CORS is configured intentionally for the deployed mobile/backend setup.
+- Production CORS contains only intended web origins; HSTS/HTTPS redirect and API
+  security headers are verified through the deployed proxy. API responses default
+  to `no-store` unless an endpoint explicitly uses authenticated `private` caching,
+  and neither Kestrel nor the proxy discloses a software version.
 - Auth rate limiting is enabled.
-- Logs are collected by the hosting platform.
-- PostgreSQL backups are configured.
+- Account deletion requires the current password on the server, and oversized/chunked payloads return `413` instead of reaching JSON/form processing.
+- Registration is limited per IP/email, AI is limited per user/IP, and Database provider shares counters through `AbuseRateLimitBuckets`.
+- New accounts cannot use AI before confirming the six-digit email code; existing accounts remain verified after migration.
+- Release build stores bearer tokens in OS SecureStore/Keychain and removes legacy plaintext tokens from AsyncStorage.
+- JSON console logs are collected with retention and alerts for readiness, 5xx,
+  SMTP outbox, RTDN and backup failures; request bodies and auth headers are excluded.
+- Automatic cleanup of expired reset tokens, sessions, rate-limit buckets,
+  verification codes and RTDN inbox events is enabled; business/legal retention
+  periods for ledgers, bug reports and admin audits are documented separately.
+- PostgreSQL backups are stored encrypted outside the application host, their
+  SHA256 manifests are retained, and `verify-postgres-restore.ps1` has passed on
+  the target PostgreSQL major version.
 
 ## Secrets and integrations
 
@@ -39,6 +59,9 @@ Testing release.
 - System status config is set intentionally:
   - `SystemStatus:Kind=ok` for normal operation,
   - `maintenance`, `update` or `degraded` only during controlled events.
+- If admin API is enabled, the panel keeps the raw admin key server-side only;
+  backend configuration contains its SHA256 hash and all write actions appear in
+  `AdminAuditEvents`.
 
 ## Credits and Google Play Billing
 
@@ -57,6 +80,15 @@ Testing release.
   locally.
 - Duplicate verify of the same purchase token does not grant credits twice.
 - Server-side consume is retry-safe.
+- Authenticated RTDN push uses the exact configured OIDC audience and service-account
+  email; duplicate Pub/Sub `messageId` values create one inbox event and plaintext
+  purchase tokens are never persisted.
+- Mobile sends a stable opaque account identifier to Google Play; backend rejects
+  a different `obfuscatedExternalAccountId` when Google returns it.
+- Voided Purchases reconciliation is enabled, its checkpoint advances, and
+  `manual_review`, `partial_clawback`, `unmatched` and polling failures are monitored.
+- A refund/chargeback removes only still-unused credits and never makes the balance
+  negative; `UnrecoveredCredits` is reviewed manually.
 
 ## Android builds
 
@@ -69,6 +101,7 @@ Testing release.
   ```
 
 - Store AAB uses release upload-key signing, not debug signing.
+- Store/EAS production build rejects Cloudflare/ngrok/local API URLs and embeds the permanent HTTPS backend URL through `EXPO_PUBLIC_API_BASE_URL`.
 - Store signing env vars are set:
   - `GYMMIN_UPLOAD_STORE_FILE`,
   - `GYMMIN_UPLOAD_STORE_PASSWORD`,
@@ -96,9 +129,16 @@ Run before publishing a package:
 ```powershell
 npm --prefix apps/mobile run test
 npm --prefix apps/mobile run typecheck
+cd apps/mobile
+npx expo-doctor
+npx expo export --platform android --output-dir .expo-release-smoke
+cd ../..
 dotnet test backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj
 dotnet build backend/Gymmin.Api/Gymmin.Api.csproj
 ```
+
+`expo-doctor` must report all checks passing. The Android export verifies Metro
+and Hermes bundling, but it does not replace the signed AAB build or device smoke.
 
 ## Manual smoke required
 
@@ -131,17 +171,27 @@ build:
   - notification vibration,
   - logout/account switching does not leave wrong-owner reminders active.
 - System status homepage callout for offline, degraded, maintenance and update.
-- Bug report submission with correlation id.
+- Bug report submission with correlation id, durable database record and optional reporter linkage.
+- Bug report remains stored when SMTP delivery fails, with `EmailDeliveryStatus=failed`.
+- Bug-report retries with the same `X-Idempotency-Key` return one report id, oversized requests return `413`, and the 11th report per user/IP in an hour returns `429` under default production limits.
+- Account deletion removes reporter linkage and account identifiers from nested bug-report diagnostics.
+- Apply all pending EF migrations before deploying the API/SMTP worker; verify
+  `BugReports`, `BugReportRewardTransactions`, `AbuseRateLimitBuckets`,
+  `GooglePlayRtdnEvents`, `GooglePlayVoidedPurchases`,
+  `IntegrationCheckpoints` and `AdminAuditEvents` exist.
 - Backend offline behavior: local-first data remains visible and safe.
 
-## Production TODO before public launch
+## External production work before public launch
 
 - Choose real hosting and domain.
-- Configure production log aggregation and crash/error monitoring.
-- Configure database backup/restore process and test restore.
+- Connect the JSON log stream and mobile crash reporting to the selected provider,
+  then verify a synthetic backend exception and a non-release mobile crash alert.
+- Schedule and monitor `backup-postgres.ps1`; periodically run and record a real
+  `verify-postgres-restore.ps1` result against production-compatible PostgreSQL.
 - Complete Google Play Internal Testing purchase smoke.
-- Add RTDN/PubSub handling for refund, chargeback, cancellation and pending
-  purchase lifecycle.
-- Add CI service-container smoke for PostgreSQL.
+- Enable and monitor the implemented Voided Purchases reconciliation; perform a
+  sandbox refund smoke and verify both the ledger clawback and manual-review path.
+- Keep the `production-gate` GitHub Actions workflow required on the release
+  branch; it applies all migrations to a real PostgreSQL 16 service container.
 - Finalize privacy policy and account deletion support text.
 - Decide documentation language policy and clean up legacy docs if needed.

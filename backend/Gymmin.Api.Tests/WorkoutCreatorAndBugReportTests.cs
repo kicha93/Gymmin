@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 using Gymmin.Api.Domain;
 using Gymmin.Api.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Gymmin.Api.Tests;
 
@@ -62,7 +65,7 @@ public sealed class WorkoutCreatorAndBugReportTests : IClassFixture<GymminApiFac
     }
 
     [Fact]
-    public async Task Bug_report_success_path_uses_fake_sender()
+    public async Task Bug_report_success_path_persists_report_and_uses_fake_sender()
     {
         using var client = _factory.CreateClient();
 
@@ -76,7 +79,125 @@ public sealed class WorkoutCreatorAndBugReportTests : IClassFixture<GymminApiFac
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<BugReportResponse>();
-        Assert.Equal("sent", body!.Status);
+        Assert.Equal("received", body!.Status);
+        Assert.Equal(BugReportEmailDeliveryStatuses.Pending, body.EmailDeliveryStatus);
+
+        var store = _factory.Services.GetRequiredService<IBugReportStore>();
+        var stored = await WaitForEmailStatusAsync(store, body.Id, BugReportEmailDeliveryStatuses.Sent);
+        Assert.NotNull(stored);
+        Assert.Null(stored!.ReporterUserId);
+        Assert.Equal("Something broke", stored.Title);
+        Assert.Equal(BugReportStatuses.New, stored.Status);
+        Assert.Equal(BugReportEmailDeliveryStatuses.Sent, stored.EmailDeliveryStatus);
+        Assert.Equal(0, stored.RewardPoints);
+        Assert.Null(stored.AdminResponse);
+    }
+
+    [Fact]
+    public async Task Bug_report_links_authenticated_user_from_bearer_token()
+    {
+        using var client = _factory.CreateClient();
+        var user = await TestPayloads.RegisterAsync(client, "bug-reporter");
+        client.Authorize(user.Token);
+
+        var response = await client.PostAsJsonAsync("/api/bug-reports", new CreateBugReportRequest(
+            "Profile issue",
+            "The profile screen is clipped",
+            "Android",
+            "Profile",
+            "en",
+            "1.0"));
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var body = (await response.Content.ReadFromJsonAsync<BugReportResponse>())!;
+        var stored = _factory.Services.GetRequiredService<IBugReportStore>().Get(body.Id);
+
+        Assert.NotNull(stored);
+        Assert.Equal(user.User.Id, stored!.ReporterUserId);
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"/api/bug-reports/{body.Id}")).StatusCode);
+        var otherUser = await TestPayloads.RegisterAsync(client, "other-bug-reporter");
+        client.Authorize(otherUser.Token);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/api/bug-reports/{body.Id}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Bug_report_is_retained_when_email_delivery_fails()
+    {
+        using var factory = new GymminApiFactory();
+        using var client = factory.CreateClient();
+        factory.BugReportEmailSender.FailNextSend = true;
+
+        var response = await client.PostAsJsonAsync("/api/bug-reports", new CreateBugReportRequest(
+            "Mail unavailable",
+            "The report must still be stored",
+            "Android",
+            "Settings",
+            "en",
+            "1.0"));
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var body = (await response.Content.ReadFromJsonAsync<BugReportResponse>())!;
+        var stored = await WaitForEmailStatusAsync(
+            factory.Services.GetRequiredService<IBugReportStore>(),
+            body.Id,
+            BugReportEmailDeliveryStatuses.Failed);
+
+        Assert.Equal(BugReportEmailDeliveryStatuses.Pending, body.EmailDeliveryStatus);
+        Assert.NotNull(stored);
+        Assert.Equal(BugReportEmailDeliveryStatuses.Failed, stored!.EmailDeliveryStatus);
+        Assert.Contains("Synthetic SMTP failure", stored.EmailDeliveryError);
+    }
+
+    [Fact]
+    public async Task Bug_report_submission_is_idempotent()
+    {
+        using var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Idempotency-Key", $"bug-test-{Guid.NewGuid():N}");
+        var payload = new CreateBugReportRequest("Same report", "Retry-safe description", "Android", "Home", "en", "1.0");
+
+        var first = await client.PostAsJsonAsync("/api/bug-reports", payload);
+        var second = await client.PostAsJsonAsync("/api/bug-reports", payload);
+        var firstBody = (await first.Content.ReadFromJsonAsync<BugReportResponse>())!;
+        var secondBody = (await second.Content.ReadFromJsonAsync<BugReportResponse>())!;
+
+        Assert.Equal(firstBody.Id, secondBody.Id);
+    }
+
+    [Fact]
+    public async Task Deleting_account_anonymizes_reporter_without_deleting_bug_report()
+    {
+        using var client = _factory.CreateClient();
+        var user = await TestPayloads.RegisterAsync(client, "bug-reporter-delete");
+        client.Authorize(user.Token);
+
+        var response = await client.PostAsJsonAsync("/api/bug-reports", new CreateBugReportRequest(
+            "Account-linked report",
+            "Keep this report after account deletion",
+            "Android",
+            "Profile",
+            "en",
+            "1.0",
+            JsonSerializer.SerializeToElement(new
+            {
+                userId = user.User.Id,
+                nested = new { storageOwner = user.User.Id, safe = "keep" },
+                values = new[] { user.User.Id, "keep-me" }
+            })));
+        var body = (await response.Content.ReadFromJsonAsync<BugReportResponse>())!;
+
+        using var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/account")
+        {
+            Content = JsonContent.Create(new DeleteAccountRequest("pass1234"))
+        };
+        Assert.Equal(HttpStatusCode.NoContent, (await client.SendAsync(deleteRequest)).StatusCode);
+        var stored = _factory.Services.GetRequiredService<IBugReportStore>().Get(body.Id);
+
+        Assert.NotNull(stored);
+        Assert.Null(stored!.ReporterUserId);
+        Assert.DoesNotContain(user.User.Id, stored.DiagnosticsJson ?? "");
+        Assert.DoesNotContain("storageOwner", stored.DiagnosticsJson ?? "");
+        Assert.Contains("keep-me", stored.DiagnosticsJson ?? "");
     }
 
     [Fact]
@@ -112,6 +233,20 @@ public sealed class WorkoutCreatorAndBugReportTests : IClassFixture<GymminApiFac
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Bug_report_rejects_payload_larger_than_64_kib()
+    {
+        using var client = _factory.CreateClient();
+        using var content = new StringContent(
+            JsonSerializer.Serialize(new { title = "Large", description = new string('x', 70_000) }),
+            Encoding.UTF8,
+            "application/json");
+
+        var response = await client.PostAsync("/api/bug-reports", content);
+
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
+    }
+
     private static async Task<HttpResponseMessage> WaitForJobAsync(HttpClient client, string path)
     {
         HttpResponseMessage? latest = null;
@@ -135,5 +270,16 @@ public sealed class WorkoutCreatorAndBugReportTests : IClassFixture<GymminApiFac
         }
 
         return latest ?? await client.GetAsync(path);
+    }
+
+    private static async Task<StoredBugReport> WaitForEmailStatusAsync(IBugReportStore store, Guid id, string status)
+    {
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            var report = store.Get(id);
+            if (report?.EmailDeliveryStatus == status) return report;
+            await Task.Delay(200);
+        }
+        throw new TimeoutException($"Bug report {id} did not reach email status {status}.");
     }
 }

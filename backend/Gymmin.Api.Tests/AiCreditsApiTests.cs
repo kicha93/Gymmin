@@ -315,6 +315,28 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
     }
 
     [Fact]
+    public async Task Google_play_purchase_account_identifier_must_match_signed_in_user()
+    {
+        _factory.GooglePlayPurchaseValidator.Reset();
+        using var client = _factory.CreateClient();
+        var auth = await TestPayloads.RegisterAsync(client, "ai-google-account-id");
+        client.Authorize(auth.Token);
+        _factory.GooglePlayPurchaseValidator.ObfuscatedExternalAccountId =
+            $"gymmin_{Guid.NewGuid():N}";
+
+        var response = await client.PostAsJsonAsync(
+            "/api/ai-credits/purchases/google-play/verify",
+            new VerifyGooglePlayPurchaseRequest("ai_tokens_3", "wrong-account-token", null));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+        Assert.Equal("google_play_account_mismatch", error!.Error.Code);
+
+        var balance = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
+        Assert.Equal(1, balance!.Balance);
+    }
+
+    [Fact]
     public async Task Google_play_invalid_or_pending_purchase_does_not_credit()
     {
         _factory.GooglePlayPurchaseValidator.Reset();

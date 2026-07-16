@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Gymmin.Api.Domain;
 using Microsoft.Extensions.Options;
 
@@ -19,6 +20,12 @@ public interface IGooglePlayPurchaseValidator
         string productId,
         string purchaseToken,
         CancellationToken cancellationToken);
+
+    Task<GooglePlayVoidedPurchasesResult> ListVoidedPurchasesAsync(
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        string? pageToken,
+        CancellationToken cancellationToken);
 }
 
 public sealed record GooglePlayPurchaseValidationResult(
@@ -33,11 +40,29 @@ public sealed record GooglePlayPurchaseValidationResult(
     string? RegionCode,
     string? RawResponseJson,
     string? ErrorCode,
-    string? ErrorMessage);
+    string? ErrorMessage,
+    string? ObfuscatedExternalAccountId = null);
 
 public sealed record GooglePlayConsumeResult(
     bool Success,
     bool IsRetryable,
+    string? ErrorCode,
+    string? ErrorMessage);
+
+public sealed record GooglePlayVoidedPurchase(
+    string PurchaseToken,
+    string? OrderId,
+    DateTimeOffset? PurchaseTime,
+    DateTimeOffset VoidedTime,
+    int VoidedSource,
+    int VoidedReason,
+    int VoidedQuantity);
+
+public sealed record GooglePlayVoidedPurchasesResult(
+    bool Success,
+    bool IsRetryable,
+    IReadOnlyList<GooglePlayVoidedPurchase> Purchases,
+    string? NextPageToken,
     string? ErrorCode,
     string? ErrorMessage);
 
@@ -121,6 +146,9 @@ public sealed class GooglePlayPurchaseValidator : IGooglePlayPurchaseValidator
             };
             var orderId = root.TryGetProperty("orderId", out var orderIdElement) ? orderIdElement.GetString() : null;
             var regionCode = root.TryGetProperty("regionCode", out var regionElement) ? regionElement.GetString() : null;
+            var obfuscatedExternalAccountId = root.TryGetProperty("obfuscatedExternalAccountId", out var accountElement)
+                ? accountElement.GetString()
+                : null;
             var consumptionState = root.TryGetProperty("consumptionState", out var consumptionElement) ? consumptionElement.GetInt32() : null as int?;
             var acknowledgementState = root.TryGetProperty("acknowledgementState", out var ackElement) ? ackElement.GetInt32() : null as int?;
             DateTimeOffset? purchaseTime = null;
@@ -142,7 +170,8 @@ public sealed class GooglePlayPurchaseValidator : IGooglePlayPurchaseValidator
                 regionCode,
                 SanitizeRawResponse(responseText),
                 purchaseState == GooglePlayPurchaseStates.Purchased ? null : "google_play_purchase_not_purchased",
-                purchaseState == GooglePlayPurchaseStates.Purchased ? null : $"Google Play purchase state is {purchaseState}.");
+                purchaseState == GooglePlayPurchaseStates.Purchased ? null : $"Google Play purchase state is {purchaseState}.",
+                obfuscatedExternalAccountId);
         }
         catch (OperationCanceledException)
         {
@@ -202,6 +231,71 @@ public sealed class GooglePlayPurchaseValidator : IGooglePlayPurchaseValidator
         {
             _logger.LogWarning(error, "Google Play purchase consume failed for product {ProductId}.", productId);
             return new GooglePlayConsumeResult(false, true, "google_play_consume_unavailable", "Google Play purchase consume is temporarily unavailable.");
+        }
+    }
+
+    public async Task<GooglePlayVoidedPurchasesResult> ListVoidedPurchasesAsync(
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        string? pageToken,
+        CancellationToken cancellationToken)
+    {
+        if (!_options.Enabled || !_options.VoidedPurchasesEnabled)
+        {
+            return new(false, false, [], null, "voided_purchases_disabled", "Google Play voided purchases are not enabled.");
+        }
+
+        try
+        {
+            var accessToken = await GetAccessTokenAsync(cancellationToken);
+            var query = string.IsNullOrWhiteSpace(pageToken)
+                ? $"startTime={startTime.ToUnixTimeMilliseconds()}&endTime={endTime.ToUnixTimeMilliseconds()}&pageSelection.maxResults=1000&type=0&includeQuantityBasedPartialRefund=true"
+                : $"pageSelection.token={Uri.EscapeDataString(pageToken)}&pageSelection.maxResults=1000&type=0&includeQuantityBasedPartialRefund=true";
+            using var request = new HttpRequestMessage(
+                HttpMethod.Get,
+                $"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{Uri.EscapeDataString(_options.PackageName)}/purchases/voidedpurchases?{query}");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            var responseText = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var retryable = (int)response.StatusCode is >= 500 or 408 or 409 or 429;
+                return new(false, retryable, [], null, $"google_play_voided_{(int)response.StatusCode}", "Google Play voided purchases request failed.");
+            }
+
+            using var document = JsonDocument.Parse(responseText);
+            var root = document.RootElement;
+            var purchases = new List<GooglePlayVoidedPurchase>();
+            if (root.TryGetProperty("voidedPurchases", out var items) && items.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in items.EnumerateArray())
+                {
+                    var purchaseToken = item.TryGetProperty("purchaseToken", out var tokenElement) ? tokenElement.GetString() : null;
+                    if (string.IsNullOrWhiteSpace(purchaseToken) || purchaseToken.Length > EfAiCreditPurchaseService.MaxPurchaseTokenLength) continue;
+                    var voidedTime = ParseUnixMilliseconds(item, "voidedTimeMillis");
+                    if (voidedTime is null) continue;
+                    purchases.Add(new GooglePlayVoidedPurchase(
+                        purchaseToken,
+                        item.TryGetProperty("orderId", out var orderElement) ? orderElement.GetString() : null,
+                        ParseUnixMilliseconds(item, "purchaseTimeMillis"),
+                        voidedTime.Value,
+                        item.TryGetProperty("voidedSource", out var sourceElement) ? sourceElement.GetInt32() : 0,
+                        item.TryGetProperty("voidedReason", out var reasonElement) ? reasonElement.GetInt32() : 0,
+                        item.TryGetProperty("voidedQuantity", out var quantityElement) ? Math.Max(1, quantityElement.GetInt32()) : 1));
+                }
+            }
+
+            var nextPageToken = root.TryGetProperty("tokenPagination", out var pagination) &&
+                pagination.TryGetProperty("nextPageToken", out var nextElement)
+                ? nextElement.GetString()
+                : null;
+            return new(true, false, purchases, nextPageToken, null, null);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception error)
+        {
+            _logger.LogWarning(error, "Google Play voided purchases request failed.");
+            return new(false, true, [], null, "google_play_voided_unavailable", "Google Play voided purchases are temporarily unavailable.");
         }
     }
 
@@ -293,8 +387,56 @@ public sealed class GooglePlayPurchaseValidator : IGooglePlayPurchaseValidator
             return null;
         }
 
+        try
+        {
+            var root = JsonNode.Parse(responseText);
+            if (root is not null)
+            {
+                RedactSensitiveFields(root);
+                var sanitized = root.ToJsonString(JsonOptions);
+                return sanitized.Length > 4000 ? sanitized[..4000] : sanitized;
+            }
+        }
+        catch (JsonException)
+        {
+            // Non-JSON Google errors are retained only as a bounded diagnostic message.
+        }
+
         return responseText.Length > 4000 ? responseText[..4000] : responseText;
     }
+
+    private static void RedactSensitiveFields(JsonNode node)
+    {
+        if (node is JsonObject jsonObject)
+        {
+            foreach (var property in jsonObject.ToList())
+            {
+                if (property.Key.Equals("purchaseToken", StringComparison.OrdinalIgnoreCase) ||
+                    property.Key.Equals("developerPayload", StringComparison.OrdinalIgnoreCase))
+                {
+                    jsonObject[property.Key] = "[redacted]";
+                }
+                else if (property.Value is not null)
+                {
+                    RedactSensitiveFields(property.Value);
+                }
+            }
+        }
+        else if (node is JsonArray jsonArray)
+        {
+            foreach (var item in jsonArray)
+            {
+                if (item is not null) RedactSensitiveFields(item);
+            }
+        }
+    }
+
+    private static DateTimeOffset? ParseUnixMilliseconds(JsonElement item, string propertyName) =>
+        item.TryGetProperty(propertyName, out var element) &&
+        long.TryParse(element.GetString(), out var value) &&
+        value >= 0
+            ? DateTimeOffset.FromUnixTimeMilliseconds(value)
+            : null;
 
     private sealed record GoogleServiceAccountCredentials(
         string ClientEmail,

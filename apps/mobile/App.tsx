@@ -1,5 +1,6 @@
 ﻿import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { config as gluestackConfig } from "@gluestack-ui/config";
 import {
   GluestackUIProvider,
@@ -328,22 +329,39 @@ const localCreatorJobStorageBaseKey = "localCreatorJob.v1";
 const localWeeklyPlanStorageBaseKey = WEEKLY_PLAN_STORAGE_BASE_KEY;
 const anonymousMergeHandledStorageBaseKey = "anonymousMergeHandled.v1";
 const localAuthStorageKey = "gymmin.localAuth.v1";
+const secureAuthTokenKey = "gymmin.auth.token.v1";
 const workoutSessionSyncActiveDebounceMs = 1600;
 const workoutSessionSyncIdleDebounceMs = 250;
+
+async function getSecureAuthToken() {
+  return Platform.OS === "web" ? null : SecureStore.getItemAsync(secureAuthTokenKey);
+}
+
+async function setSecureAuthToken(token: string) {
+  if (Platform.OS === "web") return;
+  await SecureStore.setItemAsync(secureAuthTokenKey, token, {
+    keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY
+  });
+}
+
+async function deleteSecureAuthToken() {
+  if (Platform.OS === "web") return;
+  await SecureStore.deleteItemAsync(secureAuthTokenKey);
+}
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
 
 function getDefaultApiBaseUrl() {
-  if (BUILD_API_BASE_URL.trim()) {
-    return BUILD_API_BASE_URL.trim().replace(/\/+$/, "");
-  }
-
   const configuredApiBaseUrl = typeof process !== "undefined"
     ? process.env?.EXPO_PUBLIC_API_BASE_URL?.trim()
     : "";
 
   if (configuredApiBaseUrl) {
     return configuredApiBaseUrl.replace(/\/+$/, "");
+  }
+
+  if (BUILD_API_BASE_URL.trim()) {
+    return BUILD_API_BASE_URL.trim().replace(/\/+$/, "");
   }
 
   const scriptUrl = typeof NativeModules.SourceCode?.scriptURL === "string"
@@ -1736,6 +1754,7 @@ type UserSession = {
   avatarUrl?: string | null;
   createdOn?: string | null;
   email: string;
+  emailVerified: boolean;
   id: string;
   modifiedOn?: string | null;
   name: string;
@@ -1804,6 +1823,7 @@ type AuthUserResponse = {
   avatarUrl?: string | null;
   createdOn?: string | null;
   email: string;
+  emailVerified?: boolean;
   id: string;
   modifiedOn?: string | null;
   name: string;
@@ -1834,11 +1854,12 @@ const AuthPasswordPolicy = {
 };
 
 type LocalAuthStorage = {
-  token: string;
   updatedAt: string;
   user: AuthUserResponse;
-  version: 1;
+  version: 2;
 };
+
+type LegacyLocalAuthStorage = Partial<LocalAuthStorage> & { token?: string; version?: number };
 
 const defaultCollapsedPanels: Record<string, boolean> = {
   "settings-account": true,
@@ -1944,6 +1965,7 @@ function GymminApp() {
   const [resetToken, setResetToken] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [deleteAccountConfirmation, setDeleteAccountConfirmation] = useState("");
+  const [deleteAccountPassword, setDeleteAccountPassword] = useState("");
   const [deleteAccountError, setDeleteAccountError] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [activeAuthSessions, setActiveAuthSessions] = useState<AuthSessionResponse[]>([]);
@@ -2001,6 +2023,10 @@ function GymminApp() {
     defaultCollapsedPanels
   );
   const [user, setUser] = useState<UserSession | null>(null);
+  const [isEmailVerificationOpen, setIsEmailVerificationOpen] = useState(false);
+  const [emailVerificationCode, setEmailVerificationCode] = useState("");
+  const [emailVerificationMessage, setEmailVerificationMessage] = useState("");
+  const [isEmailVerificationSubmitting, setIsEmailVerificationSubmitting] = useState(false);
   const storageOwnerId = getAccountStorageOwnerId(user?.id);
   const [hasLoadedAccountStorageMigration, setHasLoadedAccountStorageMigration] = useState(false);
   const [loadedWorkoutsOwnerId, setLoadedWorkoutsOwnerId] = useState<string | null>(null);
@@ -2026,6 +2052,7 @@ function GymminApp() {
   const achievementsSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const systemStatusFetchedAtRef = useRef<number | null>(null);
   const mainScrollRef = useRef<ScrollView | null>(null);
+  const bugReportSubmissionRef = useRef<{ key: string; signature: string } | null>(null);
   const activeWorkoutSessionEntryIndexRef = useRef<Record<string, number>>({});
   const appUsageStartedAtRef = useRef<number | null>(Date.now());
   const isApplyingAccountFavoriteExercisesRef = useRef(false);
@@ -2585,18 +2612,26 @@ function GymminApp() {
     async function loadLocalAuth() {
       try {
         const rawData = await AsyncStorage.getItem(localAuthStorageKey);
+        const storedData = rawData ? JSON.parse(rawData) as LegacyLocalAuthStorage : null;
+        let token = await getSecureAuthToken();
 
-        if (!isMounted || !rawData) {
+        if (!isMounted || !storedData || !isRecord(storedData.user)) {
+          await deleteSecureAuthToken();
+          if (rawData) await AsyncStorage.removeItem(localAuthStorageKey);
           return;
         }
 
-        const storedData = JSON.parse(rawData) as Partial<LocalAuthStorage>;
+        if (!token && typeof storedData.token === "string" && storedData.token.trim()) {
+          token = storedData.token.trim();
+          await setSecureAuthToken(token);
+          await AsyncStorage.setItem(localAuthStorageKey, JSON.stringify({
+            updatedAt: new Date().toISOString(),
+            user: storedData.user,
+            version: 2
+          } satisfies LocalAuthStorage));
+        }
 
-        if (
-          typeof storedData.token !== "string" ||
-          !storedData.token.trim() ||
-          !isRecord(storedData.user)
-        ) {
+        if (!token) {
           await AsyncStorage.removeItem(localAuthStorageKey);
           return;
         }
@@ -2606,20 +2641,24 @@ function GymminApp() {
           avatarUrl: typeof storedData.user.avatarUrl === "string" ? storedData.user.avatarUrl : null,
           createdOn: typeof storedData.user.createdOn === "string" ? storedData.user.createdOn : null,
           email: String(storedData.user.email),
+          emailVerified: storedData.user.emailVerified === true,
           id: String(storedData.user.id),
           modifiedOn: typeof storedData.user.modifiedOn === "string" ? storedData.user.modifiedOn : null,
           name: String(storedData.user.name || storedData.user.email.split("@")[0] || t("defaultUserName")),
-          token: storedData.token
+          token
         };
 
         const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
-          headers: getApiHeaders({ ...cachedSession, token: storedData.token })
+          headers: getApiHeaders(cachedSession)
         });
         recordCorrelationId(response.headers.get("X-Correlation-Id"));
 
         if (!response.ok) {
           if (response.status === 401 || response.status === 403) {
-            await AsyncStorage.removeItem(localAuthStorageKey);
+            await Promise.all([
+              AsyncStorage.removeItem(localAuthStorageKey),
+              deleteSecureAuthToken()
+            ]);
           } else {
             setUser(cachedSession);
           }
@@ -2629,7 +2668,10 @@ function GymminApp() {
         const responseBody = await response.json().catch(() => null) as AuthUserResponse | null;
 
         if (!responseBody?.id || !responseBody.email) {
-          await AsyncStorage.removeItem(localAuthStorageKey);
+          await Promise.all([
+            AsyncStorage.removeItem(localAuthStorageKey),
+            deleteSecureAuthToken()
+          ]);
           return;
         }
 
@@ -2638,20 +2680,23 @@ function GymminApp() {
           avatarUrl: responseBody.avatarUrl ?? null,
           createdOn: responseBody.createdOn ?? null,
           email: responseBody.email,
+          emailVerified: responseBody.emailVerified === true,
           id: responseBody.id,
           modifiedOn: responseBody.modifiedOn ?? null,
           name: responseBody.name || responseBody.email.split("@")[0] || t("defaultUserName"),
-          token: storedData.token
+          token
         });
       } catch (error) {
         console.error("Failed to load local auth", error);
         try {
           const rawData = await AsyncStorage.getItem(localAuthStorageKey);
-          const storedData = rawData ? JSON.parse(rawData) as Partial<LocalAuthStorage> : null;
+          const token = await getSecureAuthToken();
+          const storedData = rawData ? JSON.parse(rawData) as LegacyLocalAuthStorage : null;
           if (
             isMounted &&
-            typeof storedData?.token === "string" &&
-            storedData.token.trim() &&
+            typeof token === "string" &&
+            token.trim() &&
+            storedData !== null &&
             isRecord(storedData.user) &&
             typeof storedData.user.id === "string" &&
             typeof storedData.user.email === "string"
@@ -2661,12 +2706,13 @@ function GymminApp() {
               avatarUrl: typeof storedData.user.avatarUrl === "string" ? storedData.user.avatarUrl : null,
               createdOn: typeof storedData.user.createdOn === "string" ? storedData.user.createdOn : null,
               email: storedData.user.email,
+              emailVerified: storedData.user.emailVerified === true,
               id: storedData.user.id,
               modifiedOn: typeof storedData.user.modifiedOn === "string" ? storedData.user.modifiedOn : null,
               name: typeof storedData.user.name === "string" && storedData.user.name
                 ? storedData.user.name
                 : storedData.user.email.split("@")[0] || t("defaultUserName"),
-              token: storedData.token
+              token
             });
           }
         } catch (fallbackError) {
@@ -3372,6 +3418,10 @@ function GymminApp() {
   }, []);
 
   useEffect(() => {
+    if (user && !user.emailVerified) setIsEmailVerificationOpen(true);
+  }, [user?.id, user?.emailVerified]);
+
+  useEffect(() => {
     const showSubscription = Keyboard.addListener("keyboardDidShow", () => setIsKeyboardVisible(true));
     const hideSubscription = Keyboard.addListener("keyboardDidHide", () => setIsKeyboardVisible(false));
 
@@ -3982,10 +4032,11 @@ function GymminApp() {
     [selectedExerciseProgressKey, visibleWorkoutSessions]
   );
 
-  const bottomInset = Math.max(insets.bottom, 18);
+  const bottomInset = Math.max(insets.bottom, isLandscape ? 4 : 18);
   const bottomSheetBottomPadding = Math.max(insets.bottom, 72) + 24;
-  const bottomNavHeight = 58 + bottomInset;
+  const bottomNavHeight = (isLandscape ? 48 : 58) + bottomInset;
   const stickyActionBottom = bottomNavHeight - 4;
+  const scrollViewportBottomMargin = isLandscape ? 0 : bottomNavHeight;
 
   function getAuthHeaders(session = user): Record<string, string> {
     return getApiHeaders(session);
@@ -4142,7 +4193,7 @@ function GymminApp() {
       }
 
       setAiCreditsPurchaseMessage(t("aiCreditsProcessingPurchase"));
-      const purchase = await purchaseAiCreditPack(pack.productId);
+      const purchase = await purchaseAiCreditPack(pack.productId, user.id);
       addDiagnosticEvent({
         area: "ai",
         extra: {
@@ -5349,6 +5400,13 @@ function GymminApp() {
       return;
     }
 
+    if (!user.emailVerified) {
+      setEmailVerificationMessage("");
+      setIsEmailVerificationOpen(true);
+      setCreatorSubmitError(language === "pl" ? "Potwierdź adres email przed użyciem funkcji AI." : "Verify your email before using AI features.");
+      return;
+    }
+
     if (aiCreditBalance.balance < aiCreditBalance.planCost) {
       setCreatorSubmitError(t("aiCreditsInsufficient"));
       return;
@@ -5440,6 +5498,13 @@ function GymminApp() {
 
     if (!user) {
       setRewriteError(t("aiRewriteSessionExpired"));
+      return;
+    }
+
+    if (!user.emailVerified) {
+      setEmailVerificationMessage("");
+      setIsEmailVerificationOpen(true);
+      setRewriteError(language === "pl" ? "Potwierdź adres email przed użyciem funkcji AI." : "Verify your email before using AI features.");
       return;
     }
 
@@ -5767,6 +5832,7 @@ function GymminApp() {
       avatarUrl: authResponse.user.avatarUrl ?? null,
       createdOn: authResponse.user.createdOn ?? null,
       email: authResponse.user.email,
+      emailVerified: authResponse.user.emailVerified === true,
       id: authResponse.user.id,
       modifiedOn: authResponse.user.modifiedOn ?? null,
       name: authResponse.user.name || authResponse.user.email.split("@")[0] || t("defaultUserName"),
@@ -5774,14 +5840,15 @@ function GymminApp() {
     };
 
     const payload: LocalAuthStorage = {
-      token: authResponse.token,
       updatedAt: new Date().toISOString(),
       user: authResponse.user,
-      version: 1
+      version: 2
     };
 
+    await setSecureAuthToken(authResponse.token);
     await AsyncStorage.setItem(localAuthStorageKey, JSON.stringify(payload));
     setUser(session);
+    setIsEmailVerificationOpen(!session.emailVerified);
     setPassword("");
     setShowLoginForm(false);
     setAuthError("");
@@ -5886,11 +5953,9 @@ function GymminApp() {
     setUser(nextUser);
     try {
       const rawData = await AsyncStorage.getItem(localAuthStorageKey);
-      const storedData = rawData ? JSON.parse(rawData) as Partial<LocalAuthStorage> : null;
-      if (storedData?.token) {
+      const storedData = rawData ? JSON.parse(rawData) as LegacyLocalAuthStorage : null;
+      if (storedData) {
         await AsyncStorage.setItem(localAuthStorageKey, JSON.stringify({
-          ...storedData,
-          token: storedData.token,
           updatedAt: new Date().toISOString(),
           user: {
             ...(isRecord(storedData.user) ? storedData.user : {}),
@@ -5898,15 +5963,64 @@ function GymminApp() {
             avatarUrl: nextUser.avatarUrl ?? null,
             createdOn: nextUser.createdOn ?? null,
             email: nextUser.email,
+            emailVerified: nextUser.emailVerified,
             id: nextUser.id,
             modifiedOn: nextUser.modifiedOn ?? null,
             name: nextUser.name
           },
-          version: 1
+          version: 2
         } satisfies LocalAuthStorage));
       }
     } catch (error) {
       console.error("Failed to update cached auth user", error);
+    }
+  }
+
+  async function requestEmailVerificationCode() {
+    if (!user || user.emailVerified || isEmailVerificationSubmitting) return;
+    setIsEmailVerificationSubmitting(true);
+    setEmailVerificationMessage("");
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/email-verification/request`, {
+        headers: getAuthHeaders(user),
+        method: "POST"
+      });
+      recordCorrelationId(response.headers.get("X-Correlation-Id"));
+      if (!response.ok) throw new Error(language === "pl" ? "Nie udało się wysłać kodu." : "Could not send the code.");
+      setEmailVerificationMessage(language === "pl" ? "Nowy kod został wysłany." : "A new code has been sent.");
+    } catch (error) {
+      setEmailVerificationMessage(getErrorMessageOrFallback(error, language === "pl" ? "Nie udało się wysłać kodu." : "Could not send the code.", t("serverProblemMessage")));
+    } finally {
+      setIsEmailVerificationSubmitting(false);
+    }
+  }
+
+  async function confirmEmailVerificationCode() {
+    if (!user || user.emailVerified || isEmailVerificationSubmitting) return;
+    const code = emailVerificationCode.trim();
+    if (!/^\d{6}$/.test(code)) {
+      setEmailVerificationMessage(language === "pl" ? "Wpisz sześciocyfrowy kod." : "Enter the six-digit code.");
+      return;
+    }
+    setIsEmailVerificationSubmitting(true);
+    setEmailVerificationMessage("");
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/email-verification/confirm`, {
+        body: JSON.stringify({ code }),
+        headers: { ...getAuthHeaders(user), "Content-Type": "application/json" },
+        method: "POST"
+      });
+      recordCorrelationId(response.headers.get("X-Correlation-Id"));
+      const responseBody = await response.json().catch(() => null) as AuthUserResponse | { error?: string } | null;
+      if (!response.ok || !responseBody || !("id" in responseBody)) throw new Error(language === "pl" ? "Kod jest nieprawidłowy lub wygasł." : "The code is invalid or expired.");
+      await updateStoredUserSession({ ...user, emailVerified: true });
+      setEmailVerificationCode("");
+      setEmailVerificationMessage("");
+      setIsEmailVerificationOpen(false);
+    } catch (error) {
+      setEmailVerificationMessage(getErrorMessageOrFallback(error, language === "pl" ? "Nie udało się potwierdzić emaila." : "Could not verify email.", t("serverProblemMessage")));
+    } finally {
+      setIsEmailVerificationSubmitting(false);
     }
   }
 
@@ -6255,21 +6369,26 @@ function GymminApp() {
         apiBaseUrl,
         isLoggedIn: Boolean(user),
         language,
-        screen: activeScreen,
-        storageOwner: storageOwnerId,
-        userId: user?.id ?? null
+        screen: activeScreen
       },
       language,
       screen: getScreenTitle(activeScreen, editingWorkoutId, t),
       title: normalizedTitle
     };
 
+    const submissionSignature = `${normalizedTitle}\u0000${normalizedDescription}`;
+    const idempotencyKey = bugReportSubmissionRef.current?.signature === submissionSignature
+      ? bugReportSubmissionRef.current.key
+      : `bug-${createCorrelationId()}`;
+    bugReportSubmissionRef.current = { key: idempotencyKey, signature: submissionSignature };
+
     try {
       const response = await fetch(`${apiBaseUrl}/api/bug-reports`, {
         body: JSON.stringify(bugReportPayload),
         headers: {
           "Content-Type": "application/json",
-          ...getApiHeaders(null)
+          ...getApiHeaders(user),
+          "X-Idempotency-Key": idempotencyKey
         },
         method: "POST"
       });
@@ -6283,6 +6402,7 @@ function GymminApp() {
       }
 
       setBugSubmittedId(responseBody?.id ?? "");
+      bugReportSubmissionRef.current = null;
       setBugTitle("");
       setBugDescription("");
       setActiveScreen("bugReportSuccess");
@@ -6312,7 +6432,10 @@ function GymminApp() {
       });
     }
 
-    AsyncStorage.removeItem(localAuthStorageKey).catch((error) => {
+    Promise.all([
+      AsyncStorage.removeItem(localAuthStorageKey),
+      deleteSecureAuthToken()
+    ]).catch((error) => {
       console.error("Failed to clear local auth", error);
     });
     syncedWorkoutUserIdRef.current = null;
@@ -6326,6 +6449,9 @@ function GymminApp() {
     setRewriteSourceWorkoutId(null);
     setRewriteProposedWorkout(null);
     setRewriteError("");
+    setDeleteAccountConfirmation("");
+    setDeleteAccountPassword("");
+    setDeleteAccountError("");
     setUser(null);
     setAuthError("");
     setAuthMode("login");
@@ -6346,7 +6472,8 @@ function GymminApp() {
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/account`, {
-        headers: getAuthHeaders(accountToDelete),
+        body: JSON.stringify({ password: deleteAccountPassword }),
+        headers: { ...getAuthHeaders(accountToDelete), "Content-Type": "application/json" },
         method: "DELETE"
       });
       recordCorrelationId(response.headers.get("X-Correlation-Id"));
@@ -6354,6 +6481,11 @@ function GymminApp() {
       if (response.status === 401) {
         setDeleteAccountError(t("sessionExpired"));
         handleUnauthorizedSession();
+        return;
+      }
+
+      if (response.status === 403) {
+        setDeleteAccountError(t("deleteAccountPasswordInvalid"));
         return;
       }
 
@@ -6368,7 +6500,10 @@ function GymminApp() {
       }
 
       try {
-        await AsyncStorage.removeItem(localAuthStorageKey);
+        await Promise.all([
+          AsyncStorage.removeItem(localAuthStorageKey),
+          deleteSecureAuthToken()
+        ]);
       } catch (authCleanupError) {
         console.error("Failed to clear auth after account deletion", authCleanupError);
       }
@@ -6405,6 +6540,7 @@ function GymminApp() {
       setAvatarMessage("");
       setUser(null);
       setDeleteAccountConfirmation("");
+      setDeleteAccountPassword("");
       setDeleteAccountError("");
       setAuthError("");
       setAuthMessage(t("deleteAccountSuccess"));
@@ -6554,6 +6690,7 @@ function GymminApp() {
 
     if (activeScreen === "deleteAccount") {
       setDeleteAccountConfirmation("");
+      setDeleteAccountPassword("");
       setDeleteAccountError("");
       setActiveScreen("profile");
       return true;
@@ -7194,6 +7331,7 @@ function GymminApp() {
         onOpenAccountDetails={() => setActiveScreen("accountDetails")}
         onDeleteAccount={() => {
           setDeleteAccountConfirmation("");
+          setDeleteAccountPassword("");
           setDeleteAccountError("");
           setActiveScreen("deleteAccount");
         }}
@@ -7224,23 +7362,26 @@ function GymminApp() {
     }
 
     const confirmationPhrase = getDeleteAccountConfirmationPhrase(language);
-    const canDelete = isDeleteAccountConfirmationValid(deleteAccountConfirmation, language);
+    const canDelete = isDeleteAccountConfirmationValid(deleteAccountConfirmation, language) && deleteAccountPassword.length > 0;
 
     return (
       <DeleteAccountScreen
         canDelete={canDelete}
         confirmation={deleteAccountConfirmation}
         confirmationPhrase={confirmationPhrase}
+        password={deleteAccountPassword}
         error={deleteAccountError}
         isDeleting={isDeletingAccount}
         t={t}
         theme={theme}
         onCancel={() => {
           setDeleteAccountConfirmation("");
+          setDeleteAccountPassword("");
           setDeleteAccountError("");
           setActiveScreen("profile");
         }}
         onChangeConfirmation={setDeleteAccountConfirmation}
+        onChangePassword={setDeleteAccountPassword}
         onDelete={deleteAccountPermanently}
       />
     );
@@ -7498,7 +7639,7 @@ function GymminApp() {
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={Platform.OS === "ios" ? Math.max(insets.top, 20) + 64 : 0}
-          style={styles.keyboardAvoidingContent}
+          style={[styles.keyboardAvoidingContent, { marginBottom: scrollViewportBottomMargin }]}
         >
           <ScrollView
             ref={mainScrollRef}
@@ -7511,10 +7652,10 @@ function GymminApp() {
                 paddingRight: 20 + insets.right,
                 paddingBottom:
                   activeScreen === "builder"
-                    ? stickyActionBottom + 118
+                    ? stickyActionBottom + 118 - scrollViewportBottomMargin
                     : activeScreen === "workoutSession"
-                      ? bottomNavHeight + (isKeyboardVisible ? 260 : 28)
-                      : bottomNavHeight + 28
+                      ? bottomNavHeight + (isKeyboardVisible ? 260 : 28) - scrollViewportBottomMargin
+                      : bottomNavHeight + 28 - scrollViewportBottomMargin
               }
             ]}
           >
@@ -7824,9 +7965,10 @@ function GymminApp() {
             {
               backgroundColor: theme.card,
               borderTopColor: theme.border,
-              left: insets.left,
               paddingBottom: bottomInset,
-              right: insets.right
+              paddingLeft: 10 + insets.left,
+              paddingRight: 10 + insets.right,
+              paddingTop: isLandscape ? 4 : 7
             }
           ]}
         >
@@ -7855,7 +7997,7 @@ function GymminApp() {
               <Pressable
                 key={item.key}
                 accessibilityRole="button"
-                style={styles.navButton}
+                style={[styles.navButton, isLandscape ? { minHeight: 44 } : null]}
                 onPress={() => setActiveScreen(item.key)}
               >
                 <Ionicons
@@ -7879,6 +8021,54 @@ function GymminApp() {
             );
           })}
         </View>
+        <Modal
+          animationType="fade"
+          transparent
+          visible={Boolean(user && !user.emailVerified && isEmailVerificationOpen)}
+          onRequestClose={() => setIsEmailVerificationOpen(false)}
+        >
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 24 }}>
+            <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderRadius: 20, borderWidth: 1, padding: 22, gap: 14 }}>
+              <Text style={{ color: theme.text, fontSize: 22, fontWeight: "800" }}>
+                {language === "pl" ? "Potwierdź adres email" : "Verify your email"}
+              </Text>
+              <Text style={{ color: theme.muted, fontSize: 15, lineHeight: 21 }}>
+                {language === "pl"
+                  ? `Wpisz sześciocyfrowy kod wysłany na ${user?.email ?? ""}. Weryfikacja jest wymagana przed użyciem funkcji AI.`
+                  : `Enter the six-digit code sent to ${user?.email ?? ""}. Verification is required before using AI features.`}
+              </Text>
+              <Input style={{ borderColor: theme.border }}>
+                <InputField
+                  accessibilityLabel={language === "pl" ? "Kod weryfikacyjny" : "Verification code"}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={emailVerificationCode}
+                  onChangeText={(value) => setEmailVerificationCode(value.replace(/\D/g, "").slice(0, 6))}
+                />
+              </Input>
+              {emailVerificationMessage ? <Text style={{ color: theme.muted }}>{emailVerificationMessage}</Text> : null}
+              <Pressable
+                accessibilityRole="button"
+                disabled={isEmailVerificationSubmitting}
+                style={{ backgroundColor: theme.primary, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center", opacity: isEmailVerificationSubmitting ? 0.6 : 1 }}
+                onPress={() => void confirmEmailVerificationCode()}
+              >
+                <Text style={{ color: theme.card, fontSize: 16, fontWeight: "800" }}>
+                  {language === "pl" ? "Potwierdź" : "Verify"}
+                </Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" disabled={isEmailVerificationSubmitting} onPress={() => void requestEmailVerificationCode()}>
+                <Text style={{ color: theme.primary, textAlign: "center", fontWeight: "700" }}>
+                  {language === "pl" ? "Wyślij kod ponownie" : "Send code again"}
+                </Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" onPress={() => setIsEmailVerificationOpen(false)}>
+                <Text style={{ color: theme.muted, textAlign: "center" }}>{language === "pl" ? "Później" : "Later"}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
         <Modal
           animationType="none"
           transparent

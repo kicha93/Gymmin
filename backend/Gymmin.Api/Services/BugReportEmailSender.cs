@@ -47,8 +47,10 @@ public sealed class SmtpBugReportEmailSender(IConfiguration configuration) : IBu
             EnableSsl = enableSsl
         };
 
-        using var registration = cancellationToken.Register(client.SendAsyncCancel);
-        await client.SendMailAsync(message, cancellationToken);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(configuration.GetValue("Gymmin:Security:SmtpTimeoutSeconds", 30), 5, 120)));
+        using var registration = timeout.Token.Register(client.SendAsyncCancel);
+        await client.SendMailAsync(message, timeout.Token);
     }
 
     public static string BuildSubject(CreateBugReportRequest report)

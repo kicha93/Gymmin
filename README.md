@@ -4,7 +4,7 @@ Gymmin is a mobile-first workout builder for strength training.
 
 ## Stack
 
-- Mobile: Expo SDK 54, React Native, React 19, TypeScript
+- Mobile: Expo SDK 57, React Native 0.86, React 19.2, TypeScript
 - UI: Gluestack UI, Ionicons, React Native SVG
 - Local storage: AsyncStorage
 - Android testing: standalone APK distributed through private GitHub Release
@@ -14,7 +14,7 @@ Gymmin is a mobile-first workout builder for strength training.
 - Workout UX: compact Exercise Detail Page with hero summary, optional local media, worked-muscle anatomy toggle and collapsible technique panels; Progress uses a dashboard with summary cards, filters and compact exercise metric cards. Rest timer visibility is a per-user training preference.
 - Exercise catalog: 964 validated records with stable IDs, canonical ID aliases for reviewed merges, dedicated front-raise/step-up/good-morning/rope-climb categories, explicit `libraryTier` classification and a fail-fast validator available through `npm run exercise:catalog:validate`. Historical IDs are normalized when plans, sessions, favorites, technique content and image assets are read. The detailed migration report is in `docs/exercise-catalog-refactor.md`.
 - Exercise picker: shows `main` exercises by default and provides compact opt-in filters for variations, advanced, sport-specific and rehabilitation movements. Search can find all active tiers and marks non-main results with a tier badge; deprecated and progression records remain history-only.
-- Bug reports: backend SMTP sender
+- Bug reports: durable File/Database storage with optional account linkage and SMTP notification
 - Diagnostics: backend correlation id, structured request/error logs, safe global 500 responses, mobile diagnostics ring buffer
 - Current durable backend storage: selectable File JSON store or EF Core database store
 - Database providers: SQLite for local development and PostgreSQL for production-ready deployments
@@ -140,6 +140,8 @@ npm --prefix apps/mobile run test
 ```powershell
 cd apps/mobile
 npm run typecheck
+npx expo-doctor
+npx expo export --platform android --output-dir .expo-export-smoke
 ```
 
 ```powershell
@@ -154,15 +156,15 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 ## Current Notes
 
 - The app is local-first for anonymous users. Users can create and keep manual workouts on the phone without logging in.
-- The Profile screen uses a dashboard layout: avatar, name/email and avatar actions live in one profile card, achievements sit directly below it, quick actions link to Credits/change password/sessions/bug reports, and the Account section contains account details, active sessions, delete account and logout. Settings are kept for app preferences.
+- The Profile screen uses a dashboard layout: avatar, name/email and avatar actions live in one profile card, achievements sit directly below it, quick actions link to Credits/change password/sessions/bug reports, and the Account section contains account details, delete account and logout. Settings are kept for app preferences.
 - Contact uses a compact mail-first layout: a single email CTA opens the device mail client, app issues link to the existing Report a bug form, and the three FAQ answers are collapsible.
 - Terms use a short dashboard layout with a hero summary, three key rules, an issue-reporting callout and seven expandable detailed sections.
 - Homepage includes an account-scoped, local-first weekly plan. Planned workouts are assigned to weekdays and completed workout sessions are counted from Monday through Sunday.
 - Registration includes username, email, password, repeated password and password preview in the mobile UI. The backend contract still receives a single password field.
 - Signed-in users can upload, replace and delete a profile avatar from the Profile screen. Avatars are uploaded as `multipart/form-data`, stored as files on the backend, exposed through `GET /api/profile/avatar`, and displayed in the mobile header/profile with `avatarUpdatedAt` cache busting. Anonymous users keep the default icon.
-- Signed-in users can permanently delete their account from Profile -> Account. Mobile requires typing `USUŃ` / `DELETE`, calls `DELETE /api/account`, clears only that account's local cache, removes local auth, and leaves anonymous/other-user data untouched. The backend deletes the user, sessions, avatar file and private user-owned data.
+- Signed-in users can permanently delete their account from Profile -> Account. Mobile requires the current password plus typing `USUŃ` / `DELETE`; the backend verifies both, rate-limits attempts per user/IP, deletes private user-owned data and avatar, and anonymizes retained bug reports.
 - Installed APKs contain the API base URL used at build time. For GitHub Release phone builds, run `npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://..."` or set `GYMMIN_APK_API_BASE_URL`; the wrapper checks `/health` and, if the URL is missing or stale, starts or attaches a backend tunnel automatically. A running local backend on `http://127.0.0.1:5198` is reused instead of restarted. The current tunnel URL is written to `.artifacts/backend-url.txt`.
-- Auth hardening is implemented: token expiry, active sessions, single-session revoke, logout-all, change password and password reset by email/token. Reset tokens are stored only as hashes.
+- Auth hardening is implemented: token expiry, active sessions, single-session revoke, logout-all, change password and password reset by email/token. Reset tokens are stored only as hashes. Mobile bearer tokens live in OS-backed SecureStore/Keychain and legacy plaintext AsyncStorage sessions migrate on first launch. New accounts must confirm a six-digit email code before AI use; registration and AI generation are rate-limited per IP/user with shared Database-provider buckets.
 - After login, workouts are synchronized to the user's backend account and kept locally as a cache/offline copy.
 - After login, app settings are synchronized to the user's backend account and kept locally as a cache/offline copy.
 - After login, catalog-only favorite exercises are synchronized to the user's backend account and remain available locally/offline.
@@ -191,19 +193,19 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - AI credit consumption is protected by database transactions and an atomic conditional balance update in Database mode. File mode remains a development fallback, not the production safety boundary for paid credits.
 - AI credit concurrency, idempotency and technical-failure refund were smoke-tested on a real local PostgreSQL cluster without Docker, using the `HardenAiCreditsConcurrency` migration.
 - New users can receive an idempotent initial AI credit grant. Development/testing can use the guarded `/api/ai-credits/dev/grant` endpoint.
-- Android AI credit purchases are prepared through Google Play Billing: mobile sends the Google Play `purchaseToken` to `POST /api/ai-credits/purchases/google-play/verify`, and the backend validates the purchase, appends a `Purchase` ledger transaction, updates `AiCreditPurchases`, and performs server-side consume. `purchaseToken` is hashed and never stored plaintext.
-- Mobile uses `react-native-iap@15.3.4` plus `react-native-nitro-modules` as the native Google Play Billing stack. Android debug APK and release AAB build smoke pass with this stack when `ANDROID_HOME` / `ANDROID_SDK_ROOT` points to an installed Android SDK. The AAB build uses a short temporary build path to avoid Windows CMake path-length failures in Nitro/IAP native sources. Real billing tests still require Play Console one-time products (`ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10`) matching the current 1/3/10 credit packs, license testers, a Google Play service account, and installing the app from an Internal Testing track.
+- Android AI credit purchases use backend Google Play validation and consume. Mobile attaches an opaque account identifier and backend checks it when Google returns it. Google API diagnostics redact purchase tokens and developer payloads before persistence. Authenticated RTDN/Pub/Sub push verifies Google's OIDC signature, exact audience, service-account email and package name; notifications are deduplicated by `messageId`, stored in `GooglePlayRtdnEvents`, and plaintext purchase tokens are never persisted. A checkpointed Voided Purchases worker reconciles refunds/chargebacks, claws back only unused credits without creating negative balances and records unrecovered amounts for manual review.
+- Mobile uses `react-native-iap@15.5.0` plus `react-native-nitro-modules@0.35.10` as the native Google Play Billing stack. Android debug APK and release AAB build smoke pass on Expo SDK 57 / React Native 0.86 when `ANDROID_HOME` / `ANDROID_SDK_ROOT` points to an installed Android SDK. Windows native builds use a short temporary build path and clear copied `.cxx` caches to avoid CMake/Ninja path failures in Nitro/IAP sources. Real billing tests still require Play Console one-time products (`ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10`) matching the current 1/3/10 credit packs, license testers, a Google Play service account, and installing the app from an Internal Testing track.
 - Workout creator jobs are asynchronous and persisted on both sides: the phone stores the active `jobId`, and the backend stores job state in File or Database storage.
-- Bug reports call the backend and are sent by SMTP when SMTP is configured. Email subjects use the app-prefixed format `[Gymmin][Bug] {Title}` / `[Gymmin][Błąd] {Tytuł}` with safe fallback titles.
+- Bug reports are persisted before email delivery in File or Database storage. Submissions are limited to 64 KiB, rate-limited, and retry-safe through `X-Idempotency-Key`. A durable background outbox retries SMTP delivery. The optional admin API uses only a configured SHA256 key hash, rate-limits failed access, supports status/response and one immutable reward per report, and appends `AdminAuditEvents`.
 - Every backend response includes `X-Correlation-Id`. Mobile sends `X-Correlation-Id` on API requests and attaches recent correlation ids plus local diagnostic events to bug reports.
 - Backend unexpected errors return a safe JSON error response with `correlationId`; stack traces are logged server-side only.
-- `/api/diagnostics` is available only in development/testing or when explicitly enabled, and does not expose secrets.
+- `/api/diagnostics` is available only in development/testing. Production fails startup if diagnostics or migrations-on-startup are enabled, or if the database schema has pending EF migrations. `/health/live` checks process liveness and `/health/ready` checks database connectivity plus schema currency. API responses default to disabled HTTP caching unless an endpoint explicitly uses authenticated private caching, and use restrictive security headers; Kestrel omits its server-identification header.
 - `/api/system/status` is a public, user-safe status endpoint. Mobile checks it on the homepage and shows a calm callout for `degraded`, `maintenance`, `update`, or local `offline`; `ok` shows nothing. Configure it with `SystemStatus:Kind`, `SystemStatus:MessagePl`, and `SystemStatus:MessageEn`. See `docs/system-status.md`.
 - Conflict resolution and multi-device sync polish are not finished yet.
 - Garmin integration is currently a placeholder and is out of scope for the current development track.
 - Backend API has integration smoke tests for auth hardening, settings, workouts, favorite exercises, workout sessions, AI creator auth/owner checks and bug reports.
 - Mobile has unit tests for critical local-first/sync/reminder/diagnostics helpers.
-- External monitoring SaaS is not connected yet. TODO: Sentry/Crashlytics or production log aggregation before a public release.
+- Production emits one-line JSON logs with UTC timestamps and correlation scopes. Selecting and connecting the external log/crash provider remains a deployment task; request bodies and authorization headers must stay excluded.
 
 For a broader status snapshot, see `docs/application-status.md`.
 

@@ -6,7 +6,6 @@
     "icon": "./assets/gymmin-app-icon.png",
     "orientation": "default",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "ios": {
       "buildNumber": "1",
       "supportsTablet": true,
@@ -21,7 +20,7 @@
       "package": "com.gymmin.app"
     },
     "plugins": [
-      "react-native-iap"
+      "expo-secure-store"
     ]
   }
 }

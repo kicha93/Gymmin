@@ -21,8 +21,11 @@ public interface IUserStore
     bool RevokeSession(string userId, string sessionId, string reason);
     void RevokeAllSessions(string userId, string reason, string? exceptSessionId = null);
     AuthResult ChangePassword(string userId, string currentPassword, string newPassword, string? currentSessionId);
+    bool VerifyPassword(string userId, string password);
     PasswordResetIssue? CreatePasswordResetToken(string email, AuthRequestMetadata? metadata = null);
     AuthResult ConfirmPasswordReset(string token, string newPassword);
+    EmailVerificationIssue? CreateEmailVerificationCode(string userId);
+    AuthUserResponse? ConfirmEmailVerification(string userId, string code);
 }
 
 public sealed record AuthResult(
@@ -44,6 +47,8 @@ public sealed record PasswordResetIssue(
     string Email,
     string Token,
     DateTimeOffset ExpiresAt);
+
+public sealed record EmailVerificationIssue(string Email, string Code, DateTimeOffset ExpiresAt);
 
 internal static class AuthSecurity
 {
@@ -99,6 +104,8 @@ internal static class AuthSecurity
             .TrimEnd('=');
     }
 
+    public static string CreateVerificationCode() => RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+
     public static string HashToken(string? token)
     {
         var normalized = token?.Trim() ?? "";
@@ -132,6 +139,7 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
     private readonly object _fileLock = new();
     private readonly int _sessionLifetimeDays;
     private readonly int _resetTokenMinutes;
+    private readonly int _emailVerificationCodeMinutes;
     private readonly string _storagePath;
     private readonly string _resetTokensPath;
     private readonly ILogger<FileBackedUserStore> _logger;
@@ -141,6 +149,7 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
         _logger = logger;
         _sessionLifetimeDays = Math.Clamp(configuration.GetValue("Gymmin:Auth:SessionLifetimeDays", 30), 1, 365);
         _resetTokenMinutes = Math.Clamp(configuration.GetValue("Gymmin:Auth:PasswordResetTokenMinutes", 30), 5, 240);
+        _emailVerificationCodeMinutes = Math.Clamp(configuration.GetValue("Gymmin:Auth:EmailVerificationCodeMinutes", 30), 5, 240);
         _storagePath = Path.Combine(environment.ContentRootPath, "App_Data", "users.json");
         _resetTokensPath = Path.Combine(environment.ContentRootPath, "App_Data", "password-reset-tokens.json");
         LoadUsers();
@@ -153,7 +162,7 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
         var name = request.Name?.Trim() ?? "";
         var password = request.Password ?? "";
 
-        if (!IsValidEmail(email) || password.Length < 4 || string.IsNullOrWhiteSpace(name))
+        if (!IsValidEmail(email) || !AuthSecurity.IsValidNewPassword(password) || string.IsNullOrWhiteSpace(name))
         {
             return new AuthResult(false, null, "Invalid registration data.", StatusCodes.Status400BadRequest);
         }
@@ -173,6 +182,7 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
                 Id = Guid.NewGuid().ToString("N"),
                 Name = name,
                 Password = AuthSecurity.CreatePasswordHash(password),
+                EmailVerificationRequired = true,
                 Sessions = [],
                 UpdatedAt = now
             };
@@ -407,6 +417,16 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
         }
     }
 
+    public bool VerifyPassword(string userId, string password)
+    {
+        if (string.IsNullOrEmpty(password)) return false;
+        lock (_fileLock)
+        {
+            return _usersById.TryGetValue(userId, out var user) &&
+                AuthSecurity.VerifyPassword(password, user.Password);
+        }
+    }
+
     public PasswordResetIssue? CreatePasswordResetToken(string email, AuthRequestMetadata? metadata = null)
     {
         var normalizedEmail = NormalizeEmail(email);
@@ -472,6 +492,39 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
         }
     }
 
+    public EmailVerificationIssue? CreateEmailVerificationCode(string userId)
+    {
+        lock (_fileLock)
+        {
+            if (!_usersById.TryGetValue(userId, out var user) || IsEmailVerified(user)) return null;
+            var now = DateTimeOffset.UtcNow;
+            var code = AuthSecurity.CreateVerificationCode();
+            user.EmailVerificationCodeHash = AuthSecurity.HashToken(code);
+            user.EmailVerificationCodeExpiresAt = now.AddMinutes(_emailVerificationCodeMinutes);
+            user.EmailVerificationSentAt = now;
+            user.UpdatedAt = now;
+            SaveUsers();
+            return new EmailVerificationIssue(user.Email, code, user.EmailVerificationCodeExpiresAt.Value);
+        }
+    }
+
+    public AuthUserResponse? ConfirmEmailVerification(string userId, string code)
+    {
+        var codeHash = AuthSecurity.HashToken(code);
+        lock (_fileLock)
+        {
+            if (!_usersById.TryGetValue(userId, out var user)) return null;
+            if (IsEmailVerified(user)) return ToResponse(user);
+            if (string.IsNullOrWhiteSpace(codeHash) || user.EmailVerificationCodeHash != codeHash || user.EmailVerificationCodeExpiresAt <= DateTimeOffset.UtcNow) return null;
+            user.EmailVerifiedAt = DateTimeOffset.UtcNow;
+            user.EmailVerificationCodeHash = null;
+            user.EmailVerificationCodeExpiresAt = null;
+            user.UpdatedAt = user.EmailVerifiedAt.Value;
+            SaveUsers();
+            return ToResponse(user);
+        }
+    }
+
     public bool DeleteUserData(string userId)
     {
         lock (_fileLock)
@@ -504,8 +557,11 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
             FileSystemUserAvatarStorage.BuildAvatarUrl(avatar),
             avatar?.UpdatedAt,
             user.CreatedAt,
-            user.UpdatedAt);
+            user.UpdatedAt,
+            IsEmailVerified(user));
     }
+
+    private static bool IsEmailVerified(PersistedUser user) => !user.EmailVerificationRequired || user.EmailVerifiedAt is not null;
 
     public UserAvatarMetadata? GetAvatarMetadata(string userId)
     {
@@ -772,6 +828,11 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
         public string? AvatarFileName { get; set; }
         public string? AvatarContentType { get; set; }
         public DateTimeOffset? AvatarUpdatedAt { get; set; }
+        public bool EmailVerificationRequired { get; set; }
+        public DateTimeOffset? EmailVerifiedAt { get; set; }
+        public string? EmailVerificationCodeHash { get; set; }
+        public DateTimeOffset? EmailVerificationCodeExpiresAt { get; set; }
+        public DateTimeOffset? EmailVerificationSentAt { get; set; }
         public List<PersistedUserSession> Sessions { get; set; } = [];
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }

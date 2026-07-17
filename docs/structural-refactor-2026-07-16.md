@@ -76,6 +76,10 @@ zsynchronizowanych danych.
   oczekującego joba, a `useAccountScopedCreatorJob` obsługuje jego bezpieczny
   odczyt i zapis per konto. Zmiana konta zeruje stan przed załadowaniem danych
   nowego właściciela, natomiast `App.tsx` reaguje tylko na zakończony odczyt.
+- `src/domain/workoutCreatorImport.ts` przejął tolerancyjne parsowanie odpowiedzi
+  Kreatora, JSON osadzonego w Markdown, aliasów polskich/angielskich, mapowanie
+  ćwiczeń do katalogu oraz budowę kroków i wariantów rozgrzewki. Composition root
+  otrzymuje już gotowe `SavedWorkout[]` i tekst planu.
 - Status systemu i jego cache są obsługiwane przez
   `useSystemStatusController`.
 - Kontrakty auth, kompletowanie sesji i polityka hasła są w czystym
@@ -129,6 +133,7 @@ Dodano testy dla:
 - kontraktu, odpowiedzi i scalania synchronizacji sesji treningowych.
 - kontraktów synchronizacji ulubionych ćwiczeń i osiągnięć.
 - typowanego transportu danych konta i obsługi statusów HTTP.
+- importu odpowiedzi Kreatora, wrapperów JSON, rozgrzewki i odpoczynku.
 
 Regresja wykryta podczas wydzielania sesji została poprawiona: identyfikator
 ćwiczenia jest teraz kanonizowany przez `resolveExerciseId` również podczas

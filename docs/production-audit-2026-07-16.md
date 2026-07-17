@@ -20,7 +20,7 @@ upload key, device smoke oraz testu kilku replik.
 
 ## Wynik automatycznej weryfikacji
 
-- mobile unit tests: 208/208,
+- mobile unit tests: 212/212,
 - backend tests: 105/105; dwa pełne przebiegi zakończone sukcesem,
 - TypeScript typecheck: zaliczony,
 - backend Release build z `--warnaserror`: zaliczony, 0 ostrzeżeń,
@@ -109,6 +109,9 @@ systemowego wyboru zdjęcia na starszym Androidzie.
 - Start planu/rewrite i polling statusu joba korzystają z typowanego klienta
   Kreatora. Odpowiedzi jobów oraz błędy kredytów przechodzą przez wspólną
   walidację i diagnostykę HTTP.
+- Luźne odpowiedzi Kreatora, w tym wrappery i JSON w blokach Markdown, są
+  parsowane w `domain/workoutCreatorImport.ts`. Moduł odpowiada też za stabilne
+  ID, mapowanie katalogu, wariant rozgrzewki i normalizację odpoczynku.
 - `Program.cs` jest już composition root bez implementacji endpointów
   biznesowych. Wszystkie grupy tras mają osobne moduły ze wspólną autoryzacją,
   obsługą request metadata i odpowiedziami infrastrukturalnymi.

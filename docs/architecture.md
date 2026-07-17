@@ -59,6 +59,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/api/aiCreditsApi.ts` obsługuje saldo, historię, pakiety, weryfikację Google Play i deweloperskie zasilenie kredytów; natywne billing UI i lokalizacja pozostają w kompozycji,
 - `src/api/workoutCreatorApi.ts` definiuje transport startu planu/rewrite i statusu joba oraz normalizuje `queued/processing/completed/failed`; polling i zastosowanie wyniku pozostają w warstwie kompozycji,
 - `src/domain/workoutCreatorJob.ts` waliduje i normalizuje lokalny kontrakt oczekującego joba, a `src/features/workoutCreator/useAccountScopedCreatorJob.ts` izoluje jego odczyt, zapis i zmianę właściciela storage,
+- `src/domain/workoutCreatorImport.ts` parsuje bezpośrednie i opakowane odpowiedzi AI, odzyskuje JSON z tekstu Markdown oraz buduje lokalne treningi z opcjonalną rozgrzewką i mapowaniem do katalogu,
 - `src/domain/accountWorkouts.ts` mapuje lokalne treningi na kontrakt konta, odbudowuje zwalidowane odpowiedzi API i scala rekordy po stabilnym ID z pierwszeństwem danych konta,
 - `src/domain/auth.ts` zawiera czyste kontrakty sesji i politykę hasła, a `src/features/auth/authSession.ts` izoluje natywny SecureStore,
 - `src/storage/localDataRepositories.ts` centralizuje account-scoped odczyt, zapis i obsługę anonimowych danych treningowych,

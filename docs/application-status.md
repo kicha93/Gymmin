@@ -165,6 +165,11 @@ plan/rewrite, koduje identyfikator joba i normalizuje statusy
 `useAccountScopedCreatorJob`. Polling, saldo kredytów, import treningu oraz
 nawigacja pozostają koordynowane przez `App.tsx`.
 
+Import wyniku AI znajduje się w `src/domain/workoutCreatorImport.ts`. Obsługuje
+tablice bezpośrednie, wrappery `result/workouts`, JSON osadzony w Markdown,
+polskie i angielskie nazwy pól, mapowanie ćwiczeń do katalogu, odpoczynek oraz
+wariant rozgrzewki gotowej, przycisku potwierdzenia albo bez rozgrzewki.
+
 Transport kredytów AI korzysta z `src/api/aiCreditsApi.ts`. Klient pobiera i
 normalizuje saldo, historię oraz pakiety, waliduje odpowiedź weryfikacji zakupu
 Google Play i obsługuje endpoint deweloperskiego zasilenia. `App.tsx` zachowuje

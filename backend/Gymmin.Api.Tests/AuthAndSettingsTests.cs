@@ -62,6 +62,40 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
     }
 
     [Fact]
+    public async Task Legacy_user_id_header_cannot_authenticate_private_endpoints()
+    {
+        using var client = _factory.CreateClient();
+        var registered = await TestPayloads.RegisterAsync(client, "legacy-header");
+        client.ClearAuthorization();
+        client.DefaultRequestHeaders.Add("X-Gymmin-User-Id", registered.User.Id);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/settings")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PutAsJsonAsync("/api/settings", new UpsertUserSettingsRequest(
+            "pl",
+            "light",
+            "3",
+            "0",
+            StageType.Exercise,
+            "guided",
+            "horizontal",
+            new Dictionary<string, bool>(),
+            false,
+            null,
+            DateTimeOffset.UtcNow))).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/workouts")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync(
+            "/api/workouts",
+            TestPayloads.Workout("spoofed-workout", "Spoofed"))).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync(
+            "/api/sync/workouts",
+            new SyncWorkoutsRequest([], [], null))).StatusCode);
+
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "invalid-token");
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/settings")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/workouts")).StatusCode);
+    }
+
+    [Fact]
     public async Task Settings_roundtrip_persists_workout_reminders()
     {
         using var client = _factory.CreateClient();

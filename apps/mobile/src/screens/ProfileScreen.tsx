@@ -26,6 +26,7 @@ type ProfileScreenProps = {
   onOpenBugReport: () => void;
   onOpenChangePassword: () => void;
   onOpenCredits: () => void;
+  onAvatarLoadError: () => void;
   onRemoveAvatar: () => void;
   t: (key: TranslationKey) => string;
   theme: Theme;
@@ -58,6 +59,7 @@ export function ProfileScreen({
   onOpenBugReport,
   onOpenChangePassword,
   onOpenCredits,
+  onAvatarLoadError,
   onRemoveAvatar,
   t,
   theme,
@@ -76,7 +78,12 @@ export function ProfileScreen({
       <View style={[styles.profileDashboardCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <View style={[styles.profileDashboardAvatarFrame, { backgroundColor: theme.secondaryBand }]}>
           {avatarSource ? (
-            <Image resizeMode="cover" source={avatarSource} style={styles.profileDashboardAvatarImage} />
+            <Image
+              resizeMode="cover"
+              source={avatarSource}
+              style={styles.profileDashboardAvatarImage}
+              onError={onAvatarLoadError}
+            />
           ) : (
             <Ionicons name="person" size={52} color={theme.primary} />
           )}

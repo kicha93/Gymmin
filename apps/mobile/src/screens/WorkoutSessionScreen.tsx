@@ -9,13 +9,20 @@ import { parseTimerSecondsValue, RestTimerControl, SessionValueInput } from "../
 import { getExerciseDisplayName } from "../domain/exercises";
 import {
   calculateEntryVolume,
-  getExerciseProgressSummary,
   type WorkoutSession,
   type WorkoutSessionEntry
 } from "../domain/workoutSessions";
+import {
+  getGuidedEntryGroups,
+  getGuidedGroupIndex,
+  getPreviousExerciseValues,
+  getSessionEntryPreviewStep,
+  getSessionEntrySetTarget,
+  groupInlineWorkoutEntries
+} from "../domain/workoutSessionPresentation";
 import { formatRestDuration, formatWorkoutProgressPercent, getWorkoutProgress } from "../domain/workoutSessionUi";
 import { formatExerciseSetTarget, isRestTargetStep } from "../domain/workoutExerciseSummary";
-import { createStep, type GoalType, type StageType, type WorkoutDraft, type WorkoutStep } from "../domain/workouts";
+import { type WorkoutDraft, type WorkoutStep } from "../domain/workouts";
 import type { LanguageCode, TranslationKey } from "../i18n/translations";
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
@@ -77,98 +84,6 @@ export function WorkoutSessionScreen({
   visibleWorkoutSessions,
   windowSize
 }: WorkoutSessionScreenProps) {
-  function getSessionEntryPreviewStep(session: WorkoutSession, entry: WorkoutSessionEntry): WorkoutStep {
-    const sourceStep = session.planSnapshot.steps.find(
-      (step) => step.kind === "exercise" && step.id === entry.sourceElementId
-    );
-
-    if (sourceStep) {
-      return sourceStep;
-    }
-
-    return createStep({
-      exerciseId: entry.exerciseId ?? "",
-      exerciseName: entry.exerciseName ?? "",
-      goalType: (entry.plannedTargetType as GoalType | "") || "",
-      id: entry.sourceElementId ?? entry.id,
-      kind: "exercise",
-      loadKg: entry.plannedWeight ?? "",
-      stageType: (entry.type as StageType | "") || "",
-      targetValue: entry.plannedTarget ?? ""
-    });
-  }
-
-  function getSessionEntrySetTarget(entry: WorkoutSessionEntry, setCount = "1") {
-    const previewStep = createStep({
-      exerciseName: entry.exerciseName ?? "",
-      goalType: (entry.plannedTargetType as GoalType | "") || "",
-      kind: "exercise",
-      loadKg: entry.plannedWeight ?? "",
-      stageType: (entry.type as StageType | "") || "",
-      targetValue: entry.plannedTarget ?? "",
-      setCount
-    });
-
-    return formatExerciseSetTarget(previewStep);
-  }
-
-  function getGuidedEntryGroups(session: WorkoutSession) {
-    const exerciseEntries = session.entries.filter((entry) => entry.type !== "rest");
-    const sourceEntries = exerciseEntries.length ? exerciseEntries : session.entries;
-    const groups: Array<{
-      entries: WorkoutSessionEntry[];
-      firstIndex: number;
-      key: string;
-      restEntry?: WorkoutSessionEntry;
-    }> = [];
-    const grouped = new Map<string, { entries: WorkoutSessionEntry[]; firstIndex: number; key: string }>();
-
-    sourceEntries.forEach((entry) => {
-      const key = [entry.sourceStageId, entry.sourceSeriesId, entry.sourceElementId ?? entry.id].filter(Boolean).join(":");
-      const firstIndex = session.entries.findIndex((item) => item.id === entry.id);
-      const existing = grouped.get(key);
-
-      if (existing) {
-        existing.entries.push(entry);
-        return;
-      }
-
-      const group = { entries: [entry], firstIndex, key };
-      grouped.set(key, group);
-      groups.push(group);
-    });
-
-    return groups.map((group) => {
-      const referenceEntry = group.entries[0];
-      const restEntry = session.entries.find(
-        (entry) =>
-          entry.type === "rest" &&
-          entry.sourceSeriesId === referenceEntry.sourceSeriesId &&
-          entry.elementIndex > referenceEntry.elementIndex
-      );
-
-      return {
-        ...group,
-        restEntry
-      };
-    });
-  }
-
-  function getGuidedGroupIndex(
-    groups: Array<{ entries: WorkoutSessionEntry[]; firstIndex: number }>,
-    entryIndex: number,
-    currentEntry?: WorkoutSessionEntry
-  ) {
-    const directIndex = groups.findIndex((group) => group.entries.some((entry) => entry.id === currentEntry?.id));
-
-    if (directIndex >= 0) {
-      return directIndex;
-    }
-
-    const nextIndex = groups.findIndex((group) => group.firstIndex >= entryIndex);
-    return nextIndex >= 0 ? nextIndex : Math.max(0, groups.length - 1);
-  }
-
   function toggleWorkoutSessionEntryCompleted(entry: WorkoutSessionEntry) {
     if (entry.isCompleted) {
       updateWorkoutSessionEntry(entry.id, {
@@ -201,34 +116,6 @@ export function WorkoutSessionScreen({
       completedAt: hasAnyValue ? entry.completedAt ?? new Date().toISOString() : undefined,
       isCompleted: hasAnyValue
     });
-  }
-
-  function getWorkoutSessionEntryProgressKey(entry?: WorkoutSessionEntry) {
-    if (!entry) {
-      return null;
-    }
-
-    if (entry.exerciseId?.trim()) {
-      return `id:${entry.exerciseId.trim().toLowerCase()}`;
-    }
-
-    if (entry.exerciseName?.trim()) {
-      return `name:${entry.exerciseName.trim().toLowerCase()}`;
-    }
-
-    return null;
-  }
-
-  function getPreviousExerciseValues(entries: WorkoutSessionEntry[]) {
-    const referenceEntry = entries.find((entry) => entry.exerciseId?.trim() || entry.exerciseName?.trim());
-    const progressKey = getWorkoutSessionEntryProgressKey(referenceEntry);
-    const summary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
-    const previousEntry = summary?.lastResult.entry;
-
-    return {
-      reps: previousEntry?.actualReps?.trim() || "",
-      weight: previousEntry?.actualWeight?.trim() || ""
-    };
   }
 
   function applyPreviousExerciseValue(
@@ -278,7 +165,7 @@ export function WorkoutSessionScreen({
   }
 
   function renderPreviousExerciseValueButtons(entries: WorkoutSessionEntry[], compact = false) {
-    const previousValues = getPreviousExerciseValues(entries);
+    const previousValues = getPreviousExerciseValues(entries, visibleWorkoutSessions);
 
     if (!previousValues.reps && !previousValues.weight) {
       return null;
@@ -370,36 +257,12 @@ export function WorkoutSessionScreen({
   }
 
   function renderInlineWorkoutTable(session: WorkoutSession) {
-    const visibleSessionEntries = session.entries.filter(isWorkoutSessionEntryFillRequired);
-    const groupedSessionEntries = visibleSessionEntries.reduce<
-      { entries: WorkoutSessionEntry[]; key: string; previewStep: WorkoutStep; title: string }[]
-    >((groups, entry) => {
-      const previewStep = getSessionEntryPreviewStep(session, entry);
-      const title = previewStep.exerciseName
-        ? getExerciseDisplayName(previewStep.exerciseName, language)
-        : formatSessionEntryTitle(entry);
-      const normalizedTitle = title.trim().toLowerCase();
-      const key = entry.exerciseId
-        ? `id:${entry.exerciseId}`
-        : entry.sourceElementId
-          ? `step:${entry.sourceElementId}`
-          : `name:${normalizedTitle || entry.id}`;
-      const existingGroup = groups.find((group) => group.key === key);
-
-      if (existingGroup) {
-        existingGroup.entries.push(entry);
-        return groups;
-      }
-
-      groups.push({
-        entries: [entry],
-        key,
-        previewStep,
-        title
-      });
-
-      return groups;
-    }, []);
+    const groupedSessionEntries = groupInlineWorkoutEntries(
+      session,
+      isWorkoutSessionEntryFillRequired,
+      language,
+      formatSessionEntryTitle
+    );
 
     if (!groupedSessionEntries.length) {
       return (
@@ -974,4 +837,3 @@ export function WorkoutSessionScreen({
 
   return renderWorkoutSession();
 }
-

@@ -13,6 +13,17 @@ export type AvatarImageSource = {
   uri: string;
 };
 
+export function getSafeAvatarCacheKey(userId: string) {
+  return userId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 100) || "user";
+}
+
+export function getAvatarExtension(contentType: string | null) {
+  const normalized = (contentType ?? "").split(";")[0].trim().toLowerCase();
+  if (normalized === "image/png") return "png";
+  if (normalized === "image/webp") return "webp";
+  return normalized === "image/jpeg" || normalized === "image/jpg" ? "jpg" : null;
+}
+
 export function buildAvatarImageUri(apiBaseUrl: string, user?: AvatarUser | null) {
   const avatarUrl = user?.avatarUrl?.trim();
   if (!avatarUrl) {

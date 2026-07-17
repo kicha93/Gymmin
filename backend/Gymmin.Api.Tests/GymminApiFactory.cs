@@ -54,12 +54,22 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
                 ["Gymmin:Auth:RateLimits:EmailVerificationConfirmIp:Limit"] = "1000",
                 ["Gymmin:Auth:RateLimits:WorkoutCreatorUser:Limit"] = "1000",
                 ["Gymmin:Auth:RateLimits:WorkoutCreatorIp:Limit"] = "1000",
+                ["Gymmin:WorkoutCreator:Worker:PollMilliseconds"] = "200",
+                ["Gymmin:WorkoutCreator:Worker:LeaseSeconds"] = "30",
                 ["BugReports:EmailDelivery:PollSeconds"] = "1",
-                ["ConnectionStrings:DefaultConnection"] = $"Data Source={_databasePath}"
+                ["ConnectionStrings:DefaultConnection"] = $"Data Source={_databasePath};Cache=Shared;Default Timeout=30"
             });
         });
         builder.ConfigureTestServices(services =>
         {
+            foreach (var descriptor in services
+                .Where(descriptor =>
+                    descriptor.ServiceType == typeof(IHostedService) &&
+                    descriptor.ImplementationType == typeof(WorkoutPlanJobWorker))
+                .ToList())
+            {
+                services.Remove(descriptor);
+            }
             services.RemoveAll<IDbContextFactory<GymminDbContext>>();
             services.RemoveAll<IUserStore>();
             services.RemoveAll<IUserSettingsStore>();
@@ -71,7 +81,9 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IAiCreditService>();
             services.RemoveAll<IBugReportStore>();
             services.RemoveAll<IAccountDeletionService>();
-            services.AddDbContextFactory<GymminDbContext>(options => options.UseSqlite($"Data Source={_databasePath}"));
+            services.RemoveAll<IUserAvatarStorage>();
+            services.AddDbContextFactory<GymminDbContext>(options =>
+                options.UseSqlite($"Data Source={_databasePath};Cache=Shared;Default Timeout=30"));
             services.AddSingleton<IUserStore, EfUserStore>();
             services.AddSingleton<IUserSettingsStore, EfUserSettingsStore>();
             services.AddSingleton<IWorkoutStore, EfWorkoutStore>();
@@ -79,8 +91,10 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IWorkoutSessionStore, EfWorkoutSessionStore>();
             services.AddSingleton<IAchievementStore, EfAchievementStore>();
             services.AddSingleton<IWorkoutPlanJobStore, EfWorkoutPlanJobStore>();
+            services.AddSingleton<EfWorkoutPlanJobProcessor>();
             services.AddSingleton<IAiCreditService, EfAiCreditService>();
             services.AddSingleton<IBugReportStore, EfBugReportStore>();
+            services.AddSingleton<IUserAvatarStorage, DatabaseUserAvatarStorage>();
             services.AddSingleton<IAccountDeletionService, EfAccountDeletionService>();
             services.RemoveAll<IAiCreditPurchaseService>();
             services.AddSingleton<IAiCreditPurchaseService, EfAiCreditPurchaseService>();
@@ -97,6 +111,7 @@ public sealed class GymminApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IBugReportEmailSender>(BugReportEmailSender);
             services.RemoveAll<IPasswordResetEmailSender>();
             services.AddSingleton<IPasswordResetEmailSender>(PasswordResetEmailSender);
+            services.AddHostedService<WorkoutPlanJobWorker>();
         });
     }
 

@@ -33,6 +33,7 @@ docs/
   backend-sync.md
   build-android-apk.md
   deployment.md
+  production-audit-2026-07-16.md
   release-checklist.md
   run-mobile-tunnel.md
   system-status.md
@@ -40,6 +41,9 @@ docs/
 scripts/
   start-expo-tunnel.ps1
 ```
+
+Aktualny audyt gotowości produkcyjnej, wykryte blokery i kolejność napraw są
+opisane w `docs/production-audit-2026-07-16.md`.
 
 The mobile UI is split by responsibility: route-level views live in
 `apps/mobile/src/screens`, reusable controls and view fragments in
@@ -161,7 +165,7 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - Terms use a short dashboard layout with a hero summary, three key rules, an issue-reporting callout and seven expandable detailed sections.
 - Homepage includes an account-scoped, local-first weekly plan. Planned workouts are assigned to weekdays and completed workout sessions are counted from Monday through Sunday.
 - Registration includes username, email, password, repeated password and password preview in the mobile UI. The backend contract still receives a single password field.
-- Signed-in users can upload, replace and delete a profile avatar from the Profile screen. Avatars are uploaded as `multipart/form-data`, stored as files on the backend, exposed through `GET /api/profile/avatar`, and displayed in the mobile header/profile with `avatarUpdatedAt` cache busting. Anonymous users keep the default icon.
+- Signed-in users can upload, replace and delete a profile avatar from the Profile screen. Avatars are uploaded as `multipart/form-data`; production Database mode stores bytes and metadata in the database, while File mode remains a development fallback. They are exposed through authenticated `GET /api/profile/avatar`. Native mobile downloads the image with the bearer token into an account-scoped private cache and limits the rendered/uploaded copy to 1024 px on its longest side, preventing high-resolution camera images from exhausting Android image memory. `avatarUpdatedAt` invalidates the cache; anonymous users keep the default icon.
 - Signed-in users can permanently delete their account from Profile -> Account. Mobile requires the current password plus typing `USUŃ` / `DELETE`; the backend verifies both, rate-limits attempts per user/IP, deletes private user-owned data and avatar, and anonymizes retained bug reports.
 - Installed APKs contain the API base URL used at build time. For GitHub Release phone builds, run `npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://..."` or set `GYMMIN_APK_API_BASE_URL`; the wrapper checks `/health` and, if the URL is missing or stale, starts or attaches a backend tunnel automatically. A running local backend on `http://127.0.0.1:5198` is reused instead of restarted. The current tunnel URL is written to `.artifacts/backend-url.txt`.
 - Auth hardening is implemented: token expiry, active sessions, single-session revoke, logout-all, change password and password reset by email/token. Reset tokens are stored only as hashes. Mobile bearer tokens live in OS-backed SecureStore/Keychain and legacy plaintext AsyncStorage sessions migrate on first launch. New accounts must confirm a six-digit email code before AI use; registration and AI generation are rate-limited per IP/user with shared Database-provider buckets.
@@ -195,7 +199,7 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - New users can receive an idempotent initial AI credit grant. Development/testing can use the guarded `/api/ai-credits/dev/grant` endpoint.
 - Android AI credit purchases use backend Google Play validation and consume. Mobile attaches an opaque account identifier and backend checks it when Google returns it. Google API diagnostics redact purchase tokens and developer payloads before persistence. Authenticated RTDN/Pub/Sub push verifies Google's OIDC signature, exact audience, service-account email and package name; notifications are deduplicated by `messageId`, stored in `GooglePlayRtdnEvents`, and plaintext purchase tokens are never persisted. A checkpointed Voided Purchases worker reconciles refunds/chargebacks, claws back only unused credits without creating negative balances and records unrecovered amounts for manual review.
 - Mobile uses `react-native-iap@15.5.0` plus `react-native-nitro-modules@0.35.10` as the native Google Play Billing stack. Android debug APK and release AAB build smoke pass on Expo SDK 57 / React Native 0.86 when `ANDROID_HOME` / `ANDROID_SDK_ROOT` points to an installed Android SDK. Windows native builds use a short temporary build path and clear copied `.cxx` caches to avoid CMake/Ninja path failures in Nitro/IAP sources. Real billing tests still require Play Console one-time products (`ai_tokens_1`, `ai_tokens_3`, `ai_tokens_10`) matching the current 1/3/10 credit packs, license testers, a Google Play service account, and installing the app from an Internal Testing track.
-- Workout creator jobs are asynchronous and persisted on both sides: the phone stores the active `jobId`, and the backend stores job state in File or Database storage.
+- Workout creator jobs are asynchronous and persisted on both sides: the phone stores the active `jobId`, and the backend stores job state in File or Database storage. Database jobs are processed by a controlled worker with atomic lease, heartbeat and expired-lease recovery for safe multi-replica deployment.
 - Bug reports are persisted before email delivery in File or Database storage. Submissions are limited to 64 KiB, rate-limited, and retry-safe through `X-Idempotency-Key`. A durable background outbox retries SMTP delivery. The optional admin API uses only a configured SHA256 key hash, rate-limits failed access, supports status/response and one immutable reward per report, and appends `AdminAuditEvents`.
 - Every backend response includes `X-Correlation-Id`. Mobile sends `X-Correlation-Id` on API requests and attaches recent correlation ids plus local diagnostic events to bug reports.
 - Backend unexpected errors return a safe JSON error response with `correlationId`; stack traces are logged server-side only.

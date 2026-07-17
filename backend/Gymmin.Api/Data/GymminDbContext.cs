@@ -45,6 +45,7 @@ public sealed class GymminDbContext : DbContext
             entity.Property(user => user.PasswordSalt).IsRequired();
             entity.Property(user => user.AvatarFileName).HasMaxLength(260);
             entity.Property(user => user.AvatarContentType).HasMaxLength(80);
+            entity.Property(user => user.AvatarContent);
             entity.Property(user => user.EmailVerificationCodeHash).HasMaxLength(64);
             entity.HasIndex(user => user.NormalizedEmail).IsUnique();
         });
@@ -137,9 +138,11 @@ public sealed class GymminDbContext : DbContext
             entity.Property(job => job.IdempotencyKey).HasMaxLength(160);
             entity.Property(job => job.TokenTransactionId).HasMaxLength(80);
             entity.Property(job => job.TokenRefundReason).HasMaxLength(250);
+            entity.Property(job => job.LeaseId).HasMaxLength(64);
             entity.HasIndex(job => job.UserId);
             entity.HasIndex(job => job.Status);
             entity.HasIndex(job => job.CreatedAt);
+            entity.HasIndex(job => job.LeaseExpiresAt);
             entity.HasIndex(job => new { job.UserId, job.JobType, job.IdempotencyKey });
             entity.HasOne(job => job.User)
                 .WithMany()
@@ -414,6 +417,7 @@ public sealed class UserEntity
     public string PasswordSalt { get; set; } = "";
     public string? AvatarFileName { get; set; }
     public string? AvatarContentType { get; set; }
+    public byte[]? AvatarContent { get; set; }
     public DateTimeOffset? AvatarUpdatedAt { get; set; }
     public DateTimeOffset? EmailVerifiedAt { get; set; }
     public string? EmailVerificationCodeHash { get; set; }
@@ -513,6 +517,9 @@ public sealed class WorkoutCreatorJobEntity
     public DateTimeOffset? TokenRefundedAt { get; set; }
     public string? TokenRefundReason { get; set; }
     public string? IdempotencyKey { get; set; }
+    public string? LeaseId { get; set; }
+    public DateTimeOffset? LeaseExpiresAt { get; set; }
+    public int AttemptCount { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }

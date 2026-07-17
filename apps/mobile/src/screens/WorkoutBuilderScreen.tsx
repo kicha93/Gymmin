@@ -16,53 +16,20 @@ import {
 } from "../domain/exercises";
 import {
   createStep,
-  type GoalType,
   type StageType,
-  type TargetComparator,
   type WorkoutDraft,
   type WorkoutStep
 } from "../domain/workouts";
+import {
+  getGoalTypeOptions,
+  getStageTypeOptions,
+  getStageTypeTranslationKey,
+  getTargetComparatorOptions,
+  normalizeSetCountInput
+} from "../domain/workoutBuilderConfiguration";
 import type { LanguageCode, TranslationKey } from "../i18n/translations";
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
-
-const stageTypeValues: StageType[] = ["warmup", "exercise", "recovery", "rest", "cooldown", "other"];
-const goalTypeValues: GoalType[] = ["repetitions", "time", "buttonPress", "calories", "heartRate"];
-const targetComparatorValues: TargetComparator[] = ["below", "above"];
-
-const stageTypeTranslationKeys: Record<StageType, TranslationKey> = {
-  cooldown: "stageCooldown",
-  exercise: "stageExercise",
-  other: "stageOther",
-  recovery: "stageRecovery",
-  rest: "stageRest",
-  warmup: "stageWarmup"
-};
-
-const goalTypeTranslationKeys: Record<GoalType, TranslationKey> = {
-  buttonPress: "goalButtonPress",
-  calories: "goalCalories",
-  heartRate: "goalHeartRate",
-  repetitions: "goalRepetitions",
-  time: "goalTime"
-};
-
-const targetComparatorTranslationKeys: Record<TargetComparator, TranslationKey> = {
-  above: "targetAbove",
-  below: "targetBelow"
-};
-
-function getStageTypeOptions(t: (key: TranslationKey) => string) {
-  return stageTypeValues.map((value) => ({ label: t(stageTypeTranslationKeys[value]), value }));
-}
-
-function getGoalTypeOptions(t: (key: TranslationKey) => string) {
-  return goalTypeValues.map((value) => ({ label: t(goalTypeTranslationKeys[value]), value }));
-}
-
-function getTargetComparatorOptions(t: (key: TranslationKey) => string) {
-  return targetComparatorValues.map((value) => ({ label: t(targetComparatorTranslationKeys[value]), value }));
-}
 
 type WorkoutBuilderProps = {
   defaultSetCount: string;
@@ -245,16 +212,6 @@ function StageConfiguration({ stage, t, theme, updateStep }: StageConfigurationP
       </View>
     </>
   );
-}
-
-function normalizeSetCountInput(value: string) {
-  const numericValue = value.replace(/\D/g, "").slice(0, 2);
-
-  if (!numericValue) {
-    return "";
-  }
-
-  return String(Math.min(Number(numericValue), 20));
 }
 
 function StepConfiguration({
@@ -896,7 +853,7 @@ export function WorkoutBuilderScreen({
                                                     {element.exerciseName
                                                       ? getExerciseDisplayName(element.exerciseName, language)
                                                       : element.stageType
-                                                        ? t(stageTypeTranslationKeys[element.stageType])
+                                                        ? t(getStageTypeTranslationKey(element.stageType))
                                                       : `${t("addElement")} ${elementIndex + 1}`}
                                                   </Text>
                                                 </View>

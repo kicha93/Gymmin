@@ -12,7 +12,7 @@ import {
   getRequiredEquipment,
   resolveExerciseId
 } from "../exercises";
-import { getExerciseImageAssetKeys } from "../exerciseImageAssets";
+import { getExerciseAnimationAssetKey, getExerciseImageAssetKeys } from "../exerciseImageAssets";
 
 describe("exercise catalog cleanup", () => {
   it("maps removed duplicate exercise names to their canonical target", () => {
@@ -51,7 +51,7 @@ describe("exercise catalog cleanup", () => {
     expect(getExerciseImageAssetKeys("lying-leg-curl")).toHaveLength(0);
   });
 
-  it("registers every image pair from the July exercise package", () => {
+  it("uses supplied exercise image pairs when no animation is registered", () => {
     const exerciseIds = [
       "curl-cable-biceps-curl-331",
       "lateral-raise-dumbbell-lateral-raise-545",
@@ -60,7 +60,6 @@ describe("exercise catalog cleanup", () => {
       "lunge-dumbbell-bulgarian-split-squat-625",
       "row-face-pull-1044",
       "shoulder-press-seated-dumbbell-shoulder-press-1128",
-      "squat-barbell-front-squat-1253",
       "squat-leg-press-1285",
       "triceps-extension-cable-overhead-triceps-extension-1403"
     ];
@@ -68,6 +67,16 @@ describe("exercise catalog cleanup", () => {
     for (const exerciseId of exerciseIds) {
       expect(getExerciseImageAssetKeys(exerciseId), exerciseId).toHaveLength(2);
     }
+  });
+
+  it("registers an exercise animation while retaining start and end fallback images", () => {
+    expect(getExerciseAnimationAssetKey("squat-barbell-front-squat-1253")).toBe(
+      "squat-barbell-front-squat-1253/animation"
+    );
+    expect(getExerciseImageAssetKeys("squat-barbell-front-squat-1253")).toEqual([
+      "squat-barbell-front-squat-1253/start",
+      "squat-barbell-front-squat-1253/end"
+    ]);
   });
 
   it("preserves old Stage 2 exercise names as aliases to focused catalog entries", () => {

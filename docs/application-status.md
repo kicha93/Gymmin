@@ -79,9 +79,15 @@ Formularz Kreatora AI jest wydzielony do `WorkoutCreatorScreen`, a definicja ank
 
 Formularz modyfikowania treningu przez AI i ekran propozycji mają osobne moduły `WorkoutAiRewriteScreen` oraz `WorkoutAiProposalScreen`. Podgląd zachowuje hierarchię etapów, serii i ćwiczeń oraz informację o dopasowaniu do katalogu. Endpoint rewrite, polling, rozliczenie kredytu, zapis jako nowy trening i zastąpienie istniejącego planu pozostają w kompozycji aplikacji.
 
-Warstwa prezentacyjna Ustawień jest wydzielona do `SettingsScreen` i `SettingsSheetContent`. Ekran zachowuje sekcje preferencji, treningu, przypomnień, integracji i informacji, a arkusze zachowują edycję języka, wartości domyślnych oraz godzin per dzień. Persystencja local-first, uprawnienia powiadomień i synchronizacja ustawień nadal są koordynowane przez `App.tsx`.
+Warstwa prezentacyjna Ustawień jest wydzielona do `SettingsScreen` i `SettingsSheetContent`. Ekran zachowuje sekcje preferencji, treningu, przypomnień, integracji i informacji, a arkusze zachowują edycję języka, wartości domyślnych oraz godzin per dzień. Normalizacja znajduje się w `src/domain/appSettings.ts`, account-scoped persystencja w `useAccountScopedSettings`, natomiast `App.tsx` koordynuje uprawnienia powiadomień i transport synchronizacji ustawień.
 
 Wszystkie widoki nawigacyjne mobile mają obecnie własne moduły w `src/screens`. Dotyczy to również homepage, listy treningów, planu tygodnia, buildera treningu, aktywnej sesji, szczegółów ćwiczenia, ulubionych ćwiczeń i artykułu. Elementy używane przez kilka ekranów zostały przeniesione do `src/components`, a typy i czyste helpery do `src/domain`. `App.tsx` pozostaje kompozytorem stanu, storage, API, synchronizacji i nawigacji; nie zawiera już pełnych implementacji ekranów.
+
+Account-scoped ulubione ćwiczenia i osiągnięcia mają własne kontrolery w `src/features`. Synchronizacja ulubionych odrzuca spóźnione odpowiedzi, a osiągnięcia oraz czas użycia korzystają z jednego debounce zamiast dwóch konkurujących timerów. Kontrakty, normalizacja odpowiedzi i merge znajdują się odpowiednio w `src/domain/favoriteExerciseSync.ts` i `src/domain/achievementSync.ts`.
+
+Pierwszą synchronizację treningów, ustawień, ulubionych, sesji i osiągnięć po zalogowaniu koordynuje `useInitialAccountSync`. Każda dziedzina ma jawny stan synchronizacji, a odpowiedź rozpoczęta dla poprzedniego konta jest unieważniana po zmianie użytkownika lub właściciela lokalnego storage.
+
+Kolejne zmiany ustawień są zapisywane zdalnie przez `useAccountSettingsAutoSave`. Kontroler stosuje debounce 400 ms, utrzymuje najwyżej jeden aktywny `PUT /api/settings` i po zakończeniu wysyła wyłącznie najnowszą oczekującą rewizję. Odpowiedź starego konta ani starszej rewizji nie aktualizuje lokalnego `updatedAt`.
 
 ### Logowanie i rejestracja
 
@@ -126,11 +132,25 @@ Działa:
 - unieważnianie innych sesji po zmianie hasła,
 - unieważnianie wszystkich sesji po resecie hasła.
 
+Mobile używa typowanego `src/api/authApi.ts` dla logowania, rejestracji,
+weryfikacji emaila, resetu/zmiany hasła i aktywnych sesji. Klient waliduje
+odpowiedzi przed aktualizacją UI. Akcja wylogowania wszystkich urządzeń czyści
+lokalną sesję dopiero po potwierdzonym sukcesie API.
+
+Mutacje profilu korzystają z `src/api/profileApi.ts`. Moduł obsługuje upload i
+usunięcie avatara oraz zdalny krok usunięcia konta; picker, prywatny cache pliku
+i czyszczenie account-scoped danych po sukcesie pozostają poza transportem HTTP.
+
 Avatar uzytkownika jest obslugiwany w Profilu. Zalogowany uzytkownik moze
 zmienic albo usunac avatar. Mobile wysyla obraz przez `multipart/form-data`,
-backend zapisuje go jako plik w `App_Data/avatars`, a `GET /api/auth/me`
+produkcyjny Database provider zapisuje bajty i metadane w bazie, a File provider
+pozostaje lokalnym fallbackiem. `GET /api/auth/me`
 zwraca `avatarUrl` i `avatarUpdatedAt`. Header aplikacji pokazuje avatar, jesli
-jest ustawiony; anonymous user widzi domyslna ikone.
+jest ustawiony; anonymous user widzi domyslna ikone. W natywnej aplikacji avatar
+jest pobierany z bearer tokenem do prywatnego cache per konto. Kopia pobierana
+oraz nowe obrazy przed uploadem sa ograniczane do 1024 px na dluzszym boku, aby
+zdjecia z aparatu o bardzo duzej rozdzielczosci nie powodowaly bledu renderowania
+lub nadmiernego zuzycia pamieci na Androidzie.
 
 Profil obsluguje tez trwale usuniecie konta. Opcja `Usun konto` znajduje sie w
 sekcji Konto nad `Wyloguj` i wymaga mocnego potwierdzenia przez wpisanie `USUŃ`
@@ -141,7 +161,6 @@ urzadzeniu.
 
 Brakuje jeszcze:
 
-- potwierdzania emaila,
 - OAuth/social login,
 - 2FA,
 - deeplinka resetu hasła.
@@ -207,6 +226,12 @@ Element typu `Odpoczynek` ukrywa pole ćwiczenia i ciężaru. Element typu `Rozg
 Po kontrolnej fazie refaktoru katalog zawiera 964 rekordy. Ryzykowne scalenie `Dead-hang Biceps Curl` zostało cofnięte, a nieudowodniony alias `stage2-back-extension` usunięty. Stare identyfikatory zatwierdzonych scaleń są rozwiązywane centralnie przy odczycie planów, sesji, progresu, ulubionych, treści technicznych i obrazów. Rekordy mają `libraryTier`: `main`, `advanced`, `sportSpecific`, `rehab`, `variation`, `progression` albo `deprecated`; domyślny picker pokazuje wyłącznie poziom `main`.
 
 Walidacja `npm run exercise:catalog:validate` sprawdza unikalność ID i nazw, kategorie, sprzęt, aliasy, mapping ID oraz poziomy biblioteki. Pełny raport zmian: `docs/exercise-catalog-refactor.md`.
+
+Media ćwiczeń wspierają opcjonalne lokalne MP4. Jeżeli animacja jest
+zarejestrowana dla ćwiczenia, ekran szczegółów odtwarza ją automatycznie, bez
+dźwięku i kontrolek, w nieskończonej pętli. Dotychczasowe obrazy start/end
+pozostają w paczce i są używane jako fallback przy błędzie odtwarzania. Pierwszym
+wdrożonym przykładem jest `squat-barbell-front-squat-1253`.
 
 Nie wspieramy własnych ćwiczeń w produkcie. To świadoma decyzja pod przyszłe mapowanie do Garmin.
 
@@ -590,6 +615,20 @@ Brakuje jeszcze mobile UI tests i E2E. File provider pozostaje fallbackiem dev; 
 ## Najbliższe logiczne kroki
 
 Aktualny tor produkcyjny dla backendu: PostgreSQL provider, jawne migracje i deployment checklist są opisane w `docs/deployment.md`.
+
+Pełny audyt z 2026-07-16 jest w `docs/production-audit-2026-07-16.md`.
+Wykryte w nim blokery legacy auth, trwałości avatarów i konkurencji jobów AI są
+zamknięte w kodzie. Przed publicznym wydaniem pozostają wdrożeniowe smoke testy
+na docelowym PostgreSQL, kilku replikach i fizycznym urządzeniu.
+
+Audyt strukturalny i wykonane wydzielenia klienta API, repozytoriów local-first,
+kontrolerów, logiki sesji/buildera, skompresowanego katalogu technik oraz
+backendowych endpointów systemowych opisuje
+`docs/structural-refactor-2026-07-16.md`.
+
+Backendowy `Program.cs` jest obecnie composition root; endpointy biznesowe są
+podzielone na moduły w `backend/Gymmin.Api/Endpoints`. Mobile oddziela czyste
+kontrakty auth od natywnej persystencji SecureStore.
 
 1. Rozszerzyć testy mobile o UI tests i krytyczne E2E.
 2. Uruchomić produkcyjny PostgreSQL, backup poza hostem i okresowy test restore według `docs/deployment.md`.

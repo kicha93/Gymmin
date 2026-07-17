@@ -199,9 +199,10 @@ Authorization: Bearer {token}
 `POST /api/profile/avatar` accepts `multipart/form-data` with field `avatar`.
 Allowed image types are JPEG, PNG and WebP. The backend validates content type
 and file magic bytes, rejects empty files, unsupported formats and files larger
-than 2 MB. Images are stored as backend files under `App_Data/avatars`, while
-the user record stores only `AvatarFileName`, `AvatarContentType` and
-`AvatarUpdatedAt`. `GET /api/profile/avatar` returns only the current user's
+than 2 MB. Database mode stores image bytes and metadata on the user record, so
+the avatar is shared across replicas and included in PostgreSQL backup/restore.
+File mode uses `App_Data/avatars` only as a development fallback. `GET
+/api/profile/avatar` returns only the current user's
 avatar with private/no-cache headers. `DELETE` is idempotent and clears avatar
 metadata. Mobile uses `avatarUpdatedAt` as a cache buster and does not store
 base64 image data in AsyncStorage.
@@ -222,8 +223,9 @@ The endpoint deletes the currently authenticated account and invalidates its
 sessions by removing the user record. Database mode relies on user-scoped
 cascade deletes for settings, workouts, workout sessions, favorite exercises,
 achievements/app usage, AI credit records and creator jobs. File mode removes
-the same user-scoped data from the JSON stores. The avatar file under
-`App_Data/avatars/{userId}` is deleted as part of the operation.
+the same user-scoped data from the JSON stores. Database avatar content, or the
+File-provider fallback under `App_Data/avatars/{userId}`, is deleted as part of
+the operation.
 
 Mobile exposes this as `Profile -> Account -> Delete account`. The user must
 type `USUŃ` in PL or `DELETE` in EN before the final destructive action is

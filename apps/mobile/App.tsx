@@ -1,6 +1,5 @@
 ﻿import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as SecureStore from "expo-secure-store";
 import { config as gluestackConfig } from "@gluestack-ui/config";
 import {
   GluestackUIProvider,
@@ -31,7 +30,19 @@ import {
 } from "react-native";
 
 import { BUILD_API_BASE_URL } from "./src/config/buildConfig";
-import { applyAvatarResponse, buildAvatarImageSource, type AvatarResponse } from "./src/domain/avatar";
+import {
+  applyAvatarResponse,
+  buildAvatarImageSource,
+  type AvatarResponse
+} from "./src/domain/avatar";
+import {
+  clearCachedAvatar,
+  clearPreparedAvatar,
+  getCachedAvatarUri,
+  prepareAvatarForUpload,
+  refreshCachedAvatar,
+  type PreparedAvatar
+} from "./src/domain/avatarCache";
 import {
   achievementDefinitions,
   ACHIEVEMENTS_STORAGE_BASE_KEY,
@@ -44,17 +55,18 @@ import {
   getDefaultAppUsageStats,
   getNewUserAchievementUnlocks,
   loadAppUsageStats,
-  loadAchievementsSyncState,
   loadUserAchievements,
   mergeAppUsageStats,
   mergeUserAchievements,
   saveAppUsageStats,
-  saveAchievementsSyncState,
   saveUserAchievements,
-  type AchievementsSyncState,
   type AppUsageStats,
   type UserAchievement
 } from "./src/domain/achievements";
+import {
+  synchronizeAchievements,
+  type AchievementSyncRequest
+} from "./src/domain/achievementSync";
 import {
   GoalType,
   StageType,
@@ -64,8 +76,7 @@ import {
   WorkoutStepKind,
   createDefaultWorkout,
   createStep,
-  hasUserDefinedWorkouts,
-  normalizeWorkoutDraftExerciseIds
+  hasUserDefinedWorkouts
 } from "./src/domain/workouts";
 import {
   areCreatorDraftsEqual,
@@ -80,14 +91,11 @@ import {
   completeWorkoutSession,
   createWorkoutSessionFromWorkout,
   getActiveWorkoutSessionsForUi,
-  getClientSessionId,
-  getDeletedWorkoutSessionIds,
   getExerciseProgressItems,
   getExerciseProgressSummary,
   getSessionDurationMs,
   getSessionStartedAtTime,
   getWorkoutSessionStatusLabel,
-  getWorkoutSessionUpdatedAt,
   getWorkoutHistorySummary,
   getWorkoutSessionDisplayName,
   markWorkoutSessionDeleted,
@@ -104,6 +112,16 @@ import type {
   WorkoutSessionEntry,
   WorkoutSessionStatus
 } from "./src/domain/workoutSessions";
+import { clampWorkoutSessionEntryIndex } from "./src/domain/workoutSessionPresentation";
+import {
+  getSettingsTimestamp,
+  normalizeAppSettings,
+  type AppSettings
+} from "./src/domain/appSettings";
+import {
+  synchronizeWorkoutSessions,
+  type WorkoutSessionSyncRequest
+} from "./src/domain/workoutSessionSync";
 import {
   findExerciseById,
   findCatalogExerciseBestEffort,
@@ -115,16 +133,13 @@ import {
 } from "./src/domain/workoutExerciseSummary";
 import {
   addFavoriteExercise,
-  getDeletedFavoriteExerciseIds,
   getFavoriteCatalogExercises,
   getValidFavoriteExerciseIds,
   isExerciseFavorite,
   loadFavoriteExercises,
-  loadFavoriteExercisesSyncMetadata,
   mergeFavoriteExercises,
   removeFavoriteExercise,
   saveFavoriteExercises,
-  saveFavoriteExercisesSyncMetadata,
   toggleFavoriteExercise,
   FAVORITE_EXERCISES_LEGACY_STORAGE_KEY,
   FAVORITE_EXERCISES_LEGACY_SYNC_STORAGE_KEY,
@@ -132,6 +147,10 @@ import {
   FAVORITE_EXERCISES_SYNC_STORAGE_BASE_KEY
 } from "./src/domain/favoriteExercises";
 import type { FavoriteExercise } from "./src/domain/favoriteExercises";
+import {
+  synchronizeFavoriteExercises,
+  type FavoriteExerciseSyncRequest
+} from "./src/domain/favoriteExerciseSync";
 import {
   ANONYMOUS_LOCAL_OWNER,
   detectAccountSwitch,
@@ -175,10 +194,16 @@ import type { ReminderDaySchedule, ReminderWeekday, WorkoutReminderSettings } fr
 import {
   addDiagnosticEvent,
   createCorrelationId,
-  getDiagnosticsSnapshot,
-  recordApiError,
-  recordCorrelationId
+  getDiagnosticsSnapshot
 } from "./src/domain/appDiagnostics";
+import {
+  buildApiHeaders,
+  createApiError as createHttpApiError,
+  requestApi
+} from "./src/api/apiClient";
+import { createAuthApiClient } from "./src/api/authApi";
+import { createProfileApiClient } from "./src/api/profileApi";
+import { getErrorMessageOrFallback } from "./src/domain/apiErrors";
 import {
   emptyAiCreditBalance,
   isInsufficientAiCreditsError,
@@ -199,12 +224,6 @@ import {
   mapBillingError,
   purchaseAiCreditPack
 } from "./src/domain/googlePlayBilling";
-import {
-  createOfflineSystemStatus,
-  normalizeSystemStatusResponse,
-  shouldFetchSystemStatus,
-  type SystemStatusState
-} from "./src/domain/systemStatus";
 import { articles } from "./src/domain/articles";
 import type { Article } from "./src/domain/articles";
 import { GymminLogo, GymminMark } from "./src/components/GymminLogo";
@@ -266,9 +285,62 @@ import { AppDialog, type AppDialogAction, type AppDialogState } from "./src/comp
 import { GlobalErrorFallback } from "./src/components/GlobalErrorFallback";
 import type { ReminderSchedulingStatus, SettingsSheetKey } from "./src/domain/settings";
 import type { SavedWorkout, SortDirection, WorkoutSortField, WorkoutSortSettings } from "./src/domain/savedWorkouts";
+import {
+  compareWorkouts,
+  defaultWorkoutSort,
+  getFallbackWorkoutCreatedAt,
+  normalizeDateString,
+  normalizeSavedWorkoutTextFields,
+  normalizeWorkoutDraftTextFields,
+  normalizeWorkoutSortSettings,
+  repairTextEncoding
+} from "./src/domain/savedWorkoutNormalization";
+import {
+  ACTIVE_WORKOUT_SESSION_STORAGE_BASE_KEY as activeWorkoutSessionStorageBaseKey,
+  LOCAL_CREATOR_JOB_STORAGE_BASE_KEY as localCreatorJobStorageBaseKey,
+  LOCAL_CREATOR_PROFILES_STORAGE_BASE_KEY as localCreatorProfilesStorageBaseKey,
+  LOCAL_SETTINGS_STORAGE_BASE_KEY as localSettingsStorageBaseKey,
+  LOCAL_WORKOUTS_STORAGE_BASE_KEY as localWorkoutsStorageBaseKey,
+  hasAnonymousAccountData as hasStoredAnonymousAccountData,
+  hasAnonymousMergeHandled,
+  loadCreatorProfilesForOwner as loadCreatorProfilesForStorageOwner,
+  loadWorkoutSessionsForOwner as loadWorkoutSessionsForStorageOwner,
+  loadWorkoutsForOwner as loadWorkoutsForStorageOwner,
+  markAnonymousMergeHandled,
+  mergeCreatorProfilesById,
+  saveCreatorProfilesForOwner as saveCreatorProfilesForStorageOwner,
+  saveWorkoutSessionsForOwner as saveWorkoutSessionsForStorageOwner,
+  saveWorkoutsForOwner as saveWorkoutsForStorageOwner
+} from "./src/storage/localDataRepositories";
+import { useAccountScopedWorkouts } from "./src/features/workouts/useAccountScopedWorkouts";
+import { useAccountScopedCreatorProfiles } from "./src/features/workoutCreator/useAccountScopedCreatorProfiles";
+import { useAccountScopedWorkoutSessions } from "./src/features/workoutSessions/useAccountScopedWorkoutSessions";
+import { useWorkoutSessionAutoSync } from "./src/features/workoutSessions/useWorkoutSessionAutoSync";
+import { useSystemStatusController } from "./src/features/systemStatus/useSystemStatusController";
+import { useAccountScopedSettings } from "./src/features/settings/useAccountScopedSettings";
+import { useAccountSettingsAutoSave } from "./src/features/settings/useAccountSettingsAutoSave";
+import { useAccountScopedFavoriteExercises } from "./src/features/favorites/useAccountScopedFavoriteExercises";
+import { useAccountScopedAchievements } from "./src/features/achievements/useAccountScopedAchievements";
+import { useInitialAccountSync } from "./src/features/sync/useInitialAccountSync";
+import {
+  LOCAL_AUTH_STORAGE_KEY as localAuthStorageKey,
+  deleteSecureAuthToken,
+  getSecureAuthToken,
+  setSecureAuthToken
+} from "./src/features/auth/authSession";
+import {
+  AuthPasswordPolicy,
+  createUserSession,
+  type AuthApiResponse,
+  type AuthSessionResponse,
+  type AuthUserResponse,
+  type LegacyLocalAuthStorage,
+  type LocalAuthStorage,
+  type UserSession
+} from "./src/domain/auth";
 import { getScreenTitle, navItems, type ScreenKey } from "./src/navigation/appNavigation";
 import { styles } from "./src/theme/appStyles";
-import { themes, type Theme, type ThemeName } from "./src/theme/theme";
+import { themes, type Theme } from "./src/theme/theme";
 
 type ExpoNotificationsModule = typeof import("expo-notifications");
 
@@ -313,41 +385,23 @@ async function getNotificationsModule() {
 const stageTypeValues: StageType[] = ["warmup", "exercise", "recovery", "rest", "cooldown", "other"];
 const goalTypeValues: GoalType[] = ["repetitions", "time", "buttonPress", "calories", "heartRate"];
 const targetComparatorValues: TargetComparator[] = ["below", "above"];
-const workoutExecutionModeValues: WorkoutExecutionMode[] = ["guided", "readonly-post-workout", "inline-table"];
 
 const localWorkoutsLegacyStorageKey = "gymmin.localWorkouts.v1";
-const localWorkoutsStorageBaseKey = "localWorkouts.v1";
 const workoutSessionsLegacyStorageKey = "gymmin.workoutSessions";
 // TODO: per-user local storage for account-scoped workout sessions and richer conflict UX.
-const activeWorkoutSessionStorageBaseKey = "activeWorkoutSession.v1";
 const localSettingsLegacyStorageKey = "gymmin.localSettings.v1";
-const localSettingsStorageBaseKey = "localSettings.v1";
 const localCreatorProfilesLegacyStorageKey = "gymmin.localCreatorProfiles.v1";
-const localCreatorProfilesStorageBaseKey = "localCreatorProfiles.v1";
 const localCreatorJobLegacyStorageKey = "gymmin.localCreatorJob.v1";
-const localCreatorJobStorageBaseKey = "localCreatorJob.v1";
 const localWeeklyPlanStorageBaseKey = WEEKLY_PLAN_STORAGE_BASE_KEY;
-const anonymousMergeHandledStorageBaseKey = "anonymousMergeHandled.v1";
-const localAuthStorageKey = "gymmin.localAuth.v1";
-const secureAuthTokenKey = "gymmin.auth.token.v1";
-const workoutSessionSyncActiveDebounceMs = 1600;
-const workoutSessionSyncIdleDebounceMs = 250;
-
-async function getSecureAuthToken() {
-  return Platform.OS === "web" ? null : SecureStore.getItemAsync(secureAuthTokenKey);
-}
-
-async function setSecureAuthToken(token: string) {
-  if (Platform.OS === "web") return;
-  await SecureStore.setItemAsync(secureAuthTokenKey, token, {
-    keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY
-  });
-}
-
-async function deleteSecureAuthToken() {
-  if (Platform.OS === "web") return;
-  await SecureStore.deleteItemAsync(secureAuthTokenKey);
-}
+const anonymousAccountDataBaseKeys = [
+  localWorkoutsStorageBaseKey,
+  FAVORITE_EXERCISES_STORAGE_BASE_KEY,
+  WORKOUT_SESSIONS_STORAGE_BASE_KEY,
+  ACHIEVEMENTS_STORAGE_BASE_KEY,
+  APP_USAGE_STATS_STORAGE_BASE_KEY,
+  localCreatorProfilesStorageBaseKey,
+  localCreatorJobStorageBaseKey
+];
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
 
@@ -408,22 +462,6 @@ function getTargetComparatorOptions(t: (key: TranslationKey) => string) {
   return targetComparatorValues.map((value) => ({ label: t(targetComparatorTranslationKeys[value]), value }));
 }
 
-function isLanguageCode(value: unknown): value is LanguageCode {
-  return value === "pl" || value === "en";
-}
-
-function isThemeName(value: unknown): value is ThemeName {
-  return value === "light" || value === "dark";
-}
-
-function isStageType(value: unknown): value is StageType {
-  return typeof value === "string" && stageTypeValues.includes(value as StageType);
-}
-
-function isWorkoutExecutionMode(value: unknown): value is WorkoutExecutionMode {
-  return typeof value === "string" && workoutExecutionModeValues.includes(value as WorkoutExecutionMode);
-}
-
 function getWorkoutExecutionModeOptions(t: (key: TranslationKey) => string) {
   return [
     { label: t("executionGuided"), value: "guided" as const },
@@ -463,27 +501,6 @@ function getReminderWeekdayFromNumber(value: number): ReminderWeekday {
   }
 }
 
-function normalizeCollapsedPanels(value: unknown) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return defaultCollapsedPanels;
-  }
-
-  const storedPanels = Object.fromEntries(
-    Object.entries(value).filter((entry): entry is [string, boolean] => typeof entry[1] === "boolean")
-  );
-
-  return {
-    ...defaultCollapsedPanels,
-    ...storedPanels
-  };
-}
-
-type WorkoutTableOrientation = "vertical" | "horizontal";
-
-function isWorkoutTableOrientation(value: unknown): value is WorkoutTableOrientation {
-  return value === "vertical" || value === "horizontal";
-}
-
 type ApiWorkoutStep = {
   clientStepId: string;
   exerciseId?: string;
@@ -510,214 +527,7 @@ type ApiWorkout = {
   steps: ApiWorkoutStep[];
 };
 
-type ApiUserSettings = {
-  collapsedPanels?: Record<string, boolean>;
-  defaultSetCount?: string;
-  defaultStageType?: StageType | "" | null;
-  defaultWorkoutTableOrientation?: WorkoutTableOrientation | null;
-  defaultWorkoutExecutionMode?: WorkoutExecutionMode | null;
-  showRestTimer?: boolean;
-  defaultWeight?: string;
-  isAuthPanelDismissed?: boolean;
-  language?: LanguageCode;
-  themeName?: ThemeName;
-  updatedAt?: string;
-  workoutReminders?: WorkoutReminderSettings;
-};
-
-type ApiFavoriteExercisesResponse = {
-  favorites?: FavoriteExercise[];
-  serverTime?: string;
-};
-
-type ApiWorkoutSessionEnvelope = {
-  clientSessionId: string;
-  clientUpdatedAt?: string;
-  deletedAt?: string | null;
-  serverUpdatedAt?: string;
-  session?: WorkoutSession;
-};
-
-type ApiWorkoutSessionsResponse = {
-  sessions?: ApiWorkoutSessionEnvelope[];
-  serverTime?: string;
-};
-
-type WorkoutSessionsSyncMetadata = {
-  lastPulledAt?: string | null;
-  lastPushedAt?: string | null;
-  userId?: string | null;
-};
-
-type LocalWorkoutsStorage = {
-  selectedWorkoutId: string;
-  sort?: WorkoutSortSettings;
-  updatedAt: string;
-  version: 1;
-  workouts: SavedWorkout[];
-};
-
-type LocalWorkoutSessionsStorage = {
-  sessions: WorkoutSession[];
-  updatedAt: string;
-  version: 1;
-};
-
-type LocalActiveWorkoutSessionStorage = {
-  entryIndex: number;
-  sessionId: string | null;
-  updatedAt: string;
-  version: 1;
-};
-
-function clampWorkoutSessionEntryIndex(entryIndex: unknown, session?: WorkoutSession | null) {
-  const parsed = typeof entryIndex === "number" ? entryIndex : Number.parseInt(String(entryIndex ?? ""), 10);
-  const safeIndex = Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
-  const maxIndex = Math.max(0, (session?.entries.length ?? 1) - 1);
-  return Math.min(safeIndex, maxIndex);
-}
-
-function repairTextEncoding(value: string) {
-  if (!/[\u00c2-\u00c5\u00e2]/.test(value)) {
-    return value;
-  }
-
-  const replacements: Array<[string, string]> = [
-    ["\u00c4\u2026", "\u0105"],
-    ["\u00c4\u2021", "\u0107"],
-    ["\u00c4\u2122", "\u0119"],
-    ["\u00c5\u201a", "\u0142"],
-    ["\u00c5\u201e", "\u0144"],
-    ["\u00c3\u00b3", "\u00f3"],
-    ["\u00c5\u203a", "\u015b"],
-    ["\u00c5\u00ba", "\u017a"],
-    ["\u00c5\u00bc", "\u017c"],
-    ["\u00c4\u201e", "\u0104"],
-    ["\u00c4\u2020", "\u0106"],
-    ["\u00c4\u02dc", "\u0118"],
-    ["\u00c5\u0081", "\u0141"],
-    ["\u00c5\u0192", "\u0143"],
-    ["\u00c3\u201c", "\u00d3"],
-    ["\u00c5\u0160", "\u015a"],
-    ["\u00c5\u00b9", "\u0179"],
-    ["\u00c5\u00bb", "\u017b"],
-    ["\u00e2\u20ac\u017e", "\u201e"],
-    ["\u00e2\u20ac\u0153", "\u201c"],
-    ["\u00e2\u20ac\u009d", "\u201d"],
-    ["\u00e2\u20ac\u2122", "\u2019"],
-    ["\u00e2\u20ac\u02dc", "\u2018"],
-    ["\u00e2\u20ac\u201c", "-"],
-    ["\u00e2\u20ac\u201d", "-"],
-    ["\u00e2\u2020\u2019", "\u2192"],
-    ["\u00c2\u00b7", "\u00b7"],
-    ["\u00c2\u00ae", "\u00ae"],
-    ["\u00c2\u00b0", "\u00b0"],
-    ["\u00c2\u00a0", " "]
-  ];
-
-  return replacements.reduce((text, [from, to]) => text.split(from).join(to), value);
-}
-
-function normalizeWorkoutDraftTextFields(draft: WorkoutDraft): WorkoutDraft {
-  const normalizedDraft = normalizeWorkoutDraftExerciseIds(draft);
-  return {
-    ...normalizedDraft,
-    name: repairTextEncoding(draft.name),
-    notes: repairTextEncoding(draft.notes),
-    steps: normalizedDraft.steps.map((step) => ({
-      ...step,
-      exerciseName: repairTextEncoding(step.exerciseName),
-      label: repairTextEncoding(step.label),
-      loadKg: repairTextEncoding(step.loadKg),
-      notes: repairTextEncoding(step.notes),
-      setCount: repairTextEncoding(step.setCount),
-      targetValue: repairTextEncoding(step.targetValue)
-    }))
-  };
-}
-
-function normalizeSavedWorkoutTextFields(workout: SavedWorkout): SavedWorkout {
-  const draft = normalizeWorkoutDraftTextFields(workout.draft);
-
-  return {
-    ...workout,
-    createdAt: normalizeDateString(workout.createdAt) ?? getFallbackWorkoutCreatedAt(workout),
-    draft,
-    name: repairTextEncoding(workout.name || draft.name)
-  };
-}
-
-function normalizeDateString(value: unknown) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const timestamp = Date.parse(value);
-  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
-}
-
-function getFallbackWorkoutCreatedAt(workout: Pick<SavedWorkout, "id">) {
-  const timestampMatch = workout.id.match(/(\d{10,})/);
-  if (timestampMatch) {
-    const timestamp = Number(timestampMatch[1]);
-    if (Number.isFinite(timestamp)) {
-      return new Date(timestamp).toISOString();
-    }
-  }
-
-  return new Date(0).toISOString();
-}
-
-const defaultWorkoutSort: WorkoutSortSettings = {
-  direction: "desc",
-  field: "createdAt"
-};
-
-function normalizeWorkoutSortSettings(value: unknown): WorkoutSortSettings {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return defaultWorkoutSort;
-  }
-
-  const candidate = value as Partial<WorkoutSortSettings>;
-  return {
-    direction: candidate.direction === "asc" || candidate.direction === "desc"
-      ? candidate.direction
-      : defaultWorkoutSort.direction,
-    field: candidate.field === "name" || candidate.field === "createdAt"
-      ? candidate.field
-      : defaultWorkoutSort.field
-  };
-}
-
-function compareWorkouts(left: SavedWorkout, right: SavedWorkout, sort: WorkoutSortSettings) {
-  const directionMultiplier = sort.direction === "asc" ? 1 : -1;
-  const nameCompare = left.name.localeCompare(right.name, undefined, { sensitivity: "base" });
-
-  if (sort.field === "name") {
-    return (nameCompare || left.id.localeCompare(right.id)) * directionMultiplier;
-  }
-
-  const leftCreatedAt = Date.parse(left.createdAt ?? getFallbackWorkoutCreatedAt(left));
-  const rightCreatedAt = Date.parse(right.createdAt ?? getFallbackWorkoutCreatedAt(right));
-  const dateCompare = (leftCreatedAt || 0) - (rightCreatedAt || 0);
-  return (dateCompare || nameCompare || left.id.localeCompare(right.id)) * directionMultiplier;
-}
-
-type LocalSettingsStorage = {
-  collapsedPanels: Record<string, boolean>;
-  defaultSetCount: string;
-  defaultStageType: StageType | "";
-  defaultWorkoutTableOrientation: WorkoutTableOrientation;
-  defaultWorkoutExecutionMode: WorkoutExecutionMode;
-  showRestTimer: boolean;
-  defaultWeight: string;
-  isAuthPanelDismissed: boolean;
-  language: LanguageCode;
-  themeName: ThemeName;
-  updatedAt: string;
-  version: 1;
-  workoutReminders: WorkoutReminderSettings;
-};
+type ApiUserSettings = AppSettings;
 
 const initialWorkouts = [
   {
@@ -1115,110 +925,7 @@ function normalizeApiUserSettings(value: unknown): ApiUserSettings | null {
     return null;
   }
 
-  return {
-    collapsedPanels: normalizeCollapsedPanels(value.collapsedPanels),
-    defaultSetCount: typeof value.defaultSetCount === "string" ? value.defaultSetCount : "",
-    defaultStageType:
-      value.defaultStageType === null || value.defaultStageType === "" || value.defaultStageType === undefined
-        ? ""
-        : isStageType(value.defaultStageType)
-          ? value.defaultStageType
-          : "",
-    defaultWorkoutExecutionMode: isWorkoutExecutionMode(value.defaultWorkoutExecutionMode)
-      ? value.defaultWorkoutExecutionMode
-      : "guided",
-    defaultWorkoutTableOrientation: isWorkoutTableOrientation(value.defaultWorkoutTableOrientation)
-      ? value.defaultWorkoutTableOrientation
-      : "vertical",
-    showRestTimer: value.showRestTimer !== false,
-    defaultWeight: typeof value.defaultWeight === "string" ? value.defaultWeight : "",
-    isAuthPanelDismissed: value.isAuthPanelDismissed === true,
-    language: isLanguageCode(value.language) ? value.language : "en",
-    themeName: isThemeName(value.themeName) ? value.themeName : "light",
-    updatedAt: typeof value.updatedAt === "string" ? value.updatedAt : new Date().toISOString(),
-    workoutReminders: normalizeWorkoutReminderSettings(value.workoutReminders, isLanguageCode(value.language) ? value.language : "en")
-  };
-}
-
-function normalizeApiFavoriteExercisesResponse(value: unknown): ApiFavoriteExercisesResponse {
-  if (!isRecord(value)) {
-    return { favorites: [] };
-  }
-
-  const favorites = Array.isArray(value.favorites)
-    ? value.favorites
-        .filter(isRecord)
-        .map((favorite) => {
-          const createdAt = typeof favorite.createdAt === "string" ? favorite.createdAt : new Date().toISOString();
-
-          return {
-            createdAt,
-            deletedAt: typeof favorite.deletedAt === "string" ? favorite.deletedAt : null,
-            exerciseId: typeof favorite.exerciseId === "string" ? favorite.exerciseId : "",
-            updatedAt: typeof favorite.updatedAt === "string" ? favorite.updatedAt : createdAt
-          };
-        })
-    : [];
-
-  return {
-    favorites,
-    serverTime: typeof value.serverTime === "string" ? value.serverTime : undefined
-  };
-}
-
-function normalizeApiWorkoutSessionsResponse(value: unknown): ApiWorkoutSessionsResponse {
-  if (!isRecord(value)) {
-    return { sessions: [] };
-  }
-
-  const sessions = Array.isArray(value.sessions)
-    ? value.sessions
-        .filter(isRecord)
-        .map((envelope): ApiWorkoutSessionEnvelope | null => {
-          const clientSessionId = normalizeApiString(envelope.clientSessionId);
-          if (!clientSessionId) {
-            return null;
-          }
-
-          const normalizedSession = normalizeWorkoutSessions([
-            isRecord(envelope.session)
-              ? {
-                  ...envelope.session,
-                  deletedAt: typeof envelope.deletedAt === "string" ? envelope.deletedAt : (envelope.session.deletedAt ?? null),
-                  id: clientSessionId,
-                  updatedAt: typeof envelope.clientUpdatedAt === "string"
-                    ? envelope.clientUpdatedAt
-                    : typeof envelope.session.updatedAt === "string"
-                      ? envelope.session.updatedAt
-                      : undefined
-                }
-              : null
-          ])[0];
-
-          if (!normalizedSession) {
-            return null;
-          }
-
-          return {
-            clientSessionId,
-            clientUpdatedAt: typeof envelope.clientUpdatedAt === "string" ? envelope.clientUpdatedAt : normalizedSession.updatedAt,
-            deletedAt: typeof envelope.deletedAt === "string" ? envelope.deletedAt : null,
-            serverUpdatedAt: typeof envelope.serverUpdatedAt === "string" ? envelope.serverUpdatedAt : undefined,
-            session: normalizedSession
-          };
-        })
-        .filter((envelope): envelope is ApiWorkoutSessionEnvelope => envelope !== null)
-    : [];
-
-  return {
-    sessions,
-    serverTime: typeof value.serverTime === "string" ? value.serverTime : undefined
-  };
-}
-
-function getSettingsTimestamp(value: string) {
-  const timestamp = Date.parse(value);
-  return Number.isFinite(timestamp) ? timestamp : 0;
+  return normalizeAppSettings(value, defaultCollapsedPanels);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -1738,28 +1445,6 @@ function createSavedWorkoutsFromApiResponse(responseBody: unknown, warmupMode: A
   });
 }
 
-function isNetworkRequestFailure(error: unknown) {
-  return error instanceof Error && /network request failed/i.test(error.message);
-}
-
-function getErrorMessageOrFallback(error: unknown, fallback: string, networkFallback: string) {
-  if (isNetworkRequestFailure(error)) {
-    return networkFallback;
-  }
-
-  return error instanceof Error ? error.message : fallback;
-}
-type UserSession = {
-  avatarUpdatedAt?: string | null;
-  avatarUrl?: string | null;
-  createdOn?: string | null;
-  email: string;
-  emailVerified: boolean;
-  id: string;
-  modifiedOn?: string | null;
-  name: string;
-  token: string;
-};
 type WorkoutCreatorQuestionAnswer = {
   Question: string;
   Answer: string;
@@ -1782,13 +1467,6 @@ type WorkoutCreatorApiWorkout = Record<string, unknown> & {
   cwiczenia?: unknown;
   nazwa?: unknown;
   uwagi?: unknown;
-};
-
-type LocalCreatorProfilesStorage = {
-  profiles: WorkoutCreatorProfile[];
-  selectedProfileId: string | null;
-  updatedAt: string;
-  version: 1;
 };
 
 type ActiveWorkoutCreatorJob =
@@ -1817,49 +1495,6 @@ type StoredWorkoutCreatorJob = Partial<ActiveWorkoutCreatorJob> & {
   type?: "plan" | "rewrite";
   version?: 1;
 };
-
-type AuthUserResponse = {
-  avatarUpdatedAt?: string | null;
-  avatarUrl?: string | null;
-  createdOn?: string | null;
-  email: string;
-  emailVerified?: boolean;
-  id: string;
-  modifiedOn?: string | null;
-  name: string;
-};
-
-type AuthApiResponse = {
-  token: string;
-  user: AuthUserResponse;
-};
-
-type AuthSessionResponse = {
-  createdAt: string;
-  deviceName?: string | null;
-  expiresAt: string;
-  id: string;
-  isCurrent: boolean;
-  lastSeenAt: string;
-};
-
-type AuthSessionsResponse = {
-  sessions: AuthSessionResponse[];
-};
-
-const AuthPasswordPolicy = {
-  isValid(password: string) {
-    return password.trim().length >= 8 && password.length <= 200;
-  }
-};
-
-type LocalAuthStorage = {
-  updatedAt: string;
-  user: AuthUserResponse;
-  version: 2;
-};
-
-type LegacyLocalAuthStorage = Partial<LocalAuthStorage> & { token?: string; version?: number };
 
 const defaultCollapsedPanels: Record<string, boolean> = {
   "settings-account": true,
@@ -1895,48 +1530,29 @@ function GymminApp() {
   const languageSheetTranslateY = useRef(new Animated.Value(360)).current;
   const [isAppLoading, setIsAppLoading] = useState(true);
   const [activeScreen, setActiveScreen] = useState<ScreenKey>("home");
-  const [savedWorkouts, setSavedWorkouts] = useState<SavedWorkout[]>(() => [...initialWorkouts]);
+  const {
+    isSystemStatusRefreshing,
+    refreshSystemStatus,
+    systemStatus
+  } = useSystemStatusController(apiBaseUrl, activeScreen === "home");
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlanSettings>({ enabled: false, items: [], updatedAt: new Date().toISOString() });
   const [hasLoadedWeeklyPlan, setHasLoadedWeeklyPlan] = useState(false);
   const [weeklyPlanOwnerId, setWeeklyPlanOwnerId] = useState<string | null>(null);
-  const [selectedWorkoutId, setSelectedWorkoutId] = useState(initialWorkouts[0]?.id ?? "");
-  const [workoutSort, setWorkoutSort] = useState<WorkoutSortSettings>(defaultWorkoutSort);
   const [isWorkoutSortSheetOpen, setIsWorkoutSortSheetOpen] = useState(false);
-  const [hasLoadedLocalWorkouts, setHasLoadedLocalWorkouts] = useState(false);
-  const [hasLoadedLocalSettings, setHasLoadedLocalSettings] = useState(false);
-  const [hasLoadedLocalCreatorProfiles, setHasLoadedLocalCreatorProfiles] = useState(false);
   const [hasLoadedLocalCreatorJob, setHasLoadedLocalCreatorJob] = useState(false);
   const [hasLoadedLocalAuth, setHasLoadedLocalAuth] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string>(articles[0]?.id ?? "");
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [workout, setWorkout] = useState<WorkoutDraft>(() => createDefaultWorkout());
-  const [themeName, setThemeName] = useState<ThemeName>("light");
-  const [language, setLanguage] = useState<LanguageCode>("en");
   const [pendingLanguage, setPendingLanguage] = useState<LanguageCode>("en");
-  const [defaultSetCount, setDefaultSetCount] = useState("");
   const [pendingDefaultSetCount, setPendingDefaultSetCount] = useState("");
-  const [defaultWeight, setDefaultWeight] = useState("");
   const [pendingDefaultWeight, setPendingDefaultWeight] = useState("");
-  const [defaultStageType, setDefaultStageType] = useState<StageType | "">("");
   const [pendingDefaultStageType, setPendingDefaultStageType] = useState<StageType | "">("");
-  const [defaultWorkoutExecutionMode, setDefaultWorkoutExecutionMode] = useState<WorkoutExecutionMode>("guided");
   const [pendingDefaultWorkoutExecutionMode, setPendingDefaultWorkoutExecutionMode] = useState<WorkoutExecutionMode>("guided");
-  const [defaultWorkoutTableOrientation, setDefaultWorkoutTableOrientation] = useState<WorkoutTableOrientation>("vertical");
-  const [showRestTimer, setShowRestTimer] = useState(true);
-  const [workoutReminders, setWorkoutReminders] = useState<WorkoutReminderSettings>(
-    getDefaultWorkoutReminderSettings("en")
-  );
   const [pendingWorkoutReminderDay, setPendingWorkoutReminderDay] = useState<ReminderDaySchedule | null>(null);
   const [reminderSchedulingStatus, setReminderSchedulingStatus] = useState<ReminderSchedulingStatus>("idle");
-  const [localSettingsUpdatedAt, setLocalSettingsUpdatedAt] = useState(() => new Date().toISOString());
-  const [workoutSessions, setWorkoutSessions] = useState<WorkoutSession[]>([]);
-  const [hasLoadedWorkoutSessions, setHasLoadedWorkoutSessions] = useState(false);
-  const [favoriteExercises, setFavoriteExercises] = useState<FavoriteExercise[]>([]);
-  const [hasLoadedFavoriteExercises, setHasLoadedFavoriteExercises] = useState(false);
   const [favoriteExercisesSearch, setFavoriteExercisesSearch] = useState("");
-  const [favoriteExercisesSyncStatus, setFavoriteExercisesSyncStatus] = useState<"local" | "synced" | "failed">("local");
-  const [activeWorkoutSessionId, setActiveWorkoutSessionId] = useState<string | null>(null);
   const [selectedWorkoutSessionId, setSelectedWorkoutSessionId] = useState<string | null>(null);
   const [selectedExerciseMuscleStep, setSelectedExerciseMuscleStep] = useState<WorkoutStep | null>(null);
   const [selectedExerciseDetailStep, setSelectedExerciseDetailStep] = useState<WorkoutStep | null>(null);
@@ -1947,11 +1563,8 @@ function GymminApp() {
   const [workoutHistorySearch, setWorkoutHistorySearch] = useState("");
   const [workoutHistoryWorkoutIdFilter, setWorkoutHistoryWorkoutIdFilter] = useState<string | null>(null);
   const [selectedExerciseProgressKey, setSelectedExerciseProgressKey] = useState<string | null>(null);
-  const [sessionEntryIndex, setSessionEntryIndex] = useState(0);
   const [isPostWorkoutFillMode, setIsPostWorkoutFillMode] = useState(false);
   const [appDialog, setAppDialog] = useState<AppDialogState | null>(null);
-  const [systemStatus, setSystemStatus] = useState<SystemStatusState>({ kind: "ok", message: null, updatedAt: null });
-  const [isSystemStatusRefreshing, setIsSystemStatusRefreshing] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [activeSettingsSheet, setActiveSettingsSheet] = useState<SettingsSheetKey | null>(null);
   const [email, setEmail] = useState("");
@@ -1977,12 +1590,7 @@ function GymminApp() {
   const [canRestoreAiCreditPurchases, setCanRestoreAiCreditPurchases] = useState(false);
   const [isAiCreditsLoading, setIsAiCreditsLoading] = useState(false);
   const [isAiCreditPurchaseLoading, setIsAiCreditPurchaseLoading] = useState(false);
-  const [userAchievements, setUserAchievements] = useState<UserAchievement[]>([]);
-  const [appUsageStats, setAppUsageStats] = useState<AppUsageStats>(() => getDefaultAppUsageStats());
-  const [achievementsSyncState, setAchievementsSyncState] = useState<AchievementsSyncState>({});
   const [achievementToast, setAchievementToast] = useState<{ title: string; extraCount: number } | null>(null);
-  const [hasLoadedAchievements, setHasLoadedAchievements] = useState(false);
-  const [loadedAchievementsOwnerId, setLoadedAchievementsOwnerId] = useState<string | null>(null);
   const [isAuthActionSubmitting, setIsAuthActionSubmitting] = useState(false);
   const [isAvatarSubmitting, setIsAvatarSubmitting] = useState(false);
   const [avatarMessage, setAvatarMessage] = useState("");
@@ -1992,7 +1600,6 @@ function GymminApp() {
   const [authError, setAuthError] = useState("");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
-  const [isAuthPanelDismissed, setIsAuthPanelDismissed] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [bugTitle, setBugTitle] = useState("");
   const [bugDescription, setBugDescription] = useState("");
@@ -2012,66 +1619,337 @@ function GymminApp() {
   const [rewriteProposedWorkout, setRewriteProposedWorkout] = useState<SavedWorkout | null>(null);
   const [showAiRewriteCreditTooltip, setShowAiRewriteCreditTooltip] = useState(false);
   const [creatorCollapsedSections, setCreatorCollapsedSections] = useState<Record<string, boolean>>({});
-  const [creatorProfiles, setCreatorProfiles] = useState<WorkoutCreatorProfile[]>([]);
   const [creatorProfileName, setCreatorProfileName] = useState("");
   const [showCreatorLoginTooltip, setShowCreatorLoginTooltip] = useState(false);
   const [trainingFactIndex, setTrainingFactIndex] = useState(0);
-  const [selectedCreatorProfileId, setSelectedCreatorProfileId] = useState<string | null>(null);
   const [pendingCreatorJob, setPendingCreatorJob] = useState<PendingCreatorJob | null>(null);
   const [readOnlyWorkoutCollapsedPanels, setReadOnlyWorkoutCollapsedPanels] = useState<Record<string, boolean>>({});
-  const [collapsedPanels, setCollapsedPanels] = useState<Record<string, boolean>>(
-    defaultCollapsedPanels
-  );
   const [user, setUser] = useState<UserSession | null>(null);
   const [isEmailVerificationOpen, setIsEmailVerificationOpen] = useState(false);
   const [emailVerificationCode, setEmailVerificationCode] = useState("");
   const [emailVerificationMessage, setEmailVerificationMessage] = useState("");
   const [isEmailVerificationSubmitting, setIsEmailVerificationSubmitting] = useState(false);
+  const [cachedAvatarUri, setCachedAvatarUri] = useState<string | null>(null);
+  const [hasAvatarImageLoadFailed, setHasAvatarImageLoadFailed] = useState(false);
   const storageOwnerId = getAccountStorageOwnerId(user?.id);
+  const syncedFavoriteExercisesUserIdRef = useRef<string | null>(null);
+  const syncedAchievementsUserIdRef = useRef<string | null>(null);
   const [hasLoadedAccountStorageMigration, setHasLoadedAccountStorageMigration] = useState(false);
-  const [loadedWorkoutsOwnerId, setLoadedWorkoutsOwnerId] = useState<string | null>(null);
-  const [loadedSettingsOwnerId, setLoadedSettingsOwnerId] = useState<string | null>(null);
-  const [loadedCreatorProfilesOwnerId, setLoadedCreatorProfilesOwnerId] = useState<string | null>(null);
+  const {
+    applySettings: applyAccountSettingsState,
+    buildSettings: buildCurrentSettingsPayload,
+    collapsedPanels,
+    defaultSetCount,
+    defaultStageType,
+    defaultWeight,
+    defaultWorkoutExecutionMode,
+    defaultWorkoutTableOrientation,
+    hasLoadedLocalSettings,
+    isApplyingAccountSettingsRef,
+    isAuthPanelDismissed,
+    language,
+    loadedSettingsOwnerId,
+    localSettingsUpdatedAt,
+    setCollapsedPanels,
+    setDefaultSetCount,
+    setDefaultStageType,
+    setDefaultWeight,
+    setDefaultWorkoutExecutionMode,
+    setIsAuthPanelDismissed,
+    setLanguage,
+    setLocalSettingsUpdatedAt,
+    setShowRestTimer,
+    setThemeName,
+    setWorkoutReminders,
+    showRestTimer,
+    themeName,
+    workoutReminders
+  } = useAccountScopedSettings(
+    storageOwnerId,
+    hasLoadedAccountStorageMigration,
+    defaultCollapsedPanels
+  );
+  const {
+    activeWorkoutSessionEntryIndexRef,
+    activeWorkoutSessionId,
+    hasLoadedWorkoutSessions,
+    loadedWorkoutSessionsOwnerId,
+    sessionEntryIndex,
+    setActiveWorkoutSessionId,
+    setSessionEntryIndex,
+    setWorkoutSessions,
+    workoutSessions
+  } = useAccountScopedWorkoutSessions(
+    storageOwnerId,
+    hasLoadedAccountStorageMigration
+  );
+  const {
+    hasLoadedLocalWorkouts,
+    loadedWorkoutsOwnerId,
+    savedWorkouts,
+    selectedWorkoutId,
+    setSavedWorkouts,
+    setSelectedWorkoutId,
+    setWorkoutSort,
+    workoutSort
+  } = useAccountScopedWorkouts(
+    storageOwnerId,
+    hasLoadedAccountStorageMigration,
+    initialWorkouts as SavedWorkout[]
+  );
+  const {
+    creatorProfiles,
+    hasLoadedLocalCreatorProfiles,
+    loadedCreatorProfilesOwnerId,
+    selectedCreatorProfileId,
+    setCreatorProfiles,
+    setSelectedCreatorProfileId
+  } = useAccountScopedCreatorProfiles(
+    storageOwnerId,
+    hasLoadedAccountStorageMigration
+  );
+  const {
+    favoriteExercises,
+    favoriteExercisesSyncStatus,
+    hasLoadedFavoriteExercises,
+    isApplyingRemoteFavoritesRef: isApplyingAccountFavoriteExercisesRef,
+    loadedFavoriteExercisesOwnerId,
+    setFavoriteExercises,
+    setFavoriteExercisesSyncStatus
+  } = useAccountScopedFavoriteExercises({
+    hasLoadedAccountStorageMigration,
+    isRemoteSyncReady: Boolean(user && syncedFavoriteExercisesUserIdRef.current === user.id),
+    ownerId: storageOwnerId,
+    syncFavorites: user
+      ? (favorites) => syncAccountFavoriteExercises(user, favorites)
+      : null
+  });
+  const {
+    achievementsSyncState,
+    appUsageStats,
+    applyRemoteState: applyRemoteAchievementState,
+    hasLoadedAchievements,
+    loadedAchievementsOwnerId,
+    setAchievementsSyncState,
+    setAppUsageStats,
+    setUserAchievements,
+    userAchievements
+  } = useAccountScopedAchievements({
+    isRemoteSyncReady: Boolean(user && syncedAchievementsUserIdRef.current === user.id),
+    ownerId: storageOwnerId,
+    syncAchievements: user
+      ? (unlocked, usageStats) => syncAccountAchievements(user, unlocked, usageStats)
+      : null
+  });
   const [loadedCreatorJobOwnerId, setLoadedCreatorJobOwnerId] = useState<string | null>(null);
-  const [loadedWorkoutSessionsOwnerId, setLoadedWorkoutSessionsOwnerId] = useState<string | null>(null);
-  const [loadedFavoriteExercisesOwnerId, setLoadedFavoriteExercisesOwnerId] = useState<string | null>(null);
   const theme = themes[themeName];
   const isDarkMode = themeName === "dark";
   const t = (key: TranslationKey) => translate(language, key);
-  const userAvatarSource = buildAvatarImageSource(apiBaseUrl, user);
+  const authApi = createAuthApiClient({
+    createError: (response, endpoint, method, fallbackMessage) =>
+      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
+    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
+  });
+  const profileApi = createProfileApiClient({
+    createError: (response, endpoint, method, fallbackMessage) =>
+      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
+    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
+  });
+  const remoteUserAvatarSource = buildAvatarImageSource(apiBaseUrl, user);
+  const userAvatarSource = hasAvatarImageLoadFailed
+    ? null
+    : Platform.OS === "web"
+      ? remoteUserAvatarSource
+      : cachedAvatarUri
+        ? { uri: cachedAvatarUri }
+        : null;
   const isCreatorJobPending = pendingCreatorJob?.type === "plan";
   const isRewriteJobPending = pendingCreatorJob?.type === "rewrite";
   const pollingCreatorJobIdRef = useRef<string | null>(null);
-  const syncedWorkoutUserIdRef = useRef<string | null>(null);
-  const syncedSettingsUserIdRef = useRef<string | null>(null);
-  const syncedFavoriteExercisesUserIdRef = useRef<string | null>(null);
   const syncedWorkoutSessionsUserIdRef = useRef<string | null>(null);
-  const syncedAchievementsUserIdRef = useRef<string | null>(null);
-  const workoutSessionsSyncRequestIdRef = useRef(0);
-  const workoutSessionsSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const achievementsSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const systemStatusFetchedAtRef = useRef<number | null>(null);
   const mainScrollRef = useRef<ScrollView | null>(null);
   const bugReportSubmissionRef = useRef<{ key: string; signature: string } | null>(null);
-  const activeWorkoutSessionEntryIndexRef = useRef<Record<string, number>>({});
   const appUsageStartedAtRef = useRef<number | null>(Date.now());
-  const isApplyingAccountFavoriteExercisesRef = useRef(false);
   const isApplyingAccountWorkoutSessionsRef = useRef(false);
-  const isApplyingAccountAchievementsRef = useRef(false);
-  const hasPersistedLocalAchievementsRef = useRef(false);
-  const hasPersistedLocalFavoriteExercisesRef = useRef(false);
-  const hasPersistedLocalWorkoutSessionsRef = useRef(false);
-  const isApplyingAccountSettingsRef = useRef(false);
-  const hasPersistedLocalSettingsRef = useRef(false);
   const handledAccountPolicyUserIdRef = useRef<string | null>(null);
   const reminderStorageOwnerIdRef = useRef(storageOwnerId);
   const previousReminderLanguageRef = useRef<LanguageCode>(language);
+  const workoutsInitialSync = useInitialAccountSync({
+    enabled: Boolean(
+      hasLoadedLocalAuth &&
+      hasLoadedLocalWorkouts &&
+      loadedWorkoutsOwnerId === storageOwnerId &&
+      user
+    ),
+    onError: (error) => {
+      console.error("Failed to synchronize account workouts", error);
+    },
+    ownerId: storageOwnerId,
+    synchronize: async () => {
+      if (user) {
+        await synchronizeAccountWorkouts(user, savedWorkouts);
+      }
+    },
+    userId: user?.id ?? null
+  });
+  const settingsInitialSync = useInitialAccountSync({
+    enabled: Boolean(
+      hasLoadedLocalAuth &&
+      hasLoadedLocalSettings &&
+      loadedSettingsOwnerId === storageOwnerId &&
+      user
+    ),
+    onError: (error) => {
+      console.error("Failed to synchronize account settings", error);
+    },
+    ownerId: storageOwnerId,
+    synchronize: async () => {
+      if (user) {
+        await synchronizeAccountSettings(user);
+      }
+    },
+    userId: user?.id ?? null
+  });
+  const favoritesInitialSync = useInitialAccountSync({
+    enabled: Boolean(
+      hasLoadedLocalAuth &&
+      hasLoadedFavoriteExercises &&
+      loadedFavoriteExercisesOwnerId === storageOwnerId &&
+      user
+    ),
+    onError: (error) => {
+      console.error("Failed to synchronize account favorite exercises", error);
+      setFavoriteExercisesSyncStatus("failed");
+    },
+    ownerId: storageOwnerId,
+    syncedUserIdRef: syncedFavoriteExercisesUserIdRef,
+    synchronize: async () => {
+      if (user) {
+        await synchronizeAccountFavoriteExercises(user, favoriteExercises);
+      }
+    },
+    userId: user?.id ?? null
+  });
+  const workoutSessionsInitialSync = useInitialAccountSync({
+    enabled: Boolean(
+      hasLoadedLocalAuth &&
+      hasLoadedWorkoutSessions &&
+      loadedWorkoutSessionsOwnerId === storageOwnerId &&
+      user
+    ),
+    onError: (error) => {
+      console.error("Failed to synchronize account workout sessions", error);
+    },
+    ownerId: storageOwnerId,
+    syncedUserIdRef: syncedWorkoutSessionsUserIdRef,
+    synchronize: async () => {
+      if (user) {
+        await synchronizeAccountWorkoutSessions(user, workoutSessions);
+      }
+    },
+    userId: user?.id ?? null
+  });
+  const achievementsInitialSync = useInitialAccountSync({
+    enabled: Boolean(
+      hasLoadedLocalAuth &&
+      hasLoadedAchievements &&
+      loadedAchievementsOwnerId === storageOwnerId &&
+      user
+    ),
+    onError: (error) => {
+      console.error("Failed to synchronize account achievements", error);
+    },
+    ownerId: storageOwnerId,
+    syncedUserIdRef: syncedAchievementsUserIdRef,
+    synchronize: async () => {
+      if (user) {
+        await synchronizeAccountAchievements(user, userAchievements, appUsageStats);
+      }
+    },
+    userId: user?.id ?? null
+  });
+  const settingsAutoSaveChangeKey = JSON.stringify(buildCurrentSettingsPayload(""));
+  useAccountSettingsAutoSave({
+    buildSettings: buildCurrentSettingsPayload,
+    changeKey: settingsAutoSaveChangeKey,
+    enabled: Boolean(
+      hasLoadedLocalSettings &&
+      loadedSettingsOwnerId === storageOwnerId &&
+      user &&
+      settingsInitialSync.isSynced
+    ),
+    isApplyingRemoteSettingsRef: isApplyingAccountSettingsRef,
+    onError: (error) => {
+      console.error("Failed to save account settings", error);
+    },
+    onSaved: (savedSettings) => {
+      setLocalSettingsUpdatedAt(savedSettings.updatedAt);
+    },
+    ownerId: storageOwnerId,
+    saveSettings: (settings) => saveAccountSettings(settings, user),
+    userId: user?.id ?? null
+  });
   const screenTitle = activeScreen === "profile" && !user
     ? t("login")
     : getScreenTitle(activeScreen, editingWorkoutId, t);
   const shouldShowHeaderBackButton = activeScreen !== "home";
   const shouldShowProfileHeaderButton =
     Boolean(user) || activeScreen !== "home" || isAuthPanelDismissed;
+
+  useWorkoutSessionAutoSync({
+    hasActiveWorkoutSession: activeScreen === "workoutSession" && Boolean(activeWorkoutSessionId),
+    isApplyingRemoteSessionsRef: isApplyingAccountWorkoutSessionsRef,
+    isLoadedForOwner: hasLoadedWorkoutSessions && loadedWorkoutSessionsOwnerId === storageOwnerId,
+    isRemoteSyncReady: workoutSessionsInitialSync.isSynced,
+    ownerId: storageOwnerId,
+    sessions: workoutSessions,
+    setSessions: setWorkoutSessions,
+    syncSessions: user
+      ? (sessions) => syncAccountWorkoutSessions(user, sessions)
+      : null
+  });
+
+  useEffect(() => {
+    let isActive = true;
+    setHasAvatarImageLoadFailed(false);
+
+    if (!user?.id || !user.avatarUrl) {
+      setCachedAvatarUri(null);
+      if (user?.id && Platform.OS !== "web") {
+        clearCachedAvatar(user.id);
+      }
+      return () => {
+        isActive = false;
+      };
+    }
+
+    if (Platform.OS === "web") {
+      setCachedAvatarUri(null);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setCachedAvatarUri(getCachedAvatarUri(user.id));
+
+    void refreshCachedAvatar(apiBaseUrl, user)
+      .then((uri) => {
+        if (isActive) {
+          setCachedAvatarUri(uri);
+          setHasAvatarImageLoadFailed(false);
+        }
+      })
+      .catch((error) => {
+        if (typeof process !== "undefined" && process.env?.NODE_ENV === "development") {
+          console.warn("Could not refresh cached avatar", error);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [user?.avatarUpdatedAt, user?.avatarUrl, user?.id, user?.token]);
+
   const formatCreatorImportedWorkoutCount = (count: number) => {
     if (language === "pl") {
       const suffix = count === 1 ? "trening" : count >= 2 && count <= 4 ? "treningi" : "treningów";
@@ -2126,186 +2004,6 @@ function GymminApp() {
     }
   }
 
-  async function hasAnonymousAccountData() {
-    const accountDataKeys = [
-      localWorkoutsStorageBaseKey,
-      FAVORITE_EXERCISES_STORAGE_BASE_KEY,
-      WORKOUT_SESSIONS_STORAGE_BASE_KEY,
-      ACHIEVEMENTS_STORAGE_BASE_KEY,
-      APP_USAGE_STATS_STORAGE_BASE_KEY,
-      localCreatorProfilesStorageBaseKey,
-      localCreatorJobStorageBaseKey
-    ];
-
-    for (const baseKey of accountDataKeys) {
-      const rawData = await AsyncStorage.getItem(getAccountStorageKey(baseKey, ANONYMOUS_LOCAL_OWNER));
-      if (!rawData) {
-        continue;
-      }
-
-      try {
-        const parsed = JSON.parse(rawData) as unknown;
-        if (isRecord(parsed)) {
-          if (Array.isArray(parsed.workouts) && parsed.workouts.length > 0) {
-            return true;
-          }
-
-          if (Array.isArray(parsed.sessions) && parsed.sessions.length > 0) {
-            return true;
-          }
-
-          if (Array.isArray(parsed.profiles) && parsed.profiles.length > 0) {
-            return true;
-          }
-
-          if (Array.isArray(parsed.favorites) && parsed.favorites.length > 0) {
-            return true;
-          }
-
-          if (Array.isArray(parsed.achievements) && parsed.achievements.length > 0) {
-            return true;
-          }
-
-          if (typeof parsed.totalForegroundSeconds === "number" && parsed.totalForegroundSeconds > 0) {
-            return true;
-          }
-
-          if (typeof parsed.jobId === "string" && parsed.jobId.trim()) {
-            return true;
-          }
-        }
-      } catch {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  async function hasAnonymousMergeHandled(userId: string) {
-    const rawData = await AsyncStorage.getItem(getAccountStorageKey(anonymousMergeHandledStorageBaseKey, userId));
-    if (!rawData) {
-      return false;
-    }
-
-    try {
-      const parsed = JSON.parse(rawData) as unknown;
-      return isRecord(parsed) && parsed.version === 1 && typeof parsed.handledAt === "string";
-    } catch {
-      return false;
-    }
-  }
-
-  async function markAnonymousMergeHandled(userId: string, action: "merged" | "deleted" | "skipped") {
-    await AsyncStorage.setItem(getAccountStorageKey(anonymousMergeHandledStorageBaseKey, userId), JSON.stringify({
-      action,
-      handledAt: new Date().toISOString(),
-      version: 1
-    }));
-  }
-
-  async function loadWorkoutsForStorageOwner(ownerId: string) {
-    try {
-      const rawData = await AsyncStorage.getItem(getAccountStorageKey(localWorkoutsStorageBaseKey, ownerId));
-      if (!rawData) {
-          return { selectedWorkoutId: "", sort: defaultWorkoutSort, workouts: [] };
-      }
-
-      const storedData = JSON.parse(rawData) as Partial<LocalWorkoutsStorage>;
-      return {
-        selectedWorkoutId: typeof storedData.selectedWorkoutId === "string" ? storedData.selectedWorkoutId : "",
-        sort: normalizeWorkoutSortSettings(storedData.sort),
-        workouts: Array.isArray(storedData.workouts)
-          ? storedData.workouts.map((workout) => normalizeSavedWorkoutTextFields(workout))
-          : []
-      };
-    } catch (error) {
-      console.error("Failed to load account-scoped workouts", error);
-      return { selectedWorkoutId: "", sort: defaultWorkoutSort, workouts: [] };
-    }
-  }
-
-  async function saveWorkoutsForStorageOwner(
-    ownerId: string,
-    workouts: SavedWorkout[],
-    selectedWorkoutId = "",
-    sortSettings = workoutSort
-  ) {
-    const selectedId = selectedWorkoutId && workouts.some((workout) => workout.id === selectedWorkoutId)
-      ? selectedWorkoutId
-      : workouts[0]?.id ?? "";
-    const payload: LocalWorkoutsStorage = {
-      selectedWorkoutId: selectedId,
-      sort: normalizeWorkoutSortSettings(sortSettings),
-      updatedAt: new Date().toISOString(),
-      version: 1,
-      workouts: workouts.map((workout) => normalizeSavedWorkoutTextFields(workout))
-    };
-
-    await AsyncStorage.setItem(getAccountStorageKey(localWorkoutsStorageBaseKey, ownerId), JSON.stringify(payload));
-  }
-
-  async function loadWorkoutSessionsForStorageOwner(ownerId: string) {
-    try {
-      const rawData = await AsyncStorage.getItem(getAccountStorageKey(WORKOUT_SESSIONS_STORAGE_BASE_KEY, ownerId));
-      if (!rawData) {
-        return [];
-      }
-
-      const storedData = JSON.parse(rawData) as Partial<LocalWorkoutSessionsStorage>;
-      return normalizeWorkoutSessions(Array.isArray(storedData.sessions) ? storedData.sessions : []);
-    } catch (error) {
-      console.error("Failed to load account-scoped workout sessions", error);
-      return [];
-    }
-  }
-
-  async function saveWorkoutSessionsForStorageOwner(ownerId: string, sessions: WorkoutSession[]) {
-    const payload: LocalWorkoutSessionsStorage = {
-      sessions: normalizeWorkoutSessions(sessions),
-      updatedAt: new Date().toISOString(),
-      version: 1
-    };
-
-    await AsyncStorage.setItem(getAccountStorageKey(WORKOUT_SESSIONS_STORAGE_BASE_KEY, ownerId), JSON.stringify(payload));
-  }
-
-  async function loadCreatorProfilesForStorageOwner(ownerId: string) {
-    try {
-      const rawData = await AsyncStorage.getItem(getAccountStorageKey(localCreatorProfilesStorageBaseKey, ownerId));
-      if (!rawData) {
-        return { profiles: [] as WorkoutCreatorProfile[], selectedProfileId: null as string | null };
-      }
-
-      const storedData = JSON.parse(rawData) as Partial<LocalCreatorProfilesStorage>;
-      return {
-        profiles: Array.isArray(storedData.profiles) ? storedData.profiles : [],
-        selectedProfileId: typeof storedData.selectedProfileId === "string" ? storedData.selectedProfileId : null
-      };
-    } catch (error) {
-      console.error("Failed to load account-scoped creator profiles", error);
-      return { profiles: [] as WorkoutCreatorProfile[], selectedProfileId: null as string | null };
-    }
-  }
-
-  async function saveCreatorProfilesForStorageOwner(
-    ownerId: string,
-    profiles: WorkoutCreatorProfile[],
-    selectedProfileId: string | null
-  ) {
-    const selectedId = selectedProfileId && profiles.some((profile) => profile.id === selectedProfileId)
-      ? selectedProfileId
-      : null;
-    const payload: LocalCreatorProfilesStorage = {
-      profiles,
-      selectedProfileId: selectedId,
-      updatedAt: new Date().toISOString(),
-      version: 1
-    };
-
-    await AsyncStorage.setItem(getAccountStorageKey(localCreatorProfilesStorageBaseKey, ownerId), JSON.stringify(payload));
-  }
-
   async function removeAccountDataForOwner(ownerId: string) {
     await cancelWorkoutReminders(ownerId);
     await removeAccountStorageKeys([
@@ -2328,22 +2026,6 @@ function GymminApp() {
 
   async function removeAnonymousAccountData() {
     await removeAccountDataForOwner(ANONYMOUS_LOCAL_OWNER);
-  }
-
-  function mergeCreatorProfilesById(accountProfiles: WorkoutCreatorProfile[], anonymousProfiles: WorkoutCreatorProfile[]) {
-    const seen = new Set<string>();
-    const mergedProfiles: WorkoutCreatorProfile[] = [];
-
-    [...accountProfiles, ...anonymousProfiles].forEach((profile) => {
-      if (!profile.id || seen.has(profile.id)) {
-        return;
-      }
-
-      seen.add(profile.id);
-      mergedProfiles.push(profile);
-    });
-
-    return mergedProfiles;
   }
 
   async function mergeAnonymousDataIntoAccount(session: UserSession) {
@@ -2423,10 +2105,10 @@ function GymminApp() {
       setAchievementsSyncState({});
     }
 
-    syncedWorkoutUserIdRef.current = null;
-    syncedFavoriteExercisesUserIdRef.current = null;
-    syncedWorkoutSessionsUserIdRef.current = null;
-    syncedAchievementsUserIdRef.current = null;
+    workoutsInitialSync.markSyncing();
+    favoritesInitialSync.markSyncing();
+    workoutSessionsInitialSync.markSyncing();
+    achievementsInitialSync.markSyncing();
     setFavoriteExercisesSyncStatus("local");
 
     try {
@@ -2438,20 +2120,25 @@ function GymminApp() {
       if (storageOwnerId === accountOwnerId) {
         isApplyingAccountFavoriteExercisesRef.current = true;
         isApplyingAccountWorkoutSessionsRef.current = true;
-        isApplyingAccountAchievementsRef.current = true;
         setFavoriteExercises(syncedFavorites);
         setWorkoutSessions(syncedSessions);
-        setUserAchievements(syncedAchievements.unlocked);
-        setAppUsageStats(syncedAchievements.appUsageStats);
+        applyRemoteAchievementState(syncedAchievements);
         setFavoriteExercisesSyncStatus("synced");
         setTimeout(() => {
           isApplyingAccountFavoriteExercisesRef.current = false;
           isApplyingAccountWorkoutSessionsRef.current = false;
-          isApplyingAccountAchievementsRef.current = false;
         }, 0);
       }
+      workoutsInitialSync.markSynced();
+      favoritesInitialSync.markSynced();
+      workoutSessionsInitialSync.markSynced();
+      achievementsInitialSync.markSynced();
     } catch (error) {
       console.error("Failed to sync merged anonymous data", error);
+      workoutsInitialSync.markFailed();
+      favoritesInitialSync.markFailed();
+      workoutSessionsInitialSync.markFailed();
+      achievementsInitialSync.markFailed();
       setFavoriteExercisesSyncStatus("failed");
     }
   }
@@ -2532,14 +2219,6 @@ function GymminApp() {
 
     return () => clearTimeout(timeoutId);
   }, [activeScreen]);
-
-  useEffect(() => {
-    if (activeScreen !== "home") {
-      return;
-    }
-
-    void refreshSystemStatus(false);
-  }, [activeScreen, apiBaseUrl]);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -2648,10 +2327,9 @@ function GymminApp() {
           token
         };
 
-        const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
+        const response = await sendApiRequest("/api/auth/me", {
           headers: getApiHeaders(cachedSession)
         });
-        recordCorrelationId(response.headers.get("X-Correlation-Id"));
 
         if (!response.ok) {
           if (response.status === 401 || response.status === 403) {
@@ -2766,7 +2444,10 @@ function GymminApp() {
 
         if (detectAccountSwitch(previousUserId, currentUser.id)) {
           showInfoDialog(t("accountSwitchDetected"), t("accountSwitchCopy"));
-        } else if (!(await hasAnonymousMergeHandled(currentUser.id)) && await hasAnonymousAccountData()) {
+        } else if (
+          !(await hasAnonymousMergeHandled(currentUser.id))
+          && await hasStoredAnonymousAccountData(anonymousAccountDataBaseKeys)
+        ) {
           showAnonymousAccountDataDialog(currentUser);
         }
 
@@ -2798,166 +2479,6 @@ function GymminApp() {
 
   useEffect(() => {
     let isMounted = true;
-
-    async function loadLocalWorkouts() {
-      if (!hasLoadedAccountStorageMigration) {
-        return;
-      }
-
-      const ownerId = storageOwnerId;
-      setHasLoadedLocalWorkouts(false);
-      setLoadedWorkoutsOwnerId(null);
-
-      try {
-        const rawData = await AsyncStorage.getItem(getAccountStorageKey(localWorkoutsStorageBaseKey, ownerId));
-
-        if (!isMounted) {
-          return;
-        }
-
-        if (!rawData) {
-          setSavedWorkouts(initialWorkouts.map((workout) => normalizeSavedWorkoutTextFields(workout)));
-          setSelectedWorkoutId(initialWorkouts[0]?.id ?? "");
-          setWorkoutSort(defaultWorkoutSort);
-          return;
-        }
-
-        const storedData = JSON.parse(rawData) as Partial<LocalWorkoutsStorage>;
-
-        if (!Array.isArray(storedData.workouts)) {
-          return;
-        }
-
-        const normalizedWorkouts = storedData.workouts.map((workout) => normalizeSavedWorkoutTextFields(workout));
-        const selectedId =
-          storedData.selectedWorkoutId &&
-          normalizedWorkouts.some((item) => item.id === storedData.selectedWorkoutId)
-            ? storedData.selectedWorkoutId
-            : normalizedWorkouts[0]?.id ?? "";
-
-        setSavedWorkouts(normalizedWorkouts);
-        setSelectedWorkoutId(selectedId);
-        setWorkoutSort(normalizeWorkoutSortSettings(storedData.sort));
-      } catch (error) {
-        console.error("Failed to load local workouts", error);
-      } finally {
-        if (isMounted) {
-          setLoadedWorkoutsOwnerId(ownerId);
-          setHasLoadedLocalWorkouts(true);
-        }
-      }
-    }
-
-    void loadLocalWorkouts();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [hasLoadedAccountStorageMigration, storageOwnerId]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadLocalSettings() {
-      if (!hasLoadedAccountStorageMigration) {
-        return;
-      }
-
-      const ownerId = storageOwnerId;
-      setHasLoadedLocalSettings(false);
-      setLoadedSettingsOwnerId(null);
-      hasPersistedLocalSettingsRef.current = false;
-      isApplyingAccountSettingsRef.current = false;
-
-      try {
-        const rawData = await AsyncStorage.getItem(getAccountStorageKey(localSettingsStorageBaseKey, ownerId));
-
-        if (!isMounted) {
-          return;
-        }
-
-        if (!rawData) {
-          setLanguage("en");
-          setPendingLanguage("en");
-          setThemeName("light");
-          setDefaultSetCount("");
-          setPendingDefaultSetCount("");
-          setDefaultWeight("");
-          setPendingDefaultWeight("");
-          setDefaultStageType("");
-          setPendingDefaultStageType("");
-          setDefaultWorkoutExecutionMode("guided");
-          setPendingDefaultWorkoutExecutionMode("guided");
-          setDefaultWorkoutTableOrientation("vertical");
-          setShowRestTimer(true);
-          setWorkoutReminders(getDefaultWorkoutReminderSettings("en"));
-          setPendingWorkoutReminderDay(null);
-          setCollapsedPanels(defaultCollapsedPanels);
-          setIsAuthPanelDismissed(false);
-          setLocalSettingsUpdatedAt(new Date().toISOString());
-          return;
-        }
-
-        const storedData = JSON.parse(rawData) as Partial<LocalSettingsStorage>;
-        const nextLanguage = isLanguageCode(storedData.language) ? storedData.language : "en";
-        const nextThemeName = isThemeName(storedData.themeName) ? storedData.themeName : "light";
-        const nextDefaultSetCount =
-          typeof storedData.defaultSetCount === "string" ? storedData.defaultSetCount : "";
-        const nextDefaultWeight =
-          typeof storedData.defaultWeight === "string" ? storedData.defaultWeight : "";
-        const nextDefaultStageType =
-          storedData.defaultStageType === "" || isStageType(storedData.defaultStageType)
-            ? storedData.defaultStageType
-            : "";
-        const nextDefaultWorkoutExecutionMode = isWorkoutExecutionMode(storedData.defaultWorkoutExecutionMode)
-          ? storedData.defaultWorkoutExecutionMode
-          : "guided";
-        const nextDefaultWorkoutTableOrientation = isWorkoutTableOrientation(storedData.defaultWorkoutTableOrientation)
-          ? storedData.defaultWorkoutTableOrientation
-          : "vertical";
-        const nextShowRestTimer = storedData.showRestTimer !== false;
-        const nextCollapsedPanels = normalizeCollapsedPanels(storedData.collapsedPanels);
-        const nextWorkoutReminders = normalizeWorkoutReminderSettings(storedData.workoutReminders, nextLanguage);
-        const nextIsAuthPanelDismissed = storedData.isAuthPanelDismissed === true;
-        const nextUpdatedAt = typeof storedData.updatedAt === "string" ? storedData.updatedAt : new Date().toISOString();
-
-        setLanguage(nextLanguage);
-        setPendingLanguage(nextLanguage);
-        setThemeName(nextThemeName);
-        setDefaultSetCount(nextDefaultSetCount);
-        setPendingDefaultSetCount(nextDefaultSetCount);
-        setDefaultWeight(nextDefaultWeight);
-        setPendingDefaultWeight(nextDefaultWeight);
-        setDefaultStageType(nextDefaultStageType);
-        setPendingDefaultStageType(nextDefaultStageType);
-        setDefaultWorkoutExecutionMode(nextDefaultWorkoutExecutionMode);
-        setPendingDefaultWorkoutExecutionMode(nextDefaultWorkoutExecutionMode);
-        setDefaultWorkoutTableOrientation(nextDefaultWorkoutTableOrientation);
-        setShowRestTimer(nextShowRestTimer);
-        setWorkoutReminders(nextWorkoutReminders);
-        setPendingWorkoutReminderDay(null);
-        setCollapsedPanels(nextCollapsedPanels);
-        setIsAuthPanelDismissed(nextIsAuthPanelDismissed);
-        setLocalSettingsUpdatedAt(nextUpdatedAt);
-      } catch (error) {
-        console.error("Failed to load local settings", error);
-      } finally {
-        if (isMounted) {
-          setLoadedSettingsOwnerId(ownerId);
-          setHasLoadedLocalSettings(true);
-        }
-      }
-    }
-
-    void loadLocalSettings();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [hasLoadedAccountStorageMigration, storageOwnerId]);
-
-  useEffect(() => {
-    let isMounted = true;
     const ownerId = storageOwnerId;
     setHasLoadedWeeklyPlan(false);
     setWeeklyPlanOwnerId(null);
@@ -2985,175 +2506,6 @@ function GymminApp() {
       console.error("Failed to save weekly plan", error);
     });
   }, [hasLoadedWeeklyPlan, storageOwnerId, weeklyPlan, weeklyPlanOwnerId]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadLocalCreatorProfiles() {
-      if (!hasLoadedAccountStorageMigration) {
-        return;
-      }
-
-      const ownerId = storageOwnerId;
-      setHasLoadedLocalCreatorProfiles(false);
-      setLoadedCreatorProfilesOwnerId(null);
-
-      try {
-        const rawData = await AsyncStorage.getItem(getAccountStorageKey(localCreatorProfilesStorageBaseKey, ownerId));
-
-        if (!isMounted) {
-          return;
-        }
-
-        if (!rawData) {
-          setCreatorProfiles([]);
-          setSelectedCreatorProfileId(null);
-          return;
-        }
-
-        const storedData = JSON.parse(rawData) as Partial<LocalCreatorProfilesStorage>;
-
-        if (!Array.isArray(storedData.profiles)) {
-          return;
-        }
-
-        const selectedProfileId =
-          storedData.selectedProfileId &&
-          storedData.profiles.some((profile) => profile.id === storedData.selectedProfileId)
-            ? storedData.selectedProfileId
-            : null;
-
-        setCreatorProfiles(storedData.profiles);
-        setSelectedCreatorProfileId(selectedProfileId);
-      } catch (error) {
-        console.error("Failed to load local creator profiles", error);
-      } finally {
-        if (isMounted) {
-          setLoadedCreatorProfilesOwnerId(ownerId);
-          setHasLoadedLocalCreatorProfiles(true);
-        }
-      }
-    }
-
-    void loadLocalCreatorProfiles();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [hasLoadedAccountStorageMigration, storageOwnerId]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadWorkoutSessions() {
-      if (!hasLoadedAccountStorageMigration) {
-        return;
-      }
-
-      const ownerId = storageOwnerId;
-      setHasLoadedWorkoutSessions(false);
-      setLoadedWorkoutSessionsOwnerId(null);
-      hasPersistedLocalWorkoutSessionsRef.current = false;
-      isApplyingAccountWorkoutSessionsRef.current = false;
-
-      try {
-        const [rawData, rawActiveSessionData] = await Promise.all([
-          AsyncStorage.getItem(getAccountStorageKey(WORKOUT_SESSIONS_STORAGE_BASE_KEY, ownerId)),
-          AsyncStorage.getItem(getAccountStorageKey(activeWorkoutSessionStorageBaseKey, ownerId))
-        ]);
-
-        if (!isMounted) {
-          return;
-        }
-
-        if (!rawData) {
-          setWorkoutSessions([]);
-          setActiveWorkoutSessionId(null);
-          setSessionEntryIndex(0);
-          return;
-        }
-
-        const storedData = JSON.parse(rawData) as Partial<LocalWorkoutSessionsStorage>;
-
-        if (!Array.isArray(storedData.sessions)) {
-          return;
-        }
-
-        const normalizedSessions = normalizeWorkoutSessions(storedData.sessions);
-        setWorkoutSessions(normalizedSessions);
-        const activeSession = normalizedSessions.find((session) => session.status === "active" && !session.deletedAt);
-        setActiveWorkoutSessionId(activeSession?.id ?? null);
-        if (activeSession) {
-          let restoredEntryIndex = 0;
-          if (rawActiveSessionData) {
-            try {
-              const activeSessionData = JSON.parse(rawActiveSessionData) as Partial<LocalActiveWorkoutSessionStorage>;
-              if (activeSessionData.sessionId === activeSession.id) {
-                restoredEntryIndex = clampWorkoutSessionEntryIndex(activeSessionData.entryIndex, activeSession);
-              }
-            } catch (error) {
-              console.error("Failed to load active workout session progress", error);
-            }
-          }
-
-          activeWorkoutSessionEntryIndexRef.current[activeSession.id] = restoredEntryIndex;
-          setSessionEntryIndex(restoredEntryIndex);
-        } else {
-          setSessionEntryIndex(0);
-        }
-      } catch (error) {
-        console.error("Failed to load workout sessions", error);
-      } finally {
-        if (isMounted) {
-          setLoadedWorkoutSessionsOwnerId(ownerId);
-          setHasLoadedWorkoutSessions(true);
-        }
-      }
-    }
-
-    void loadWorkoutSessions();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [hasLoadedAccountStorageMigration, storageOwnerId]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadLocalFavoriteExercises() {
-      if (!hasLoadedAccountStorageMigration) {
-        return;
-      }
-
-      const ownerId = storageOwnerId;
-      setHasLoadedFavoriteExercises(false);
-      setLoadedFavoriteExercisesOwnerId(null);
-      hasPersistedLocalFavoriteExercisesRef.current = false;
-      isApplyingAccountFavoriteExercisesRef.current = false;
-
-      try {
-        const favorites = await loadFavoriteExercises(ownerId);
-
-        if (!isMounted) {
-          return;
-        }
-
-        setFavoriteExercises(favorites);
-      } finally {
-        if (isMounted) {
-          setLoadedFavoriteExercisesOwnerId(ownerId);
-          setHasLoadedFavoriteExercises(true);
-        }
-      }
-    }
-
-    void loadLocalFavoriteExercises();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [hasLoadedAccountStorageMigration, storageOwnerId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -3232,182 +2584,17 @@ function GymminApp() {
   }, [hasLoadedAccountStorageMigration, storageOwnerId]);
 
   useEffect(() => {
-    if (!hasLoadedFavoriteExercises || loadedFavoriteExercisesOwnerId !== storageOwnerId) {
+    if (!hasLoadedLocalSettings || loadedSettingsOwnerId !== storageOwnerId) {
       return;
     }
 
-    saveFavoriteExercises(favoriteExercises, storageOwnerId).catch((error) => {
-      console.error("Failed to save favorite exercises", error);
-    });
-
-    if (isApplyingAccountFavoriteExercisesRef.current) {
-      hasPersistedLocalFavoriteExercisesRef.current = true;
-      return;
-    }
-
-    if (!user || syncedFavoriteExercisesUserIdRef.current !== user.id) {
-      setFavoriteExercisesSyncStatus("local");
-      hasPersistedLocalFavoriteExercisesRef.current = true;
-      return;
-    }
-
-    if (!hasPersistedLocalFavoriteExercisesRef.current) {
-      hasPersistedLocalFavoriteExercisesRef.current = true;
-      return;
-    }
-
-    syncAccountFavoriteExercises(user, favoriteExercises).then((mergedFavorites) => {
-      isApplyingAccountFavoriteExercisesRef.current = true;
-      setFavoriteExercises(mergedFavorites);
-      setFavoriteExercisesSyncStatus("synced");
-      setTimeout(() => {
-        isApplyingAccountFavoriteExercisesRef.current = false;
-      }, 0);
-    }).catch((error) => {
-      console.error("Failed to sync favorite exercises", error);
-      setFavoriteExercisesSyncStatus("failed");
-    });
-  }, [favoriteExercises, hasLoadedFavoriteExercises, loadedFavoriteExercisesOwnerId, storageOwnerId]);
-
-  useEffect(() => {
-    if (!hasLoadedLocalWorkouts || loadedWorkoutsOwnerId !== storageOwnerId) {
-      return;
-    }
-
-    const payload: LocalWorkoutsStorage = {
-      selectedWorkoutId,
-      sort: normalizeWorkoutSortSettings(workoutSort),
-      updatedAt: new Date().toISOString(),
-      version: 1,
-      workouts: savedWorkouts.map((workout) => normalizeSavedWorkoutTextFields(workout))
-    };
-
-    AsyncStorage.setItem(getAccountStorageKey(localWorkoutsStorageBaseKey, storageOwnerId), JSON.stringify(payload)).catch((error) => {
-      console.error("Failed to save local workouts", error);
-    });
-  }, [hasLoadedLocalWorkouts, loadedWorkoutsOwnerId, savedWorkouts, selectedWorkoutId, storageOwnerId, workoutSort]);
-
-  useEffect(() => {
-    if (!hasLoadedLocalAuth || !hasLoadedLocalWorkouts || loadedWorkoutsOwnerId !== storageOwnerId || !user) {
-      return;
-    }
-
-    if (syncedWorkoutUserIdRef.current === user.id) {
-      return;
-    }
-
-    syncedWorkoutUserIdRef.current = user.id;
-
-    synchronizeAccountWorkouts(user, savedWorkouts).catch((error) => {
-      console.error("Failed to synchronize account workouts", error);
-      syncedWorkoutUserIdRef.current = null;
-    });
-  }, [hasLoadedLocalAuth, hasLoadedLocalWorkouts, loadedWorkoutsOwnerId, savedWorkouts, storageOwnerId, user]);
-
-  useEffect(() => {
-    if (!hasLoadedLocalAuth || !hasLoadedLocalSettings || loadedSettingsOwnerId !== storageOwnerId || !user) {
-      return;
-    }
-
-    if (syncedSettingsUserIdRef.current === user.id) {
-      return;
-    }
-
-    syncedSettingsUserIdRef.current = `syncing:${user.id}`;
-
-    synchronizeAccountSettings(user).then(() => {
-      syncedSettingsUserIdRef.current = user.id;
-    }).catch((error) => {
-      console.error("Failed to synchronize account settings", error);
-      syncedSettingsUserIdRef.current = null;
-    });
-  }, [hasLoadedLocalAuth, hasLoadedLocalSettings, loadedSettingsOwnerId, storageOwnerId, user]);
-
-  useEffect(() => {
-    if (!hasLoadedLocalAuth || !hasLoadedFavoriteExercises || loadedFavoriteExercisesOwnerId !== storageOwnerId || !user) {
-      return;
-    }
-
-    if (
-      syncedFavoriteExercisesUserIdRef.current === user.id ||
-      syncedFavoriteExercisesUserIdRef.current === `syncing:${user.id}`
-    ) {
-      return;
-    }
-
-    syncedFavoriteExercisesUserIdRef.current = `syncing:${user.id}`;
-
-    synchronizeAccountFavoriteExercises(user, favoriteExercises).then(() => {
-      syncedFavoriteExercisesUserIdRef.current = user.id;
-    }).catch((error) => {
-      console.error("Failed to synchronize account favorite exercises", error);
-      syncedFavoriteExercisesUserIdRef.current = null;
-      setFavoriteExercisesSyncStatus("failed");
-    });
-  }, [favoriteExercises, hasLoadedFavoriteExercises, hasLoadedLocalAuth, loadedFavoriteExercisesOwnerId, storageOwnerId, user]);
-
-  useEffect(() => {
-    if (!hasLoadedLocalAuth || !hasLoadedWorkoutSessions || loadedWorkoutSessionsOwnerId !== storageOwnerId || !user) {
-      return;
-    }
-
-    if (
-      syncedWorkoutSessionsUserIdRef.current === user.id ||
-      syncedWorkoutSessionsUserIdRef.current === `syncing:${user.id}`
-    ) {
-      return;
-    }
-
-    syncedWorkoutSessionsUserIdRef.current = `syncing:${user.id}`;
-
-    synchronizeAccountWorkoutSessions(user, workoutSessions).then(() => {
-      syncedWorkoutSessionsUserIdRef.current = user.id;
-    }).catch((error) => {
-      console.error("Failed to synchronize account workout sessions", error);
-      syncedWorkoutSessionsUserIdRef.current = null;
-    });
-  }, [hasLoadedLocalAuth, hasLoadedWorkoutSessions, loadedWorkoutSessionsOwnerId, storageOwnerId, user]);
-
-  useEffect(() => {
-    if (!hasLoadedLocalAuth || !hasLoadedAchievements || loadedAchievementsOwnerId !== storageOwnerId || !user) {
-      return;
-    }
-
-    if (
-      syncedAchievementsUserIdRef.current === user.id ||
-      syncedAchievementsUserIdRef.current === `syncing:${user.id}`
-    ) {
-      return;
-    }
-
-    syncedAchievementsUserIdRef.current = `syncing:${user.id}`;
-
-    synchronizeAccountAchievements(user, userAchievements, appUsageStats).then(() => {
-      syncedAchievementsUserIdRef.current = user.id;
-    }).catch((error) => {
-      console.error("Failed to synchronize account achievements", error);
-      syncedAchievementsUserIdRef.current = null;
-    });
-  }, [appUsageStats, hasLoadedAchievements, hasLoadedLocalAuth, loadedAchievementsOwnerId, storageOwnerId, user, userAchievements]);
-
-  useEffect(() => {
-    if (!hasLoadedLocalSettings || loadedSettingsOwnerId !== storageOwnerId || !user || syncedSettingsUserIdRef.current !== user.id) {
-      return;
-    }
-
-    if (isApplyingAccountSettingsRef.current) {
-      return;
-    }
-
-    const payload = buildCurrentSettingsPayload(new Date().toISOString());
-    saveAccountSettings(payload).then((savedSettings) => {
-      if (savedSettings?.updatedAt) {
-        setLocalSettingsUpdatedAt(savedSettings.updatedAt);
-      }
-    }).catch((error) => {
-      console.error("Failed to save account settings", error);
-    });
-  }, [collapsedPanels, defaultSetCount, defaultStageType, defaultWeight, defaultWorkoutExecutionMode, defaultWorkoutTableOrientation, hasLoadedLocalSettings, isAuthPanelDismissed, language, loadedSettingsOwnerId, showRestTimer, storageOwnerId, themeName, user, workoutReminders]);
+    setPendingLanguage(language);
+    setPendingDefaultSetCount(defaultSetCount);
+    setPendingDefaultWeight(defaultWeight);
+    setPendingDefaultStageType(defaultStageType);
+    setPendingDefaultWorkoutExecutionMode(defaultWorkoutExecutionMode);
+    setPendingWorkoutReminderDay(null);
+  }, [hasLoadedLocalSettings, loadedSettingsOwnerId, storageOwnerId]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -3452,41 +2639,6 @@ function GymminApp() {
       message: shouldUpdateMessage ? nextDefaults.message : workoutReminders.message
     });
   }, [language, workoutReminders]);
-
-  useEffect(() => {
-    if (!hasLoadedLocalSettings || loadedSettingsOwnerId !== storageOwnerId) {
-      return;
-    }
-
-    const shouldRefreshUpdatedAt =
-      hasPersistedLocalSettingsRef.current && !isApplyingAccountSettingsRef.current;
-    const updatedAt = shouldRefreshUpdatedAt ? new Date().toISOString() : localSettingsUpdatedAt;
-    const payload: LocalSettingsStorage = {
-      collapsedPanels,
-      defaultSetCount,
-      defaultStageType,
-      defaultWorkoutExecutionMode,
-      defaultWorkoutTableOrientation,
-      showRestTimer,
-      defaultWeight,
-      isAuthPanelDismissed,
-      language,
-      themeName,
-      updatedAt,
-      version: 1,
-      workoutReminders
-    };
-
-    if (shouldRefreshUpdatedAt) {
-      setLocalSettingsUpdatedAt(updatedAt);
-    }
-
-    hasPersistedLocalSettingsRef.current = true;
-
-    AsyncStorage.setItem(getAccountStorageKey(localSettingsStorageBaseKey, storageOwnerId), JSON.stringify(payload)).catch((error) => {
-      console.error("Failed to save local settings", error);
-    });
-  }, [collapsedPanels, defaultSetCount, defaultStageType, defaultWeight, defaultWorkoutExecutionMode, defaultWorkoutTableOrientation, hasLoadedLocalSettings, isAuthPanelDismissed, language, loadedSettingsOwnerId, showRestTimer, storageOwnerId, themeName, workoutReminders]);
 
   useEffect(() => {
     const previousOwnerId = reminderStorageOwnerIdRef.current;
@@ -3543,23 +2695,6 @@ function GymminApp() {
   ]);
 
   useEffect(() => {
-    if (!hasLoadedLocalCreatorProfiles || loadedCreatorProfilesOwnerId !== storageOwnerId) {
-      return;
-    }
-
-    const payload: LocalCreatorProfilesStorage = {
-      profiles: creatorProfiles,
-      selectedProfileId: selectedCreatorProfileId,
-      updatedAt: new Date().toISOString(),
-      version: 1
-    };
-
-    AsyncStorage.setItem(getAccountStorageKey(localCreatorProfilesStorageBaseKey, storageOwnerId), JSON.stringify(payload)).catch((error) => {
-      console.error("Failed to save local creator profiles", error);
-    });
-  }, [creatorProfiles, hasLoadedLocalCreatorProfiles, loadedCreatorProfilesOwnerId, selectedCreatorProfileId, storageOwnerId]);
-
-  useEffect(() => {
     if (!hasLoadedLocalCreatorJob || loadedCreatorJobOwnerId !== storageOwnerId) {
       return;
     }
@@ -3575,236 +2710,6 @@ function GymminApp() {
       console.error("Failed to save pending creator job", error);
     });
   }, [hasLoadedLocalCreatorJob, loadedCreatorJobOwnerId, pendingCreatorJob, storageOwnerId]);
-
-  useEffect(() => {
-    if (!hasLoadedWorkoutSessions || loadedWorkoutSessionsOwnerId !== storageOwnerId) {
-      return;
-    }
-
-    const normalizedSessions = normalizeWorkoutSessions(workoutSessions);
-    const payload: LocalWorkoutSessionsStorage = {
-      sessions: normalizedSessions,
-      updatedAt: new Date().toISOString(),
-      version: 1
-    };
-
-    AsyncStorage.setItem(getAccountStorageKey(WORKOUT_SESSIONS_STORAGE_BASE_KEY, storageOwnerId), JSON.stringify(payload)).catch((error) => {
-      console.error("Failed to save workout sessions", error);
-    });
-
-    const clearPendingWorkoutSessionSync = () => {
-      if (workoutSessionsSyncTimeoutRef.current) {
-        clearTimeout(workoutSessionsSyncTimeoutRef.current);
-        workoutSessionsSyncTimeoutRef.current = null;
-      }
-    };
-
-    if (isApplyingAccountWorkoutSessionsRef.current) {
-      hasPersistedLocalWorkoutSessionsRef.current = true;
-      clearPendingWorkoutSessionSync();
-      return;
-    }
-
-    if (!user || syncedWorkoutSessionsUserIdRef.current !== user.id) {
-      hasPersistedLocalWorkoutSessionsRef.current = true;
-      clearPendingWorkoutSessionSync();
-      return;
-    }
-
-    if (!hasPersistedLocalWorkoutSessionsRef.current) {
-      hasPersistedLocalWorkoutSessionsRef.current = true;
-      return;
-    }
-
-    const requestId = workoutSessionsSyncRequestIdRef.current + 1;
-    workoutSessionsSyncRequestIdRef.current = requestId;
-
-    clearPendingWorkoutSessionSync();
-    const syncDelay = activeScreen === "workoutSession" && activeWorkoutSessionId
-      ? workoutSessionSyncActiveDebounceMs
-      : workoutSessionSyncIdleDebounceMs;
-
-    workoutSessionsSyncTimeoutRef.current = setTimeout(() => {
-      workoutSessionsSyncTimeoutRef.current = null;
-      syncAccountWorkoutSessions(user, normalizedSessions).then((mergedSessions) => {
-        if (workoutSessionsSyncRequestIdRef.current !== requestId) {
-          return;
-        }
-
-        isApplyingAccountWorkoutSessionsRef.current = true;
-        setWorkoutSessions(mergedSessions);
-        setTimeout(() => {
-          isApplyingAccountWorkoutSessionsRef.current = false;
-        }, 0);
-      }).catch((error) => {
-        if (workoutSessionsSyncRequestIdRef.current !== requestId) {
-          return;
-        }
-
-        console.error("Failed to sync workout sessions", error);
-      });
-    }, syncDelay);
-
-    return clearPendingWorkoutSessionSync;
-  }, [activeScreen, activeWorkoutSessionId, hasLoadedWorkoutSessions, loadedWorkoutSessionsOwnerId, storageOwnerId, workoutSessions]);
-
-  useEffect(() => {
-    if (!hasLoadedWorkoutSessions || loadedWorkoutSessionsOwnerId !== storageOwnerId) {
-      return;
-    }
-
-    const storageKey = getAccountStorageKey(activeWorkoutSessionStorageBaseKey, storageOwnerId);
-    const session = activeWorkoutSessionId
-      ? workoutSessions.find((item) => item.id === activeWorkoutSessionId && item.status === "active" && !item.deletedAt)
-      : null;
-
-    if (!session) {
-      AsyncStorage.removeItem(storageKey).catch((error) => {
-        console.error("Failed to clear active workout session progress", error);
-      });
-      return;
-    }
-
-    const entryIndex = clampWorkoutSessionEntryIndex(sessionEntryIndex, session);
-    activeWorkoutSessionEntryIndexRef.current[session.id] = entryIndex;
-
-    const payload: LocalActiveWorkoutSessionStorage = {
-      entryIndex,
-      sessionId: session.id,
-      updatedAt: new Date().toISOString(),
-      version: 1
-    };
-
-    AsyncStorage.setItem(storageKey, JSON.stringify(payload)).catch((error) => {
-      console.error("Failed to save active workout session progress", error);
-    });
-  }, [activeWorkoutSessionId, hasLoadedWorkoutSessions, loadedWorkoutSessionsOwnerId, sessionEntryIndex, storageOwnerId, workoutSessions]);
-
-  useEffect(() => {
-    let isMounted = true;
-    setHasLoadedAchievements(false);
-    setLoadedAchievementsOwnerId(null);
-
-    Promise.all([
-      loadUserAchievements(storageOwnerId),
-      loadAppUsageStats(storageOwnerId),
-      loadAchievementsSyncState(storageOwnerId)
-    ]).then(([loadedAchievements, loadedUsageStats, loadedSyncState]) => {
-      if (!isMounted) {
-        return;
-      }
-
-      setUserAchievements(loadedAchievements);
-      setAppUsageStats(loadedUsageStats);
-      setAchievementsSyncState(loadedSyncState);
-      setLoadedAchievementsOwnerId(storageOwnerId);
-      setHasLoadedAchievements(true);
-      hasPersistedLocalAchievementsRef.current = false;
-      syncedAchievementsUserIdRef.current = null;
-    }).catch((error) => {
-      console.error("Failed to load achievements", error);
-      if (isMounted) {
-        setUserAchievements([]);
-        setAppUsageStats(getDefaultAppUsageStats());
-        setAchievementsSyncState({});
-        setLoadedAchievementsOwnerId(storageOwnerId);
-        setHasLoadedAchievements(true);
-        hasPersistedLocalAchievementsRef.current = false;
-        syncedAchievementsUserIdRef.current = null;
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [storageOwnerId]);
-
-  useEffect(() => {
-    if (!hasLoadedAchievements || loadedAchievementsOwnerId !== storageOwnerId) {
-      return;
-    }
-
-    saveUserAchievements(storageOwnerId, userAchievements).catch((error) => {
-      console.error("Failed to save achievements", error);
-    });
-
-    if (isApplyingAccountAchievementsRef.current) {
-      hasPersistedLocalAchievementsRef.current = true;
-      return;
-    }
-
-    if (!user || syncedAchievementsUserIdRef.current !== user.id) {
-      hasPersistedLocalAchievementsRef.current = true;
-      return;
-    }
-
-    if (!hasPersistedLocalAchievementsRef.current) {
-      hasPersistedLocalAchievementsRef.current = true;
-      return;
-    }
-
-    if (achievementsSyncTimeoutRef.current) {
-      clearTimeout(achievementsSyncTimeoutRef.current);
-    }
-
-    achievementsSyncTimeoutRef.current = setTimeout(() => {
-      syncAccountAchievements(user, userAchievements, appUsageStats).then((merged) => {
-        isApplyingAccountAchievementsRef.current = true;
-        setUserAchievements(merged.unlocked);
-        setAppUsageStats(merged.appUsageStats);
-        setTimeout(() => {
-          isApplyingAccountAchievementsRef.current = false;
-        }, 0);
-      }).catch((error) => {
-        console.error("Failed to sync achievements", error);
-      });
-    }, 1200);
-  }, [hasLoadedAchievements, loadedAchievementsOwnerId, storageOwnerId, userAchievements]);
-
-  useEffect(() => {
-    if (!hasLoadedAchievements || loadedAchievementsOwnerId !== storageOwnerId) {
-      return;
-    }
-
-    saveAppUsageStats(storageOwnerId, appUsageStats).catch((error) => {
-      console.error("Failed to save app usage stats", error);
-    });
-
-    if (isApplyingAccountAchievementsRef.current || !user || syncedAchievementsUserIdRef.current !== user.id) {
-      return;
-    }
-
-    if (!hasPersistedLocalAchievementsRef.current) {
-      return;
-    }
-
-    if (achievementsSyncTimeoutRef.current) {
-      clearTimeout(achievementsSyncTimeoutRef.current);
-    }
-
-    achievementsSyncTimeoutRef.current = setTimeout(() => {
-      syncAccountAchievements(user, userAchievements, appUsageStats).then((merged) => {
-        isApplyingAccountAchievementsRef.current = true;
-        setUserAchievements(merged.unlocked);
-        setAppUsageStats(merged.appUsageStats);
-        setTimeout(() => {
-          isApplyingAccountAchievementsRef.current = false;
-        }, 0);
-      }).catch((error) => {
-        console.error("Failed to sync app usage stats", error);
-      });
-    }, 1800);
-  }, [appUsageStats, hasLoadedAchievements, loadedAchievementsOwnerId, storageOwnerId, user, userAchievements]);
-
-  useEffect(() => {
-    if (!hasLoadedAchievements || loadedAchievementsOwnerId !== storageOwnerId) {
-      return;
-    }
-
-    saveAchievementsSyncState(storageOwnerId, achievementsSyncState).catch((error) => {
-      console.error("Failed to save achievements sync state", error);
-    });
-  }, [achievementsSyncState, hasLoadedAchievements, loadedAchievementsOwnerId, storageOwnerId]);
 
   useEffect(() => {
     const finalizeForegroundUsage = () => {
@@ -4043,44 +2948,15 @@ function GymminApp() {
   }
 
   function getApiHeaders(session: UserSession | null = user): Record<string, string> {
-    const correlationId = createCorrelationId();
-    const headers: Record<string, string> = {
-      "ngrok-skip-browser-warning": "true",
-      "X-Correlation-Id": correlationId
-    };
+    return buildApiHeaders(session);
+  }
 
-    if (session?.token) {
-      headers.Authorization = `Bearer ${session.token}`;
-    }
-
-    return headers;
+  function sendApiRequest(endpoint: string, init: RequestInit = {}) {
+    return requestApi(apiBaseUrl, endpoint, init);
   }
 
   async function createApiError(response: Response, endpoint: string, method: string, fallbackMessage: string) {
-    const correlationId = response.headers.get("X-Correlation-Id") ?? undefined;
-    recordCorrelationId(correlationId);
-    const body = await response.json().catch(() => null) as
-      | { error?: string | { code?: string; message?: string; correlationId?: string }; detail?: string; message?: string }
-      | null;
-    const errorObject = typeof body?.error === "object" ? body.error : null;
-    const code = errorObject?.code ?? (response.status === 429 ? "rate_limited" : undefined);
-    const message = response.status === 429
-      ? t("rateLimitError")
-      : errorObject?.message ?? (typeof body?.error === "string" ? body.error : body?.detail ?? body?.message ?? fallbackMessage);
-    const apiError = {
-      code,
-      correlationId: errorObject?.correlationId ?? correlationId,
-      endpoint,
-      message,
-      method,
-      status: response.status
-    };
-    recordApiError(apiError);
-    const error = new Error(message) as Error & { code?: string; correlationId?: string; status?: number };
-    error.code = code;
-    error.correlationId = apiError.correlationId;
-    error.status = response.status;
-    return error;
+    return createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError"));
   }
 
   async function fetchAiCredits(session = user) {
@@ -4093,9 +2969,9 @@ function GymminApp() {
     try {
       const headers = getAuthHeaders(session);
       const [balanceResponse, transactionsResponse, packsResponse] = await Promise.all([
-        fetch(`${apiBaseUrl}/api/ai-credits/balance`, { headers }),
-        fetch(`${apiBaseUrl}/api/ai-credits/transactions?limit=50`, { headers }),
-        fetch(`${apiBaseUrl}/api/ai-credits/packs`, { headers })
+        sendApiRequest("/api/ai-credits/balance", { headers }),
+        sendApiRequest("/api/ai-credits/transactions?limit=50", { headers }),
+        sendApiRequest("/api/ai-credits/packs", { headers })
       ]);
 
       if (balanceResponse.status === 401 || transactionsResponse.status === 401 || packsResponse.status === 401) {
@@ -4138,7 +3014,7 @@ function GymminApp() {
       return null;
     }
 
-    const response = await fetch(`${apiBaseUrl}/api/ai-credits/purchases/google-play/verify`, {
+    const response = await sendApiRequest("/api/ai-credits/purchases/google-play/verify", {
       body: JSON.stringify({
         orderId: purchase.orderId ?? null,
         productId: purchase.productId,
@@ -4259,7 +3135,7 @@ function GymminApp() {
     setIsAiCreditsLoading(true);
     setAiCreditsError("");
     try {
-      const response = await fetch(`${apiBaseUrl}/api/ai-credits/dev/grant`, {
+      const response = await sendApiRequest("/api/ai-credits/dev/grant", {
         body: JSON.stringify({
           amount: 10,
           reason: "Mobile dev top-up"
@@ -4291,7 +3167,7 @@ function GymminApp() {
   }
 
   async function fetchAccountWorkouts(session: UserSession) {
-    const response = await fetch(`${apiBaseUrl}/api/workouts/`, {
+    const response = await sendApiRequest("/api/workouts/", {
       headers: getAuthHeaders(session)
     });
 
@@ -4304,7 +3180,7 @@ function GymminApp() {
   }
 
   async function synchronizeAccountWorkouts(session: UserSession, localWorkouts: SavedWorkout[]) {
-    const response = await fetch(`${apiBaseUrl}/api/sync/workouts`, {
+    const response = await sendApiRequest("/api/sync/workouts", {
       body: JSON.stringify({
         deletedClientWorkoutIds: [],
         lastPulledAt: null,
@@ -4337,7 +3213,7 @@ function GymminApp() {
       return;
     }
 
-    const response = await fetch(`${apiBaseUrl}/api/workouts/`, {
+    const response = await sendApiRequest("/api/workouts/", {
       body: JSON.stringify(mapSavedWorkoutToApiRequest(nextWorkout)),
       headers: {
         ...getAuthHeaders(session),
@@ -4356,7 +3232,7 @@ function GymminApp() {
       return;
     }
 
-    const response = await fetch(`${apiBaseUrl}/api/workouts/${encodeURIComponent(workoutId)}`, {
+    const response = await sendApiRequest(`/api/workouts/${encodeURIComponent(workoutId)}`, {
       headers: getAuthHeaders(session),
       method: "DELETE"
     });
@@ -4364,23 +3240,6 @@ function GymminApp() {
     if (!response.ok && response.status !== 404) {
       throw new Error(`Workout delete failed with status ${response.status}`);
     }
-  }
-
-  function buildCurrentSettingsPayload(updatedAt = localSettingsUpdatedAt) {
-    return {
-      collapsedPanels,
-      defaultSetCount,
-      defaultStageType: defaultStageType || null,
-      defaultWorkoutExecutionMode,
-      defaultWorkoutTableOrientation,
-      showRestTimer,
-      defaultWeight,
-      isAuthPanelDismissed,
-      language,
-      themeName,
-      workoutReminders,
-      updatedAt
-    };
   }
 
   function updateWorkoutReminderSettings(nextSettings: WorkoutReminderSettings) {
@@ -4471,52 +3330,17 @@ function GymminApp() {
   }
 
   function applyAccountSettings(settings: ApiUserSettings) {
-    isApplyingAccountSettingsRef.current = true;
-
-    const nextLanguage = isLanguageCode(settings.language) ? settings.language : "en";
-    const nextThemeName = isThemeName(settings.themeName) ? settings.themeName : "light";
-    const nextDefaultSetCount = typeof settings.defaultSetCount === "string" ? settings.defaultSetCount : "";
-    const nextDefaultWeight = typeof settings.defaultWeight === "string" ? settings.defaultWeight : "";
-    const nextDefaultStageType = settings.defaultStageType && isStageType(settings.defaultStageType)
-      ? settings.defaultStageType
-      : "";
-    const nextDefaultWorkoutExecutionMode = isWorkoutExecutionMode(settings.defaultWorkoutExecutionMode)
-      ? settings.defaultWorkoutExecutionMode
-      : "guided";
-    const nextDefaultWorkoutTableOrientation = isWorkoutTableOrientation(settings.defaultWorkoutTableOrientation)
-      ? settings.defaultWorkoutTableOrientation
-      : "vertical";
-    const nextShowRestTimer = settings.showRestTimer !== false;
-    const nextCollapsedPanels = normalizeCollapsedPanels(settings.collapsedPanels);
-    const nextWorkoutReminders = normalizeWorkoutReminderSettings(settings.workoutReminders, nextLanguage);
-    const nextUpdatedAt = typeof settings.updatedAt === "string" ? settings.updatedAt : new Date().toISOString();
-
-    setLanguage(nextLanguage);
-    setPendingLanguage(nextLanguage);
-    setThemeName(nextThemeName);
-    setDefaultSetCount(nextDefaultSetCount);
-    setPendingDefaultSetCount(nextDefaultSetCount);
-    setDefaultWeight(nextDefaultWeight);
-    setPendingDefaultWeight(nextDefaultWeight);
-    setDefaultStageType(nextDefaultStageType);
-    setPendingDefaultStageType(nextDefaultStageType);
-    setDefaultWorkoutExecutionMode(nextDefaultWorkoutExecutionMode);
-    setPendingDefaultWorkoutExecutionMode(nextDefaultWorkoutExecutionMode);
-    setDefaultWorkoutTableOrientation(nextDefaultWorkoutTableOrientation);
-    setShowRestTimer(nextShowRestTimer);
-    setWorkoutReminders(nextWorkoutReminders);
+    applyAccountSettingsState(settings, true);
+    setPendingLanguage(settings.language);
+    setPendingDefaultSetCount(settings.defaultSetCount);
+    setPendingDefaultWeight(settings.defaultWeight);
+    setPendingDefaultStageType(settings.defaultStageType);
+    setPendingDefaultWorkoutExecutionMode(settings.defaultWorkoutExecutionMode);
     setPendingWorkoutReminderDay(null);
-    setCollapsedPanels(nextCollapsedPanels);
-    setIsAuthPanelDismissed(settings.isAuthPanelDismissed === true);
-    setLocalSettingsUpdatedAt(nextUpdatedAt);
-
-    setTimeout(() => {
-      isApplyingAccountSettingsRef.current = false;
-    }, 0);
   }
 
   async function fetchAccountSettings(session: UserSession) {
-    const response = await fetch(`${apiBaseUrl}/api/settings`, {
+    const response = await sendApiRequest("/api/settings", {
       headers: getAuthHeaders(session)
     });
 
@@ -4537,8 +3361,11 @@ function GymminApp() {
       return null;
     }
 
-    const response = await fetch(`${apiBaseUrl}/api/settings`, {
-      body: JSON.stringify(payload),
+    const response = await sendApiRequest("/api/settings", {
+      body: JSON.stringify({
+        ...payload,
+        defaultStageType: payload.defaultStageType || null
+      }),
       headers: {
         ...getAuthHeaders(session),
         "Content-Type": "application/json"
@@ -4575,40 +3402,28 @@ function GymminApp() {
     localFavorites: FavoriteExercise[],
     forceFullPull = false
   ) {
-    const metadata = await loadFavoriteExercisesSyncMetadata(session.id);
-    const lastPulledAt = forceFullPull || metadata.userId !== session.id ? null : metadata.lastPulledAt ?? null;
-    const response = await fetch(`${apiBaseUrl}/api/sync/favorite-exercises`, {
-      body: JSON.stringify({
-        deletedExerciseIds: getDeletedFavoriteExerciseIds(localFavorites),
-        favorites: localFavorites,
-        lastPulledAt
-      }),
-      headers: {
-        ...getAuthHeaders(session),
-        "Content-Type": "application/json"
-      },
-      method: "POST"
+    return synchronizeFavoriteExercises({
+      favorites: localFavorites,
+      forceFullPull,
+      userId: session.id,
+      request: async (body: FavoriteExerciseSyncRequest) => {
+        const response = await sendApiRequest("/api/sync/favorite-exercises", {
+          body: JSON.stringify(body),
+          headers: {
+            ...getAuthHeaders(session),
+            "Content-Type": "application/json"
+          },
+          method: "POST"
+        });
+        if (response.status === 401) {
+          throw new Error("Favorite exercises sync unauthorized");
+        }
+        if (!response.ok) {
+          throw new Error(`Favorite exercises sync failed with status ${response.status}`);
+        }
+        return response.json().catch(() => null);
+      }
     });
-
-    if (response.status === 401) {
-      throw new Error("Favorite exercises sync unauthorized");
-    }
-
-    if (!response.ok) {
-      throw new Error(`Favorite exercises sync failed with status ${response.status}`);
-    }
-
-    const responseBody = normalizeApiFavoriteExercisesResponse(await response.json().catch(() => null));
-    const remoteFavorites = responseBody.favorites ?? [];
-    const mergedFavorites = mergeFavoriteExercises(localFavorites, remoteFavorites);
-
-    await saveFavoriteExercisesSyncMetadata({
-      lastPulledAt: responseBody.serverTime ?? new Date().toISOString(),
-      lastPushedAt: new Date().toISOString(),
-      userId: session.id
-    }, session.id);
-
-    return mergedFavorites;
   }
 
   async function synchronizeAccountFavoriteExercises(session: UserSession, localFavorites: FavoriteExercise[]) {
@@ -4621,76 +3436,33 @@ function GymminApp() {
     }, 0);
   }
 
-  async function loadWorkoutSessionsSyncMetadata(userId?: string | null): Promise<WorkoutSessionsSyncMetadata> {
-    try {
-      const rawData = await AsyncStorage.getItem(getAccountStorageKey(WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY, userId));
-      if (!rawData) {
-        return {};
-      }
-
-      const parsed = JSON.parse(rawData) as Partial<WorkoutSessionsSyncMetadata>;
-      return {
-        lastPulledAt: typeof parsed.lastPulledAt === "string" ? parsed.lastPulledAt : null,
-        lastPushedAt: typeof parsed.lastPushedAt === "string" ? parsed.lastPushedAt : null,
-        userId: typeof parsed.userId === "string" ? parsed.userId : null
-      };
-    } catch (error) {
-      console.error("Failed to load workout sessions sync metadata", error);
-      return {};
-    }
-  }
-
-  async function saveWorkoutSessionsSyncMetadata(metadata: WorkoutSessionsSyncMetadata, userId?: string | null) {
-    await AsyncStorage.setItem(getAccountStorageKey(WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY, userId), JSON.stringify(metadata));
-  }
-
   async function syncAccountWorkoutSessions(
     session: UserSession,
     localSessions: WorkoutSession[],
     forceFullPull = false
   ) {
-    const normalizedLocalSessions = normalizeWorkoutSessions(localSessions);
-    const metadata = await loadWorkoutSessionsSyncMetadata(session.id);
-    const lastPulledAt = forceFullPull || metadata.userId !== session.id ? null : metadata.lastPulledAt ?? null;
-    const response = await fetch(`${apiBaseUrl}/api/sync/workout-sessions`, {
-      body: JSON.stringify({
-        deletedClientSessionIds: getDeletedWorkoutSessionIds(normalizedLocalSessions),
-        lastPulledAt,
-        sessions: normalizedLocalSessions.map((workoutSession) => ({
-          clientSessionId: getClientSessionId(workoutSession),
-          clientUpdatedAt: getWorkoutSessionUpdatedAt(workoutSession),
-          deletedAt: workoutSession.deletedAt ?? null,
-          session: workoutSession
-        }))
-      }),
-      headers: {
-        ...getAuthHeaders(session),
-        "Content-Type": "application/json"
-      },
-      method: "POST"
+    return synchronizeWorkoutSessions({
+      forceFullPull,
+      localSessions,
+      userId: session.id,
+      request: async (body: WorkoutSessionSyncRequest) => {
+        const response = await sendApiRequest("/api/sync/workout-sessions", {
+          body: JSON.stringify(body),
+          headers: {
+            ...getAuthHeaders(session),
+            "Content-Type": "application/json"
+          },
+          method: "POST"
+        });
+        if (response.status === 401) {
+          throw new Error("Workout sessions sync unauthorized");
+        }
+        if (!response.ok) {
+          throw new Error(`Workout sessions sync failed with status ${response.status}`);
+        }
+        return response.json().catch(() => null);
+      }
     });
-
-    if (response.status === 401) {
-      throw new Error("Workout sessions sync unauthorized");
-    }
-
-    if (!response.ok) {
-      throw new Error(`Workout sessions sync failed with status ${response.status}`);
-    }
-
-    const responseBody = normalizeApiWorkoutSessionsResponse(await response.json().catch(() => null));
-    const remoteSessions = normalizeWorkoutSessions(
-      responseBody.sessions?.map((envelope) => envelope.session).filter(Boolean) ?? []
-    );
-    const mergedSessions = mergeWorkoutSessions(normalizedLocalSessions, remoteSessions);
-
-    await saveWorkoutSessionsSyncMetadata({
-      lastPulledAt: responseBody.serverTime ?? new Date().toISOString(),
-      lastPushedAt: new Date().toISOString(),
-      userId: session.id
-    }, session.id);
-
-    return mergedSessions;
   }
 
   async function synchronizeAccountWorkoutSessions(session: UserSession, localSessions: WorkoutSession[]) {
@@ -4710,85 +3482,36 @@ function GymminApp() {
     }, 0);
   }
 
-  function normalizeApiAchievementsResponse(value: unknown) {
-    const fallbackNow = new Date().toISOString();
-    if (!isRecord(value)) {
-      return {
-        appUsageStats: getDefaultAppUsageStats(fallbackNow),
-        serverTime: fallbackNow,
-        unlocked: []
-      };
-    }
-
-    const serverTime = typeof value.serverTime === "string" ? value.serverTime : fallbackNow;
-    return {
-      appUsageStats: isRecord(value.appUsageStats)
-        ? {
-            totalForegroundSeconds: typeof value.appUsageStats.totalForegroundSeconds === "number"
-              ? value.appUsageStats.totalForegroundSeconds
-              : 0,
-            updatedAt: typeof value.appUsageStats.updatedAt === "string" ? value.appUsageStats.updatedAt : serverTime
-          }
-        : getDefaultAppUsageStats(serverTime),
-      serverTime,
-      unlocked: Array.isArray(value.unlocked)
-        ? value.unlocked
-          .filter(isRecord)
-          .map((achievement) => ({
-            achievementId: typeof achievement.achievementId === "string" ? achievement.achievementId : "",
-            progressAtUnlock: typeof achievement.progressAtUnlock === "number" ? achievement.progressAtUnlock : undefined,
-            unlockedAt: typeof achievement.unlockedAt === "string" ? achievement.unlockedAt : "",
-            updatedAt: typeof achievement.updatedAt === "string" ? achievement.updatedAt : undefined
-          }))
-        : []
-    };
-  }
-
   async function syncAccountAchievements(
     session: UserSession,
     localAchievements: UserAchievement[],
     localUsageStats: AppUsageStats,
     forceFullPull = false
   ) {
-    const metadata = await loadAchievementsSyncState(session.id);
-    const lastPulledAt = forceFullPull ? null : metadata.lastPulledAt ?? null;
-    const response = await fetch(`${apiBaseUrl}/api/sync/achievements`, {
-      body: JSON.stringify({
-        appUsageStats: localUsageStats,
-        lastPulledAt,
-        unlocked: localAchievements
-      }),
-      headers: {
-        ...getAuthHeaders(session),
-        "Content-Type": "application/json"
-      },
-      method: "POST"
+    return synchronizeAchievements({
+      appUsageStats: localUsageStats,
+      forceFullPull,
+      unlocked: localAchievements,
+      userId: session.id,
+      request: async (body: AchievementSyncRequest) => {
+        const response = await sendApiRequest("/api/sync/achievements", {
+          body: JSON.stringify(body),
+          headers: {
+            ...getAuthHeaders(session),
+            "Content-Type": "application/json"
+          },
+          method: "POST"
+        });
+        if (response.status === 401) {
+          handleUnauthorizedSession();
+          throw new Error("Achievements sync unauthorized");
+        }
+        if (!response.ok) {
+          throw await createApiError(response, "/api/sync/achievements", "POST", "Achievements sync failed");
+        }
+        return response.json().catch(() => null);
+      }
     });
-
-    if (response.status === 401) {
-      handleUnauthorizedSession();
-      throw new Error("Achievements sync unauthorized");
-    }
-
-    if (!response.ok) {
-      throw await createApiError(response, "/api/sync/achievements", "POST", "Achievements sync failed");
-    }
-
-    const responseBody = normalizeApiAchievementsResponse(await response.json().catch(() => null));
-    const mergedAchievements = mergeUserAchievements(localAchievements, responseBody.unlocked);
-    const mergedUsageStats = mergeAppUsageStats(localUsageStats, responseBody.appUsageStats);
-    const nextSyncState = {
-      lastPulledAt: responseBody.serverTime,
-      lastSyncedAt: new Date().toISOString()
-    };
-
-    await saveAchievementsSyncState(session.id, nextSyncState);
-    setAchievementsSyncState(nextSyncState);
-
-    return {
-      appUsageStats: mergedUsageStats,
-      unlocked: mergedAchievements
-    };
   }
 
   async function synchronizeAccountAchievements(
@@ -4797,12 +3520,7 @@ function GymminApp() {
     localUsageStats: AppUsageStats
   ) {
     const merged = await syncAccountAchievements(session, localAchievements, localUsageStats, true);
-    isApplyingAccountAchievementsRef.current = true;
-    setUserAchievements(merged.unlocked);
-    setAppUsageStats(merged.appUsageStats);
-    setTimeout(() => {
-      isApplyingAccountAchievementsRef.current = false;
-    }, 0);
+    applyRemoteAchievementState(merged);
   }
 
   function updateStep(stepId: string, nextStep: WorkoutStep) {
@@ -5260,7 +3978,7 @@ function GymminApp() {
         return null;
       }
 
-      const response = await fetch(`${apiBaseUrl}/api/workout-creator/plan/${encodeURIComponent(jobId)}`, {
+      const response = await sendApiRequest(`/api/workout-creator/plan/${encodeURIComponent(jobId)}`, {
         headers: {
           ...getAuthHeaders(user),
           "ngrok-skip-browser-warning": "true"
@@ -5418,7 +4136,7 @@ function GymminApp() {
     setCreatorPhase("submitted");
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/workout-creator/plan`, {
+      const response = await sendApiRequest("/api/workout-creator/plan", {
         body: JSON.stringify({
           language,
           profileId,
@@ -5522,7 +4240,7 @@ function GymminApp() {
     setIsRewriteSubmitting(true);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/workout-creator/rewrite`, {
+      const response = await sendApiRequest("/api/workout-creator/rewrite", {
         body: JSON.stringify({
           language,
           workout: mapSavedWorkoutToApiRequest(sourceWorkout),
@@ -5827,17 +4545,10 @@ function GymminApp() {
   }
 
   async function persistAuthSession(authResponse: AuthApiResponse) {
-    const session: UserSession = {
-      avatarUpdatedAt: authResponse.user.avatarUpdatedAt ?? null,
-      avatarUrl: authResponse.user.avatarUrl ?? null,
-      createdOn: authResponse.user.createdOn ?? null,
-      email: authResponse.user.email,
-      emailVerified: authResponse.user.emailVerified === true,
-      id: authResponse.user.id,
-      modifiedOn: authResponse.user.modifiedOn ?? null,
-      name: authResponse.user.name || authResponse.user.email.split("@")[0] || t("defaultUserName"),
-      token: authResponse.token
-    };
+    const session = createUserSession(
+      authResponse,
+      authResponse.user.email.split("@")[0] || t("defaultUserName")
+    );
 
     const payload: LocalAuthStorage = {
       updatedAt: new Date().toISOString(),
@@ -5860,38 +4571,16 @@ function GymminApp() {
     setAuthError("");
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/${endpoint}`, {
-        body: JSON.stringify(body),
-        headers: {
+      const responseBody = await authApi.authenticate(
+        endpoint,
+        body,
+        {
           "Content-Type": "application/json",
           "X-Gymmin-Device-Name": getAuthDeviceName(),
           ...getApiHeaders(null)
         },
-        method: "POST"
-      });
-      recordCorrelationId(response.headers.get("X-Correlation-Id"));
-      const responseBody = await response.json().catch(() => null) as
-        | AuthApiResponse
-        | { error?: string; detail?: string; title?: string }
-        | null;
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          throw await createApiError(response, `/api/auth/${endpoint}`, "POST", t("authRequestError"));
-        }
-
-        const message =
-          responseBody && "error" in responseBody
-            ? responseBody.error
-            : responseBody && "detail" in responseBody
-              ? responseBody.detail
-              : t("authRequestError");
-        throw new Error(message ?? t("authRequestError"));
-      }
-
-      if (!responseBody || !("token" in responseBody) || !responseBody.user) {
-        throw new Error(t("authRequestError"));
-      }
+        t("authRequestError")
+      );
 
       await persistAuthSession(responseBody);
     } catch (error) {
@@ -5981,14 +4670,14 @@ function GymminApp() {
     setIsEmailVerificationSubmitting(true);
     setEmailVerificationMessage("");
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/email-verification/request`, {
-        headers: getAuthHeaders(user),
-        method: "POST"
-      });
-      recordCorrelationId(response.headers.get("X-Correlation-Id"));
-      if (!response.ok) throw new Error(language === "pl" ? "Nie udało się wysłać kodu." : "Could not send the code.");
+      const fallbackMessage = language === "pl" ? "Nie udało się wysłać kodu." : "Could not send the code.";
+      await authApi.requestEmailVerification(getAuthHeaders(user), fallbackMessage);
       setEmailVerificationMessage(language === "pl" ? "Nowy kod został wysłany." : "A new code has been sent.");
     } catch (error) {
+      if ((error as { status?: number }).status === 401) {
+        handleUnauthorizedSession();
+        return;
+      }
       setEmailVerificationMessage(getErrorMessageOrFallback(error, language === "pl" ? "Nie udało się wysłać kodu." : "Could not send the code.", t("serverProblemMessage")));
     } finally {
       setIsEmailVerificationSubmitting(false);
@@ -6005,20 +4694,22 @@ function GymminApp() {
     setIsEmailVerificationSubmitting(true);
     setEmailVerificationMessage("");
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/email-verification/confirm`, {
-        body: JSON.stringify({ code }),
-        headers: { ...getAuthHeaders(user), "Content-Type": "application/json" },
-        method: "POST"
-      });
-      recordCorrelationId(response.headers.get("X-Correlation-Id"));
-      const responseBody = await response.json().catch(() => null) as AuthUserResponse | { error?: string } | null;
-      if (!response.ok || !responseBody || !("id" in responseBody)) throw new Error(language === "pl" ? "Kod jest nieprawidłowy lub wygasł." : "The code is invalid or expired.");
+      const fallbackMessage = language === "pl" ? "Kod jest nieprawidłowy lub wygasł." : "The code is invalid or expired.";
+      await authApi.confirmEmailVerification(code, getAuthHeaders(user), fallbackMessage);
       await updateStoredUserSession({ ...user, emailVerified: true });
       setEmailVerificationCode("");
       setEmailVerificationMessage("");
       setIsEmailVerificationOpen(false);
     } catch (error) {
-      setEmailVerificationMessage(getErrorMessageOrFallback(error, language === "pl" ? "Nie udało się potwierdzić emaila." : "Could not verify email.", t("serverProblemMessage")));
+      const status = (error as { status?: number }).status;
+      if (status === 401) {
+        handleUnauthorizedSession();
+        return;
+      }
+      const fallbackMessage = language === "pl" ? "Nie udało się potwierdzić emaila." : "Could not verify email.";
+      setEmailVerificationMessage(status === 400
+        ? (language === "pl" ? "Kod jest nieprawidłowy lub wygasł." : "The code is invalid or expired.")
+        : getErrorMessageOrFallback(error, fallbackMessage, t("serverProblemMessage")));
     } finally {
       setIsEmailVerificationSubmitting(false);
     }
@@ -6040,6 +4731,7 @@ function GymminApp() {
 
     setIsAvatarSubmitting(true);
     setAvatarMessage("");
+    let preparedAvatar: PreparedAvatar | null = null;
 
     try {
       const ImagePicker = await import("expo-image-picker");
@@ -6061,39 +4753,29 @@ function GymminApp() {
       }
 
       const asset = result.assets[0];
-      const mimeType = asset.mimeType && ["image/jpeg", "image/png", "image/webp"].includes(asset.mimeType)
-        ? asset.mimeType
-        : "image/jpeg";
-      const extension = mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg";
+      preparedAvatar = await prepareAvatarForUpload(asset.uri, asset.mimeType);
       const formData = new FormData();
       formData.append("avatar", {
-        name: `avatar.${extension}`,
-        type: mimeType,
-        uri: asset.uri
+        name: `avatar.${preparedAvatar.extension}`,
+        type: preparedAvatar.mimeType,
+        uri: preparedAvatar.uri
       } as unknown as Blob);
 
-      const response = await fetch(`${apiBaseUrl}/api/profile/avatar`, {
-        body: formData,
-        headers: getAuthHeaders(user),
-        method: "POST"
-      });
-      recordCorrelationId(response.headers.get("X-Correlation-Id"));
-
-      if (response.status === 401) {
+      const responseBody = await profileApi.uploadAvatar(
+        formData,
+        getAuthHeaders(user),
+        t("avatarUploadError")
+      );
+      await applyAvatarUpdate(responseBody);
+      setAvatarMessage(t("avatarUpdated"));
+    } catch (error) {
+      if ((error as { status?: number }).status === 401) {
         handleUnauthorizedSession();
         return;
       }
-
-      if (!response.ok) {
-        throw await createApiError(response, "/api/profile/avatar", "POST", t("avatarUploadError"));
-      }
-
-      const responseBody = await response.json().catch(() => null) as AvatarResponse | null;
-      await applyAvatarUpdate(responseBody ?? {});
-      setAvatarMessage(t("avatarUpdated"));
-    } catch (error) {
       setAvatarMessage(getErrorMessageOrFallback(error, t("avatarUploadError"), t("avatarNetworkError")));
     } finally {
+      clearPreparedAvatar(preparedAvatar);
       setIsAvatarSubmitting(false);
     }
   }
@@ -6108,25 +4790,19 @@ function GymminApp() {
     setAvatarMessage("");
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/profile/avatar`, {
-        headers: getAuthHeaders(user),
-        method: "DELETE"
-      });
-      recordCorrelationId(response.headers.get("X-Correlation-Id"));
-
-      if (response.status === 401) {
+      const responseBody = await profileApi.removeAvatar(
+        getAuthHeaders(user),
+        t("avatarRemoveError")
+      );
+      await applyAvatarUpdate(responseBody);
+      clearCachedAvatar(user.id);
+      setCachedAvatarUri(null);
+      setAvatarMessage(t("avatarRemoved"));
+    } catch (error) {
+      if ((error as { status?: number }).status === 401) {
         handleUnauthorizedSession();
         return;
       }
-
-      if (!response.ok) {
-        throw await createApiError(response, "/api/profile/avatar", "DELETE", t("avatarRemoveError"));
-      }
-
-      const responseBody = await response.json().catch(() => null) as AvatarResponse | null;
-      await applyAvatarUpdate(responseBody ?? { avatarUrl: null, avatarUpdatedAt: null });
-      setAvatarMessage(t("avatarRemoved"));
-    } catch (error) {
       setAvatarMessage(getErrorMessageOrFallback(error, t("avatarRemoveError"), t("avatarNetworkError")));
     } finally {
       setIsAvatarSubmitting(false);
@@ -6145,19 +4821,7 @@ function GymminApp() {
     setAuthMessage("");
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/password-reset/request`, {
-        body: JSON.stringify({ email: normalizedEmail }),
-        headers: {
-          "Content-Type": "application/json",
-          ...getApiHeaders(null)
-        },
-        method: "POST"
-      });
-      recordCorrelationId(response.headers.get("X-Correlation-Id"));
-
-      if (!response.ok) {
-        throw await createApiError(response, "/api/auth/password-reset/request", "POST", t("authRequestError"));
-      }
+      await authApi.requestPasswordReset(normalizedEmail, getApiHeaders(null), t("authRequestError"));
 
       setAuthMessage(t("resetPasswordRequestSuccess"));
     } catch (error) {
@@ -6183,19 +4847,12 @@ function GymminApp() {
     setAuthMessage("");
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/password-reset/confirm`, {
-        body: JSON.stringify({ token: resetToken.trim(), newPassword }),
-        headers: {
-          "Content-Type": "application/json",
-          ...getApiHeaders(null)
-        },
-        method: "POST"
-      });
-      recordCorrelationId(response.headers.get("X-Correlation-Id"));
-
-      if (!response.ok) {
-        throw await createApiError(response, "/api/auth/password-reset/confirm", "POST", t("authRequestError"));
-      }
+      await authApi.confirmPasswordReset(
+        resetToken.trim(),
+        newPassword,
+        getApiHeaders(null),
+        t("authRequestError")
+      );
 
       setAuthMessage(t("resetPasswordSuccess"));
       setResetToken("");
@@ -6230,23 +4887,12 @@ function GymminApp() {
     setAuthMessage("");
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/change-password`, {
-        body: JSON.stringify({ currentPassword, newPassword }),
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(user)
-        },
-        method: "POST"
-      });
-
-      if (response.status === 401) {
-        handleUnauthorizedSession();
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(response.status === 400 ? t("currentPasswordInvalid") : t("changePasswordFailed"));
-      }
+      await authApi.changePassword(
+        currentPassword,
+        newPassword,
+        getAuthHeaders(user),
+        t("changePasswordFailed")
+      );
 
       setCurrentPassword("");
       setNewPassword("");
@@ -6256,7 +4902,14 @@ function GymminApp() {
       setIsRepeatPasswordVisible(false);
       setAuthMessage(t("passwordChanged"));
     } catch (error) {
-      setAuthError(getErrorMessageOrFallback(error, t("changePasswordFailed"), t("serverProblemMessage")));
+      const status = (error as { status?: number }).status;
+      if (status === 401) {
+        handleUnauthorizedSession();
+        return;
+      }
+      setAuthError(status === 400
+        ? t("currentPasswordInvalid")
+        : getErrorMessageOrFallback(error, t("changePasswordFailed"), t("serverProblemMessage")));
     } finally {
       setIsAuthActionSubmitting(false);
     }
@@ -6270,25 +4923,16 @@ function GymminApp() {
     setIsAuthActionSubmitting(true);
     setAuthError("");
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/sessions`, {
-        headers: {
+      const sessions = await authApi.getSessions({
           ...getAuthHeaders(user),
           "X-Gymmin-Device-Name": getAuthDeviceName()
-        }
-      });
-
-      if (response.status === 401) {
+        }, t("authRequestError"));
+      setActiveAuthSessions(sessions);
+    } catch (error) {
+      if ((error as { status?: number }).status === 401) {
         handleUnauthorizedSession();
         return;
       }
-
-      if (!response.ok) {
-        throw new Error(t("authRequestError"));
-      }
-
-      const body = await response.json() as AuthSessionsResponse;
-      setActiveAuthSessions(Array.isArray(body.sessions) ? body.sessions : []);
-    } catch (error) {
       setAuthError(getErrorMessageOrFallback(error, t("authRequestError"), t("serverProblemMessage")));
     } finally {
       setIsAuthActionSubmitting(false);
@@ -6301,17 +4945,7 @@ function GymminApp() {
     }
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/sessions/${encodeURIComponent(sessionId)}`, {
-        headers: getAuthHeaders(user),
-        method: "DELETE"
-      });
-      if (response.status === 401) {
-        handleUnauthorizedSession();
-        return;
-      }
-      if (!response.ok) {
-        throw new Error(t("authRequestError"));
-      }
+      await authApi.revokeSession(sessionId, getAuthHeaders(user), t("authRequestError"));
       setAuthMessage(t("sessionSignedOut"));
       if (activeAuthSessions.find((session) => session.id === sessionId)?.isCurrent) {
         logOut();
@@ -6319,6 +4953,10 @@ function GymminApp() {
       }
       await fetchAuthSessions();
     } catch (error) {
+      if ((error as { status?: number }).status === 401) {
+        handleUnauthorizedSession();
+        return;
+      }
       setAuthError(getErrorMessageOrFallback(error, t("authRequestError"), t("serverProblemMessage")));
     }
   }
@@ -6334,17 +4972,16 @@ function GymminApp() {
       title: t("signOutAllSessions"),
       variant: "destructive",
       onConfirm: () => {
-          fetch(`${apiBaseUrl}/api/auth/logout-all`, {
-            body: JSON.stringify({ exceptCurrent: false }),
-            headers: {
-              "Content-Type": "application/json",
-              ...getAuthHeaders(user)
-            },
-            method: "POST"
-          })
-            .then(() => logOut())
-            .catch((error) => setAuthError(getErrorMessageOrFallback(error, t("authRequestError"), t("serverProblemMessage"))));
-        }
+        void authApi.logoutAll(getAuthHeaders(user), t("authRequestError"))
+          .then(() => logOut())
+          .catch((error) => {
+            if ((error as { status?: number }).status === 401) {
+              handleUnauthorizedSession();
+              return;
+            }
+            setAuthError(getErrorMessageOrFallback(error, t("authRequestError"), t("serverProblemMessage")));
+          });
+      }
     });
   }
 
@@ -6383,7 +5020,7 @@ function GymminApp() {
     bugReportSubmissionRef.current = { key: idempotencyKey, signature: submissionSignature };
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/bug-reports`, {
+      const response = await sendApiRequest("/api/bug-reports", {
         body: JSON.stringify(bugReportPayload),
         headers: {
           "Content-Type": "application/json",
@@ -6392,7 +5029,6 @@ function GymminApp() {
         },
         method: "POST"
       });
-      recordCorrelationId(response.headers.get("X-Correlation-Id"));
       const responseBody = await response.json().catch(() => null) as
         | { id?: string; error?: string; detail?: string }
         | null;
@@ -6424,7 +5060,7 @@ function GymminApp() {
     const token = user?.token;
 
     if (token) {
-      fetch(`${apiBaseUrl}/api/auth/logout`, {
+      sendApiRequest("/api/auth/logout", {
         headers: getApiHeaders(user),
         method: "POST"
       }).catch((error) => {
@@ -6438,10 +5074,11 @@ function GymminApp() {
     ]).catch((error) => {
       console.error("Failed to clear local auth", error);
     });
-    syncedWorkoutUserIdRef.current = null;
-    syncedSettingsUserIdRef.current = null;
-    syncedFavoriteExercisesUserIdRef.current = null;
-    syncedWorkoutSessionsUserIdRef.current = null;
+    workoutsInitialSync.reset();
+    settingsInitialSync.reset();
+    favoritesInitialSync.reset();
+    workoutSessionsInitialSync.reset();
+    achievementsInitialSync.reset();
     handledAccountPolicyUserIdRef.current = null;
     setFavoriteExercisesSyncStatus("local");
     setPendingCreatorJob(null);
@@ -6471,27 +5108,11 @@ function GymminApp() {
     setDeleteAccountError("");
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/account`, {
-        body: JSON.stringify({ password: deleteAccountPassword }),
-        headers: { ...getAuthHeaders(accountToDelete), "Content-Type": "application/json" },
-        method: "DELETE"
-      });
-      recordCorrelationId(response.headers.get("X-Correlation-Id"));
-
-      if (response.status === 401) {
-        setDeleteAccountError(t("sessionExpired"));
-        handleUnauthorizedSession();
-        return;
-      }
-
-      if (response.status === 403) {
-        setDeleteAccountError(t("deleteAccountPasswordInvalid"));
-        return;
-      }
-
-      if (!response.ok) {
-        throw await createApiError(response, "/api/account", "DELETE", t("deleteAccountError"));
-      }
+      await profileApi.deleteAccount(
+        deleteAccountPassword,
+        getAuthHeaders(accountToDelete),
+        t("deleteAccountError")
+      );
 
       try {
         await removeAccountDataForOwner(accountOwnerId);
@@ -6508,10 +5129,11 @@ function GymminApp() {
         console.error("Failed to clear auth after account deletion", authCleanupError);
       }
 
-      syncedWorkoutUserIdRef.current = null;
-      syncedSettingsUserIdRef.current = null;
-      syncedFavoriteExercisesUserIdRef.current = null;
-      syncedWorkoutSessionsUserIdRef.current = null;
+      workoutsInitialSync.reset();
+      settingsInitialSync.reset();
+      favoritesInitialSync.reset();
+      workoutSessionsInitialSync.reset();
+      achievementsInitialSync.reset();
       handledAccountPolicyUserIdRef.current = null;
       setLastAccountUserId(null).catch((error) => {
         console.error("Failed to clear last account after deletion", error);
@@ -6547,6 +5169,16 @@ function GymminApp() {
       setActiveScreen("home");
       showInfoDialog(t("profile"), t("deleteAccountSuccess"));
     } catch (error) {
+      const status = (error as { status?: number }).status;
+      if (status === 401) {
+        setDeleteAccountError(t("sessionExpired"));
+        handleUnauthorizedSession();
+        return;
+      }
+      if (status === 403) {
+        setDeleteAccountError(t("deleteAccountPasswordInvalid"));
+        return;
+      }
       setDeleteAccountError(getErrorMessageOrFallback(error, t("deleteAccountError"), t("deleteAccountNetworkError")));
     } finally {
       setIsDeletingAccount(false);
@@ -6561,35 +5193,6 @@ function GymminApp() {
     }
 
     setActiveScreen("profile");
-  }
-
-  async function refreshSystemStatus(force = false) {
-    const now = Date.now();
-    if (!force && !shouldFetchSystemStatus(systemStatusFetchedAtRef.current, now)) {
-      return;
-    }
-
-    setIsSystemStatusRefreshing(true);
-
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/system/status`, {
-        headers: getApiHeaders(null),
-        method: "GET"
-      });
-      recordCorrelationId(response.headers.get("X-Correlation-Id"));
-
-      if (!response.ok) {
-        throw new Error("System status request failed");
-      }
-
-      const responseBody = await response.json().catch(() => null);
-      setSystemStatus(normalizeSystemStatusResponse(responseBody));
-    } catch {
-      setSystemStatus(createOfflineSystemStatus());
-    } finally {
-      systemStatusFetchedAtRef.current = Date.now();
-      setIsSystemStatusRefreshing(false);
-    }
   }
 
   const areOnlineFeaturesAvailable = systemStatus.kind === "ok";
@@ -7295,6 +5898,7 @@ function GymminApp() {
         displayName={getProfileDisplayName(user, t("profileUser"))}
         isAvatarSubmitting={isAvatarSubmitting}
         latestAchievementTitle={latestUnlockedAchievement?.definition.title[language]}
+        onAvatarLoadError={() => setHasAvatarImageLoadFailed(true)}
         t={t}
         theme={theme}
         totalAchievements={totalCount}
@@ -7599,6 +6203,7 @@ function GymminApp() {
                   resizeMode="cover"
                   source={userAvatarSource}
                   style={styles.profileHeaderAvatarImage}
+                  onError={() => setHasAvatarImageLoadFailed(true)}
                 />
               ) : (
                 <Ionicons name={user ? "person" : "person-outline"} size={24} color={theme.primary} />

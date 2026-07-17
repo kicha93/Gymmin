@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
+using Gymmin.Api.Data;
 using Gymmin.Api.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace Gymmin.Api.Services;
 
@@ -13,6 +15,10 @@ public sealed record StoredUserAvatar(
     string ContentType,
     DateTimeOffset UpdatedAt);
 
+public sealed record StoredUserAvatarContent(
+    byte[] Bytes,
+    string ContentType);
+
 public sealed record AvatarValidationResult(
     bool IsValid,
     string? Error,
@@ -22,7 +28,7 @@ public interface IUserAvatarStorage
 {
     AvatarValidationResult Validate(IFormFile? file);
     Task<StoredUserAvatar> SaveAsync(string userId, IFormFile file, CancellationToken cancellationToken);
-    string? GetPath(string userId, string fileName);
+    StoredUserAvatarContent? Get(string userId, string fileName);
     void Delete(string userId);
 }
 
@@ -38,10 +44,12 @@ public sealed class FileSystemUserAvatarStorage : IUserAvatarStorage
     };
 
     private readonly string _rootPath;
+    private readonly IUserStore _users;
 
-    public FileSystemUserAvatarStorage(IWebHostEnvironment environment)
+    public FileSystemUserAvatarStorage(IWebHostEnvironment environment, IUserStore users)
     {
         _rootPath = Path.Combine(environment.ContentRootPath, "App_Data", "avatars");
+        _users = users;
     }
 
     public AvatarValidationResult Validate(IFormFile? file)
@@ -86,24 +94,32 @@ public sealed class FileSystemUserAvatarStorage : IUserAvatarStorage
         var extension = ExtensionByContentType[contentType];
         var userDirectory = GetUserDirectory(userId);
         Directory.CreateDirectory(userDirectory);
-
-        foreach (var oldFile in Directory.EnumerateFiles(userDirectory, "avatar.*"))
-        {
-            File.Delete(oldFile);
-        }
-
-        var fileName = $"avatar{extension}";
+        var fileName = $"avatar-{Guid.NewGuid():N}{extension}";
         var path = Path.Combine(userDirectory, fileName);
-        await using (var output = File.Create(path))
+        var tempPath = Path.Combine(userDirectory, $".{fileName}.tmp");
+        await using (var output = File.Create(tempPath))
         await using (var input = file.OpenReadStream())
         {
             await input.CopyToAsync(output, cancellationToken);
         }
 
-        return new StoredUserAvatar(fileName, contentType, DateTimeOffset.UtcNow);
+        File.Move(tempPath, path);
+        var updatedAt = DateTimeOffset.UtcNow;
+        if (!_users.UpdateAvatar(userId, fileName, contentType, updatedAt))
+        {
+            File.Delete(path);
+            throw new InvalidOperationException("Avatar owner no longer exists.");
+        }
+
+        foreach (var oldFile in EnumerateAvatarFiles(userDirectory).Where(item => item != path))
+        {
+            File.Delete(oldFile);
+        }
+
+        return new StoredUserAvatar(fileName, contentType, updatedAt);
     }
 
-    public string? GetPath(string userId, string fileName)
+    public StoredUserAvatarContent? Get(string userId, string fileName)
     {
         if (string.IsNullOrWhiteSpace(fileName) || fileName.Contains(Path.DirectorySeparatorChar) || fileName.Contains(Path.AltDirectorySeparatorChar))
         {
@@ -111,18 +127,31 @@ public sealed class FileSystemUserAvatarStorage : IUserAvatarStorage
         }
 
         var path = Path.Combine(GetUserDirectory(userId), fileName);
-        return File.Exists(path) ? path : null;
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        var contentType = NormalizeContentType(Path.GetExtension(fileName) switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            _ => null
+        });
+        return contentType is null ? null : new StoredUserAvatarContent(File.ReadAllBytes(path), contentType);
     }
 
     public void Delete(string userId)
     {
+        _users.ClearAvatar(userId);
         var userDirectory = GetUserDirectory(userId);
         if (!Directory.Exists(userDirectory))
         {
             return;
         }
 
-        foreach (var file in Directory.EnumerateFiles(userDirectory, "avatar.*"))
+        foreach (var file in EnumerateAvatarFiles(userDirectory))
         {
             File.Delete(file);
         }
@@ -149,7 +178,7 @@ public sealed class FileSystemUserAvatarStorage : IUserAvatarStorage
         return $"/api/profile/avatar?v={Uri.EscapeDataString(avatar.UpdatedAt.ToUnixTimeMilliseconds().ToString())}";
     }
 
-    private static bool MatchesMagicBytes(string contentType, ReadOnlySpan<byte> header)
+    public static bool MatchesMagicBytes(string contentType, ReadOnlySpan<byte> header)
     {
         return contentType switch
         {
@@ -174,5 +203,113 @@ public sealed class FileSystemUserAvatarStorage : IUserAvatarStorage
         }
 
         return Path.Combine(_rootPath, safeId);
+    }
+
+    private static IEnumerable<string> EnumerateAvatarFiles(string userDirectory)
+    {
+        return Directory
+            .EnumerateFiles(userDirectory, "avatar-*")
+            .Concat(Directory.EnumerateFiles(userDirectory, "avatar.*"))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+    }
+}
+
+public sealed class DatabaseUserAvatarStorage : IUserAvatarStorage
+{
+    private readonly IDbContextFactory<GymminDbContext> _dbFactory;
+
+    public DatabaseUserAvatarStorage(IDbContextFactory<GymminDbContext> dbFactory)
+    {
+        _dbFactory = dbFactory;
+    }
+
+    public AvatarValidationResult Validate(IFormFile? file) => ValidateFile(file);
+
+    public async Task<StoredUserAvatar> SaveAsync(string userId, IFormFile file, CancellationToken cancellationToken)
+    {
+        var contentType = FileSystemUserAvatarStorage.NormalizeContentType(file.ContentType)
+            ?? throw new InvalidOperationException("Avatar content type must be validated before save.");
+        await using var input = file.OpenReadStream();
+        await using var buffer = new MemoryStream((int)file.Length);
+        await input.CopyToAsync(buffer, cancellationToken);
+
+        await using var db = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        var user = await db.Users.FirstOrDefaultAsync(item => item.Id == userId, cancellationToken)
+            ?? throw new InvalidOperationException("Avatar owner no longer exists.");
+        var updatedAt = DateTimeOffset.UtcNow;
+        user.AvatarContent = buffer.ToArray();
+        user.AvatarContentType = contentType;
+        user.AvatarFileName = $"avatar{contentType switch
+        {
+            "image/jpeg" => ".jpg",
+            "image/png" => ".png",
+            "image/webp" => ".webp",
+            _ => throw new InvalidOperationException("Unsupported validated avatar content type.")
+        }}";
+        user.AvatarUpdatedAt = updatedAt;
+        user.UpdatedAt = updatedAt;
+        await db.SaveChangesAsync(cancellationToken);
+        return new StoredUserAvatar(user.AvatarFileName, contentType, updatedAt);
+    }
+
+    public StoredUserAvatarContent? Get(string userId, string fileName)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var avatar = db.Users
+            .AsNoTracking()
+            .Where(user => user.Id == userId &&
+                user.AvatarFileName == fileName &&
+                user.AvatarContent != null &&
+                user.AvatarContentType != null)
+            .Select(user => new { user.AvatarContent, user.AvatarContentType })
+            .FirstOrDefault();
+        return avatar?.AvatarContent is null || string.IsNullOrWhiteSpace(avatar.AvatarContentType)
+            ? null
+            : new StoredUserAvatarContent(avatar.AvatarContent, avatar.AvatarContentType);
+    }
+
+    public void Delete(string userId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var user = db.Users.FirstOrDefault(item => item.Id == userId);
+        if (user is null)
+        {
+            return;
+        }
+
+        user.AvatarContent = null;
+        user.AvatarContentType = null;
+        user.AvatarFileName = null;
+        user.AvatarUpdatedAt = null;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+        db.SaveChanges();
+    }
+
+    private static AvatarValidationResult ValidateFile(IFormFile? file)
+    {
+        if (file is null)
+        {
+            return new AvatarValidationResult(false, "Avatar file is required.", StatusCodes.Status400BadRequest);
+        }
+        if (file.Length <= 0)
+        {
+            return new AvatarValidationResult(false, "Avatar file is empty.", StatusCodes.Status400BadRequest);
+        }
+        if (file.Length > FileSystemUserAvatarStorage.MaxAvatarBytes)
+        {
+            return new AvatarValidationResult(false, "Avatar file is too large.", StatusCodes.Status413PayloadTooLarge);
+        }
+        var contentType = FileSystemUserAvatarStorage.NormalizeContentType(file.ContentType);
+        if (contentType is null)
+        {
+            return new AvatarValidationResult(false, "Unsupported avatar content type.", StatusCodes.Status400BadRequest);
+        }
+        using var stream = file.OpenReadStream();
+        Span<byte> header = stackalloc byte[12];
+        var read = stream.Read(header);
+        var valid = FileSystemUserAvatarStorage.MatchesMagicBytes(contentType, header[..read]);
+        return valid
+            ? new AvatarValidationResult(true, null, StatusCodes.Status200OK)
+            : new AvatarValidationResult(false, "Avatar file content does not match its content type.", StatusCodes.Status400BadRequest);
     }
 }

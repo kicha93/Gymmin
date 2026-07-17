@@ -13,21 +13,14 @@ public sealed class EfWorkoutPlanJobStore : IWorkoutPlanJobStore
     };
 
     private readonly IDbContextFactory<GymminDbContext> _dbFactory;
-    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IAiCreditService _credits;
-    private readonly ILogger<EfWorkoutPlanJobStore> _logger;
 
     public EfWorkoutPlanJobStore(
         IDbContextFactory<GymminDbContext> dbFactory,
-        IServiceScopeFactory scopeFactory,
-        IAiCreditService credits,
-        ILogger<EfWorkoutPlanJobStore> logger)
+        IAiCreditService credits)
     {
         _dbFactory = dbFactory;
-        _scopeFactory = scopeFactory;
         _credits = credits;
-        _logger = logger;
-        ResumeProcessingJobs();
     }
 
     public CreateWorkoutPlanJobResponse Start(CreateWorkoutPlanRequest request, string userId, AiCreditJobCharge? charge = null)
@@ -140,102 +133,7 @@ public sealed class EfWorkoutPlanJobStore : IWorkoutPlanJobStore
             }
         }
 
-        StartProcessing(job.Id);
         return new CreateWorkoutPlanJobResponse("processing", job.Id);
-    }
-
-    private void ResumeProcessingJobs()
-    {
-        using var db = _dbFactory.CreateDbContext();
-        var jobIds = db.WorkoutCreatorJobs
-            .AsNoTracking()
-            .Where(job => job.Status == "processing")
-            .Select(job => job.Id)
-            .ToList();
-
-        foreach (var jobId in jobIds)
-        {
-            _logger.LogInformation("Resuming database workout creator job {JobId} after backend startup.", jobId);
-            StartProcessing(jobId);
-        }
-    }
-
-    private void StartProcessing(string jobId)
-    {
-        _ = Task.Run(async () =>
-        {
-            string? userId = null;
-            string? jobType = null;
-            try
-            {
-                WorkoutCreatorJobEntity? job;
-                using (var db = _dbFactory.CreateDbContext())
-                {
-                    job = db.WorkoutCreatorJobs.AsNoTracking().FirstOrDefault(item => item.Id == jobId);
-                }
-
-                if (job is null)
-                {
-                    return;
-                }
-
-                userId = job.UserId;
-                jobType = job.JobType;
-                using var scope = _scopeFactory.CreateScope();
-                var generator = scope.ServiceProvider.GetRequiredService<IWorkoutPlanGenerator>();
-                var result = job.JobType == "rewrite"
-                    ? await generator.RewritePlanAsync(
-                        JsonSerializer.Deserialize<CreateWorkoutRewriteRequest>(job.RequestJson, JsonOptions)
-                            ?? throw new InvalidOperationException("Rewrite request is missing."),
-                        CancellationToken.None)
-                    : await generator.CreatePlanAsync(
-                        JsonSerializer.Deserialize<CreateWorkoutPlanRequest>(job.RequestJson, JsonOptions)
-                            ?? throw new InvalidOperationException("Plan request is missing."),
-                        CancellationToken.None);
-
-                UpdateJob(jobId, "completed", result, null);
-            }
-            catch (Exception error)
-            {
-                _logger.LogError(error, "Database workout creator job {JobId} failed. UserId={UserId} JobType={JobType}", jobId, userId ?? "unknown", jobType ?? "unknown");
-                UpdateJob(jobId, "failed", null, error.Message, refundToken: true);
-            }
-        });
-    }
-
-    private void UpdateJob(string jobId, string status, CreateWorkoutPlanResponse? result, string? error, bool refundToken = false)
-    {
-        using var db = _dbFactory.CreateDbContext();
-        using var transaction = db.Database.BeginTransaction();
-        var job = db.WorkoutCreatorJobs.FirstOrDefault(item => item.Id == jobId);
-
-        if (job is null)
-        {
-            return;
-        }
-
-        job.CompletedAt = status is "completed" or "failed" ? DateTimeOffset.UtcNow : null;
-        job.Error = error;
-        job.Model = result?.Model;
-        job.ReasoningEffort = result?.ReasoningEffort;
-        job.ResultJson = result is null ? null : JsonSerializer.Serialize(result, JsonOptions);
-        job.Status = status;
-        job.UpdatedAt = DateTimeOffset.UtcNow;
-
-        var refunded = refundToken &&
-            job.TokenCost > 0 &&
-            (_credits is EfAiCreditService efCredits
-                ? efCredits.RefundForJob(db, job.UserId, jobId, AiCreditReasons.TechnicalFailureRefund)
-                : _credits.RefundForJob(job.UserId, jobId, AiCreditReasons.TechnicalFailureRefund));
-
-        if (refunded)
-        {
-            job.TokenRefundedAt = DateTimeOffset.UtcNow;
-            job.TokenRefundReason = AiCreditReasons.TechnicalFailureRefund;
-        }
-
-        db.SaveChanges();
-        transaction.Commit();
     }
 
     private static CreateWorkoutPlanResponse? DeserializeResult(string? resultJson)

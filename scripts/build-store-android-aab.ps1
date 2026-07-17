@@ -7,13 +7,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$argsForBuild = @(
-  "-ApiBaseUrl", $ApiBaseUrl,
-  "-ShortBuildRoot", $ShortBuildRoot
-)
-
-if ($SkipTypecheck) {
-  $argsForBuild += "-SkipTypecheck"
+$buildParameters = @{
+  ApiBaseUrl = $ApiBaseUrl
+  ShortBuildRoot = $ShortBuildRoot
 }
 
-& (Join-Path $PSScriptRoot "build-android-aab-local.ps1") @argsForBuild
+if ($SkipTypecheck) {
+  $buildParameters.SkipTypecheck = $true
+}
+
+& (Join-Path $PSScriptRoot "build-android-aab-local.ps1") @buildParameters

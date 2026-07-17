@@ -13,6 +13,23 @@ Testing release.
   `.artifacts/Gymmin-release-latest.aab`.
 - Backend: production-like ASP.NET Core API with `Database/PostgreSQL`.
 
+## Closed code-level release blockers
+
+The 2026-07-16 audit is recorded in
+`docs/production-audit-2026-07-16.md`. The following protections are implemented
+and covered by automated tests:
+
+- `X-Gymmin-User-Id` can no longer authenticate settings, workout CRUD or
+  workout sync; spoofed-header API tests return `401`.
+- avatars use database-backed shared storage in production Database mode.
+- AI jobs use an atomic claim/lease and a controlled worker, so two backend
+  replicas cannot process the same job concurrently.
+- `production-gate` runs for the actual release branch and a native Android
+  release build is part of the required gate.
+
+Public release still requires the deployment-owned backup/restore,
+multi-replica and device smoke checks listed below.
+
 ## Backend production readiness
 
 - `ASPNETCORE_ENVIRONMENT=Production`.
@@ -147,7 +164,9 @@ native Android services. Smoke these flows manually on the standalone APK/dev
 build:
 
 - Register/login/logout and active sessions.
-- Avatar upload, avatar replacement and avatar delete.
+- Avatar upload, avatar replacement and avatar delete; verify that a large
+  camera image is reduced before upload, survives an app restart and renders
+  from the authenticated account-scoped cache in both the header and Profile.
 - Account details and account deletion with strong confirmation.
 - Anonymous local workouts, login and anonymous-to-account merge.
 - Workout list, workout details and Exercise Detail Page.
@@ -178,7 +197,8 @@ build:
 - Apply all pending EF migrations before deploying the API/SMTP worker; verify
   `BugReports`, `BugReportRewardTransactions`, `AbuseRateLimitBuckets`,
   `GooglePlayRtdnEvents`, `GooglePlayVoidedPurchases`,
-  `IntegrationCheckpoints` and `AdminAuditEvents` exist.
+  `IntegrationCheckpoints`, `AdminAuditEvents`, database avatar content and
+  workout-creator lease columns exist.
 - Backend offline behavior: local-first data remains visible and safe.
 
 ## External production work before public launch
@@ -193,5 +213,7 @@ build:
   sandbox refund smoke and verify both the ledger clawback and manual-review path.
 - Keep the `production-gate` GitHub Actions workflow required on the release
   branch; it applies all migrations to a real PostgreSQL 16 service container.
+- Verify branch protection requires `production-gate` on the repository release
+  branch (`master` at the time of the 2026-07-16 audit).
 - Finalize privacy policy and account deletion support text.
 - Decide documentation language policy and clean up legacy docs if needed.

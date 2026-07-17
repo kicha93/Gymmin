@@ -69,6 +69,14 @@ const exerciseImageAssetKeysById: Record<string, ExerciseImageAssetKey[]> = {
   "triceps-extension-cable-overhead-triceps-extension-1403": ["triceps-extension-cable-overhead-triceps-extension-1403/start", "triceps-extension-cable-overhead-triceps-extension-1403/end"]
 };
 
+const exerciseAnimationAssetKeyById: Record<string, ExerciseImageAssetKey> = {
+  "squat-barbell-front-squat-1253": "squat-barbell-front-squat-1253/animation"
+};
+
 export function getExerciseImageAssetKeys(exerciseId: string): ExerciseImageAssetKey[] {
   return exerciseImageAssetKeysById[resolveExerciseId(exerciseId)] ?? [];
+}
+
+export function getExerciseAnimationAssetKey(exerciseId: string): ExerciseImageAssetKey | null {
+  return exerciseAnimationAssetKeyById[resolveExerciseId(exerciseId)] ?? null;
 }

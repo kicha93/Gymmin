@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { applyAvatarResponse, buildAvatarImageSource, buildAvatarImageUri } from "../avatar";
+import {
+  applyAvatarResponse,
+  buildAvatarImageSource,
+  buildAvatarImageUri,
+  getAvatarExtension,
+  getSafeAvatarCacheKey
+} from "../avatar";
 
 describe("avatar", () => {
   it("builds absolute URLs for relative backend avatar paths", () => {
@@ -60,5 +66,13 @@ describe("avatar", () => {
       avatarUpdatedAt: null,
       avatarUrl: null
     });
+  });
+
+  it("normalizes safe local cache names and supported image content types", () => {
+    expect(getSafeAvatarCacheKey("user/../../one@example.com")).toBe("user_______one_example_com");
+    expect(getAvatarExtension("image/jpeg; charset=binary")).toBe("jpg");
+    expect(getAvatarExtension("image/png")).toBe("png");
+    expect(getAvatarExtension("image/webp")).toBe("webp");
+    expect(getAvatarExtension("text/html")).toBeNull();
   });
 });

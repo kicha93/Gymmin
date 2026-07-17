@@ -50,7 +50,21 @@ Mobile odpowiada za:
 
 Kod mobile jest dzielony według odpowiedzialności:
 
-- `App.tsx` pozostaje głównym miejscem kompozycji ekranów, nawigacji i stanu aplikacji,
+- `App.tsx` pozostaje głównym miejscem kompozycji ekranów, nawigacji i nadrzędnego stanu aplikacji,
+- `src/api/apiClient.ts` centralizuje requesty HTTP, bearer token, correlation id, diagnostykę i bezpieczne błędy API,
+- `src/api/authApi.ts` jest typowanym klientem credentials, weryfikacji emaila, haseł i aktywnych sesji; waliduje kształt odpowiedzi przed przekazaniem danych do UI,
+- `src/api/profileApi.ts` obsługuje transport avatara i step-up account deletion; aplikacja zachowuje odpowiedzialność za picker, cache i czyszczenie account-scoped storage,
+- `src/domain/auth.ts` zawiera czyste kontrakty sesji i politykę hasła, a `src/features/auth/authSession.ts` izoluje natywny SecureStore,
+- `src/storage/localDataRepositories.ts` centralizuje account-scoped odczyt, zapis i obsługę anonimowych danych treningowych,
+- `src/features` zawiera kontrolery/hooki niezależnych cykli życia danych, obecnie treningów, sesji, ustawień, profili Kreatora i statusu systemu,
+- `src/features/workoutSessions/useAccountScopedWorkoutSessions.ts` wiąże listę sesji, aktywną sesję i pozycję wykonania z jednym właścicielem storage,
+- `src/features/workoutSessions/useWorkoutSessionAutoSync.ts` obsługuje debounce synchronizacji sesji, odrzucanie nieaktualnych odpowiedzi i ochronę przed pętlą remote/local,
+- `src/domain/workoutSessionSync.ts` definiuje transportowy kontrakt synchronizacji sesji, waliduje odpowiedź API i zapisuje metadata pull/push,
+- `src/domain/appSettings.ts` normalizuje ustawienia, a `src/features/settings/useAccountScopedSettings.ts` wiąże ich stan z aktualnym właścicielem storage,
+- `src/features/favorites/useAccountScopedFavoriteExercises.ts` wiąże ulubione z właścicielem storage i chroni auto-sync przed spóźnionymi odpowiedziami; kontrakt transportowy znajduje się w `src/domain/favoriteExerciseSync.ts`,
+- `src/features/achievements/useAccountScopedAchievements.ts` zarządza osiągnięciami, czasem użycia i jednym kontrolowanym debounce synchronizacji; walidacja i merge odpowiedzi API znajdują się w `src/domain/achievementSync.ts`,
+- `src/features/sync/useInitialAccountSync.ts` jest wspólną bramką pierwszej synchronizacji po zalogowaniu dla treningów, ustawień, ulubionych, sesji i osiągnięć; zmiana konta unieważnia request poprzedniego użytkownika,
+- `src/features/settings/useAccountSettingsAutoSave.ts` grupuje kolejne zmiany ustawień i serializuje zapisy `PUT /api/settings`, dzięki czemu równoległe odpowiedzi nie cofają rewizji ustawień,
 - `src/i18n/translations.ts` zawiera typowane tłumaczenia PL/EN oraz helper `translate`,
 - `src/theme/theme.ts` i `src/theme/appStyles.ts` zawierają motywy oraz wspólne style,
 - `src/components/AppControls.tsx` zawiera współdzielone kontrolki formularzy i wyboru,
@@ -70,6 +84,8 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/screens/WorkoutAiRewriteScreen.tsx` i `src/screens/WorkoutAiProposalScreen.tsx` rozdzielają formularz instrukcji modyfikacji od podglądu propozycji AI; zapis, zastąpienie treningu, kredyty, endpoint rewrite i polling pozostają w `App.tsx`,
 - `src/domain/workoutCreator.ts` zawiera typy, statyczną definicję ankiety oraz czyste helpery kopiowania i porównywania profili Kreatora,
 - `src/domain/workoutAi.ts` zawiera testowalne podsumowanie dopasowania ćwiczeń z propozycji AI do katalogu,
+- `src/domain/workoutSessionPresentation.ts` zawiera grupowanie aktywnej sesji, dane tabeli i lookup poprzednich wyników,
+- `src/domain/workoutBuilderConfiguration.ts` zawiera typowane opcje i normalizację wejścia buildera,
 - `src/domain` pozostaje miejscem dla logiki domenowej i testowalnych helperów niezależnych od UI.
 
 Podział warstwy mobile jest zakończony na poziomie ekranów:
@@ -82,7 +98,7 @@ Podział warstwy mobile jest zakończony na poziomie ekranów:
 
 Taki podział nie zmienia publicznych kontraktów, storage ani modelu danych. Krótkie funkcje `render...` pozostające w `App.tsx` są adapterami kompozycyjnymi i nie zawierają samodzielnych layoutów ekranów.
 
-`src/screens/SettingsScreen.tsx` prezentuje aktywne sekcje ustawień, harmonogram przypomnień i linki informacyjne. `src/components/SettingsSheetContent.tsx` zawiera kontrolowane arkusze wyboru języka, domyślnych parametrów treningu i godziny przypomnienia. Stan, uprawnienia do powiadomień, account-scoped storage oraz synchronizacja `/api/settings` nadal pozostają w kompozycji `App.tsx`; typy UI i wspólna lista dni są w `src/domain/settings.ts`.
+`src/screens/SettingsScreen.tsx` prezentuje aktywne sekcje ustawień, harmonogram przypomnień i linki informacyjne. `src/components/SettingsSheetContent.tsx` zawiera kontrolowane arkusze wyboru języka, domyślnych parametrów treningu i godziny przypomnienia. Account-scoped stan i persystencja są w `useAccountScopedSettings`, normalizacja w `src/domain/appSettings.ts`, a `useAccountSettingsAutoSave` bezpiecznie grupuje i serializuje zdalne zapisy. `App.tsx` koordynuje uprawnienia do powiadomień i transport `/api/settings`.
 
 ### Local storage
 
@@ -145,16 +161,25 @@ Rejestracja ma potwierdzenie hasła i podgląd hasła po stronie UI. Backend nad
 
 Auth hardening obejmuje wygasanie tokenów, `RevokedAt`, listę aktywnych sesji, wylogowanie pojedynczej sesji, logout-all, zmianę hasła i reset hasła przez email/token. Mobile przechowuje bearer token w OS SecureStore/Keychain, a nie w AsyncStorage. Nowe konta wymagają weryfikacji emaila przed AI. Kody resetu i weryfikacji są zapisywane wyłącznie jako hash. Limity rejestracji i AI są współdzielone między replikami przez PostgreSQL. Po zmianie hasła aktywna zostaje tylko bieżąca sesja; po resecie hasła unieważniane są wszystkie sesje użytkownika.
 
+Transport tych operacji przechodzi przez `src/api/authApi.ts`. Klient odrzuca niepełne odpowiedzi logowania i sesji oraz wymaga udanego statusu backendu przed lokalnym wykonaniem `logout-all`; nieudany request nie usuwa lokalnej sesji.
+
 Operacje destrukcyjne stosują step-up authentication: usunięcie konta wymaga ponownej weryfikacji aktualnego hasła po stronie API oraz limitu prób per użytkownik/IP. Warstwa HTTP ogranicza rozmiary requestów i kolekcji synchronizacji, a Production rozdziela allowlistę CORS od szerokiej polityki Development/Testing.
 
 ### Profile avatar
 
 Profile avatar is an account feature. Mobile uses `expo-image-picker` to pick
-an image and uploads it as `multipart/form-data` to `POST /api/profile/avatar`.
-The backend validates MIME type and magic bytes, stores the image file under
-`App_Data/avatars`, and stores only metadata on the user record. `GET
+an image, normalizes it with `expo-image-manipulator` to at most 1024 px on the
+longest side and uploads it as `multipart/form-data` to `POST /api/profile/avatar`.
+The backend validates MIME type and magic bytes. Production Database mode stores
+the bytes and metadata atomically on the user record, so all replicas and
+PostgreSQL backups see the same avatar. File mode stores versioned files under
+`App_Data/avatars` only as a development fallback. `GET
 /api/auth/me` returns optional `avatarUrl` and `avatarUpdatedAt`; mobile uses
-those fields to render the header/profile avatar and to cache-bust the image.
+those fields to refresh an account-scoped private file cache. Native image
+downloads use an explicit bearer header because the avatar endpoint is protected;
+the downloaded copy is also normalized to 1024 px before React Native renders it.
+This avoids both anonymous image requests and Android failures on full-resolution
+camera files. Web uses the authenticated remote image source directly.
 Anonymous users keep the default profile icon.
 
 The Profile screen uses a compact account-dashboard layout. A single profile
@@ -190,6 +215,10 @@ Aktywny job kreatora jest local-first i account-scoped. Mobile rozróżnia:
 - job modyfikowania istniejącego treningu.
 
 Po restarcie aplikacja może kontynuować polling, jeżeli ma aktywny job i token użytkownika.
+
+W Database mode kontrolowany `BackgroundService` atomowo claimuje oczekujące lub
+wygasłe zadanie. `LeaseId`, `LeaseExpiresAt`, heartbeat i warunkowy zapis wyniku
+chronią przed równoległym wykonaniem tego samego joba na kilku replikach.
 
 ### AI credits
 
@@ -248,6 +277,13 @@ Backend odpowiada za:
   rejection when EF migrations are pending,
 - placeholder Garmin sync. Integracja Garmin pozostaje poza aktualnym zakresem prac.
 
+Wszystkie endpointy biznesowe są mapowane przez moduły w
+`backend/Gymmin.Api/Endpoints`: system, auth, profil/konto, ustawienia, treningi,
+ulubione, sesje, osiągnięcia, bug reporty/admin, kredyty i zakupy, RTDN oraz
+Kreator AI. `EndpointAuthorization`, `EndpointRequest` i `EndpointResults`
+stanowią wspólną warstwę infrastrukturalną. `Program.cs` jest composition root
+konfiguracji hosta, DI, middleware i produkcyjnych kontroli startowych.
+
 ## Testy
 
 Backend ma projekt `backend/Gymmin.Api.Tests` oparty o xUnit i `Microsoft.AspNetCore.Mvc.Testing`.
@@ -284,6 +320,9 @@ Zakres mobile unit tests:
 - Progress dashboard helpers for tracked exercises, current-month volume, strength/volume sorting and local SVG sparkline data,
 - workout reminders pure scheduling logic,
 - diagnostics ring buffer, correlation ids i sanitization.
+- wspólny klient API i mapowanie błędów,
+- repozytoria account-scoped i normalizację zapisanych treningów,
+- grupowanie aktywnej sesji oraz konfigurację buildera.
 
 Mobile ma też typecheck jako automatyczną kontrolę:
 

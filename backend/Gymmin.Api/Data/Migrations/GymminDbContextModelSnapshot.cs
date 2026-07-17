@@ -714,6 +714,9 @@ namespace Gymmin.Api.Data.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<byte[]>("AvatarContent")
+                        .HasColumnType("BLOB");
+
                     b.Property<string>("AvatarContentType")
                         .HasMaxLength(80)
                         .HasColumnType("TEXT");
@@ -937,6 +940,9 @@ namespace Gymmin.Api.Data.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("CompletedAt")
                         .HasColumnType("TEXT");
 
@@ -959,6 +965,13 @@ namespace Gymmin.Api.Data.Migrations
                     b.Property<string>("Language")
                         .IsRequired()
                         .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LeaseExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LeaseId")
+                        .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Model")
@@ -1004,6 +1017,8 @@ namespace Gymmin.Api.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("LeaseExpiresAt");
 
                     b.HasIndex("Status");
 

@@ -1,9 +1,12 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useEvent } from "expo";
+import { useVideoPlayer, VideoView, type VideoSource } from "expo-video";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { HumanMuscleFigure } from "../components/WorkoutPresentation";
 import { exerciseImageSources } from "../exerciseImageSources";
+import { exerciseVideoSources } from "../exerciseVideoSources";
 import { getExerciseDisplayName, muscleLabels, type MuscleKey } from "../domain/exercises";
 import { getExerciseProgressSummary, type WorkoutSession, type WorkoutSessionEntry } from "../domain/workoutSessions";
 import { getExerciseDetails, getExerciseProgressKeyForDetails } from "../domain/workoutExerciseSummary";
@@ -26,6 +29,44 @@ type ExerciseDetailScreenProps = {
   visibleWorkoutSessions: WorkoutSession[];
 };
 
+function ExerciseLoopVideo({
+  onPlaybackError,
+  source
+}: {
+  onPlaybackError: () => void;
+  source: VideoSource;
+}) {
+  const player = useVideoPlayer(source, (videoPlayer) => {
+    videoPlayer.keepScreenOnWhilePlaying = false;
+    videoPlayer.loop = true;
+    videoPlayer.muted = true;
+    videoPlayer.play();
+  });
+  const { status } = useEvent(player, "statusChange", { status: player.status });
+
+  useEffect(() => {
+    if (status === "error") {
+      onPlaybackError();
+    }
+  }, [onPlaybackError, status]);
+
+  return (
+    <VideoView
+      allowsPictureInPicture={false}
+      allowsVideoFrameAnalysis={false}
+      contentFit="contain"
+      fullscreenOptions={{ enable: false }}
+      nativeControls={false}
+      player={player}
+      playsInline
+      pointerEvents="none"
+      style={styles.exerciseDetailImage}
+      surfaceType="textureView"
+      useExoShutter={false}
+    />
+  );
+}
+
 export function ExerciseDetailScreen({
   collapsedPanels,
   formatEntryActual,
@@ -40,6 +81,10 @@ export function ExerciseDetailScreen({
   visibleWorkoutSessions
 }: ExerciseDetailScreenProps) {
     const details = step ? getExerciseDetails(step, language) : null;
+    const [hasVideoPlaybackFailed, setHasVideoPlaybackFailed] = useState(false);
+    const videoSource = details?.videoAssetKey
+      ? exerciseVideoSources[details.videoAssetKey]
+      : null;
     const progressKey = getExerciseProgressKeyForDetails(details);
     const progressSummary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
     const fallbackName = step?.exerciseName ? getExerciseDisplayName(step.exerciseName, language) : t("exerciseDetails");
@@ -50,6 +95,10 @@ export function ExerciseDetailScreen({
       primary: "#ff3347",
       secondary: "#ffc43d"
     };
+
+    useEffect(() => {
+      setHasVideoPlaybackFailed(false);
+    }, [details?.videoAssetKey]);
 
     function fill(muscle: MuscleKey) {
       if (details?.primary.includes(muscle)) {
@@ -174,7 +223,19 @@ export function ExerciseDetailScreen({
           )}
         </View>
 
-        {details?.imageAssetKeys.length ? (
+        {videoSource && !hasVideoPlaybackFailed ? (
+          <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseAnimation")}</Text>
+            <View style={styles.exerciseImageStrip}>
+              <View style={[styles.exerciseImageFrame, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
+                <ExerciseLoopVideo
+                  source={videoSource}
+                  onPlaybackError={() => setHasVideoPlaybackFailed(true)}
+                />
+              </View>
+            </View>
+          </View>
+        ) : details?.imageAssetKeys.length ? (
           <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseAnimation")}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.exerciseImageStrip}>

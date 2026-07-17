@@ -9,14 +9,18 @@
       "android": {
         "buildType": "apk"
       },
-      "env": {}
+      "env": {
+        "EXPO_PUBLIC_USE_RN_FETCH": "1"
+      }
     },
     "production": {
       "distribution": "store",
       "android": {
         "buildType": "app-bundle"
       },
-      "env": {}
+      "env": {
+        "EXPO_PUBLIC_USE_RN_FETCH": "1"
+      }
     }
   }
 }

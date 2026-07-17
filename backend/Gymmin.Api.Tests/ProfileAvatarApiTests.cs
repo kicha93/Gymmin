@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Gymmin.Api.Data;
 using Gymmin.Api.Domain;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Gymmin.Api.Tests;
 
@@ -49,6 +52,16 @@ public sealed class ProfileAvatarApiTests : IClassFixture<GymminApiFactory>
         Assert.Equal(HttpStatusCode.OK, avatar.StatusCode);
         Assert.Equal("image/png", avatar.Content.Headers.ContentType?.MediaType);
         Assert.Contains("private", avatar.Headers.CacheControl?.ToString() ?? "");
+        Assert.Equal(PngBytes, await avatar.Content.ReadAsByteArrayAsync());
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<GymminDbContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            var storedUser = await db.Users.AsNoTracking().SingleAsync(user => user.Id == auth.User.Id);
+            Assert.Equal(PngBytes, storedUser.AvatarContent);
+            Assert.Equal("image/png", storedUser.AvatarContentType);
+        }
 
         var me = await client.GetFromJsonAsync<AuthUserResponse>("/api/auth/me");
         Assert.NotNull(me);
@@ -63,6 +76,14 @@ public sealed class ProfileAvatarApiTests : IClassFixture<GymminApiFactory>
 
         var afterDelete = await client.GetAsync("/api/profile/avatar");
         Assert.Equal(HttpStatusCode.NotFound, afterDelete.StatusCode);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<GymminDbContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            var storedUser = await db.Users.AsNoTracking().SingleAsync(user => user.Id == auth.User.Id);
+            Assert.Null(storedUser.AvatarContent);
+        }
 
         var meAfterDelete = await client.GetFromJsonAsync<AuthUserResponse>("/api/auth/me");
         Assert.Null(meAfterDelete!.AvatarUrl);

@@ -104,6 +104,17 @@ describe("workoutExerciseSummary", () => {
     ]);
   });
 
+  it("returns a video asset with retained image fallbacks for front squats", () => {
+    const details = getExerciseDetails({ exerciseId: "squat-barbell-front-squat-1253" }, "pl");
+
+    expect(details?.hasAnimation).toBe(true);
+    expect(details?.videoAssetKey).toBe("squat-barbell-front-squat-1253/animation");
+    expect(details?.imageAssetKeys).toEqual([
+      "squat-barbell-front-squat-1253/start",
+      "squat-barbell-front-squat-1253/end"
+    ]);
+  });
+
   it("returns null exercise details for missing or unknown catalog mapping", () => {
     expect(getExerciseDetails({ exerciseId: "", exerciseName: "" }, "en")).toBeNull();
     expect(getExerciseDetails({ exerciseId: "missing-id", exerciseName: "Unknown Movement" }, "pl")).toBeNull();

@@ -3,7 +3,7 @@ name: Production gate
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -52,7 +52,7 @@ jobs:
 
   mobile:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: apps/mobile
@@ -65,9 +65,47 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
       - run: npx expo-doctor
       - run: npx expo export --platform android --output-dir .expo-ci-export
+        env:
+          EXPO_PUBLIC_USE_RN_FETCH: "1"
       - run: npm audit --audit-level=high
+      - name: Generate ephemeral CI release key
+        shell: bash
+        run: >-
+          keytool -genkeypair -noprompt
+          -keystore "$RUNNER_TEMP/gymmin-ci-upload.jks"
+          -storepass gymmin-ci-password
+          -keypass gymmin-ci-password
+          -alias gymmin-ci
+          -keyalg RSA
+          -keysize 2048
+          -validity 2
+          -dname "CN=Gymmin CI, OU=CI, O=Gymmin, L=Warsaw, C=PL"
+      - name: Native Android release bundle smoke
+        shell: bash
+        env:
+          EXPO_PUBLIC_API_BASE_URL: https://api.example.invalid
+          EXPO_PUBLIC_USE_RN_FETCH: "1"
+          GYMMIN_UPLOAD_STORE_FILE: ${{ runner.temp }}/gymmin-ci-upload.jks
+          GYMMIN_UPLOAD_STORE_PASSWORD: gymmin-ci-password
+          GYMMIN_UPLOAD_KEY_ALIAS: gymmin-ci
+          GYMMIN_UPLOAD_KEY_PASSWORD: gymmin-ci-password
+        run: cd android && ./gradlew bundleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon
+      - name: Verify native bundle signature
+        shell: bash
+        run: jarsigner -verify android/app/build/outputs/bundle/release/app-release.aab
+      - name: Verify release manifest permissions
+        shell: bash
+        run: |
+          manifest="android/app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml"
+          test -f "$manifest"
+          ! grep -q "android.permission.SYSTEM_ALERT_WINDOW" "$manifest"
+          ! grep -q "android.permission.WRITE_EXTERNAL_STORAGE" "$manifest"

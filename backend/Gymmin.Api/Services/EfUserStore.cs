@@ -151,6 +151,7 @@ public sealed class EfUserStore : IUserStore
 
         user.AvatarFileName = null;
         user.AvatarContentType = null;
+        user.AvatarContent = null;
         user.AvatarUpdatedAt = null;
         user.UpdatedAt = DateTimeOffset.UtcNow;
         db.SaveChanges();

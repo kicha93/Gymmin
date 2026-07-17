@@ -41,6 +41,8 @@ $env:Gymmin__AiCredits__InitialGrant = "1"
 $env:Gymmin__AiCredits__PlanCost = "1"
 $env:Gymmin__AiCredits__RewriteCost = "1"
 $env:Gymmin__AiCredits__DevGrantEnabled = "false"
+$env:Gymmin__WorkoutCreator__Worker__PollMilliseconds = "500"
+$env:Gymmin__WorkoutCreator__Worker__LeaseSeconds = "300"
 $env:Gymmin__GooglePlay__Enabled = "true"
 $env:Gymmin__GooglePlay__PackageName = "com.gymmin.app"
 $env:Gymmin__GooglePlay__ServiceAccountJsonBase64 = "<base64-json>"
@@ -58,6 +60,11 @@ $env:BugReports__EmailDelivery__BatchSize = "20"
 ```
 
 Bug-report SMTP is sent by a persistent background worker. Run database migrations before starting the new backend version so `BugReports` and `BugReportRewardTransactions` exist before the worker begins polling. The default intake limit is 10 reports per user/IP per hour and each request is capped at 64 KiB.
+
+Workout creator jobs are also processed by a persistent database worker. Its
+atomic lease prevents two replicas from owning one job simultaneously. Keep the
+lease substantially longer than the heartbeat/poll interval and run the lease
+migration before starting the new version.
 
 Password reset email can use `Auth:Smtp` values. If they are not set, the backend falls back to `BugReports:Smtp` where supported by the current sender configuration.
 Production startup fails when neither `Auth:Smtp` nor the `BugReports:Smtp` fallback contains complete host, username and password credentials, because new accounts could not complete mandatory email verification.
@@ -124,7 +131,10 @@ dotnet tool run dotnet-ef database update
 
 For PostgreSQL migrations, set `Gymmin__Storage__Provider`, `Gymmin__Storage__DatabaseProvider` and `ConnectionStrings__DefaultConnection` before running `dotnet-ef`.
 
-No migration was added for PostgreSQL provider wiring because the EF model did not change in this step.
+The production hardening migrations add database avatar content and workout
+creator lease fields. Apply them before the new API/worker starts. When importing
+legacy `App_Data`, the importer also copies valid existing avatar files into the
+database; keep the source directory until the migration has been verified.
 
 ## Health and diagnostics
 
@@ -226,6 +236,8 @@ Outside Production, missing SMTP or OpenAI configuration does not block startup.
 - Final Android/iOS build uses `expo-secure-store`; verify a legacy session migrates without leaving `token` in `gymmin.localAuth.v1`.
 - Logs collected by the hosting platform.
 - Database backups configured.
+- Verify PostgreSQL backup/restore includes `Users.AvatarContent`; run an avatar
+  upload/read/delete smoke through two backend replicas without sticky sessions.
 - GitHub sideload APK built with the intended test `ApiBaseUrl` when doing phone QA.
 - Store AAB built with the production `ApiBaseUrl`.
 - `/health` and `/api/diagnostics` verified after deployment.
@@ -433,12 +445,14 @@ Voided Purchases worker; deployment must enable and monitor it.
 
 ## Deployment-owned work remaining
 
+- Apply and verify the completed hardening migrations on the target PostgreSQL.
+- Run avatar and AI-job smoke through at least two backend replicas.
 - Choose the permanent host/domain and configure its trusted proxy addresses.
 - Schedule `backup-postgres.ps1`, copy backups off-host and record successful
   `verify-postgres-restore.ps1` runs.
 - Connect JSON logs and mobile crashes to the selected external provider.
 - Make `.github/workflows/production-gate.yml` required on the release branch;
-  it runs the real PostgreSQL migration smoke.
+  it runs the real PostgreSQL migration smoke and native Android release build.
 - Configure Pub/Sub OIDC, enable the Voided Purchases worker and alert on
   `manual_review`, `partial_clawback`, `unmatched` or repeated polling failures.
 - Complete Google Play Internal Testing with real test products and license testers.

@@ -33,6 +33,10 @@ public sealed class AppDataDatabaseImporter
         }
 
         await ImportUsersAsync(Path.Combine(appData, "users.json"), cancellationToken);
+        await ImportAvatarsAsync(
+            Path.Combine(appData, "users.json"),
+            Path.Combine(appData, "avatars"),
+            cancellationToken);
         await ImportSettingsAsync(Path.Combine(appData, "user-settings.json"), cancellationToken);
         await ImportWorkoutsAsync(Path.Combine(appData, "workouts.json"), cancellationToken);
         await ImportCreatorJobsAsync(Path.Combine(appData, "workout-creator-jobs.json"), cancellationToken);
@@ -137,6 +141,70 @@ public sealed class AppDataDatabaseImporter
                     : JsonSerializer.Serialize(settings.WorkoutReminders, JsonOptions),
                 UserId = userId
             });
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ImportAvatarsAsync(
+        string usersPath,
+        string avatarsRoot,
+        CancellationToken cancellationToken)
+    {
+        var users = ReadJson<List<PersistedUser>>(usersPath) ?? [];
+        if (users.Count == 0 || !Directory.Exists(avatarsRoot))
+        {
+            return;
+        }
+
+        await using var db = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        foreach (var imported in users.Where(user =>
+            !string.IsNullOrWhiteSpace(user.Id) &&
+            !string.IsNullOrWhiteSpace(user.AvatarFileName) &&
+            !string.IsNullOrWhiteSpace(user.AvatarContentType) &&
+            user.AvatarUpdatedAt is not null))
+        {
+            var user = await db.Users.FirstOrDefaultAsync(item => item.Id == imported.Id, cancellationToken);
+            if (user is null || user.AvatarContent is not null)
+            {
+                continue;
+            }
+
+            var fileName = imported.AvatarFileName!;
+            if (fileName.Contains(Path.DirectorySeparatorChar) || fileName.Contains(Path.AltDirectorySeparatorChar))
+            {
+                continue;
+            }
+
+            var contentType = FileSystemUserAvatarStorage.NormalizeContentType(imported.AvatarContentType);
+            var safeId = new string(imported.Id.Where(character =>
+                char.IsLetterOrDigit(character) || character is '-' or '_').ToArray());
+            var path = Path.Combine(avatarsRoot, safeId, fileName);
+            if (contentType is null || !File.Exists(path))
+            {
+                continue;
+            }
+
+            var info = new FileInfo(path);
+            if (info.Length is <= 0 or > FileSystemUserAvatarStorage.MaxAvatarBytes)
+            {
+                _logger.LogWarning("Skipping invalid legacy avatar size for user {UserId}.", imported.Id);
+                continue;
+            }
+
+            var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
+            if (!FileSystemUserAvatarStorage.MatchesMagicBytes(contentType, bytes.AsSpan(0, Math.Min(12, bytes.Length))))
+            {
+                _logger.LogWarning("Skipping legacy avatar with invalid content for user {UserId}.", imported.Id);
+                continue;
+            }
+
+            user.AvatarContent = bytes;
+            user.AvatarContentType = contentType;
+            user.AvatarFileName = fileName;
+            var avatarUpdatedAt = imported.AvatarUpdatedAt.GetValueOrDefault(user.UpdatedAt);
+            user.AvatarUpdatedAt = avatarUpdatedAt;
+            user.UpdatedAt = new[] { user.UpdatedAt, avatarUpdatedAt }.Max();
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -263,6 +331,9 @@ public sealed class AppDataDatabaseImporter
         public string Name { get; set; } = "";
         public PersistedPassword? Password { get; set; }
         public List<PersistedUserSession> Sessions { get; set; } = [];
+        public string? AvatarFileName { get; set; }
+        public string? AvatarContentType { get; set; }
+        public DateTimeOffset? AvatarUpdatedAt { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
     }

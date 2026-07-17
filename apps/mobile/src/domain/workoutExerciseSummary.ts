@@ -8,7 +8,11 @@ import {
   type ExerciseLanguage,
   type MuscleKey
 } from "./exercises";
-import { getExerciseImageAssetKeys, type ExerciseImageAssetKey } from "./exerciseImageAssets";
+import {
+  getExerciseAnimationAssetKey,
+  getExerciseImageAssetKeys,
+  type ExerciseImageAssetKey
+} from "./exerciseImageAssets";
 import { getExerciseTechniqueContent } from "./exerciseTechniqueContent";
 import type { WorkoutExecutionMode } from "./workoutSessions";
 import type { WorkoutStep } from "./workouts";
@@ -29,6 +33,7 @@ export type ExerciseDetails = ExerciseMuscleGroups & {
   commonMistakes: string[];
   instructions: string[];
   techniqueTips: string[];
+  videoAssetKey: ExerciseImageAssetKey | null;
 };
 
 function safeTrim(value: unknown): string {
@@ -142,6 +147,7 @@ export function getExerciseDetails(
   }
 
   const techniqueContent = getExerciseTechniqueContent(exercise.id);
+  const videoAssetKey = getExerciseAnimationAssetKey(exercise.id);
   const imageAssetKeys = getExerciseImageAssetKeys(exercise.id);
   const localizeList = (items: readonly { en: string; pl: string }[] | undefined) =>
     (items ?? [])
@@ -155,10 +161,11 @@ export function getExerciseDetails(
     commonMistakes: localizeList(techniqueContent?.commonMistakes),
     displayName: language === "pl" ? exercise.polishName : exercise.name,
     equipment: getRequiredEquipment(exercise).map(formatCodeLabel),
-    hasAnimation: imageAssetKeys.length > 0,
+    hasAnimation: Boolean(videoAssetKey) || imageAssetKeys.length > 0,
     imageAssetKeys,
     instructions: localizeList(techniqueContent?.instructions),
-    techniqueTips: localizeList(techniqueContent?.techniqueTips)
+    techniqueTips: localizeList(techniqueContent?.techniqueTips),
+    videoAssetKey
   };
 }
 

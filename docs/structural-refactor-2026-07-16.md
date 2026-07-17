@@ -99,6 +99,24 @@ zsynchronizowanych danych.
   migrację legacy tokenu, waliduje zapisany profil, odświeża `/auth/me`, używa
   cache przy awarii online, zapisuje nowe logowanie i aktualizacje profilu oraz
   czyści oba storage po `401/403`, logout i usunięciu konta.
+- `useStoredAuthRestoration` przejął efekt montowania i bramkę
+  `hasLoadedLocalAuth`. Composition root przekazuje typowany odczyt bieżącego
+  użytkownika, ale nie zarządza już asynchronicznym odtworzeniem ani ochroną
+  przed aktualizacją po odmontowaniu.
+- `useAccountDataPolicy`, `useEmailVerification` i `useAuthSessionsController`
+  przejęły decyzję o zmianie konta/adopcji danych, kod email oraz listę i
+  revokację sesji. Decyzja polityki konta ma test priorytetów i nie jest
+  ponawiana przy każdym renderze.
+- `useAiCreditsController` posiada pełny stan kredytów i Google Play Billing,
+  włącznie z częściowo odpornym odczytem, weryfikacją tokenu zakupu i restore.
+- `useWorkoutReminderScheduling` przejął trzy efekty języka, właściciela i
+  reschedulingu. `useActiveWorkoutController` posiada mutacje wykonywanej sesji.
+- `useWorkoutEditorController` oraz `domain/workoutEditor.ts` przejęły otwarcie,
+  zapis i hierarchiczne mutacje buildera. Usuwanie i przenoszenie zagnieżdżonych
+  grup ma testy regresyjne.
+- Polling Kreatora jest rozdzielony na cykl React
+  `useWorkoutCreatorJobPolling` i testowalną pętlę `workoutCreatorPolling` z
+  anulowaniem, timeoutem, błędem providera i mapowaniem wygasłej sesji.
 - Odczyt, zapis, migracja i wykrywanie anonimowych danych zostały przeniesione
   do `src/storage/localDataRepositories.ts`.
 - `useAccountStorageMigration` przejął z composition root kompletną listę
@@ -157,6 +175,7 @@ Dodano testy dla:
 - importu odpowiedzi Kreatora, wrapperów JSON, rozgrzewki i odpoczynku.
 - odtwarzania auth: legacy migration, offline fallback i unauthorized cleanup.
 - kompletności mapowania startowej migracji account-scoped storage.
+- decyzji polityki zmiany konta, pollingu Kreatora i mutacji edytora treningu.
 
 Regresja wykryta podczas wydzielania sesji została poprawiona: identyfikator
 ćwiczenia jest teraz kanonizowany przez `resolveExerciseId` również podczas
@@ -164,10 +183,10 @@ wyszukiwania poprzedniego ciężaru i liczby powtórzeń.
 
 ## Świadomie pozostawione granice
 
-- `App.tsx` nadal inicjuje synchronizację po zmianie konta, auth, przypomnienia
-  i procesy AI, ponieważ te cykle życia współdzielą transakcyjny stan nawigacji
-  i konta. Mechanika automatycznej synchronizacji sesji, ulubionych,
-  osiągnięć oraz persystencja ustawień nie znajdują się już w composition root.
+- `App.tsx` nadal koordynuje dialogi, nawigację, wynik adopcji anonimowych danych
+  oraz złożenie planu/rewrite AI. Cykle montowania auth, polityki konta,
+  przypomnień, billing, polling joba, mutacje aktywnej sesji i edytora nie
+  znajdują się już w composition root.
 - `WorkoutBuilderScreen` zachowuje lokalne komponenty pól formularza w jednym
   pliku; reguły domenowe są już poza JSX. Dalsze dzielenie samego layoutu ma
   sens dopiero przy zmianie jego UX.

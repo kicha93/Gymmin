@@ -98,6 +98,13 @@ Klienty API są składane przez `src/api/mobileApiClients.ts` z jednego transpor
 HTTP i jednej fabryki błędów z correlation ID. `App.tsx` memoizuje zestaw, więc
 klienty nie są rekonstruowane podczas każdej zmiany stanu lub renderu ekranu.
 
+Pozostałe procesy frontendu mają osobne kontrolery: politykę zmiany konta i
+danych anonimowych, billing kredytów AI, weryfikację emaila i aktywne sesje auth,
+harmonogram przypomnień, polling jobów Kreatora, aktywny trening oraz edytor
+treningu. Czyste operacje na hierarchii etapów/serii/ćwiczeń są w
+`src/domain/workoutEditor.ts`; composition root koordynuje już głównie
+nawigację, dialogi i przepływ danych między funkcjami.
+
 Startowa migracja starszych kluczy AsyncStorage jest skupiona w
 `src/features/storage/useAccountStorageMigration.ts`. Moduł zachowuje komplet
 dziesięciu mapowań treningów, ustawień, profili i joba Kreatora, sesji oraz
@@ -170,6 +177,12 @@ Pełny cykl startowego odtworzenia znajduje się w
 odrzuca cache bez poprawnego ID/emaila, korzysta z cache podczas awarii sieci i
 usuwa zarówno token, jak i metadata sesji po `401/403` albo wadliwej odpowiedzi
 `/auth/me`.
+
+Efekt montowania i stan gotowości odtworzenia obsługuje
+`src/features/auth/useStoredAuthRestoration.ts`. Kontroler wykonuje ten cykl
+jednorazowo, nie publikuje wyniku po odmontowaniu i dopiero po zakończeniu
+otwiera pierwszą synchronizację account-scoped danych. `App.tsx` przekazuje mu
+typowany odczyt `/auth/me` oraz setter nadrzędnej sesji.
 
 Ten sam moduł zapisuje sesję po logowaniu/rejestracji, aktualizuje cache po
 zmianie avatara lub weryfikacji emaila i czyści AsyncStorage razem z SecureStore

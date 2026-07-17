@@ -20,7 +20,7 @@ upload key, device smoke oraz testu kilku replik.
 
 ## Wynik automatycznej weryfikacji
 
-- mobile unit tests: 222/222,
+- mobile unit tests: 228/228,
 - backend tests: 105/105; dwa pełne przebiegi zakończone sukcesem,
 - TypeScript typecheck: zaliczony,
 - backend Release build z `--warnaserror`: zaliczony, 0 ostrzeżeń,
@@ -113,6 +113,9 @@ systemowego wyboru zdjęcia na starszym Androidzie.
 - `restoreStoredAuthSession` izoluje migrację legacy tokenu do SecureStore,
   walidację cache, odświeżenie `/auth/me`, offline fallback i bezwarunkowe
   czyszczenie lokalnych credentials po `401/403`.
+- `useStoredAuthRestoration` posiada startowy efekt i bramkę gotowości auth;
+  zakończenie asynchronicznego odczytu po odmontowaniu nie zmienia sesji ani nie
+  uruchamia synchronizacji danych.
 - Zapis nowego logowania, aktualizacja cache użytkownika i czyszczenie po
   logout/usunięciu konta korzystają z tego samego modułu `authSession.ts`;
   composition root nie operuje bezpośrednio na kluczu auth ani SecureStore.
@@ -131,6 +134,11 @@ systemowego wyboru zdjęcia na starszym Androidzie.
 - Start planu/rewrite i polling statusu joba korzystają z typowanego klienta
   Kreatora. Odpowiedzi jobów oraz błędy kredytów przechodzą przez wspólną
   walidację i diagnostykę HTTP.
+- Cykl pollingu Kreatora anuluje publikację wyniku po zmianie joba/odmontowaniu,
+  a pętla statusów ma testy sukcesu, błędu providera, `401` i anulowania.
+- Kontrolery kredytów, przypomnień, aktywnego treningu i edytora usuwają ich
+  niezależne cykle stanu z `App.tsx`. Edytor zachowuje atomowe przenoszenie
+  całych grup etap → serie → ćwiczenia i ma testy kaskadowego usuwania.
 - Luźne odpowiedzi Kreatora, w tym wrappery i JSON w blokach Markdown, są
   parsowane w `domain/workoutCreatorImport.ts`. Moduł odpowiada też za stabilne
   ID, mapowanie katalogu, wariant rozgrzewki i normalizację odpoczynku.

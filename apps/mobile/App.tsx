@@ -67,9 +67,7 @@ import {
   TargetComparator,
   WorkoutDraft,
   WorkoutStep,
-  WorkoutStepKind,
   createDefaultWorkout,
-  createStep,
   hasUserDefinedWorkouts
 } from "./src/domain/workouts";
 import {
@@ -82,8 +80,6 @@ import {
   type WorkoutCreatorProfile
 } from "./src/domain/workoutCreator";
 import {
-  completeWorkoutSession,
-  createWorkoutSessionFromWorkout,
   getActiveWorkoutSessionsForUi,
   getExerciseProgressItems,
   getExerciseProgressSummary,
@@ -142,10 +138,8 @@ import {
 } from "./src/domain/favoriteExerciseSync";
 import {
   ANONYMOUS_LOCAL_OWNER,
-  detectAccountSwitch,
   getAccountStorageKey,
   getAccountStorageOwnerId,
-  getLastAccountUserId,
   removeAccountJson,
   removeAccountStorageKeys,
   setLastAccountUserId
@@ -172,7 +166,6 @@ import {
   getReminderScheduleForDay,
   normalizeWorkoutReminderSettings,
   requestWorkoutReminderPermissions,
-  rescheduleWorkoutReminders,
   updateReminderDaySchedule
 } from "./src/domain/workoutReminders";
 import type { ReminderDaySchedule, ReminderWeekday, WorkoutReminderSettings } from "./src/domain/workoutReminders";
@@ -190,22 +183,11 @@ import {
 } from "./src/api/workoutCreatorApi";
 import type { PendingWorkoutCreatorJob } from "./src/domain/workoutCreatorJob";
 import { getErrorMessageOrFallback } from "./src/domain/apiErrors";
-import {
-  emptyAiCreditBalance,
-  isInsufficientAiCreditsError
-} from "./src/domain/aiCredits";
-import type { AiCreditBalance, AiCreditPack, AiCreditTransaction } from "./src/domain/aiCredits";
+import { isInsufficientAiCreditsError } from "./src/domain/aiCredits";
 import {
   getExerciseProgressHistoryGroups
 } from "./src/domain/exerciseProgressHistory";
 import { buildProfileAccountDetails, getProfileDisplayEmail, getProfileDisplayName } from "./src/domain/profile";
-import {
-  getAiCreditProducts,
-  getPendingAiCreditPurchases,
-  initBilling,
-  mapBillingError,
-  purchaseAiCreditPack
-} from "./src/domain/googlePlayBilling";
 import { articles } from "./src/domain/articles";
 import type { Article } from "./src/domain/articles";
 import { GymminLogo, GymminMark } from "./src/components/GymminLogo";
@@ -265,7 +247,7 @@ import {
 import { WorkoutSortActions, WorkoutSortSheet } from "./src/components/WorkoutSortControls";
 import { AppDialog, type AppDialogAction, type AppDialogState } from "./src/components/AppDialog";
 import { GlobalErrorFallback } from "./src/components/GlobalErrorFallback";
-import type { ReminderSchedulingStatus, SettingsSheetKey } from "./src/domain/settings";
+import type { SettingsSheetKey } from "./src/domain/settings";
 import type { SavedWorkout, SortDirection, WorkoutSortField, WorkoutSortSettings } from "./src/domain/savedWorkouts";
 import {
   compareWorkouts,
@@ -289,8 +271,6 @@ import {
   LOCAL_CREATOR_PROFILES_STORAGE_BASE_KEY as localCreatorProfilesStorageBaseKey,
   LOCAL_SETTINGS_STORAGE_BASE_KEY as localSettingsStorageBaseKey,
   LOCAL_WORKOUTS_STORAGE_BASE_KEY as localWorkoutsStorageBaseKey,
-  hasAnonymousAccountData as hasStoredAnonymousAccountData,
-  hasAnonymousMergeHandled,
   loadCreatorProfilesForOwner as loadCreatorProfilesForStorageOwner,
   loadWorkoutSessionsForOwner as loadWorkoutSessionsForStorageOwner,
   loadWorkoutsForOwner as loadWorkoutsForStorageOwner,
@@ -301,13 +281,17 @@ import {
   saveWorkoutsForOwner as saveWorkoutsForStorageOwner
 } from "./src/storage/localDataRepositories";
 import { useAccountScopedWorkouts } from "./src/features/workouts/useAccountScopedWorkouts";
+import { useWorkoutEditorController } from "./src/features/workouts/useWorkoutEditorController";
 import { useAccountScopedCreatorProfiles } from "./src/features/workoutCreator/useAccountScopedCreatorProfiles";
 import { useAccountScopedCreatorJob } from "./src/features/workoutCreator/useAccountScopedCreatorJob";
+import { pollWorkoutCreatorJob } from "./src/features/workoutCreator/workoutCreatorPolling";
+import { useWorkoutCreatorJobPolling } from "./src/features/workoutCreator/useWorkoutCreatorJobPolling";
 import { useAccountScopedWeeklyPlan } from "./src/features/weeklyPlan/useAccountScopedWeeklyPlan";
 import { useAccountStorageMigration } from "./src/features/storage/useAccountStorageMigration";
 import { useCachedAvatar } from "./src/features/profile/useCachedAvatar";
 import { useAccountScopedWorkoutSessions } from "./src/features/workoutSessions/useAccountScopedWorkoutSessions";
 import { useWorkoutSessionAutoSync } from "./src/features/workoutSessions/useWorkoutSessionAutoSync";
+import { useActiveWorkoutController } from "./src/features/workoutSessions/useActiveWorkoutController";
 import { useSystemStatusController } from "./src/features/systemStatus/useSystemStatusController";
 import { useAccountScopedSettings } from "./src/features/settings/useAccountScopedSettings";
 import { useAccountSettingsAutoSave } from "./src/features/settings/useAccountSettingsAutoSave";
@@ -317,13 +301,17 @@ import { useInitialAccountSync } from "./src/features/sync/useInitialAccountSync
 import {
   clearStoredAuthSession,
   persistStoredAuthSession,
-  restoreStoredAuthSession,
   updateStoredAuthUser
 } from "./src/features/auth/authSession";
+import { useStoredAuthRestoration } from "./src/features/auth/useStoredAuthRestoration";
+import { useEmailVerification } from "./src/features/auth/useEmailVerification";
+import { useAuthSessionsController } from "./src/features/auth/useAuthSessionsController";
+import { useAccountDataPolicy } from "./src/features/account/useAccountDataPolicy";
+import { useWorkoutReminderScheduling } from "./src/features/reminders/useWorkoutReminderScheduling";
+import { useAiCreditsController } from "./src/features/aiCredits/useAiCreditsController";
 import {
   AuthPasswordPolicy,
   type AuthApiResponse,
-  type AuthSessionResponse,
   type UserSession
 } from "./src/domain/auth";
 import { getScreenTitle, navItems, type ScreenKey } from "./src/navigation/appNavigation";
@@ -810,14 +798,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function delay(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-
-
 const defaultCollapsedPanels: Record<string, boolean> = {
   "settings-account": true,
   "settings-info": true,
@@ -858,7 +838,6 @@ function GymminApp() {
     systemStatus
   } = useSystemStatusController(apiBaseUrl, activeScreen === "home");
   const [isWorkoutSortSheetOpen, setIsWorkoutSortSheetOpen] = useState(false);
-  const [hasLoadedLocalAuth, setHasLoadedLocalAuth] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string>(articles[0]?.id ?? "");
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -869,7 +848,6 @@ function GymminApp() {
   const [pendingDefaultStageType, setPendingDefaultStageType] = useState<StageType | "">("");
   const [pendingDefaultWorkoutExecutionMode, setPendingDefaultWorkoutExecutionMode] = useState<WorkoutExecutionMode>("guided");
   const [pendingWorkoutReminderDay, setPendingWorkoutReminderDay] = useState<ReminderDaySchedule | null>(null);
-  const [reminderSchedulingStatus, setReminderSchedulingStatus] = useState<ReminderSchedulingStatus>("idle");
   const [favoriteExercisesSearch, setFavoriteExercisesSearch] = useState("");
   const [selectedWorkoutSessionId, setSelectedWorkoutSessionId] = useState<string | null>(null);
   const [selectedExerciseMuscleStep, setSelectedExerciseMuscleStep] = useState<WorkoutStep | null>(null);
@@ -899,15 +877,6 @@ function GymminApp() {
   const [deleteAccountPassword, setDeleteAccountPassword] = useState("");
   const [deleteAccountError, setDeleteAccountError] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const [activeAuthSessions, setActiveAuthSessions] = useState<AuthSessionResponse[]>([]);
-  const [aiCreditBalance, setAiCreditBalance] = useState<AiCreditBalance>(emptyAiCreditBalance);
-  const [aiCreditTransactions, setAiCreditTransactions] = useState<AiCreditTransaction[]>([]);
-  const [aiCreditPacks, setAiCreditPacks] = useState<AiCreditPack[]>([]);
-  const [aiCreditsError, setAiCreditsError] = useState("");
-  const [aiCreditsPurchaseMessage, setAiCreditsPurchaseMessage] = useState("");
-  const [canRestoreAiCreditPurchases, setCanRestoreAiCreditPurchases] = useState(false);
-  const [isAiCreditsLoading, setIsAiCreditsLoading] = useState(false);
-  const [isAiCreditPurchaseLoading, setIsAiCreditPurchaseLoading] = useState(false);
   const [achievementToast, setAchievementToast] = useState<{ title: string; extraCount: number } | null>(null);
   const [isAuthActionSubmitting, setIsAuthActionSubmitting] = useState(false);
   const [isAvatarSubmitting, setIsAvatarSubmitting] = useState(false);
@@ -942,10 +911,6 @@ function GymminApp() {
   const [trainingFactIndex, setTrainingFactIndex] = useState(0);
   const [readOnlyWorkoutCollapsedPanels, setReadOnlyWorkoutCollapsedPanels] = useState<Record<string, boolean>>({});
   const [user, setUser] = useState<UserSession | null>(null);
-  const [isEmailVerificationOpen, setIsEmailVerificationOpen] = useState(false);
-  const [emailVerificationCode, setEmailVerificationCode] = useState("");
-  const [emailVerificationMessage, setEmailVerificationMessage] = useState("");
-  const [isEmailVerificationSubmitting, setIsEmailVerificationSubmitting] = useState(false);
   const {
     cachedAvatarUri,
     clearAvatarCache,
@@ -1084,6 +1049,69 @@ function GymminApp() {
     profileApi,
     workoutCreatorApi
   } = useMemo(() => createMobileApiClients({ apiBaseUrl, rateLimitMessage }), [rateLimitMessage]);
+  const hasLoadedLocalAuth = useStoredAuthRestoration({
+    fallbackName: t("defaultUserName"),
+    getCurrentUser: (cachedSession) => authApi.getCurrentUser(
+      getApiHeaders(cachedSession),
+      t("authRequestError")
+    ),
+    onRestored: setUser
+  });
+  const {
+    balance: aiCreditBalance,
+    buyPack: buyAiCreditPack,
+    canRestorePurchases: canRestoreAiCreditPurchases,
+    error: aiCreditsError,
+    grantDevelopmentCredits: grantDevAiCredits,
+    isLoading: isAiCreditsLoading,
+    isPurchaseLoading: isAiCreditPurchaseLoading,
+    packs: aiCreditPacks,
+    purchaseMessage: aiCreditsPurchaseMessage,
+    refresh: fetchAiCredits,
+    restorePurchases: restorePendingAiCreditPurchases,
+    transactions: aiCreditTransactions
+  } = useAiCreditsController({
+    api: aiCreditsApi,
+    getHeaders: getAuthHeaders,
+    onUnauthorized: handleUnauthorizedSession,
+    t,
+    user
+  });
+  const {
+    code: emailVerificationCode,
+    confirmCode: confirmEmailVerificationCode,
+    isOpen: isEmailVerificationOpen,
+    isSubmitting: isEmailVerificationSubmitting,
+    message: emailVerificationMessage,
+    requestCode: requestEmailVerificationCode,
+    setCode: setEmailVerificationCode,
+    setIsOpen: setIsEmailVerificationOpen,
+    setMessage: setEmailVerificationMessage
+  } = useEmailVerification({
+    api: authApi,
+    getHeaders: getAuthHeaders,
+    language,
+    onUnauthorized: handleUnauthorizedSession,
+    t,
+    updateUser: updateStoredUserSession,
+    user
+  });
+  const {
+    revoke: revokeAuthSession,
+    sessions: activeAuthSessions
+  } = useAuthSessionsController({
+    active: activeScreen === "activeSessions",
+    api: authApi,
+    deviceName: getAuthDeviceName(),
+    getHeaders: getAuthHeaders,
+    onCurrentRevoked: logOut,
+    onMessage: setAuthMessage,
+    onUnauthorized: handleUnauthorizedSession,
+    setError: setAuthError,
+    setSubmitting: setIsAuthActionSubmitting,
+    t,
+    user
+  });
   const remoteUserAvatarSource = buildAvatarImageSource(apiBaseUrl, user);
   const userAvatarSource = hasAvatarImageLoadFailed
     ? null
@@ -1094,15 +1122,11 @@ function GymminApp() {
         : null;
   const isCreatorJobPending = pendingCreatorJob?.type === "plan";
   const isRewriteJobPending = pendingCreatorJob?.type === "rewrite";
-  const pollingCreatorJobIdRef = useRef<string | null>(null);
   const syncedWorkoutSessionsUserIdRef = useRef<string | null>(null);
   const mainScrollRef = useRef<ScrollView | null>(null);
   const bugReportSubmissionRef = useRef<{ key: string; signature: string } | null>(null);
   const appUsageStartedAtRef = useRef<number | null>(Date.now());
   const isApplyingAccountWorkoutSessionsRef = useRef(false);
-  const handledAccountPolicyUserIdRef = useRef<string | null>(null);
-  const reminderStorageOwnerIdRef = useRef(storageOwnerId);
-  const previousReminderLanguageRef = useRef<LanguageCode>(language);
   const workoutsInitialSync = useInitialAccountSync({
     enabled: Boolean(
       hasLoadedLocalAuth &&
@@ -1196,6 +1220,38 @@ function GymminApp() {
       }
     },
     userId: user?.id ?? null
+  });
+  const accountDataPolicy = useAccountDataPolicy({
+    anonymousDataBaseKeys: anonymousAccountDataBaseKeys,
+    enabled: Boolean(
+      hasLoadedLocalAuth
+      && hasLoadedLocalWorkouts
+      && hasLoadedFavoriteExercises
+      && hasLoadedWorkoutSessions
+      && hasLoadedLocalCreatorProfiles
+      && loadedWorkoutsOwnerId === storageOwnerId
+      && loadedFavoriteExercisesOwnerId === storageOwnerId
+      && loadedWorkoutSessionsOwnerId === storageOwnerId
+      && loadedCreatorProfilesOwnerId === storageOwnerId
+      && user
+    ),
+    onAccountSwitch: () => showInfoDialog(t("accountSwitchDetected"), t("accountSwitchCopy")),
+    onAnonymousData: showAnonymousAccountDataDialog,
+    user
+  });
+  const {
+    setStatus: setReminderSchedulingStatus,
+    status: reminderSchedulingStatus
+  } = useWorkoutReminderScheduling({
+    enabled: hasLoadedLocalSettings
+      && hasLoadedWorkoutSessions
+      && loadedSettingsOwnerId === storageOwnerId
+      && loadedWorkoutSessionsOwnerId === storageOwnerId,
+    language,
+    ownerId: storageOwnerId,
+    sessions: workoutSessions,
+    settings: workoutReminders,
+    updateSettings: updateWorkoutReminderSettings
   });
   const settingsAutoSaveChangeKey = JSON.stringify(buildCurrentSettingsPayload(""));
   useAccountSettingsAutoSave({
@@ -1533,116 +1589,6 @@ function GymminApp() {
   }, [showCreatorLoginTooltip, user]);
 
   useEffect(() => {
-    if (!user) {
-      setAiCreditBalance(emptyAiCreditBalance);
-      setAiCreditTransactions([]);
-      setAiCreditPacks([]);
-      setAiCreditsError("");
-      return;
-    }
-
-    void fetchAiCredits(user);
-  }, [user?.id, user?.token]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadLocalAuth() {
-      try {
-        const restoredSession = await restoreStoredAuthSession({
-          fallbackName: t("defaultUserName"),
-          getCurrentUser: (cachedSession) => authApi.getCurrentUser(
-            getApiHeaders(cachedSession),
-            t("authRequestError")
-          )
-        });
-        if (isMounted && restoredSession) {
-          setUser(restoredSession);
-        }
-      } catch (error) {
-        console.error("Failed to load local auth", error);
-      } finally {
-        if (isMounted) {
-          setHasLoadedLocalAuth(true);
-        }
-      }
-    }
-
-    void loadLocalAuth();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (
-      !hasLoadedLocalAuth ||
-      !hasLoadedLocalWorkouts ||
-      !hasLoadedFavoriteExercises ||
-      !hasLoadedWorkoutSessions ||
-      !hasLoadedLocalCreatorProfiles ||
-      loadedWorkoutsOwnerId !== storageOwnerId ||
-      loadedFavoriteExercisesOwnerId !== storageOwnerId ||
-      loadedWorkoutSessionsOwnerId !== storageOwnerId ||
-      loadedCreatorProfilesOwnerId !== storageOwnerId ||
-      !user
-    ) {
-      return;
-    }
-
-    if (handledAccountPolicyUserIdRef.current === user.id) {
-      return;
-    }
-
-    const currentUser = user;
-    handledAccountPolicyUserIdRef.current = currentUser.id;
-    let isMounted = true;
-
-    async function applyAccountStoragePolicy() {
-      try {
-        const previousUserId = await getLastAccountUserId();
-
-        if (!isMounted) {
-          return;
-        }
-
-        if (detectAccountSwitch(previousUserId, currentUser.id)) {
-          showInfoDialog(t("accountSwitchDetected"), t("accountSwitchCopy"));
-        } else if (
-          !(await hasAnonymousMergeHandled(currentUser.id))
-          && await hasStoredAnonymousAccountData(anonymousAccountDataBaseKeys)
-        ) {
-          showAnonymousAccountDataDialog(currentUser);
-        }
-
-        await setLastAccountUserId(currentUser.id);
-      } catch (error) {
-        console.error("Failed to apply account storage policy", error);
-      }
-    }
-
-    void applyAccountStoragePolicy();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [
-    hasLoadedFavoriteExercises,
-    hasLoadedLocalAuth,
-    hasLoadedLocalCreatorProfiles,
-    hasLoadedLocalWorkouts,
-    hasLoadedWorkoutSessions,
-    language,
-    loadedCreatorProfilesOwnerId,
-    loadedFavoriteExercisesOwnerId,
-    loadedWorkoutSessionsOwnerId,
-    loadedWorkoutsOwnerId,
-    storageOwnerId,
-    user?.id
-  ]);
-
-  useEffect(() => {
     if (!hasLoadedLocalCreatorJob || loadedCreatorJobOwnerId !== storageOwnerId) {
       return;
     }
@@ -1684,10 +1630,6 @@ function GymminApp() {
   }, []);
 
   useEffect(() => {
-    if (user && !user.emailVerified) setIsEmailVerificationOpen(true);
-  }, [user?.id, user?.emailVerified]);
-
-  useEffect(() => {
     const showSubscription = Keyboard.addListener("keyboardDidShow", () => setIsKeyboardVisible(true));
     const hideSubscription = Keyboard.addListener("keyboardDidHide", () => setIsKeyboardVisible(false));
 
@@ -1696,82 +1638,6 @@ function GymminApp() {
       hideSubscription.remove();
     };
   }, []);
-
-  useEffect(() => {
-    const previousLanguage = previousReminderLanguageRef.current;
-    if (previousLanguage === language) {
-      return;
-    }
-
-    previousReminderLanguageRef.current = language;
-    const previousDefaults = getDefaultWorkoutReminderSettings(previousLanguage);
-    const nextDefaults = getDefaultWorkoutReminderSettings(language);
-    const shouldUpdateMessage = workoutReminders.message === previousDefaults.message;
-    const shouldUpdateDescription = (workoutReminders.description ?? "") === (previousDefaults.description ?? "");
-    if (!shouldUpdateMessage && !shouldUpdateDescription) {
-      return;
-    }
-
-    updateWorkoutReminderSettings({
-      ...workoutReminders,
-      description: shouldUpdateDescription ? nextDefaults.description : workoutReminders.description,
-      message: shouldUpdateMessage ? nextDefaults.message : workoutReminders.message
-    });
-  }, [language, workoutReminders]);
-
-  useEffect(() => {
-    const previousOwnerId = reminderStorageOwnerIdRef.current;
-    if (previousOwnerId === storageOwnerId) {
-      return;
-    }
-
-    reminderStorageOwnerIdRef.current = storageOwnerId;
-    void cancelWorkoutReminders(previousOwnerId);
-  }, [storageOwnerId]);
-
-  useEffect(() => {
-    if (
-      !hasLoadedLocalSettings ||
-      !hasLoadedWorkoutSessions ||
-      loadedSettingsOwnerId !== storageOwnerId ||
-      loadedWorkoutSessionsOwnerId !== storageOwnerId
-    ) {
-      return;
-    }
-
-    let isActive = true;
-
-    rescheduleWorkoutReminders(workoutReminders, workoutSessions, storageOwnerId).then((result) => {
-      if (!isActive) {
-        return;
-      }
-
-      if (result.permissionDenied) {
-        setReminderSchedulingStatus("permissionDenied");
-      } else if (workoutReminders.enabled) {
-        setReminderSchedulingStatus("scheduled");
-      } else {
-        setReminderSchedulingStatus("idle");
-      }
-    }).catch((error) => {
-      console.error("Failed to reschedule workout reminders", error);
-      if (isActive) {
-        setReminderSchedulingStatus("failed");
-      }
-    });
-
-    return () => {
-      isActive = false;
-    };
-  }, [
-    hasLoadedLocalSettings,
-    hasLoadedWorkoutSessions,
-    loadedSettingsOwnerId,
-    loadedWorkoutSessionsOwnerId,
-    storageOwnerId,
-    workoutReminders,
-    workoutSessions
-  ]);
 
   useEffect(() => {
     const finalizeForegroundUsage = () => {
@@ -1799,18 +1665,14 @@ function GymminApp() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!hasLoadedLocalCreatorJob || loadedCreatorJobOwnerId !== storageOwnerId || !pendingCreatorJob || !user) {
-      return undefined;
-    }
-
-    let isActive = true;
-    void resumePendingWorkoutCreatorJob(pendingCreatorJob, () => isActive);
-
-    return () => {
-      isActive = false;
-    };
-  }, [hasLoadedLocalCreatorJob, loadedCreatorJobOwnerId, pendingCreatorJob?.jobId, savedWorkouts, storageOwnerId, user?.token]);
+  useWorkoutCreatorJobPolling({
+    enabled: hasLoadedLocalCreatorJob
+      && loadedCreatorJobOwnerId === storageOwnerId
+      && Boolean(user),
+    job: pendingCreatorJob,
+    resume: resumePendingWorkoutCreatorJob,
+    scopeKey: `${storageOwnerId}:${user?.token ?? ""}`
+  });
 
   useEffect(() => {
     if (activeSettingsSheet) {
@@ -1849,14 +1711,6 @@ function GymminApp() {
     return () => clearTimeout(timeoutId);
   }, [creatorPhase]);
 
-  useEffect(() => {
-    if (activeScreen !== "activeSessions" || !user) {
-      return;
-    }
-
-    void fetchAuthSessions();
-  }, [activeScreen, user?.id]);
-
   const filteredWorkouts = useMemo(() => {
     const phrase = search.trim().toLowerCase();
     const visibleWorkouts = !phrase
@@ -1880,6 +1734,48 @@ function GymminApp() {
     [savedWorkouts, visibleWorkoutSessions, weeklyPlan]
   );
   const shouldShowWorkoutHeaderTime = activeScreen === "workoutSession" && Boolean(activeWorkoutSession);
+  const activeWorkoutController = useActiveWorkoutController({
+    activeSession: activeWorkoutSession,
+    activeSessionId: activeWorkoutSessionId,
+    entryIndex: sessionEntryIndex,
+    entryIndexBySessionRef: activeWorkoutSessionEntryIndexRef,
+    onEmptyWorkout: () => showInfoDialog(t("emptyWorkoutSession")),
+    onFinished: () => showInfoDialog(t("workoutSaved")),
+    onNavigate: setActiveScreen,
+    savedWorkouts,
+    selectedWorkoutId,
+    sessions: visibleWorkoutSessions,
+    setActiveSessionId: setActiveWorkoutSessionId,
+    setEntryIndex: setSessionEntryIndex,
+    setIsPostWorkoutFillMode,
+    setSelectedWorkoutId,
+    setSessions: setWorkoutSessions
+  });
+  const {
+    addStep,
+    moveStep,
+    openExisting: openWorkoutEditor,
+    openNew: openWorkoutBuilder,
+    removeStep,
+    save: saveWorkout,
+    updateStep
+  } = useWorkoutEditorController({
+    defaultSetCount,
+    defaultStageType: defaultStageType || "exercise",
+    editingWorkoutId,
+    onNavigate: setActiveScreen,
+    onSave: (nextWorkout) => {
+      upsertAccountWorkout(nextWorkout).catch((error) => {
+        console.error("Failed to save workout to account", error);
+      });
+    },
+    savedWorkouts,
+    setEditingWorkoutId,
+    setSavedWorkouts,
+    setSelectedWorkoutId,
+    setWorkout,
+    workout
+  });
 
   const selectedWorkout = useMemo(
     () => savedWorkouts.find((item) => item.id === selectedWorkoutId) ?? savedWorkouts[0] ?? null,
@@ -2011,170 +1907,6 @@ function GymminApp() {
 
   function getApiHeaders(session: UserSession | null = user): Record<string, string> {
     return buildApiHeaders(session);
-  }
-
-  async function fetchAiCredits(session = user) {
-    if (!session) {
-      return;
-    }
-
-    setIsAiCreditsLoading(true);
-    setAiCreditsError("");
-    try {
-      const overview = await aiCreditsApi.loadOverview(getAuthHeaders(session), t("aiCreditsLoadError"));
-      setAiCreditBalance(overview.balance);
-      if (overview.transactions) {
-        setAiCreditTransactions(overview.transactions);
-      }
-      if (overview.packs) {
-        const products = await getAiCreditProducts(overview.packs.map((pack) => pack.productId)).catch(() => []);
-        setAiCreditPacks(overview.packs.map((pack) => {
-          const product = products.find((item) => item.productId === pack.productId);
-          return product?.localizedPrice ? { ...pack, localizedPrice: product.localizedPrice } : pack;
-        }));
-      }
-    } catch (error) {
-      if ((error as { status?: number }).status === 401) {
-        handleUnauthorizedSession();
-        return;
-      }
-      console.error("Failed to load AI credits", error);
-      setAiCreditsError(getErrorMessageOrFallback(error, t("aiCreditsLoadError"), t("serverProblemMessage")));
-    } finally {
-      setIsAiCreditsLoading(false);
-    }
-  }
-
-  async function verifyGooglePlayAiCreditPurchase(
-    purchase: { productId: string; purchaseToken: string; orderId?: string | null },
-    session = user
-  ) {
-    if (!session) {
-      return null;
-    }
-
-    let result;
-    try {
-      result = await aiCreditsApi.verifyGooglePlayPurchase(
-        purchase,
-        getAuthHeaders(session),
-        t("aiCreditsPurchaseVerifyError")
-      );
-    } catch (error) {
-      if ((error as { status?: number }).status === 401) {
-        handleUnauthorizedSession();
-        return null;
-      }
-      throw error;
-    }
-
-    setAiCreditBalance((current) => ({ ...current, balance: result.balance }));
-    setAiCreditsPurchaseMessage(result.status === "already_processed" ? t("aiCreditsPurchaseCompleted") : t("aiCreditsPurchaseAdded"));
-    setCanRestoreAiCreditPurchases(false);
-    await fetchAiCredits(session);
-    return result;
-  }
-
-  async function buyAiCreditPack(pack: AiCreditPack) {
-    if (!user || isAiCreditPurchaseLoading || !pack.active) {
-      return;
-    }
-
-    setIsAiCreditPurchaseLoading(true);
-    setAiCreditsError("");
-    setAiCreditsPurchaseMessage(t("aiCreditsPreparingPurchase"));
-    setCanRestoreAiCreditPurchases(false);
-    try {
-      const initialized = await initBilling();
-      if (!initialized) {
-        throw new Error(t("aiCreditsBillingUnavailable"));
-      }
-
-      setAiCreditsPurchaseMessage(t("aiCreditsProcessingPurchase"));
-      const purchase = await purchaseAiCreditPack(pack.productId, user.id);
-      addDiagnosticEvent({
-        area: "ai",
-        extra: {
-          orderId: purchase.orderId ?? null,
-          productId: purchase.productId
-        },
-        level: "info",
-        message: "Google Play purchase returned for verification",
-        screen: "aiCredits"
-      });
-      await verifyGooglePlayAiCreditPurchase(purchase, user);
-    } catch (error) {
-      const billingError = mapBillingError(error);
-      if (billingError.isCancelled) {
-        setAiCreditsPurchaseMessage(t("aiCreditsPurchaseCancelled"));
-      } else {
-        console.error("Failed to buy AI credits", error);
-        setAiCreditsError(getErrorMessageOrFallback(error, t("aiCreditsPurchaseVerifyError"), t("serverProblemMessage")));
-        setAiCreditsPurchaseMessage("");
-        setCanRestoreAiCreditPurchases(true);
-      }
-    } finally {
-      setIsAiCreditPurchaseLoading(false);
-    }
-  }
-
-  async function restorePendingAiCreditPurchases() {
-    if (!user || isAiCreditPurchaseLoading) {
-      return;
-    }
-
-    setIsAiCreditPurchaseLoading(true);
-    setAiCreditsError("");
-    setAiCreditsPurchaseMessage(t("aiCreditsProcessingPurchase"));
-    try {
-      const pendingPurchases = await getPendingAiCreditPurchases(aiCreditPacks.map((pack) => pack.productId));
-      if (!pendingPurchases.length) {
-        setAiCreditsPurchaseMessage("");
-        setCanRestoreAiCreditPurchases(false);
-        return;
-      }
-
-      setCanRestoreAiCreditPurchases(true);
-
-      for (const purchase of pendingPurchases) {
-        await verifyGooglePlayAiCreditPurchase(purchase, user);
-      }
-    } catch (error) {
-      console.error("Failed to restore AI credit purchases", error);
-      setAiCreditsError(getErrorMessageOrFallback(error, t("aiCreditsPurchaseVerifyError"), t("serverProblemMessage")));
-      setAiCreditsPurchaseMessage("");
-      setCanRestoreAiCreditPurchases(true);
-    } finally {
-      setIsAiCreditPurchaseLoading(false);
-    }
-  }
-
-  async function grantDevAiCredits() {
-    if (!user || isAiCreditsLoading) {
-      return;
-    }
-
-    setIsAiCreditsLoading(true);
-    setAiCreditsError("");
-    try {
-      const balance = await aiCreditsApi.grantDevelopmentCredits(
-        10,
-        "Mobile dev top-up",
-        getAuthHeaders(user),
-        t("aiCreditsLoadError")
-      );
-      setAiCreditBalance(balance);
-      await fetchAiCredits(user);
-    } catch (error) {
-      if ((error as { status?: number }).status === 401) {
-        handleUnauthorizedSession();
-        return;
-      }
-      console.error("Failed to grant development AI credits", error);
-      setAiCreditsError(getErrorMessageOrFallback(error, t("aiCreditsLoadError"), t("serverProblemMessage")));
-    } finally {
-      setIsAiCreditsLoading(false);
-    }
   }
 
   async function fetchAccountWorkouts(session: UserSession) {
@@ -2466,132 +2198,6 @@ function GymminApp() {
     applyRemoteAchievementState(merged);
   }
 
-  function updateStep(stepId: string, nextStep: WorkoutStep) {
-    setWorkout((current) => ({
-      ...current,
-      steps: current.steps.map((step) => (step.id === stepId ? nextStep : step))
-    }));
-  }
-
-  function removeStep(stepId: string) {
-    setWorkout((current) => ({
-      ...current,
-      steps: current.steps.filter((step) => {
-        if (step.id === stepId || step.parentStageId === stepId || step.parentSetId === stepId) {
-          return false;
-        }
-
-        const parentSet = current.steps.find((item) => item.id === step.parentSetId);
-
-        return parentSet?.parentStageId !== stepId;
-      })
-    }));
-  }
-
-  function moveStep(stepId: string, direction: -1 | 1) {
-    setWorkout((current) => {
-      const movedStep = current.steps.find((step) => step.id === stepId);
-
-      if (!movedStep) {
-        return current;
-      }
-
-      if (movedStep.kind === "exercise") {
-        const elements = current.steps.filter(
-          (step) => step.kind === "exercise" && step.parentSetId === movedStep.parentSetId
-        );
-        const currentIndex = elements.findIndex((step) => step.id === stepId);
-        const nextIndex = currentIndex + direction;
-
-        if (currentIndex < 0 || nextIndex < 0 || nextIndex >= elements.length) {
-          return current;
-        }
-
-        const reorderedElements = [...elements];
-        const [element] = reorderedElements.splice(currentIndex, 1);
-        reorderedElements.splice(nextIndex, 0, element);
-
-        return {
-          ...current,
-          steps: current.steps.map((step) => {
-            if (step.kind !== "exercise" || step.parentSetId !== movedStep.parentSetId) {
-              return step;
-            }
-
-            return reorderedElements.shift() ?? step;
-          })
-        };
-      }
-
-      if (movedStep.kind === "set") {
-        const seriesGroups = current.steps
-          .filter((step) => step.kind === "set" && step.parentStageId === movedStep.parentStageId)
-          .map((set) => ({
-            set,
-            elements: current.steps.filter((step) => step.kind === "exercise" && step.parentSetId === set.id)
-          }));
-        const currentIndex = seriesGroups.findIndex((group) => group.set.id === stepId);
-        const nextIndex = currentIndex + direction;
-
-        if (currentIndex < 0 || nextIndex < 0 || nextIndex >= seriesGroups.length) {
-          return current;
-        }
-
-        const reorderedGroups = [...seriesGroups];
-        const [group] = reorderedGroups.splice(currentIndex, 1);
-        reorderedGroups.splice(nextIndex, 0, group);
-        const reorderedSetIds = new Set(seriesGroups.map((item) => item.set.id));
-
-        return {
-          ...current,
-          steps: current.steps.flatMap((step) => {
-            if (step.kind !== "set" || step.parentStageId !== movedStep.parentStageId) {
-              return step.kind === "exercise" && step.parentSetId && reorderedSetIds.has(step.parentSetId)
-                ? []
-                : [step];
-            }
-
-            const nextGroup = reorderedGroups.shift();
-            return nextGroup ? [nextGroup.set, ...nextGroup.elements] : [step];
-          })
-        };
-      }
-
-      const stageGroups = current.steps
-        .filter((step) => step.kind === "stage")
-        .map((stage) => ({
-          stage,
-          series: current.steps
-            .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
-            .flatMap((set) => [
-              set,
-              ...current.steps.filter((step) => step.kind === "exercise" && step.parentSetId === set.id)
-            ])
-        }));
-      const currentIndex = stageGroups.findIndex((group) => group.stage.id === stepId);
-      const nextIndex = currentIndex + direction;
-
-      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= stageGroups.length) {
-        return current;
-      }
-
-      const reorderedGroups = [...stageGroups];
-      const [group] = reorderedGroups.splice(currentIndex, 1);
-      reorderedGroups.splice(nextIndex, 0, group);
-
-      return {
-        ...current,
-        steps: reorderedGroups.flatMap((item) => [item.stage, ...item.series])
-      };
-    });
-  }
-
-  function openWorkoutBuilder() {
-    setEditingWorkoutId(null);
-    setWorkout(createDefaultWorkout());
-    setActiveScreen("builder");
-  }
-
   function openWorkoutCreator() {
     if (!areOnlineFeaturesAvailable) {
       showOnlineFeatureUnavailableDialog();
@@ -2659,76 +2265,19 @@ function GymminApp() {
   }
 
   function startSelectedWorkoutSession(executionMode = resolveWorkoutStartExecutionMode(defaultWorkoutExecutionMode)) {
-    const savedWorkout = savedWorkouts.find((item) => item.id === selectedWorkoutId);
-
-    if (!savedWorkout) {
-      return;
-    }
-
-    const session = createWorkoutSessionFromWorkout(savedWorkout.draft, savedWorkout.id, executionMode);
-
-    if (!session.entries.length) {
-      showInfoDialog(t("emptyWorkoutSession"));
-      return;
-    }
-
-    setWorkoutSessions((current) => [session, ...current]);
-    setActiveWorkoutSessionId(session.id);
-    activeWorkoutSessionEntryIndexRef.current[session.id] = 0;
-    setSessionEntryIndex(0);
-    setIsPostWorkoutFillMode(false);
-    setActiveScreen("workoutSession");
+    activeWorkoutController.start(executionMode);
   }
 
   function continueActiveWorkoutSession(sessionId = activeWorkoutSessionId) {
-    if (!sessionId) {
-      return;
-    }
-
-    const session = visibleWorkoutSessions.find((item) => item.id === sessionId);
-
-    if (session) {
-      setSelectedWorkoutId(session.sourceWorkoutId);
-    }
-
-    setActiveWorkoutSessionId(sessionId);
-    setSessionEntryIndex(clampWorkoutSessionEntryIndex(activeWorkoutSessionEntryIndexRef.current[sessionId] ?? sessionEntryIndex, session));
-    setIsPostWorkoutFillMode(false);
-    setActiveScreen("workoutSession");
+    activeWorkoutController.continueSession(sessionId);
   }
 
   function updateWorkoutSessionEntry(entryId: string, patch: Partial<WorkoutSessionEntry>) {
-    if (!activeWorkoutSessionId) {
-      return;
-    }
-
-    setWorkoutSessions((current) =>
-      current.map((session) =>
-        session.id === activeWorkoutSessionId
-          ? {
-              ...session,
-              updatedAt: new Date().toISOString(),
-              entries: session.entries.map((entry) => entry.id === entryId ? { ...entry, ...patch } : entry)
-            }
-          : session
-      )
-    );
+    activeWorkoutController.updateEntry(entryId, patch);
   }
 
   function finishActiveWorkoutSession() {
-    if (!activeWorkoutSession) {
-      return;
-    }
-
-    const completed = completeWorkoutSession(activeWorkoutSession);
-    setWorkoutSessions((current) => current.map((session) => session.id === completed.id ? completed : session));
-    setSelectedWorkoutId(activeWorkoutSession.sourceWorkoutId);
-    delete activeWorkoutSessionEntryIndexRef.current[activeWorkoutSession.id];
-    setActiveWorkoutSessionId(null);
-    setSessionEntryIndex(0);
-    setIsPostWorkoutFillMode(false);
-    setActiveScreen("workoutDetail");
-    showInfoDialog(t("workoutSaved"));
+    activeWorkoutController.finish();
   }
 
   function isWorkoutSessionEntryFillRequired(entry: WorkoutSessionEntry) {
@@ -2781,62 +2330,10 @@ function GymminApp() {
           label: t("confirm"),
           variant: "destructive",
           onPress: () => {
-          const deleted = markWorkoutSessionDeleted(activeWorkoutSession);
-          setWorkoutSessions((current) => current.map((session) => session.id === deleted.id ? deleted : session));
-          delete activeWorkoutSessionEntryIndexRef.current[activeWorkoutSession.id];
-          setActiveWorkoutSessionId(null);
-          setSessionEntryIndex(0);
-          setIsPostWorkoutFillMode(false);
-          setActiveScreen("home");
+          activeWorkoutController.abandon();
         }
       }
       ]
-    });
-  }
-
-  function openWorkoutEditor(workoutId: string) {
-    const savedWorkout = savedWorkouts.find((item) => item.id === workoutId);
-
-    if (!savedWorkout) {
-      return;
-    }
-
-    setSelectedWorkoutId(workoutId);
-    setEditingWorkoutId(workoutId);
-    setWorkout({
-      ...savedWorkout.draft,
-      steps: savedWorkout.draft.steps.map((step) => ({ ...step }))
-    });
-    setActiveScreen("builder");
-  }
-
-  function saveWorkout() {
-    const normalizedName = workout.name.trim() || "Nowy trening";
-    const existingWorkout = editingWorkoutId ? savedWorkouts.find((item) => item.id === editingWorkoutId) : null;
-    const nextWorkout: SavedWorkout = {
-      createdAt: existingWorkout?.createdAt ?? new Date().toISOString(),
-      draft: {
-        ...workout,
-        name: normalizedName,
-        steps: workout.steps.map((step) => ({ ...step }))
-      },
-      id: editingWorkoutId ?? `workout-${Date.now()}`,
-      name: normalizedName
-    };
-
-    setSavedWorkouts((current) => {
-      if (!editingWorkoutId) {
-        return [nextWorkout, ...current];
-      }
-
-      return current.map((item) => (item.id === editingWorkoutId ? nextWorkout : item));
-    });
-    setSelectedWorkoutId(nextWorkout.id);
-    setEditingWorkoutId(null);
-    setActiveScreen("workoutDetail");
-
-    upsertAccountWorkout(nextWorkout).catch((error) => {
-      console.error("Failed to save workout to account", error);
     });
   }
 
@@ -2916,44 +2413,18 @@ function GymminApp() {
       throw new Error(t("aiRewriteSessionExpired"));
     }
 
-    for (let attempt = 0; attempt < 360; attempt += 1) {
-      if (!shouldContinue()) {
-        return null;
-      }
-
-      let jobStatus;
-      try {
-        jobStatus = await workoutCreatorApi.getJob(jobId, {
+    return pollWorkoutCreatorJob({
+      cancelled: () => !shouldContinue(),
+      failedMessage: t("aiCreatorSubmitError"),
+      getJob: () => workoutCreatorApi.getJob(jobId, {
           ...getAuthHeaders(user),
           "ngrok-skip-browser-warning": "true"
-        }, t("aiCreatorSubmitError"));
-      } catch (error) {
-        if ((error as { status?: number }).status === 401) {
-          throw new Error(t("aiRewriteSessionExpired"));
-        }
-        throw error;
-      }
-
-      if (jobStatus.status === "completed") {
-        return jobStatus.result;
-      }
-
-      if (jobStatus.status === "failed") {
-        throw new Error(jobStatus.error || t("aiCreatorSubmitError"));
-      }
-
-      await delay(5000);
-    }
-
-    throw new Error(t("aiCreatorSubmitError"));
+        }, t("aiCreatorSubmitError")),
+      sessionExpiredMessage: t("aiRewriteSessionExpired")
+    });
   }
 
   async function resumePendingWorkoutCreatorJob(job: PendingWorkoutCreatorJob, shouldContinue: () => boolean = () => true) {
-    if (pollingCreatorJobIdRef.current === job.jobId) {
-      return;
-    }
-
-    pollingCreatorJobIdRef.current = job.jobId;
     setCreatorSubmitError("");
     setRewriteError("");
 
@@ -3017,10 +2488,6 @@ function GymminApp() {
       } else {
         setCreatorSubmitError(getErrorMessageOrFallback(error, t("aiCreatorSubmitError"), t("serverProblemMessage")));
         setCreatorPhase("profilePrompt");
-      }
-    } finally {
-      if (pollingCreatorJobIdRef.current === job.jobId) {
-        pollingCreatorJobIdRef.current = null;
       }
     }
   }
@@ -3390,33 +2857,6 @@ function GymminApp() {
     }));
   }
 
-  function addStep(kind: WorkoutStepKind) {
-    setWorkout((current) => {
-      if (kind === "stage") {
-        return {
-          ...current,
-          steps: [...current.steps, createStep({ kind, stageType: defaultStageType })]
-        };
-      }
-
-      const lastStage = [...current.steps].reverse().find((step) => step.kind === "stage");
-
-      if (lastStage) {
-        return {
-          ...current,
-          steps: [...current.steps, createStep({ kind, parentStageId: lastStage.id, setCount: defaultSetCount })]
-        };
-      }
-
-      const stage = createStep({ kind: "stage", stageType: defaultStageType });
-
-      return {
-        ...current,
-        steps: [stage, createStep({ kind, parentStageId: stage.id, setCount: defaultSetCount })]
-      };
-    });
-  }
-
   async function persistAuthSession(authResponse: AuthApiResponse) {
     const session = await persistStoredAuthSession(
       authResponse,
@@ -3505,56 +2945,6 @@ function GymminApp() {
   async function updateStoredUserSession(nextUser: UserSession) {
     setUser(nextUser);
     await updateStoredAuthUser(nextUser);
-  }
-
-  async function requestEmailVerificationCode() {
-    if (!user || user.emailVerified || isEmailVerificationSubmitting) return;
-    setIsEmailVerificationSubmitting(true);
-    setEmailVerificationMessage("");
-    try {
-      const fallbackMessage = language === "pl" ? "Nie udało się wysłać kodu." : "Could not send the code.";
-      await authApi.requestEmailVerification(getAuthHeaders(user), fallbackMessage);
-      setEmailVerificationMessage(language === "pl" ? "Nowy kod został wysłany." : "A new code has been sent.");
-    } catch (error) {
-      if ((error as { status?: number }).status === 401) {
-        handleUnauthorizedSession();
-        return;
-      }
-      setEmailVerificationMessage(getErrorMessageOrFallback(error, language === "pl" ? "Nie udało się wysłać kodu." : "Could not send the code.", t("serverProblemMessage")));
-    } finally {
-      setIsEmailVerificationSubmitting(false);
-    }
-  }
-
-  async function confirmEmailVerificationCode() {
-    if (!user || user.emailVerified || isEmailVerificationSubmitting) return;
-    const code = emailVerificationCode.trim();
-    if (!/^\d{6}$/.test(code)) {
-      setEmailVerificationMessage(language === "pl" ? "Wpisz sześciocyfrowy kod." : "Enter the six-digit code.");
-      return;
-    }
-    setIsEmailVerificationSubmitting(true);
-    setEmailVerificationMessage("");
-    try {
-      const fallbackMessage = language === "pl" ? "Kod jest nieprawidłowy lub wygasł." : "The code is invalid or expired.";
-      await authApi.confirmEmailVerification(code, getAuthHeaders(user), fallbackMessage);
-      await updateStoredUserSession({ ...user, emailVerified: true });
-      setEmailVerificationCode("");
-      setEmailVerificationMessage("");
-      setIsEmailVerificationOpen(false);
-    } catch (error) {
-      const status = (error as { status?: number }).status;
-      if (status === 401) {
-        handleUnauthorizedSession();
-        return;
-      }
-      const fallbackMessage = language === "pl" ? "Nie udało się potwierdzić emaila." : "Could not verify email.";
-      setEmailVerificationMessage(status === 400
-        ? (language === "pl" ? "Kod jest nieprawidłowy lub wygasł." : "The code is invalid or expired.")
-        : getErrorMessageOrFallback(error, fallbackMessage, t("serverProblemMessage")));
-    } finally {
-      setIsEmailVerificationSubmitting(false);
-    }
   }
 
   async function applyAvatarUpdate(response: AvatarResponse) {
@@ -3756,52 +3146,6 @@ function GymminApp() {
     }
   }
 
-  async function fetchAuthSessions() {
-    if (!user) {
-      return;
-    }
-
-    setIsAuthActionSubmitting(true);
-    setAuthError("");
-    try {
-      const sessions = await authApi.getSessions({
-          ...getAuthHeaders(user),
-          "X-Gymmin-Device-Name": getAuthDeviceName()
-        }, t("authRequestError"));
-      setActiveAuthSessions(sessions);
-    } catch (error) {
-      if ((error as { status?: number }).status === 401) {
-        handleUnauthorizedSession();
-        return;
-      }
-      setAuthError(getErrorMessageOrFallback(error, t("authRequestError"), t("serverProblemMessage")));
-    } finally {
-      setIsAuthActionSubmitting(false);
-    }
-  }
-
-  async function revokeAuthSession(sessionId: string) {
-    if (!user) {
-      return;
-    }
-
-    try {
-      await authApi.revokeSession(sessionId, getAuthHeaders(user), t("authRequestError"));
-      setAuthMessage(t("sessionSignedOut"));
-      if (activeAuthSessions.find((session) => session.id === sessionId)?.isCurrent) {
-        logOut();
-        return;
-      }
-      await fetchAuthSessions();
-    } catch (error) {
-      if ((error as { status?: number }).status === 401) {
-        handleUnauthorizedSession();
-        return;
-      }
-      setAuthError(getErrorMessageOrFallback(error, t("authRequestError"), t("serverProblemMessage")));
-    }
-  }
-
   async function logoutAllAuthSessions() {
     if (!user) {
       return;
@@ -3903,7 +3247,7 @@ function GymminApp() {
     favoritesInitialSync.reset();
     workoutSessionsInitialSync.reset();
     achievementsInitialSync.reset();
-    handledAccountPolicyUserIdRef.current = null;
+    accountDataPolicy.reset();
     setFavoriteExercisesSyncStatus("local");
     setPendingCreatorJob(null);
     setCreatorPhase("form");
@@ -3955,7 +3299,7 @@ function GymminApp() {
       favoritesInitialSync.reset();
       workoutSessionsInitialSync.reset();
       achievementsInitialSync.reset();
-      handledAccountPolicyUserIdRef.current = null;
+      accountDataPolicy.reset();
       setLastAccountUserId(null).catch((error) => {
         console.error("Failed to clear last account after deletion", error);
       });
@@ -3977,9 +3321,6 @@ function GymminApp() {
       setUserAchievements([]);
       setAppUsageStats(getDefaultAppUsageStats());
       setAchievementsSyncState({});
-      setAiCreditBalance(emptyAiCreditBalance);
-      setAiCreditTransactions([]);
-      setAiCreditsError("");
       setAvatarMessage("");
       setUser(null);
       setDeleteAccountConfirmation("");

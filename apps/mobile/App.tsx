@@ -202,15 +202,19 @@ import {
   requestApi
 } from "./src/api/apiClient";
 import { createAuthApiClient } from "./src/api/authApi";
+import { createAiCreditsApiClient } from "./src/api/aiCreditsApi";
 import { createProfileApiClient } from "./src/api/profileApi";
+import {
+  createWorkoutCreatorApiClient,
+  getWorkoutCreatorJobId,
+  isWorkoutCreatorJobResponse,
+  type WorkoutCreatorQuestionAnswer
+} from "./src/api/workoutCreatorApi";
+import type { PendingWorkoutCreatorJob } from "./src/domain/workoutCreatorJob";
 import { getErrorMessageOrFallback } from "./src/domain/apiErrors";
 import {
   emptyAiCreditBalance,
-  isInsufficientAiCreditsError,
-  normalizeAiCreditPurchaseVerifyResponse,
-  normalizeAiCreditBalance,
-  normalizeAiCreditPacks,
-  normalizeAiCreditTransactions
+  isInsufficientAiCreditsError
 } from "./src/domain/aiCredits";
 import type { AiCreditBalance, AiCreditPack, AiCreditTransaction } from "./src/domain/aiCredits";
 import {
@@ -314,6 +318,7 @@ import {
 } from "./src/storage/localDataRepositories";
 import { useAccountScopedWorkouts } from "./src/features/workouts/useAccountScopedWorkouts";
 import { useAccountScopedCreatorProfiles } from "./src/features/workoutCreator/useAccountScopedCreatorProfiles";
+import { useAccountScopedCreatorJob } from "./src/features/workoutCreator/useAccountScopedCreatorJob";
 import { useAccountScopedWorkoutSessions } from "./src/features/workoutSessions/useAccountScopedWorkoutSessions";
 import { useWorkoutSessionAutoSync } from "./src/features/workoutSessions/useWorkoutSessionAutoSync";
 import { useSystemStatusController } from "./src/features/systemStatus/useSystemStatusController";
@@ -1076,24 +1081,6 @@ function getApiPlanText(responseBody: unknown) {
   }
 }
 
-function getWorkoutCreatorJobId(responseBody: unknown) {
-  if (!isRecord(responseBody)) {
-    return "";
-  }
-
-  return getApiString(responseBody, ["jobId", "id"]);
-}
-
-function isWorkoutCreatorJobResponse(responseBody: unknown) {
-  if (!isRecord(responseBody)) {
-    return false;
-  }
-
-  const status = getApiString(responseBody, ["status"]).toLowerCase();
-
-  return Boolean(getWorkoutCreatorJobId(responseBody)) && (status === "processing" || status === "queued");
-}
-
 function delay(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -1445,17 +1432,6 @@ function createSavedWorkoutsFromApiResponse(responseBody: unknown, warmupMode: A
   });
 }
 
-type WorkoutCreatorQuestionAnswer = {
-  Question: string;
-  Answer: string;
-};
-type WorkoutCreatorPlanResponse = {
-  model: string;
-  planText?: string;
-  prompt: string;
-  reasoningEffort: string;
-  status: string;
-};
 type WorkoutCreatorApiExercise = Record<string, unknown> & {
   liczbaPowtorzen?: unknown;
   liczbaSerii?: unknown;
@@ -1467,33 +1443,6 @@ type WorkoutCreatorApiWorkout = Record<string, unknown> & {
   cwiczenia?: unknown;
   nazwa?: unknown;
   uwagi?: unknown;
-};
-
-type ActiveWorkoutCreatorJob =
-  | {
-      createdAt: string;
-      jobId: string;
-      profileId: string | null;
-      type: "plan";
-      version: 1;
-    }
-  | {
-      createdAt: string;
-      jobId: string;
-      sourceWorkoutId: string;
-      type: "rewrite";
-      version: 1;
-    };
-
-type PendingCreatorJob = ActiveWorkoutCreatorJob;
-
-type StoredWorkoutCreatorJob = Partial<ActiveWorkoutCreatorJob> & {
-  createdAt: string;
-  jobId: string;
-  profileId: string | null;
-  sourceWorkoutId?: string;
-  type?: "plan" | "rewrite";
-  version?: 1;
 };
 
 const defaultCollapsedPanels: Record<string, boolean> = {
@@ -1539,7 +1488,6 @@ function GymminApp() {
   const [hasLoadedWeeklyPlan, setHasLoadedWeeklyPlan] = useState(false);
   const [weeklyPlanOwnerId, setWeeklyPlanOwnerId] = useState<string | null>(null);
   const [isWorkoutSortSheetOpen, setIsWorkoutSortSheetOpen] = useState(false);
-  const [hasLoadedLocalCreatorJob, setHasLoadedLocalCreatorJob] = useState(false);
   const [hasLoadedLocalAuth, setHasLoadedLocalAuth] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string>(articles[0]?.id ?? "");
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
@@ -1622,7 +1570,6 @@ function GymminApp() {
   const [creatorProfileName, setCreatorProfileName] = useState("");
   const [showCreatorLoginTooltip, setShowCreatorLoginTooltip] = useState(false);
   const [trainingFactIndex, setTrainingFactIndex] = useState(0);
-  const [pendingCreatorJob, setPendingCreatorJob] = useState<PendingCreatorJob | null>(null);
   const [readOnlyWorkoutCollapsedPanels, setReadOnlyWorkoutCollapsedPanels] = useState<Record<string, boolean>>({});
   const [user, setUser] = useState<UserSession | null>(null);
   const [isEmailVerificationOpen, setIsEmailVerificationOpen] = useState(false);
@@ -1709,6 +1656,15 @@ function GymminApp() {
     hasLoadedAccountStorageMigration
   );
   const {
+    hasLoadedLocalCreatorJob,
+    loadedCreatorJobOwnerId,
+    pendingCreatorJob,
+    setPendingCreatorJob
+  } = useAccountScopedCreatorJob(
+    storageOwnerId,
+    hasLoadedAccountStorageMigration
+  );
+  const {
     favoriteExercises,
     favoriteExercisesSyncStatus,
     hasLoadedFavoriteExercises,
@@ -1741,7 +1697,6 @@ function GymminApp() {
       ? (unlocked, usageStats) => syncAccountAchievements(user, unlocked, usageStats)
       : null
   });
-  const [loadedCreatorJobOwnerId, setLoadedCreatorJobOwnerId] = useState<string | null>(null);
   const theme = themes[themeName];
   const isDarkMode = themeName === "dark";
   const t = (key: TranslationKey) => translate(language, key);
@@ -1750,7 +1705,17 @@ function GymminApp() {
       createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
     request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
   });
+  const aiCreditsApi = createAiCreditsApiClient({
+    createError: (response, endpoint, method, fallbackMessage) =>
+      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
+    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
+  });
   const profileApi = createProfileApiClient({
+    createError: (response, endpoint, method, fallbackMessage) =>
+      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
+    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
+  });
+  const workoutCreatorApi = createWorkoutCreatorApiClient({
     createError: (response, endpoint, method, fallbackMessage) =>
       createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
     request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
@@ -2508,80 +2473,24 @@ function GymminApp() {
   }, [hasLoadedWeeklyPlan, storageOwnerId, weeklyPlan, weeklyPlanOwnerId]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadLocalCreatorJob() {
-      if (!hasLoadedAccountStorageMigration) {
-        return;
-      }
-
-      const ownerId = storageOwnerId;
-      setHasLoadedLocalCreatorJob(false);
-      setLoadedCreatorJobOwnerId(null);
-
-      try {
-        const rawData = await AsyncStorage.getItem(getAccountStorageKey(localCreatorJobStorageBaseKey, ownerId));
-
-        if (!isMounted) {
-          return;
-        }
-
-        if (!rawData) {
-          setPendingCreatorJob(null);
-          setCreatorPhase("form");
-          setRewriteSourceWorkoutId(null);
-          return;
-        }
-
-        const storedData = JSON.parse(rawData) as Partial<StoredWorkoutCreatorJob>;
-
-        if (typeof storedData.jobId !== "string" || !storedData.jobId.trim()) {
-          return;
-        }
-
-        const createdAt = typeof storedData.createdAt === "string" ? storedData.createdAt : new Date().toISOString();
-
-        if (storedData.type === "rewrite") {
-          if (typeof storedData.sourceWorkoutId !== "string" || !storedData.sourceWorkoutId.trim()) {
-            return;
-          }
-
-          setPendingCreatorJob({
-            createdAt,
-            jobId: storedData.jobId,
-            sourceWorkoutId: storedData.sourceWorkoutId,
-            type: "rewrite",
-            version: 1
-          });
-          setRewriteSourceWorkoutId(storedData.sourceWorkoutId);
-          setActiveScreen("workoutAiRewrite");
-          return;
-        }
-
-        setPendingCreatorJob({
-          createdAt,
-          jobId: storedData.jobId,
-          profileId: typeof storedData.profileId === "string" ? storedData.profileId : null,
-          type: "plan",
-          version: 1
-        });
-        setCreatorPhase("submitted");
-      } catch (error) {
-        console.error("Failed to load pending creator job", error);
-      } finally {
-        if (isMounted) {
-          setLoadedCreatorJobOwnerId(ownerId);
-          setHasLoadedLocalCreatorJob(true);
-        }
-      }
+    if (!hasLoadedLocalCreatorJob || loadedCreatorJobOwnerId !== storageOwnerId) {
+      return;
     }
 
-    void loadLocalCreatorJob();
+    if (!pendingCreatorJob) {
+      setCreatorPhase("form");
+      setRewriteSourceWorkoutId(null);
+      return;
+    }
 
-    return () => {
-      isMounted = false;
-    };
-  }, [hasLoadedAccountStorageMigration, storageOwnerId]);
+    if (pendingCreatorJob.type === "rewrite") {
+      setRewriteSourceWorkoutId(pendingCreatorJob.sourceWorkoutId);
+      setActiveScreen("workoutAiRewrite");
+      return;
+    }
+
+    setCreatorPhase("submitted");
+  }, [hasLoadedLocalCreatorJob, loadedCreatorJobOwnerId, storageOwnerId]);
 
   useEffect(() => {
     if (!hasLoadedLocalSettings || loadedSettingsOwnerId !== storageOwnerId) {
@@ -2693,23 +2602,6 @@ function GymminApp() {
     workoutReminders,
     workoutSessions
   ]);
-
-  useEffect(() => {
-    if (!hasLoadedLocalCreatorJob || loadedCreatorJobOwnerId !== storageOwnerId) {
-      return;
-    }
-
-    if (!pendingCreatorJob) {
-      AsyncStorage.removeItem(getAccountStorageKey(localCreatorJobStorageBaseKey, storageOwnerId)).catch((error) => {
-        console.error("Failed to clear pending creator job", error);
-      });
-      return;
-    }
-
-    AsyncStorage.setItem(getAccountStorageKey(localCreatorJobStorageBaseKey, storageOwnerId), JSON.stringify(pendingCreatorJob)).catch((error) => {
-      console.error("Failed to save pending creator job", error);
-    });
-  }, [hasLoadedLocalCreatorJob, loadedCreatorJobOwnerId, pendingCreatorJob, storageOwnerId]);
 
   useEffect(() => {
     const finalizeForegroundUsage = () => {
@@ -2967,38 +2859,23 @@ function GymminApp() {
     setIsAiCreditsLoading(true);
     setAiCreditsError("");
     try {
-      const headers = getAuthHeaders(session);
-      const [balanceResponse, transactionsResponse, packsResponse] = await Promise.all([
-        sendApiRequest("/api/ai-credits/balance", { headers }),
-        sendApiRequest("/api/ai-credits/transactions?limit=50", { headers }),
-        sendApiRequest("/api/ai-credits/packs", { headers })
-      ]);
-
-      if (balanceResponse.status === 401 || transactionsResponse.status === 401 || packsResponse.status === 401) {
-        handleUnauthorizedSession();
-        return;
+      const overview = await aiCreditsApi.loadOverview(getAuthHeaders(session), t("aiCreditsLoadError"));
+      setAiCreditBalance(overview.balance);
+      if (overview.transactions) {
+        setAiCreditTransactions(overview.transactions);
       }
-
-      if (!balanceResponse.ok) {
-        throw await createApiError(balanceResponse, "/api/ai-credits/balance", "GET", t("aiCreditsLoadError"));
-      }
-
-      const balanceBody = await balanceResponse.json().catch(() => null) as unknown;
-      setAiCreditBalance(normalizeAiCreditBalance(balanceBody));
-
-      if (transactionsResponse.ok) {
-        setAiCreditTransactions(normalizeAiCreditTransactions(await transactionsResponse.json().catch(() => null)));
-      }
-
-      if (packsResponse.ok) {
-        const packs = normalizeAiCreditPacks(await packsResponse.json().catch(() => null));
-        const products = await getAiCreditProducts(packs.map((pack) => pack.productId)).catch(() => []);
-        setAiCreditPacks(packs.map((pack) => {
+      if (overview.packs) {
+        const products = await getAiCreditProducts(overview.packs.map((pack) => pack.productId)).catch(() => []);
+        setAiCreditPacks(overview.packs.map((pack) => {
           const product = products.find((item) => item.productId === pack.productId);
           return product?.localizedPrice ? { ...pack, localizedPrice: product.localizedPrice } : pack;
         }));
       }
     } catch (error) {
+      if ((error as { status?: number }).status === 401) {
+        handleUnauthorizedSession();
+        return;
+      }
       console.error("Failed to load AI credits", error);
       setAiCreditsError(getErrorMessageOrFallback(error, t("aiCreditsLoadError"), t("serverProblemMessage")));
     } finally {
@@ -3014,36 +2891,19 @@ function GymminApp() {
       return null;
     }
 
-    const response = await sendApiRequest("/api/ai-credits/purchases/google-play/verify", {
-      body: JSON.stringify({
-        orderId: purchase.orderId ?? null,
-        productId: purchase.productId,
-        purchaseToken: purchase.purchaseToken
-      }),
-      headers: {
-        ...getAuthHeaders(session),
-        "Content-Type": "application/json"
-      },
-      method: "POST"
-    });
-
-    if (response.status === 401) {
-      handleUnauthorizedSession();
-      return null;
-    }
-
-    if (!response.ok) {
-      throw await createApiError(
-        response,
-        "/api/ai-credits/purchases/google-play/verify",
-        "POST",
+    let result;
+    try {
+      result = await aiCreditsApi.verifyGooglePlayPurchase(
+        purchase,
+        getAuthHeaders(session),
         t("aiCreditsPurchaseVerifyError")
       );
-    }
-
-    const result = normalizeAiCreditPurchaseVerifyResponse(await response.json().catch(() => null));
-    if (!result) {
-      throw new Error(t("aiCreditsPurchaseVerifyError"));
+    } catch (error) {
+      if ((error as { status?: number }).status === 401) {
+        handleUnauthorizedSession();
+        return null;
+      }
+      throw error;
     }
 
     setAiCreditBalance((current) => ({ ...current, balance: result.balance }));
@@ -3135,30 +2995,19 @@ function GymminApp() {
     setIsAiCreditsLoading(true);
     setAiCreditsError("");
     try {
-      const response = await sendApiRequest("/api/ai-credits/dev/grant", {
-        body: JSON.stringify({
-          amount: 10,
-          reason: "Mobile dev top-up"
-        }),
-        headers: {
-          ...getAuthHeaders(user),
-          "Content-Type": "application/json"
-        },
-        method: "POST"
-      });
-
-      if (response.status === 401) {
+      const balance = await aiCreditsApi.grantDevelopmentCredits(
+        10,
+        "Mobile dev top-up",
+        getAuthHeaders(user),
+        t("aiCreditsLoadError")
+      );
+      setAiCreditBalance(balance);
+      await fetchAiCredits(user);
+    } catch (error) {
+      if ((error as { status?: number }).status === 401) {
         handleUnauthorizedSession();
         return;
       }
-
-      if (!response.ok) {
-        throw await createApiError(response, "/api/ai-credits/dev/grant", "POST", t("aiCreditsLoadError"));
-      }
-
-      setAiCreditBalance(normalizeAiCreditBalance(await response.json().catch(() => null)));
-      await fetchAiCredits(user);
-    } catch (error) {
       console.error("Failed to grant development AI credits", error);
       setAiCreditsError(getErrorMessageOrFallback(error, t("aiCreditsLoadError"), t("serverProblemMessage")));
     } finally {
@@ -3978,41 +3827,25 @@ function GymminApp() {
         return null;
       }
 
-      const response = await sendApiRequest(`/api/workout-creator/plan/${encodeURIComponent(jobId)}`, {
-        headers: {
+      let jobStatus;
+      try {
+        jobStatus = await workoutCreatorApi.getJob(jobId, {
           ...getAuthHeaders(user),
           "ngrok-skip-browser-warning": "true"
-        }
-      });
-      const responseBody = await response.json().catch(() => null) as unknown;
-
-      if (!response.ok) {
-        if (response.status === 401) {
+        }, t("aiCreatorSubmitError"));
+      } catch (error) {
+        if ((error as { status?: number }).status === 401) {
           throw new Error(t("aiRewriteSessionExpired"));
         }
-
-        const message =
-          isRecord(responseBody) && getApiString(responseBody, ["detail", "error", "title"])
-            ? getApiString(responseBody, ["detail", "error", "title"])
-            : t("aiCreatorSubmitError");
-        throw new Error(message);
+        throw error;
       }
 
-      if (!isRecord(responseBody)) {
-        continue;
+      if (jobStatus.status === "completed") {
+        return jobStatus.result;
       }
 
-      const status = getApiString(responseBody, ["status"]).toLowerCase();
-
-      if (status === "completed") {
-        return getApiValue(responseBody, ["result", "response", "data"]) ??
-          getApiValue(responseBody, ["result", "data"]) ??
-          getApiValue(responseBody, ["result"]) ??
-          responseBody;
-      }
-
-      if (status === "failed") {
-        throw new Error(getApiString(responseBody, ["error", "detail", "title"]) || t("aiCreatorSubmitError"));
+      if (jobStatus.status === "failed") {
+        throw new Error(jobStatus.error || t("aiCreatorSubmitError"));
       }
 
       await delay(5000);
@@ -4021,7 +3854,7 @@ function GymminApp() {
     throw new Error(t("aiCreatorSubmitError"));
   }
 
-  async function resumePendingWorkoutCreatorJob(job: PendingCreatorJob, shouldContinue: () => boolean = () => true) {
+  async function resumePendingWorkoutCreatorJob(job: PendingWorkoutCreatorJob, shouldContinue: () => boolean = () => true) {
     if (pollingCreatorJobIdRef.current === job.jobId) {
       return;
     }
@@ -4136,45 +3969,16 @@ function GymminApp() {
     setCreatorPhase("submitted");
 
     try {
-      const response = await sendApiRequest("/api/workout-creator/plan", {
-        body: JSON.stringify({
+      const responseBody = await workoutCreatorApi.startPlan({
           language,
           profileId,
           questionsAndAnswers
-        }),
-        headers: {
+        }, {
           ...getAuthHeaders(user),
           "Content-Type": "application/json",
           "X-Idempotency-Key": `plan-${profileId ?? "profile"}-${Date.now()}`,
           "ngrok-skip-browser-warning": "true"
-        },
-        method: "POST"
-      });
-      const responseBody = await response.json().catch(() => null) as
-        | WorkoutCreatorPlanResponse
-        | WorkoutCreatorApiWorkout[]
-        | { jobId?: string; status?: string }
-        | { detail?: string; error?: string; title?: string }
-        | null;
-
-      if (!response.ok) {
-        const apiError = isRecord(responseBody) ? (responseBody as Record<string, unknown>)["error"] : null;
-        if (
-          isRecord(apiError) &&
-          apiError.code === "insufficient_ai_credits"
-        ) {
-          const error = new Error(t("aiCreditsInsufficient")) as Error & { code?: string; status?: number };
-          error.code = "insufficient_ai_credits";
-          error.status = response.status;
-          throw error;
-        }
-
-        const message =
-          isRecord(responseBody) && getApiString(responseBody, ["detail", "error", "title"])
-            ? getApiString(responseBody, ["detail", "error", "title"])
-            : t("aiCreatorSubmitError");
-        throw new Error(message);
-      }
+        }, t("aiCreatorSubmitError"));
 
       void fetchAiCredits(user);
 
@@ -4240,47 +4044,19 @@ function GymminApp() {
     setIsRewriteSubmitting(true);
 
     try {
-      const response = await sendApiRequest("/api/workout-creator/rewrite", {
-        body: JSON.stringify({
+      const responseBody = await workoutCreatorApi.startRewrite({
           language,
           workout: mapSavedWorkoutToApiRequest(sourceWorkout),
           instruction,
           preferences: {
             catalogOnly: true
           }
-        }),
-        headers: {
+        }, {
           ...getAuthHeaders(user),
           "Content-Type": "application/json",
           "X-Idempotency-Key": `rewrite-${sourceWorkout.id}-${Date.now()}`,
           "ngrok-skip-browser-warning": "true"
-        },
-        method: "POST"
-      });
-      const responseBody = await response.json().catch(() => null) as unknown;
-
-      if (response.status === 401) {
-        throw new Error(t("aiRewriteSessionExpired"));
-      }
-
-      if (!response.ok) {
-        const apiError = isRecord(responseBody) ? responseBody["error"] : null;
-        if (
-          isRecord(apiError) &&
-          apiError.code === "insufficient_ai_credits"
-        ) {
-          const error = new Error(t("aiCreditsInsufficient")) as Error & { code?: string; status?: number };
-          error.code = "insufficient_ai_credits";
-          error.status = response.status;
-          throw error;
-        }
-
-        const message =
-          isRecord(responseBody) && getApiString(responseBody, ["detail", "error", "title"])
-            ? getApiString(responseBody, ["detail", "error", "title"])
-            : t("aiRewriteStartError");
-        throw new Error(message);
-      }
+        }, t("aiRewriteStartError"));
 
       const jobId = getWorkoutCreatorJobId(responseBody);
       let completedResponseBody = responseBody;
@@ -4318,9 +4094,12 @@ function GymminApp() {
       showInfoDialog(t("aiRewriteReady"));
     } catch (error) {
       console.error("Workout rewrite failed", error);
-      setRewriteError(isInsufficientAiCreditsError(error)
-        ? t("aiCreditsInsufficient")
-        : getErrorMessageOrFallback(error, t("aiRewriteStartError"), t("serverProblemMessage")));
+      const status = (error as { status?: number }).status;
+      setRewriteError(status === 401
+        ? t("aiRewriteSessionExpired")
+        : isInsufficientAiCreditsError(error)
+          ? t("aiCreditsInsufficient")
+          : getErrorMessageOrFallback(error, t("aiRewriteStartError"), t("serverProblemMessage")));
     } finally {
       setIsRewriteSubmitting(false);
     }

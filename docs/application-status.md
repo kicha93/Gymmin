@@ -141,6 +141,19 @@ Mutacje profilu korzystają z `src/api/profileApi.ts`. Moduł obsługuje upload 
 usunięcie avatara oraz zdalny krok usunięcia konta; picker, prywatny cache pliku
 i czyszczenie account-scoped danych po sukcesie pozostają poza transportem HTTP.
 
+Transport Kreatora AI korzysta z `src/api/workoutCreatorApi.ts`. Moduł uruchamia
+plan/rewrite, koduje identyfikator joba i normalizuje statusy
+`queued/processing/completed/failed`. Lokalny pending job jest walidowany przez
+`src/domain/workoutCreatorJob.ts` i utrzymywany per konto przez
+`useAccountScopedCreatorJob`. Polling, saldo kredytów, import treningu oraz
+nawigacja pozostają koordynowane przez `App.tsx`.
+
+Transport kredytów AI korzysta z `src/api/aiCreditsApi.ts`. Klient pobiera i
+normalizuje saldo, historię oraz pakiety, waliduje odpowiedź weryfikacji zakupu
+Google Play i obsługuje endpoint deweloperskiego zasilenia. `App.tsx` zachowuje
+koordynację natywnego billing UI, lokalnych komunikatów i reakcji na wygaśnięcie
+sesji.
+
 Avatar uzytkownika jest obslugiwany w Profilu. Zalogowany uzytkownik moze
 zmienic albo usunac avatar. Mobile wysyla obraz przez `multipart/form-data`,
 produkcyjny Database provider zapisuje bajty i metadane w bazie, a File provider

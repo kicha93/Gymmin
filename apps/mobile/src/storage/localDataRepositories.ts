@@ -17,6 +17,10 @@ import {
 } from "../domain/workoutSessions";
 import type { WorkoutCreatorProfile } from "../domain/workoutCreator";
 import {
+  normalizePendingWorkoutCreatorJob,
+  type PendingWorkoutCreatorJob
+} from "../domain/workoutCreatorJob";
+import {
   normalizeAppSettings,
   type AppSettings,
   type LocalSettingsStorage
@@ -216,6 +220,28 @@ export async function saveCreatorProfilesForOwner(
     version: 1
   };
   await saveAccountJson(LOCAL_CREATOR_PROFILES_STORAGE_BASE_KEY, payload, ownerId);
+}
+
+export async function loadCreatorJobForOwner(ownerId: string) {
+  try {
+    const storedData = await loadAccountJson<unknown>(LOCAL_CREATOR_JOB_STORAGE_BASE_KEY, ownerId);
+    return normalizePendingWorkoutCreatorJob(storedData);
+  } catch (error) {
+    console.error("Failed to load pending creator job", error);
+    return null;
+  }
+}
+
+export async function saveCreatorJobForOwner(
+  ownerId: string,
+  job: PendingWorkoutCreatorJob | null
+) {
+  if (!job) {
+    await removeAccountJson(LOCAL_CREATOR_JOB_STORAGE_BASE_KEY, ownerId);
+    return;
+  }
+
+  await saveAccountJson(LOCAL_CREATOR_JOB_STORAGE_BASE_KEY, job, ownerId);
 }
 
 export function mergeCreatorProfilesById(

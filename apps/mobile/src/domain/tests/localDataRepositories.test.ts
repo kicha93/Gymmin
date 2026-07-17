@@ -5,10 +5,12 @@ import {
   hasAnonymousAccountData,
   hasAnonymousMergeHandled,
   loadActiveWorkoutSessionForOwner,
+  loadCreatorJobForOwner,
   loadWorkoutsForOwner,
   markAnonymousMergeHandled,
   mergeCreatorProfilesById,
   saveActiveWorkoutSessionForOwner,
+  saveCreatorJobForOwner,
   saveWorkoutsForOwner
 } from "../../storage/localDataRepositories";
 import { getAccountStorageKey } from "../accountStorage";
@@ -67,5 +69,20 @@ describe("localDataRepositories", () => {
       entryIndex: undefined,
       sessionId: null
     });
+  });
+
+  it("round-trips and clears a pending creator job per owner", async () => {
+    await saveCreatorJobForOwner("user-a", {
+      createdAt: "2026-07-17T08:00:00.000Z",
+      jobId: "job-1",
+      profileId: null,
+      type: "plan",
+      version: 1
+    });
+
+    await expect(loadCreatorJobForOwner("user-a")).resolves.toMatchObject({ jobId: "job-1" });
+    await expect(loadCreatorJobForOwner("user-b")).resolves.toBeNull();
+    await saveCreatorJobForOwner("user-a", null);
+    await expect(loadCreatorJobForOwner("user-a")).resolves.toBeNull();
   });
 });

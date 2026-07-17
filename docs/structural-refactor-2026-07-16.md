@@ -53,6 +53,18 @@ zsynchronizowanych danych.
 - `src/api/profileApi.ts` izoluje upload/usunięcie avatara i zdalne usunięcie
   konta. Picker, przygotowanie pliku, cache avatara i lokalne czyszczenie danych
   pozostają w aplikacji, a statusy i odpowiedzi HTTP są walidowane centralnie.
+- `src/api/aiCreditsApi.ts` izoluje pobieranie salda, historii i pakietów,
+  weryfikację zakupu Google Play oraz deweloperskie zasilenie. Warstwa zachowuje
+  częściową odporność odczytu: niedostępna historia lub lista pakietów nie usuwa
+  ostatnich poprawnych danych, ale saldo pozostaje wymaganym źródłem prawdy.
+- `src/api/workoutCreatorApi.ts` izoluje start planu, start rewrite i odczyt
+  statusu joba Kreatora. Obsługuje zarówno aktualne odpowiedzi asynchroniczne,
+  jak i zgodność ze starszym bezpośrednim wynikiem; polling, kredyty, import i
+  nawigacja pozostają w composition root.
+- `src/domain/workoutCreatorJob.ts` normalizuje starszy i aktualny format
+  oczekującego joba, a `useAccountScopedCreatorJob` obsługuje jego bezpieczny
+  odczyt i zapis per konto. Zmiana konta zeruje stan przed załadowaniem danych
+  nowego właściciela, natomiast `App.tsx` reaguje tylko na zakończony odczyt.
 - Status systemu i jego cache są obsługiwane przez
   `useSystemStatusController`.
 - Kontrakty auth, kompletowanie sesji i polityka hasła są w czystym

@@ -66,6 +66,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/domain/auth.ts` zawiera czyste kontrakty sesji i politykę hasła, a `src/features/auth/authSession.ts` izoluje natywny SecureStore,
 - `src/features/auth/authSession.ts` odpowiada za pełny lokalny lifecycle sesji: zapis logowania, odtworzenie, migrację legacy tokenu, aktualizację profilu, fallback offline i czyszczenie credentials,
 - `src/storage/localDataRepositories.ts` centralizuje account-scoped odczyt, zapis i obsługę anonimowych danych treningowych,
+- `src/features/storage/useAccountStorageMigration.ts` jest jedyną bramką startowej migracji wszystkich wspieranych kluczy legacy do anonimowego account-scoped storage; kontrolery danych uruchamiają się dopiero po jej zakończeniu,
 - `src/features` zawiera kontrolery/hooki niezależnych cykli życia danych, obecnie treningów, sesji, ustawień, profili Kreatora i statusu systemu,
 - `src/features/workoutSessions/useAccountScopedWorkoutSessions.ts` wiąże listę sesji, aktywną sesję i pozycję wykonania z jednym właścicielem storage,
 - `src/features/weeklyPlan/useAccountScopedWeeklyPlan.ts` izoluje odczyt i zapis planu tygodniowego per owner oraz zeruje stan podczas przełączania kont,

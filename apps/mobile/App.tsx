@@ -99,7 +99,6 @@ import {
   mergeWorkoutSessions,
   normalizeWorkoutSessions,
   workoutHasHistory,
-  WORKOUT_SESSIONS_LEGACY_SYNC_STORAGE_KEY,
   WORKOUT_SESSIONS_STORAGE_BASE_KEY,
   WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY
 } from "./src/domain/workoutSessions";
@@ -137,8 +136,6 @@ import {
   removeFavoriteExercise,
   saveFavoriteExercises,
   toggleFavoriteExercise,
-  FAVORITE_EXERCISES_LEGACY_STORAGE_KEY,
-  FAVORITE_EXERCISES_LEGACY_SYNC_STORAGE_KEY,
   FAVORITE_EXERCISES_STORAGE_BASE_KEY,
   FAVORITE_EXERCISES_SYNC_STORAGE_BASE_KEY
 } from "./src/domain/favoriteExercises";
@@ -152,7 +149,6 @@ import {
   getAccountStorageKey,
   getAccountStorageOwnerId,
   getLastAccountUserId,
-  migrateLegacyAccountStorage,
   removeAccountJson,
   removeAccountStorageKeys,
   setLastAccountUserId
@@ -311,6 +307,7 @@ import { useAccountScopedWorkouts } from "./src/features/workouts/useAccountScop
 import { useAccountScopedCreatorProfiles } from "./src/features/workoutCreator/useAccountScopedCreatorProfiles";
 import { useAccountScopedCreatorJob } from "./src/features/workoutCreator/useAccountScopedCreatorJob";
 import { useAccountScopedWeeklyPlan } from "./src/features/weeklyPlan/useAccountScopedWeeklyPlan";
+import { useAccountStorageMigration } from "./src/features/storage/useAccountStorageMigration";
 import { useAccountScopedWorkoutSessions } from "./src/features/workoutSessions/useAccountScopedWorkoutSessions";
 import { useWorkoutSessionAutoSync } from "./src/features/workoutSessions/useWorkoutSessionAutoSync";
 import { useSystemStatusController } from "./src/features/systemStatus/useSystemStatusController";
@@ -379,12 +376,6 @@ const stageTypeValues: StageType[] = ["warmup", "exercise", "recovery", "rest", 
 const goalTypeValues: GoalType[] = ["repetitions", "time", "buttonPress", "calories", "heartRate"];
 const targetComparatorValues: TargetComparator[] = ["below", "above"];
 
-const localWorkoutsLegacyStorageKey = "gymmin.localWorkouts.v1";
-const workoutSessionsLegacyStorageKey = "gymmin.workoutSessions";
-// TODO: per-user local storage for account-scoped workout sessions and richer conflict UX.
-const localSettingsLegacyStorageKey = "gymmin.localSettings.v1";
-const localCreatorProfilesLegacyStorageKey = "gymmin.localCreatorProfiles.v1";
-const localCreatorJobLegacyStorageKey = "gymmin.localCreatorJob.v1";
 const localWeeklyPlanStorageBaseKey = WEEKLY_PLAN_STORAGE_BASE_KEY;
 const anonymousAccountDataBaseKeys = [
   localWorkoutsStorageBaseKey,
@@ -963,7 +954,7 @@ function GymminApp() {
   const { weeklyPlan, setWeeklyPlan } = useAccountScopedWeeklyPlan(storageOwnerId);
   const syncedFavoriteExercisesUserIdRef = useRef<string | null>(null);
   const syncedAchievementsUserIdRef = useRef<string | null>(null);
-  const [hasLoadedAccountStorageMigration, setHasLoadedAccountStorageMigration] = useState(false);
+  const hasLoadedAccountStorageMigration = useAccountStorageMigration();
   const {
     applySettings: applyAccountSettingsState,
     buildSettings: buildCurrentSettingsPayload,
@@ -1591,35 +1582,6 @@ function GymminApp() {
 
     void fetchAiCredits(user);
   }, [user?.id, user?.token]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function runAccountStorageMigration() {
-      await migrateLegacyAccountStorage([
-        { baseKey: localWorkoutsStorageBaseKey, legacyKey: localWorkoutsLegacyStorageKey },
-        { baseKey: localWorkoutsStorageBaseKey, legacyKey: "gymmin.workouts" },
-        { baseKey: localSettingsStorageBaseKey, legacyKey: localSettingsLegacyStorageKey },
-        { baseKey: localSettingsStorageBaseKey, legacyKey: "gymmin.settings" },
-        { baseKey: localCreatorProfilesStorageBaseKey, legacyKey: localCreatorProfilesLegacyStorageKey },
-        { baseKey: localCreatorJobStorageBaseKey, legacyKey: localCreatorJobLegacyStorageKey },
-        { baseKey: WORKOUT_SESSIONS_STORAGE_BASE_KEY, legacyKey: workoutSessionsLegacyStorageKey },
-        { baseKey: WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY, legacyKey: WORKOUT_SESSIONS_LEGACY_SYNC_STORAGE_KEY },
-        { baseKey: FAVORITE_EXERCISES_STORAGE_BASE_KEY, legacyKey: FAVORITE_EXERCISES_LEGACY_STORAGE_KEY },
-        { baseKey: FAVORITE_EXERCISES_SYNC_STORAGE_BASE_KEY, legacyKey: FAVORITE_EXERCISES_LEGACY_SYNC_STORAGE_KEY }
-      ]);
-
-      if (isMounted) {
-        setHasLoadedAccountStorageMigration(true);
-      }
-    }
-
-    void runAccountStorageMigration();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     let isMounted = true;

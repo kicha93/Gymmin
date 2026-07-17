@@ -20,7 +20,7 @@ upload key, device smoke oraz testu kilku replik.
 
 ## Wynik automatycznej weryfikacji
 
-- mobile unit tests: 221/221,
+- mobile unit tests: 222/222,
 - backend tests: 105/105; dwa pełne przebiegi zakończone sukcesem,
 - TypeScript typecheck: zaliczony,
 - backend Release build z `--warnaserror`: zaliczony, 0 ostrzeżeń,
@@ -102,6 +102,10 @@ systemowego wyboru zdjęcia na starszym Androidzie.
 - Plan tygodniowy korzysta z `useAccountScopedWeeklyPlan`; zmiana ownera
   natychmiast zeruje poprzedni stan, a zapis jest dozwolony dopiero po odczycie
   klucza właściwego konta.
+- `useAccountStorageMigration` centralizuje startową migrację dziesięciu
+  historycznych kluczy AsyncStorage i dopiero po jej zakończeniu otwiera odczyt
+  account-scoped kontrolerów. Test utrzymuje kompletność mapowania danych
+  istniejących instalacji.
 - Operacje credentials, weryfikacji emaila, haseł i aktywnych sesji korzystają
   z typowanego klienta auth. `logout-all` usuwa lokalną sesję dopiero po udanym
   statusie backendu; błąd serwera pozostawia użytkownika zalogowanego. Ten sam

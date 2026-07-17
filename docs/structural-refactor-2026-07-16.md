@@ -97,6 +97,10 @@ zsynchronizowanych danych.
   czyści oba storage po `401/403`, logout i usunięciu konta.
 - Odczyt, zapis, migracja i wykrywanie anonimowych danych zostały przeniesione
   do `src/storage/localDataRepositories.ts`.
+- `useAccountStorageMigration` przejął z composition root kompletną listę
+  dziesięciu kluczy legacy i bramkę gotowości. Mapowanie jest chronione testem,
+  a istniejące wartości nadal trafiają wyłącznie do anonimowego storage bez
+  usuwania źródła.
 - `useAccountScopedWeeklyPlan` przejął stan gotowości, owner tracking oraz
   odczyt/zapis planu tygodniowego. Przy zmianie konta poprzedni plan jest
   zerowany przed asynchronicznym odczytem, co zapobiega chwilowemu wyciekowi UI.
@@ -148,6 +152,7 @@ Dodano testy dla:
 - typowanego transportu danych konta i obsługi statusów HTTP.
 - importu odpowiedzi Kreatora, wrapperów JSON, rozgrzewki i odpoczynku.
 - odtwarzania auth: legacy migration, offline fallback i unauthorized cleanup.
+- kompletności mapowania startowej migracji account-scoped storage.
 
 Regresja wykryta podczas wydzielania sesji została poprawiona: identyfikator
 ćwiczenia jest teraz kanonizowany przez `resolveExerciseId` również podczas

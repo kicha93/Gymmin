@@ -98,6 +98,13 @@ Klienty API są składane przez `src/api/mobileApiClients.ts` z jednego transpor
 HTTP i jednej fabryki błędów z correlation ID. `App.tsx` memoizuje zestaw, więc
 klienty nie są rekonstruowane podczas każdej zmiany stanu lub renderu ekranu.
 
+Startowa migracja starszych kluczy AsyncStorage jest skupiona w
+`src/features/storage/useAccountStorageMigration.ts`. Moduł zachowuje komplet
+dziesięciu mapowań treningów, ustawień, profili i joba Kreatora, sesji oraz
+ulubionych; account-scoped kontrolery rozpoczynają odczyt dopiero po zakończeniu
+migracji. Lista źródeł legacy ma test regresyjny, aby refaktoryzacja nie zgubiła
+lokalnych danych istniejących instalacji.
+
 Mapowanie treningów pomiędzy lokalnym `SavedWorkout` i kontraktem konta oraz
 deterministyczny merge po stabilnym ID znajdują się w
 `src/domain/accountWorkouts.ts`. Dane konta mają pierwszeństwo przed lokalnym

@@ -58,6 +58,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/api/bugReportsApi.ts` obsługuje idempotentne wysłanie zgłoszenia, walidację odpowiedzi i szczegóły błędów backendu,
 - `src/platform/deviceInfo.ts` jest adapterem React Native dla diagnostyki urządzenia i nazwy sesji auth; czyste buildery formatują snapshot bez zależności od UI,
 - `src/api/profileApi.ts` obsługuje transport avatara i step-up account deletion; aplikacja zachowuje odpowiedzialność za picker, cache i czyszczenie account-scoped storage,
+- `src/features/profile/useCachedAvatar.ts` zarządza natywnym cache avatara, odświeżeniem po zmianie metadanych, czyszczeniem po usunięciu oraz stanem fallbacku po błędzie obrazu; composition root otrzymuje gotowe URI i akcje,
 - `src/api/aiCreditsApi.ts` obsługuje saldo, historię, pakiety, weryfikację Google Play i deweloperskie zasilenie kredytów; natywne billing UI i lokalizacja pozostają w kompozycji,
 - `src/api/workoutCreatorApi.ts` definiuje transport startu planu/rewrite i statusu joba oraz normalizuje `queued/processing/completed/failed`; polling i zastosowanie wyniku pozostają w warstwie kompozycji,
 - `src/domain/workoutCreatorJob.ts` waliduje i normalizuje lokalny kontrakt oczekującego joba, a `src/features/workoutCreator/useAccountScopedCreatorJob.ts` izoluje jego odczyt, zapis i zmianę właściciela storage,

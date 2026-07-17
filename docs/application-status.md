@@ -180,6 +180,12 @@ Mutacje profilu korzystają z `src/api/profileApi.ts`. Moduł obsługuje upload 
 usunięcie avatara oraz zdalny krok usunięcia konta; picker, prywatny cache pliku
 i czyszczenie account-scoped danych po sukcesie pozostają poza transportem HTTP.
 
+Cykl życia prywatnego cache avatara jest wydzielony do
+`src/features/profile/useCachedAvatar.ts`. Hook wybiera istniejący plik,
+odświeża go po zmianie `avatarUpdatedAt`, nie zapisuje cache na webie, czyści go
+po usunięciu avatara i udostępnia wspólny stan błędu obrazu dla nagłówka oraz
+profilu. `App.tsx` nie zarządza już osobnym efektem pobierania avatara.
+
 Transport Kreatora AI korzysta z `src/api/workoutCreatorApi.ts`. Moduł uruchamia
 plan/rewrite, koduje identyfikator joba i normalizuje statusy
 `queued/processing/completed/failed`. Lokalny pending job jest walidowany przez

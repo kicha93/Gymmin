@@ -60,6 +60,10 @@ zsynchronizowanych danych.
 - `src/api/profileApi.ts` izoluje upload/usunięcie avatara i zdalne usunięcie
   konta. Picker, przygotowanie pliku, cache avatara i lokalne czyszczenie danych
   pozostają w aplikacji, a statusy i odpowiedzi HTTP są walidowane centralnie.
+- `src/features/profile/useCachedAvatar.ts` przejął stan URI, natywne
+  odświeżanie prywatnego pliku, czyszczenie oraz fallback po błędzie renderowania.
+  Nagłówek i profil korzystają z jednego kontrolera zamiast własności efektu w
+  composition root.
 - `src/api/aiCreditsApi.ts` izoluje pobieranie salda, historii i pakietów,
   weryfikację zakupu Google Play oraz deweloperskie zasilenie. Warstwa zachowuje
   częściową odporność odczytu: niedostępna historia lub lista pakietów nie usuwa

@@ -36,11 +36,8 @@ import {
   type AvatarResponse
 } from "./src/domain/avatar";
 import {
-  clearCachedAvatar,
   clearPreparedAvatar,
-  getCachedAvatarUri,
   prepareAvatarForUpload,
-  refreshCachedAvatar,
   type PreparedAvatar
 } from "./src/domain/avatarCache";
 import {
@@ -308,6 +305,7 @@ import { useAccountScopedCreatorProfiles } from "./src/features/workoutCreator/u
 import { useAccountScopedCreatorJob } from "./src/features/workoutCreator/useAccountScopedCreatorJob";
 import { useAccountScopedWeeklyPlan } from "./src/features/weeklyPlan/useAccountScopedWeeklyPlan";
 import { useAccountStorageMigration } from "./src/features/storage/useAccountStorageMigration";
+import { useCachedAvatar } from "./src/features/profile/useCachedAvatar";
 import { useAccountScopedWorkoutSessions } from "./src/features/workoutSessions/useAccountScopedWorkoutSessions";
 import { useWorkoutSessionAutoSync } from "./src/features/workoutSessions/useWorkoutSessionAutoSync";
 import { useSystemStatusController } from "./src/features/systemStatus/useSystemStatusController";
@@ -948,8 +946,12 @@ function GymminApp() {
   const [emailVerificationCode, setEmailVerificationCode] = useState("");
   const [emailVerificationMessage, setEmailVerificationMessage] = useState("");
   const [isEmailVerificationSubmitting, setIsEmailVerificationSubmitting] = useState(false);
-  const [cachedAvatarUri, setCachedAvatarUri] = useState<string | null>(null);
-  const [hasAvatarImageLoadFailed, setHasAvatarImageLoadFailed] = useState(false);
+  const {
+    cachedAvatarUri,
+    clearAvatarCache,
+    hasAvatarImageLoadFailed,
+    markAvatarImageLoadFailed
+  } = useCachedAvatar({ apiBaseUrl, user });
   const storageOwnerId = getAccountStorageOwnerId(user?.id);
   const { weeklyPlan, setWeeklyPlan } = useAccountScopedWeeklyPlan(storageOwnerId);
   const syncedFavoriteExercisesUserIdRef = useRef<string | null>(null);
@@ -1235,47 +1237,6 @@ function GymminApp() {
       ? (sessions) => syncAccountWorkoutSessions(user, sessions)
       : null
   });
-
-  useEffect(() => {
-    let isActive = true;
-    setHasAvatarImageLoadFailed(false);
-
-    if (!user?.id || !user.avatarUrl) {
-      setCachedAvatarUri(null);
-      if (user?.id && Platform.OS !== "web") {
-        clearCachedAvatar(user.id);
-      }
-      return () => {
-        isActive = false;
-      };
-    }
-
-    if (Platform.OS === "web") {
-      setCachedAvatarUri(null);
-      return () => {
-        isActive = false;
-      };
-    }
-
-    setCachedAvatarUri(getCachedAvatarUri(user.id));
-
-    void refreshCachedAvatar(apiBaseUrl, user)
-      .then((uri) => {
-        if (isActive) {
-          setCachedAvatarUri(uri);
-          setHasAvatarImageLoadFailed(false);
-        }
-      })
-      .catch((error) => {
-        if (typeof process !== "undefined" && process.env?.NODE_ENV === "development") {
-          console.warn("Could not refresh cached avatar", error);
-        }
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [user?.avatarUpdatedAt, user?.avatarUrl, user?.id, user?.token]);
 
   const formatCreatorImportedWorkoutCount = (count: number) => {
     if (language === "pl") {
@@ -3676,8 +3637,7 @@ function GymminApp() {
         t("avatarRemoveError")
       );
       await applyAvatarUpdate(responseBody);
-      clearCachedAvatar(user.id);
-      setCachedAvatarUri(null);
+      clearAvatarCache();
       setAvatarMessage(t("avatarRemoved"));
     } catch (error) {
       if ((error as { status?: number }).status === 401) {
@@ -4759,7 +4719,7 @@ function GymminApp() {
         displayName={getProfileDisplayName(user, t("profileUser"))}
         isAvatarSubmitting={isAvatarSubmitting}
         latestAchievementTitle={latestUnlockedAchievement?.definition.title[language]}
-        onAvatarLoadError={() => setHasAvatarImageLoadFailed(true)}
+        onAvatarLoadError={markAvatarImageLoadFailed}
         t={t}
         theme={theme}
         totalAchievements={totalCount}
@@ -5064,7 +5024,7 @@ function GymminApp() {
                   resizeMode="cover"
                   source={userAvatarSource}
                   style={styles.profileHeaderAvatarImage}
-                  onError={() => setHasAvatarImageLoadFailed(true)}
+                  onError={markAvatarImageLoadFailed}
                 />
               ) : (
                 <Ionicons name={user ? "person" : "person-outline"} size={24} color={theme.primary} />

@@ -122,6 +122,9 @@ systemowego wyboru zdjęcia na starszym Androidzie.
 - Odczyt informacji o urządzeniu i budowa bezpiecznej nazwy sesji są izolowane
   w `platform/deviceInfo.ts`; czyste formatowanie ma testy bez zależności od
   rzeczywistego urządzenia.
+- Prywatny cache avatara ma jeden cykl życia w `useCachedAvatar`: odświeżenie
+  reaguje na wersję avatara, spóźniony request nie aktualizuje odmontowanego
+  widoku, a usunięcie czyści plik oraz URI używane przez nagłówek i profil.
 - Upload/usunięcie avatara i zdalne usunięcie konta korzystają z typowanego
   klienta profilu, który zachowuje rozróżnienie `401/403` dla step-up auth i nie
   uruchamia lokalnego czyszczenia po nieudanym statusie API.

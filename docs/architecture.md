@@ -52,6 +52,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 
 - `App.tsx` pozostaje głównym miejscem kompozycji ekranów, nawigacji i nadrzędnego stanu aplikacji,
 - `src/api/apiClient.ts` centralizuje requesty HTTP, bearer token, correlation id, diagnostykę i bezpieczne błędy API,
+- `src/api/mobileApiClients.ts` składa wszystkie klienty domenowe ze wspólnego transportu i fabryki błędów; `App.tsx` memoizuje gotowy zestaw zamiast rekonstruować klientów przy każdym renderze,
 - `src/api/accountDataApi.ts` centralizuje CRUD treningów, ustawienia oraz endpointy synchronizacji treningów, ulubionych, sesji i osiągnięć; waliduje rekordy treningów w runtime, a algorytmy merge i metadata pozostają w modułach domenowych,
 - `src/api/authApi.ts` jest typowanym klientem credentials, weryfikacji emaila, haseł i aktywnych sesji; waliduje kształt odpowiedzi przed przekazaniem danych do UI,
 - `src/api/bugReportsApi.ts` obsługuje idempotentne wysłanie zgłoszenia, walidację odpowiedzi i szczegóły błędów backendu,

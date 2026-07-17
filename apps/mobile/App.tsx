@@ -188,20 +188,9 @@ import {
   createCorrelationId,
   getDiagnosticsSnapshot
 } from "./src/domain/appDiagnostics";
+import { buildApiHeaders } from "./src/api/apiClient";
+import { createMobileApiClients } from "./src/api/mobileApiClients";
 import {
-  buildApiHeaders,
-  createApiError as createHttpApiError,
-  requestApi
-} from "./src/api/apiClient";
-import { createAuthApiClient } from "./src/api/authApi";
-import { createAiCreditsApiClient } from "./src/api/aiCreditsApi";
-import { createBugReportsApiClient } from "./src/api/bugReportsApi";
-import {
-  createAccountDataApiClient
-} from "./src/api/accountDataApi";
-import { createProfileApiClient } from "./src/api/profileApi";
-import {
-  createWorkoutCreatorApiClient,
   getWorkoutCreatorJobId,
   isWorkoutCreatorJobResponse,
   type WorkoutCreatorQuestionAnswer
@@ -1093,36 +1082,15 @@ function GymminApp() {
   const theme = themes[themeName];
   const isDarkMode = themeName === "dark";
   const t = (key: TranslationKey) => translate(language, key);
-  const authApi = createAuthApiClient({
-    createError: (response, endpoint, method, fallbackMessage) =>
-      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
-    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
-  });
-  const accountDataApi = createAccountDataApiClient({
-    createError: (response, endpoint, method, fallbackMessage) =>
-      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
-    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
-  });
-  const aiCreditsApi = createAiCreditsApiClient({
-    createError: (response, endpoint, method, fallbackMessage) =>
-      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
-    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
-  });
-  const bugReportsApi = createBugReportsApiClient({
-    createError: (response, endpoint, method, fallbackMessage) =>
-      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
-    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
-  });
-  const profileApi = createProfileApiClient({
-    createError: (response, endpoint, method, fallbackMessage) =>
-      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
-    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
-  });
-  const workoutCreatorApi = createWorkoutCreatorApiClient({
-    createError: (response, endpoint, method, fallbackMessage) =>
-      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
-    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
-  });
+  const rateLimitMessage = t("rateLimitError");
+  const {
+    accountDataApi,
+    aiCreditsApi,
+    authApi,
+    bugReportsApi,
+    profileApi,
+    workoutCreatorApi
+  } = useMemo(() => createMobileApiClients({ apiBaseUrl, rateLimitMessage }), [rateLimitMessage]);
   const remoteUserAvatarSource = buildAvatarImageSource(apiBaseUrl, user);
   const userAvatarSource = hasAvatarImageLoadFailed
     ? null

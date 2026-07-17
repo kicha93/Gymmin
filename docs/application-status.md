@@ -94,6 +94,10 @@ transport nie zawiera decyzji UI ani storage. Odpowiedź listy treningów jest
 walidowana w runtime; rekordy bez stabilnego ID i wadliwe kroki są odrzucane
 przed przekazaniem do mappera oraz merge.
 
+Klienty API są składane przez `src/api/mobileApiClients.ts` z jednego transportu
+HTTP i jednej fabryki błędów z correlation ID. `App.tsx` memoizuje zestaw, więc
+klienty nie są rekonstruowane podczas każdej zmiany stanu lub renderu ekranu.
+
 Mapowanie treningów pomiędzy lokalnym `SavedWorkout` i kontraktem konta oraz
 deterministyczny merge po stabilnym ID znajdują się w
 `src/domain/accountWorkouts.ts`. Dane konta mają pierwszeństwo przed lokalnym

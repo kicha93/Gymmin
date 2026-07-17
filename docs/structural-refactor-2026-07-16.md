@@ -68,6 +68,10 @@ zsynchronizowanych danych.
   requesty synchronizacji treningów, ulubionych, sesji i osiągnięć. Composition
   root przekazuje do niego bearer headers i zachowuje wyłącznie decyzje o merge,
   obsługę zmiany konta oraz aktualizację stanu UI.
+- `src/api/mobileApiClients.ts` jest composition rootem warstwy HTTP mobile:
+  przekazuje wszystkim klientom jeden request i jedną fabrykę diagnostycznych
+  błędów. Gotowy zestaw jest memoizowany i zmienia się tylko z komunikatem rate
+  limit zależnym od języka.
 - `src/domain/accountWorkouts.ts` zawiera serializację treningu do API,
   odbudowanie lokalnego modelu ze zwalidowanej odpowiedzi oraz deterministyczny
   merge po ID. Te reguły nie są już globalnymi helperami composition root.

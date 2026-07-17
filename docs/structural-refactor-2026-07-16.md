@@ -89,7 +89,8 @@ zsynchronizowanych danych.
   `src/domain/auth.ts`, natomiast SecureStore i natywna persystencja tokenu są
   odseparowane w `src/features/auth/authSession.ts`. Ten sam moduł wykonuje
   migrację legacy tokenu, waliduje zapisany profil, odświeża `/auth/me`, używa
-  cache przy awarii online i czyści oba storage po `401/403`.
+  cache przy awarii online, zapisuje nowe logowanie i aktualizacje profilu oraz
+  czyści oba storage po `401/403`, logout i usunięciu konta.
 - Odczyt, zapis, migracja i wykrywanie anonimowych danych zostały przeniesione
   do `src/storage/localDataRepositories.ts`.
 - Normalizacja zapisanych treningów i sortowania znajduje się w

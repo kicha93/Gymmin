@@ -160,6 +160,11 @@ odrzuca cache bez poprawnego ID/emaila, korzysta z cache podczas awarii sieci i
 usuwa zarówno token, jak i metadata sesji po `401/403` albo wadliwej odpowiedzi
 `/auth/me`.
 
+Ten sam moduł zapisuje sesję po logowaniu/rejestracji, aktualizuje cache po
+zmianie avatara lub weryfikacji emaila i czyści AsyncStorage razem z SecureStore
+po logout albo usunięciu konta. `App.tsx` nie zna już fizycznego klucza lokalnej
+sesji.
+
 Mutacje profilu korzystają z `src/api/profileApi.ts`. Moduł obsługuje upload i
 usunięcie avatara oraz zdalny krok usunięcia konta; picker, prywatny cache pliku
 i czyszczenie account-scoped danych po sukcesie pozostają poza transportem HTTP.

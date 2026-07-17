@@ -2,11 +2,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 import type {
+  AuthApiResponse,
   AuthUserResponse,
   LegacyLocalAuthStorage,
   LocalAuthStorage,
   UserSession
 } from "../../domain/auth";
+import { createUserSession } from "../../domain/auth";
 
 export const LOCAL_AUTH_STORAGE_KEY = "gymmin.localAuth.v1";
 const secureAuthTokenKey = "gymmin.auth.token.v1";
@@ -126,6 +128,50 @@ export async function restoreStoredAuthSession(params: {
       console.error("Failed to restore cached auth after auth check error", fallbackError);
       return null;
     }
+  }
+}
+
+export async function persistStoredAuthSession(
+  authResponse: AuthApiResponse,
+  fallbackName: string,
+  dependencies: StoredAuthDependencies = defaultStoredAuthDependencies
+) {
+  const session = createUserSession(authResponse, fallbackName);
+  await dependencies.setToken(authResponse.token);
+  await dependencies.setRaw(JSON.stringify({
+    updatedAt: new Date().toISOString(),
+    user: authResponse.user,
+    version: 2
+  } satisfies LocalAuthStorage));
+  return session;
+}
+
+export async function updateStoredAuthUser(
+  nextUser: UserSession,
+  dependencies: StoredAuthDependencies = defaultStoredAuthDependencies
+) {
+  try {
+    const storedData = parseStoredAuth(await dependencies.getRaw());
+    if (!storedData) {
+      return;
+    }
+    await dependencies.setRaw(JSON.stringify({
+      updatedAt: new Date().toISOString(),
+      user: {
+        ...(isRecord(storedData.user) ? storedData.user : {}),
+        avatarUpdatedAt: nextUser.avatarUpdatedAt ?? null,
+        avatarUrl: nextUser.avatarUrl ?? null,
+        createdOn: nextUser.createdOn ?? null,
+        email: nextUser.email,
+        emailVerified: nextUser.emailVerified,
+        id: nextUser.id,
+        modifiedOn: nextUser.modifiedOn ?? null,
+        name: nextUser.name
+      },
+      version: 2
+    } satisfies LocalAuthStorage));
+  } catch (error) {
+    console.error("Failed to update cached auth user", error);
   }
 }
 

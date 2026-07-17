@@ -333,18 +333,15 @@ import { useAccountScopedFavoriteExercises } from "./src/features/favorites/useA
 import { useAccountScopedAchievements } from "./src/features/achievements/useAccountScopedAchievements";
 import { useInitialAccountSync } from "./src/features/sync/useInitialAccountSync";
 import {
-  LOCAL_AUTH_STORAGE_KEY as localAuthStorageKey,
-  deleteSecureAuthToken,
+  clearStoredAuthSession,
+  persistStoredAuthSession,
   restoreStoredAuthSession,
-  setSecureAuthToken
+  updateStoredAuthUser
 } from "./src/features/auth/authSession";
 import {
   AuthPasswordPolicy,
-  createUserSession,
   type AuthApiResponse,
   type AuthSessionResponse,
-  type LegacyLocalAuthStorage,
-  type LocalAuthStorage,
   type UserSession
 } from "./src/domain/auth";
 import { getScreenTitle, navItems, type ScreenKey } from "./src/navigation/appNavigation";
@@ -3564,19 +3561,10 @@ function GymminApp() {
   }
 
   async function persistAuthSession(authResponse: AuthApiResponse) {
-    const session = createUserSession(
+    const session = await persistStoredAuthSession(
       authResponse,
       authResponse.user.email.split("@")[0] || t("defaultUserName")
     );
-
-    const payload: LocalAuthStorage = {
-      updatedAt: new Date().toISOString(),
-      user: authResponse.user,
-      version: 2
-    };
-
-    await setSecureAuthToken(authResponse.token);
-    await AsyncStorage.setItem(localAuthStorageKey, JSON.stringify(payload));
     setUser(session);
     setIsEmailVerificationOpen(!session.emailVerified);
     setPassword("");
@@ -3659,29 +3647,7 @@ function GymminApp() {
 
   async function updateStoredUserSession(nextUser: UserSession) {
     setUser(nextUser);
-    try {
-      const rawData = await AsyncStorage.getItem(localAuthStorageKey);
-      const storedData = rawData ? JSON.parse(rawData) as LegacyLocalAuthStorage : null;
-      if (storedData) {
-        await AsyncStorage.setItem(localAuthStorageKey, JSON.stringify({
-          updatedAt: new Date().toISOString(),
-          user: {
-            ...(isRecord(storedData.user) ? storedData.user : {}),
-            avatarUpdatedAt: nextUser.avatarUpdatedAt ?? null,
-            avatarUrl: nextUser.avatarUrl ?? null,
-            createdOn: nextUser.createdOn ?? null,
-            email: nextUser.email,
-            emailVerified: nextUser.emailVerified,
-            id: nextUser.id,
-            modifiedOn: nextUser.modifiedOn ?? null,
-            name: nextUser.name
-          },
-          version: 2
-        } satisfies LocalAuthStorage));
-      }
-    } catch (error) {
-      console.error("Failed to update cached auth user", error);
-    }
+    await updateStoredAuthUser(nextUser);
   }
 
   async function requestEmailVerificationCode() {
@@ -4073,10 +4039,7 @@ function GymminApp() {
       });
     }
 
-    Promise.all([
-      AsyncStorage.removeItem(localAuthStorageKey),
-      deleteSecureAuthToken()
-    ]).catch((error) => {
+    clearStoredAuthSession().catch((error) => {
       console.error("Failed to clear local auth", error);
     });
     workoutsInitialSync.reset();
@@ -4126,10 +4089,7 @@ function GymminApp() {
       }
 
       try {
-        await Promise.all([
-          AsyncStorage.removeItem(localAuthStorageKey),
-          deleteSecureAuthToken()
-        ]);
+        await clearStoredAuthSession();
       } catch (authCleanupError) {
         console.error("Failed to clear auth after account deletion", authCleanupError);
       }

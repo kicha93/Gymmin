@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  persistStoredAuthSession,
   restoreStoredAuthSession,
+  updateStoredAuthUser,
   type StoredAuthDependencies
 } from "../../features/auth/authSession";
 
@@ -60,5 +62,19 @@ describe("restoreStoredAuthSession", () => {
       getCurrentUser: async () => cachedUser
     })).resolves.toBeNull();
     expect(malformed.deleteToken).toHaveBeenCalledOnce();
+  });
+
+  it("persists a new session and updates its cached user", async () => {
+    const dependencies = storage(null, null);
+    const session = await persistStoredAuthSession({
+      token: "token",
+      user: cachedUser
+    }, "User", dependencies);
+    expect(session).toMatchObject({ id: "user-1", token: "token" });
+    expect(dependencies.setToken).toHaveBeenCalledWith("token");
+
+    await updateStoredAuthUser({ ...session, emailVerified: true, name: "Updated" }, dependencies);
+    const stored = JSON.parse((await dependencies.getRaw()) ?? "null");
+    expect(stored).toMatchObject({ user: { emailVerified: true, name: "Updated" }, version: 2 });
   });
 });

@@ -335,7 +335,7 @@ import { useInitialAccountSync } from "./src/features/sync/useInitialAccountSync
 import {
   LOCAL_AUTH_STORAGE_KEY as localAuthStorageKey,
   deleteSecureAuthToken,
-  getSecureAuthToken,
+  restoreStoredAuthSession,
   setSecureAuthToken
 } from "./src/features/auth/authSession";
 import {
@@ -343,7 +343,6 @@ import {
   createUserSession,
   type AuthApiResponse,
   type AuthSessionResponse,
-  type AuthUserResponse,
   type LegacyLocalAuthStorage,
   type LocalAuthStorage,
   type UserSession
@@ -1666,113 +1665,18 @@ function GymminApp() {
 
     async function loadLocalAuth() {
       try {
-        const rawData = await AsyncStorage.getItem(localAuthStorageKey);
-        const storedData = rawData ? JSON.parse(rawData) as LegacyLocalAuthStorage : null;
-        let token = await getSecureAuthToken();
-
-        if (!isMounted || !storedData || !isRecord(storedData.user)) {
-          await deleteSecureAuthToken();
-          if (rawData) await AsyncStorage.removeItem(localAuthStorageKey);
-          return;
-        }
-
-        if (!token && typeof storedData.token === "string" && storedData.token.trim()) {
-          token = storedData.token.trim();
-          await setSecureAuthToken(token);
-          await AsyncStorage.setItem(localAuthStorageKey, JSON.stringify({
-            updatedAt: new Date().toISOString(),
-            user: storedData.user,
-            version: 2
-          } satisfies LocalAuthStorage));
-        }
-
-        if (!token) {
-          await AsyncStorage.removeItem(localAuthStorageKey);
-          return;
-        }
-
-        const cachedSession: UserSession = {
-          avatarUpdatedAt: typeof storedData.user.avatarUpdatedAt === "string" ? storedData.user.avatarUpdatedAt : null,
-          avatarUrl: typeof storedData.user.avatarUrl === "string" ? storedData.user.avatarUrl : null,
-          createdOn: typeof storedData.user.createdOn === "string" ? storedData.user.createdOn : null,
-          email: String(storedData.user.email),
-          emailVerified: storedData.user.emailVerified === true,
-          id: String(storedData.user.id),
-          modifiedOn: typeof storedData.user.modifiedOn === "string" ? storedData.user.modifiedOn : null,
-          name: String(storedData.user.name || storedData.user.email.split("@")[0] || t("defaultUserName")),
-          token
-        };
-
-        let responseBody: AuthUserResponse | null;
-        try {
-          responseBody = await authApi.getCurrentUser(
+        const restoredSession = await restoreStoredAuthSession({
+          fallbackName: t("defaultUserName"),
+          getCurrentUser: (cachedSession) => authApi.getCurrentUser(
             getApiHeaders(cachedSession),
             t("authRequestError")
-          );
-        } catch (error) {
-          const status = (error as { status?: number }).status;
-          if (status === 401 || status === 403) {
-            await Promise.all([
-              AsyncStorage.removeItem(localAuthStorageKey),
-              deleteSecureAuthToken()
-            ]);
-          } else {
-            setUser(cachedSession);
-          }
-          return;
-        }
-
-        if (!responseBody) {
-          await Promise.all([
-            AsyncStorage.removeItem(localAuthStorageKey),
-            deleteSecureAuthToken()
-          ]);
-          return;
-        }
-
-        setUser({
-          avatarUpdatedAt: responseBody.avatarUpdatedAt ?? null,
-          avatarUrl: responseBody.avatarUrl ?? null,
-          createdOn: responseBody.createdOn ?? null,
-          email: responseBody.email,
-          emailVerified: responseBody.emailVerified === true,
-          id: responseBody.id,
-          modifiedOn: responseBody.modifiedOn ?? null,
-          name: responseBody.name || responseBody.email.split("@")[0] || t("defaultUserName"),
-          token
+          )
         });
+        if (isMounted && restoredSession) {
+          setUser(restoredSession);
+        }
       } catch (error) {
         console.error("Failed to load local auth", error);
-        try {
-          const rawData = await AsyncStorage.getItem(localAuthStorageKey);
-          const token = await getSecureAuthToken();
-          const storedData = rawData ? JSON.parse(rawData) as LegacyLocalAuthStorage : null;
-          if (
-            isMounted &&
-            typeof token === "string" &&
-            token.trim() &&
-            storedData !== null &&
-            isRecord(storedData.user) &&
-            typeof storedData.user.id === "string" &&
-            typeof storedData.user.email === "string"
-          ) {
-            setUser({
-              avatarUpdatedAt: typeof storedData.user.avatarUpdatedAt === "string" ? storedData.user.avatarUpdatedAt : null,
-              avatarUrl: typeof storedData.user.avatarUrl === "string" ? storedData.user.avatarUrl : null,
-              createdOn: typeof storedData.user.createdOn === "string" ? storedData.user.createdOn : null,
-              email: storedData.user.email,
-              emailVerified: storedData.user.emailVerified === true,
-              id: storedData.user.id,
-              modifiedOn: typeof storedData.user.modifiedOn === "string" ? storedData.user.modifiedOn : null,
-              name: typeof storedData.user.name === "string" && storedData.user.name
-                ? storedData.user.name
-                : storedData.user.email.split("@")[0] || t("defaultUserName"),
-              token
-            });
-          }
-        } catch (fallbackError) {
-          console.error("Failed to restore cached auth after auth check error", fallbackError);
-        }
       } finally {
         if (isMounted) {
           setHasLoadedLocalAuth(true);

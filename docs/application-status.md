@@ -154,6 +154,12 @@ best-effort wylogowanie bieżącego urządzenia z `authApi.logout`. `App.tsx` ni
 interpretuje już surowej odpowiedzi `/api/auth/me` ani nie wykonuje requestu
 logout bezpośrednio.
 
+Pełny cykl startowego odtworzenia znajduje się w
+`src/features/auth/authSession.ts`: moduł migruje legacy token do SecureStore,
+odrzuca cache bez poprawnego ID/emaila, korzysta z cache podczas awarii sieci i
+usuwa zarówno token, jak i metadata sesji po `401/403` albo wadliwej odpowiedzi
+`/auth/me`.
+
 Mutacje profilu korzystają z `src/api/profileApi.ts`. Moduł obsługuje upload i
 usunięcie avatara oraz zdalny krok usunięcia konta; picker, prywatny cache pliku
 i czyszczenie account-scoped danych po sukcesie pozostają poza transportem HTTP.

@@ -25,6 +25,13 @@ vi.mock("react-native", () => ({
   Platform: { OS: "android" }
 }));
 
+vi.mock("expo-secure-store", () => ({
+  AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY: "afterFirstUnlockThisDeviceOnly",
+  deleteItemAsync: vi.fn(async () => undefined),
+  getItemAsync: vi.fn(async () => null),
+  setItemAsync: vi.fn(async () => undefined)
+}));
+
 vi.mock("expo-notifications", () => ({
   AndroidImportance: { DEFAULT: 3 },
   SchedulableTriggerInputTypes: { DATE: "date" },

@@ -87,7 +87,9 @@ zsynchronizowanych danych.
   `useSystemStatusController`.
 - Kontrakty auth, kompletowanie sesji i polityka hasła są w czystym
   `src/domain/auth.ts`, natomiast SecureStore i natywna persystencja tokenu są
-  odseparowane w `src/features/auth/authSession.ts`.
+  odseparowane w `src/features/auth/authSession.ts`. Ten sam moduł wykonuje
+  migrację legacy tokenu, waliduje zapisany profil, odświeża `/auth/me`, używa
+  cache przy awarii online i czyści oba storage po `401/403`.
 - Odczyt, zapis, migracja i wykrywanie anonimowych danych zostały przeniesione
   do `src/storage/localDataRepositories.ts`.
 - Normalizacja zapisanych treningów i sortowania znajduje się w
@@ -137,6 +139,7 @@ Dodano testy dla:
 - kontraktów synchronizacji ulubionych ćwiczeń i osiągnięć.
 - typowanego transportu danych konta i obsługi statusów HTTP.
 - importu odpowiedzi Kreatora, wrapperów JSON, rozgrzewki i odpoczynku.
+- odtwarzania auth: legacy migration, offline fallback i unauthorized cleanup.
 
 Regresja wykryta podczas wydzielania sesji została poprawiona: identyfikator
 ćwiczenia jest teraz kanonizowany przez `resolveExerciseId` również podczas

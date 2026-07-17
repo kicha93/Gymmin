@@ -63,6 +63,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/domain/workoutCreatorImport.ts` parsuje bezpośrednie i opakowane odpowiedzi AI, odzyskuje JSON z tekstu Markdown oraz buduje lokalne treningi z opcjonalną rozgrzewką i mapowaniem do katalogu,
 - `src/domain/accountWorkouts.ts` mapuje lokalne treningi na kontrakt konta, odbudowuje zwalidowane odpowiedzi API i scala rekordy po stabilnym ID z pierwszeństwem danych konta,
 - `src/domain/auth.ts` zawiera czyste kontrakty sesji i politykę hasła, a `src/features/auth/authSession.ts` izoluje natywny SecureStore,
+- `src/features/auth/authSession.ts` odpowiada również za atomowe odtworzenie zapisanej sesji, migrację legacy tokenu, walidację cache i kontrolowany fallback offline,
 - `src/storage/localDataRepositories.ts` centralizuje account-scoped odczyt, zapis i obsługę anonimowych danych treningowych,
 - `src/features` zawiera kontrolery/hooki niezależnych cykli życia danych, obecnie treningów, sesji, ustawień, profili Kreatora i statusu systemu,
 - `src/features/workoutSessions/useAccountScopedWorkoutSessions.ts` wiąże listę sesji, aktywną sesję i pozycję wykonania z jednym właścicielem storage,

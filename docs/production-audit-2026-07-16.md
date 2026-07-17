@@ -20,7 +20,7 @@ upload key, device smoke oraz testu kilku replik.
 
 ## Wynik automatycznej weryfikacji
 
-- mobile unit tests: 215/215,
+- mobile unit tests: 218/218,
 - backend tests: 105/105; dwa pełne przebiegi zakończone sukcesem,
 - TypeScript typecheck: zaliczony,
 - backend Release build z `--warnaserror`: zaliczony, 0 ostrzeżeń,
@@ -100,6 +100,9 @@ systemowego wyboru zdjęcia na starszym Androidzie.
   z typowanego klienta auth. `logout-all` usuwa lokalną sesję dopiero po udanym
   statusie backendu; błąd serwera pozostawia użytkownika zalogowanego. Ten sam
   klient waliduje `/auth/me` i obsługuje best-effort logout bieżącej sesji.
+- `restoreStoredAuthSession` izoluje migrację legacy tokenu do SecureStore,
+  walidację cache, odświeżenie `/auth/me`, offline fallback i bezwarunkowe
+  czyszczenie lokalnych credentials po `401/403`.
 - Zgłoszenia błędów korzystają z `bugReportsApi.ts`, który zachowuje stabilny
   klucz idempotencji, waliduje identyfikator raportu i kieruje błędy przez
   wspólną diagnostykę HTTP.

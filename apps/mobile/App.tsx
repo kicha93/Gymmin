@@ -63,10 +63,7 @@ import {
   type AppUsageStats,
   type UserAchievement
 } from "./src/domain/achievements";
-import {
-  synchronizeAchievements,
-  type AchievementSyncRequest
-} from "./src/domain/achievementSync";
+import { synchronizeAchievements } from "./src/domain/achievementSync";
 import {
   GoalType,
   StageType,
@@ -120,7 +117,6 @@ import {
 } from "./src/domain/appSettings";
 import {
   synchronizeWorkoutSessions,
-  type WorkoutSessionSyncRequest
 } from "./src/domain/workoutSessionSync";
 import {
   findExerciseById,
@@ -149,7 +145,6 @@ import {
 import type { FavoriteExercise } from "./src/domain/favoriteExercises";
 import {
   synchronizeFavoriteExercises,
-  type FavoriteExerciseSyncRequest
 } from "./src/domain/favoriteExerciseSync";
 import {
   ANONYMOUS_LOCAL_OWNER,
@@ -203,6 +198,10 @@ import {
 } from "./src/api/apiClient";
 import { createAuthApiClient } from "./src/api/authApi";
 import { createAiCreditsApiClient } from "./src/api/aiCreditsApi";
+import { createBugReportsApiClient } from "./src/api/bugReportsApi";
+import {
+  createAccountDataApiClient
+} from "./src/api/accountDataApi";
 import { createProfileApiClient } from "./src/api/profileApi";
 import {
   createWorkoutCreatorApiClient,
@@ -292,13 +291,15 @@ import type { SavedWorkout, SortDirection, WorkoutSortField, WorkoutSortSettings
 import {
   compareWorkouts,
   defaultWorkoutSort,
-  getFallbackWorkoutCreatedAt,
-  normalizeDateString,
   normalizeSavedWorkoutTextFields,
   normalizeWorkoutDraftTextFields,
-  normalizeWorkoutSortSettings,
-  repairTextEncoding
+  normalizeWorkoutSortSettings
 } from "./src/domain/savedWorkoutNormalization";
+import {
+  mapApiWorkoutToSavedWorkout,
+  mapSavedWorkoutToApiRequest,
+  mergeWorkoutsById
+} from "./src/domain/accountWorkouts";
 import {
   ACTIVE_WORKOUT_SESSION_STORAGE_BASE_KEY as activeWorkoutSessionStorageBaseKey,
   LOCAL_CREATOR_JOB_STORAGE_BASE_KEY as localCreatorJobStorageBaseKey,
@@ -505,32 +506,6 @@ function getReminderWeekdayFromNumber(value: number): ReminderWeekday {
       return "monday";
   }
 }
-
-type ApiWorkoutStep = {
-  clientStepId: string;
-  exerciseId?: string;
-  exerciseName?: string;
-  goalType?: GoalType | null;
-  kind: WorkoutStepKind;
-  label?: string;
-  loadKg?: string;
-  notes?: string;
-  parentSetClientId?: string;
-  parentStageClientId?: string;
-  setCount?: string;
-  stageType?: StageType | null;
-  targetComparator?: TargetComparator | null;
-  targetValue?: string;
-};
-
-type ApiWorkout = {
-  clientWorkoutId: string;
-  createdAt?: string;
-  name: string;
-  notes?: string;
-  sport: "strength";
-  steps: ApiWorkoutStep[];
-};
 
 type ApiUserSettings = AppSettings;
 
@@ -846,84 +821,6 @@ const trainingFacts: Record<LanguageCode, string[]> = {
     "The best training plan is the one you stick to."
   ]
 };
-
-function mapSavedWorkoutToApiRequest(workout: SavedWorkout) {
-  const normalizedWorkout = normalizeSavedWorkoutTextFields(workout);
-
-  return {
-    clientUpdatedAt: new Date().toISOString(),
-    clientWorkoutId: normalizedWorkout.id,
-    createdAt: normalizedWorkout.createdAt ?? getFallbackWorkoutCreatedAt(normalizedWorkout),
-    name: normalizedWorkout.name || normalizedWorkout.draft.name || "Workout",
-    notes: normalizedWorkout.draft.notes ?? "",
-    sport: normalizedWorkout.draft.sport,
-    steps: normalizedWorkout.draft.steps.map((step) => ({
-      clientStepId: step.id,
-      exerciseId: step.exerciseId ?? "",
-      exerciseName: step.exerciseName,
-      goalType: step.goalType || null,
-      kind: step.kind,
-      label: step.label,
-      loadKg: step.loadKg,
-      notes: step.notes,
-      parentSetClientId: step.parentSetId ?? "",
-      parentStageClientId: step.parentStageId ?? "",
-      setCount: step.setCount,
-      stageType: step.stageType || null,
-      targetComparator: step.targetComparator || null,
-      targetValue: step.targetValue
-    }))
-  };
-}
-
-function mapApiWorkoutToSavedWorkout(apiWorkout: ApiWorkout): SavedWorkout {
-  const steps = Array.isArray(apiWorkout.steps) ? apiWorkout.steps : [];
-  const name = repairTextEncoding(apiWorkout.name || "Workout");
-
-  return normalizeSavedWorkoutTextFields({
-    draft: {
-      name,
-      notes: repairTextEncoding(apiWorkout.notes ?? ""),
-      sport: "strength",
-      steps: steps.map((step) => ({
-        exerciseId: step.exerciseId ?? findCatalogExerciseBestEffort(step.exerciseName ?? "")?.id ?? "",
-        exerciseName: repairTextEncoding(step.exerciseName ?? ""),
-        goalType: step.goalType ?? "",
-        id: step.clientStepId,
-        intensity: "moderate",
-        kind: step.kind,
-        label: repairTextEncoding(step.label ?? ""),
-        loadKg: repairTextEncoding(step.loadKg ?? ""),
-        notes: repairTextEncoding(step.notes ?? ""),
-        parentSetId: step.parentSetClientId || undefined,
-        parentStageId: step.parentStageClientId || undefined,
-        setCount: repairTextEncoding(step.setCount ?? ""),
-        stageType: step.stageType ?? "",
-        targetComparator: step.targetComparator ?? "",
-        targetValue: repairTextEncoding(step.targetValue ?? "")
-      }))
-    },
-    createdAt: normalizeDateString(apiWorkout.createdAt) ?? getFallbackWorkoutCreatedAt({ id: apiWorkout.clientWorkoutId }),
-    id: apiWorkout.clientWorkoutId,
-    name
-  });
-}
-
-function mergeWorkoutsById(primary: SavedWorkout[], fallback: SavedWorkout[]) {
-  const seen = new Set<string>();
-  const result: SavedWorkout[] = [];
-
-  [...primary, ...fallback].forEach((workout) => {
-    if (seen.has(workout.id)) {
-      return;
-    }
-
-    seen.add(workout.id);
-    result.push(normalizeSavedWorkoutTextFields(workout));
-  });
-
-  return result;
-}
 
 function normalizeApiUserSettings(value: unknown): ApiUserSettings | null {
   if (!isRecord(value)) {
@@ -1705,7 +1602,17 @@ function GymminApp() {
       createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
     request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
   });
+  const accountDataApi = createAccountDataApiClient({
+    createError: (response, endpoint, method, fallbackMessage) =>
+      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
+    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
+  });
   const aiCreditsApi = createAiCreditsApiClient({
+    createError: (response, endpoint, method, fallbackMessage) =>
+      createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
+    request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
+  });
+  const bugReportsApi = createBugReportsApiClient({
     createError: (response, endpoint, method, fallbackMessage) =>
       createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError")),
     request: (endpoint, init) => requestApi(apiBaseUrl, endpoint, init)
@@ -2292,12 +2199,15 @@ function GymminApp() {
           token
         };
 
-        const response = await sendApiRequest("/api/auth/me", {
-          headers: getApiHeaders(cachedSession)
-        });
-
-        if (!response.ok) {
-          if (response.status === 401 || response.status === 403) {
+        let responseBody: AuthUserResponse | null;
+        try {
+          responseBody = await authApi.getCurrentUser(
+            getApiHeaders(cachedSession),
+            t("authRequestError")
+          );
+        } catch (error) {
+          const status = (error as { status?: number }).status;
+          if (status === 401 || status === 403) {
             await Promise.all([
               AsyncStorage.removeItem(localAuthStorageKey),
               deleteSecureAuthToken()
@@ -2308,9 +2218,7 @@ function GymminApp() {
           return;
         }
 
-        const responseBody = await response.json().catch(() => null) as AuthUserResponse | null;
-
-        if (!responseBody?.id || !responseBody.email) {
+        if (!responseBody) {
           await Promise.all([
             AsyncStorage.removeItem(localAuthStorageKey),
             deleteSecureAuthToken()
@@ -2843,14 +2751,6 @@ function GymminApp() {
     return buildApiHeaders(session);
   }
 
-  function sendApiRequest(endpoint: string, init: RequestInit = {}) {
-    return requestApi(apiBaseUrl, endpoint, init);
-  }
-
-  async function createApiError(response: Response, endpoint: string, method: string, fallbackMessage: string) {
-    return createHttpApiError(response, endpoint, method, fallbackMessage, t("rateLimitError"));
-  }
-
   async function fetchAiCredits(session = user) {
     if (!session) {
       return;
@@ -3016,35 +2916,23 @@ function GymminApp() {
   }
 
   async function fetchAccountWorkouts(session: UserSession) {
-    const response = await sendApiRequest("/api/workouts/", {
-      headers: getAuthHeaders(session)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Workout fetch failed with status ${response.status}`);
-    }
-
-    const responseBody = await response.json().catch(() => []) as ApiWorkout[];
-    return Array.isArray(responseBody) ? responseBody.map(mapApiWorkoutToSavedWorkout) : [];
+    const workouts = await accountDataApi.getWorkouts(
+      getAuthHeaders(session),
+      "Workout fetch failed"
+    );
+    return workouts.map(mapApiWorkoutToSavedWorkout);
   }
 
   async function synchronizeAccountWorkouts(session: UserSession, localWorkouts: SavedWorkout[]) {
-    const response = await sendApiRequest("/api/sync/workouts", {
-      body: JSON.stringify({
+    await accountDataApi.syncWorkouts(
+      {
         deletedClientWorkoutIds: [],
         lastPulledAt: null,
         workouts: localWorkouts.map(mapSavedWorkoutToApiRequest)
-      }),
-      headers: {
-        ...getAuthHeaders(session),
-        "Content-Type": "application/json"
       },
-      method: "POST"
-    });
-
-    if (!response.ok) {
-      throw new Error(`Workout sync failed with status ${response.status}`);
-    }
+      getAuthHeaders(session),
+      "Workout sync failed"
+    );
 
     const accountWorkouts = await fetchAccountWorkouts(session);
     const mergedWorkouts = mergeWorkoutsById(accountWorkouts, localWorkouts);
@@ -3062,18 +2950,11 @@ function GymminApp() {
       return;
     }
 
-    const response = await sendApiRequest("/api/workouts/", {
-      body: JSON.stringify(mapSavedWorkoutToApiRequest(nextWorkout)),
-      headers: {
-        ...getAuthHeaders(session),
-        "Content-Type": "application/json"
-      },
-      method: "POST"
-    });
-
-    if (!response.ok) {
-      throw new Error(`Workout upsert failed with status ${response.status}`);
-    }
+    await accountDataApi.upsertWorkout(
+      mapSavedWorkoutToApiRequest(nextWorkout),
+      getAuthHeaders(session),
+      "Workout upsert failed"
+    );
   }
 
   async function deleteAccountWorkout(workoutId: string, session = user) {
@@ -3081,14 +2962,11 @@ function GymminApp() {
       return;
     }
 
-    const response = await sendApiRequest(`/api/workouts/${encodeURIComponent(workoutId)}`, {
-      headers: getAuthHeaders(session),
-      method: "DELETE"
-    });
-
-    if (!response.ok && response.status !== 404) {
-      throw new Error(`Workout delete failed with status ${response.status}`);
-    }
+    await accountDataApi.deleteWorkout(
+      workoutId,
+      getAuthHeaders(session),
+      "Workout delete failed"
+    );
   }
 
   function updateWorkoutReminderSettings(nextSettings: WorkoutReminderSettings) {
@@ -3189,19 +3067,10 @@ function GymminApp() {
   }
 
   async function fetchAccountSettings(session: UserSession) {
-    const response = await sendApiRequest("/api/settings", {
-      headers: getAuthHeaders(session)
-    });
-
-    if (response.status === 204 || response.status === 404) {
-      return null;
-    }
-
-    if (!response.ok) {
-      throw new Error(`Settings fetch failed with status ${response.status}`);
-    }
-
-    const responseBody = await response.json().catch(() => null) as unknown;
+    const responseBody = await accountDataApi.getSettings(
+      getAuthHeaders(session),
+      "Settings fetch failed"
+    );
     return normalizeApiUserSettings(responseBody);
   }
 
@@ -3210,23 +3079,14 @@ function GymminApp() {
       return null;
     }
 
-    const response = await sendApiRequest("/api/settings", {
-      body: JSON.stringify({
+    const responseBody = await accountDataApi.saveSettings(
+      {
         ...payload,
         defaultStageType: payload.defaultStageType || null
-      }),
-      headers: {
-        ...getAuthHeaders(session),
-        "Content-Type": "application/json"
       },
-      method: "PUT"
-    });
-
-    if (!response.ok) {
-      throw new Error(`Settings save failed with status ${response.status}`);
-    }
-
-    const responseBody = await response.json().catch(() => null) as unknown;
+      getAuthHeaders(session),
+      "Settings save failed"
+    );
     return normalizeApiUserSettings(responseBody);
   }
 
@@ -3255,23 +3115,11 @@ function GymminApp() {
       favorites: localFavorites,
       forceFullPull,
       userId: session.id,
-      request: async (body: FavoriteExerciseSyncRequest) => {
-        const response = await sendApiRequest("/api/sync/favorite-exercises", {
-          body: JSON.stringify(body),
-          headers: {
-            ...getAuthHeaders(session),
-            "Content-Type": "application/json"
-          },
-          method: "POST"
-        });
-        if (response.status === 401) {
-          throw new Error("Favorite exercises sync unauthorized");
-        }
-        if (!response.ok) {
-          throw new Error(`Favorite exercises sync failed with status ${response.status}`);
-        }
-        return response.json().catch(() => null);
-      }
+      request: (body) => accountDataApi.syncFavoriteExercises(
+        body,
+        getAuthHeaders(session),
+        "Favorite exercises sync failed"
+      )
     });
   }
 
@@ -3294,23 +3142,11 @@ function GymminApp() {
       forceFullPull,
       localSessions,
       userId: session.id,
-      request: async (body: WorkoutSessionSyncRequest) => {
-        const response = await sendApiRequest("/api/sync/workout-sessions", {
-          body: JSON.stringify(body),
-          headers: {
-            ...getAuthHeaders(session),
-            "Content-Type": "application/json"
-          },
-          method: "POST"
-        });
-        if (response.status === 401) {
-          throw new Error("Workout sessions sync unauthorized");
-        }
-        if (!response.ok) {
-          throw new Error(`Workout sessions sync failed with status ${response.status}`);
-        }
-        return response.json().catch(() => null);
-      }
+      request: (body) => accountDataApi.syncWorkoutSessions(
+        body,
+        getAuthHeaders(session),
+        "Workout sessions sync failed"
+      )
     });
   }
 
@@ -3342,23 +3178,19 @@ function GymminApp() {
       forceFullPull,
       unlocked: localAchievements,
       userId: session.id,
-      request: async (body: AchievementSyncRequest) => {
-        const response = await sendApiRequest("/api/sync/achievements", {
-          body: JSON.stringify(body),
-          headers: {
-            ...getAuthHeaders(session),
-            "Content-Type": "application/json"
-          },
-          method: "POST"
-        });
-        if (response.status === 401) {
-          handleUnauthorizedSession();
-          throw new Error("Achievements sync unauthorized");
+      request: async (body) => {
+        try {
+          return await accountDataApi.syncAchievements(
+            body,
+            getAuthHeaders(session),
+            "Achievements sync failed"
+          );
+        } catch (error) {
+          if ((error as { status?: number }).status === 401) {
+            handleUnauthorizedSession();
+          }
+          throw error;
         }
-        if (!response.ok) {
-          throw await createApiError(response, "/api/sync/achievements", "POST", "Achievements sync failed");
-        }
-        return response.json().catch(() => null);
       }
     });
   }
@@ -4799,24 +4631,13 @@ function GymminApp() {
     bugReportSubmissionRef.current = { key: idempotencyKey, signature: submissionSignature };
 
     try {
-      const response = await sendApiRequest("/api/bug-reports", {
-        body: JSON.stringify(bugReportPayload),
-        headers: {
-          "Content-Type": "application/json",
-          ...getApiHeaders(user),
-          "X-Idempotency-Key": idempotencyKey
-        },
-        method: "POST"
-      });
-      const responseBody = await response.json().catch(() => null) as
-        | { id?: string; error?: string; detail?: string }
-        | null;
-
-      if (!response.ok) {
-        throw await createApiError(response, "/api/bug-reports", "POST", responseBody?.detail ?? responseBody?.error ?? t("bugSubmitError"));
-      }
-
-      setBugSubmittedId(responseBody?.id ?? "");
+      const result = await bugReportsApi.submit(
+        bugReportPayload,
+        idempotencyKey,
+        getApiHeaders(user),
+        t("bugSubmitError")
+      );
+      setBugSubmittedId(result.id);
       bugReportSubmissionRef.current = null;
       setBugTitle("");
       setBugDescription("");
@@ -4839,10 +4660,7 @@ function GymminApp() {
     const token = user?.token;
 
     if (token) {
-      sendApiRequest("/api/auth/logout", {
-        headers: getApiHeaders(user),
-        method: "POST"
-      }).catch((error) => {
+      authApi.logout(getApiHeaders(user), t("authRequestError")).catch((error) => {
         console.error("Logout request failed", error);
       });
     }

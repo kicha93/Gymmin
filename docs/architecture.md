@@ -52,11 +52,14 @@ Kod mobile jest dzielony według odpowiedzialności:
 
 - `App.tsx` pozostaje głównym miejscem kompozycji ekranów, nawigacji i nadrzędnego stanu aplikacji,
 - `src/api/apiClient.ts` centralizuje requesty HTTP, bearer token, correlation id, diagnostykę i bezpieczne błędy API,
+- `src/api/accountDataApi.ts` centralizuje CRUD treningów, ustawienia oraz endpointy synchronizacji treningów, ulubionych, sesji i osiągnięć; waliduje rekordy treningów w runtime, a algorytmy merge i metadata pozostają w modułach domenowych,
 - `src/api/authApi.ts` jest typowanym klientem credentials, weryfikacji emaila, haseł i aktywnych sesji; waliduje kształt odpowiedzi przed przekazaniem danych do UI,
+- `src/api/bugReportsApi.ts` obsługuje idempotentne wysłanie zgłoszenia, walidację odpowiedzi i szczegóły błędów backendu,
 - `src/api/profileApi.ts` obsługuje transport avatara i step-up account deletion; aplikacja zachowuje odpowiedzialność za picker, cache i czyszczenie account-scoped storage,
 - `src/api/aiCreditsApi.ts` obsługuje saldo, historię, pakiety, weryfikację Google Play i deweloperskie zasilenie kredytów; natywne billing UI i lokalizacja pozostają w kompozycji,
 - `src/api/workoutCreatorApi.ts` definiuje transport startu planu/rewrite i statusu joba oraz normalizuje `queued/processing/completed/failed`; polling i zastosowanie wyniku pozostają w warstwie kompozycji,
 - `src/domain/workoutCreatorJob.ts` waliduje i normalizuje lokalny kontrakt oczekującego joba, a `src/features/workoutCreator/useAccountScopedCreatorJob.ts` izoluje jego odczyt, zapis i zmianę właściciela storage,
+- `src/domain/accountWorkouts.ts` mapuje lokalne treningi na kontrakt konta, odbudowuje zwalidowane odpowiedzi API i scala rekordy po stabilnym ID z pierwszeństwem danych konta,
 - `src/domain/auth.ts` zawiera czyste kontrakty sesji i politykę hasła, a `src/features/auth/authSession.ts` izoluje natywny SecureStore,
 - `src/storage/localDataRepositories.ts` centralizuje account-scoped odczyt, zapis i obsługę anonimowych danych treningowych,
 - `src/features` zawiera kontrolery/hooki niezależnych cykli życia danych, obecnie treningów, sesji, ustawień, profili Kreatora i statusu systemu,
@@ -98,11 +101,11 @@ Podział warstwy mobile jest zakończony na poziomie ekranów:
 - `src/components` zawiera współdzielone kontrolki, dialogi, pickery, widgety homepage i elementy prezentacji treningu,
 - `src/domain` zawiera typy, normalizację i testowalne helpery niezależne od React Native,
 - `src/navigation/appNavigation.ts` zawiera typy tras, dolną nawigację i mapowanie tytułów ekranów,
-- `App.tsx` jest warstwą kompozycji: utrzymuje nadrzędny stan aplikacji, account-scoped storage, wywołania API, synchronizację i przekazuje dane oraz callbacki do ekranów.
+- `App.tsx` jest warstwą kompozycji: utrzymuje nadrzędny stan aplikacji, account-scoped storage i orkiestrację synchronizacji oraz przekazuje dane i callbacki do ekranów; requesty HTTP wykonują moduły `src/api`.
 
 Taki podział nie zmienia publicznych kontraktów, storage ani modelu danych. Krótkie funkcje `render...` pozostające w `App.tsx` są adapterami kompozycyjnymi i nie zawierają samodzielnych layoutów ekranów.
 
-`src/screens/SettingsScreen.tsx` prezentuje aktywne sekcje ustawień, harmonogram przypomnień i linki informacyjne. `src/components/SettingsSheetContent.tsx` zawiera kontrolowane arkusze wyboru języka, domyślnych parametrów treningu i godziny przypomnienia. Account-scoped stan i persystencja są w `useAccountScopedSettings`, normalizacja w `src/domain/appSettings.ts`, a `useAccountSettingsAutoSave` bezpiecznie grupuje i serializuje zdalne zapisy. `App.tsx` koordynuje uprawnienia do powiadomień i transport `/api/settings`.
+`src/screens/SettingsScreen.tsx` prezentuje aktywne sekcje ustawień, harmonogram przypomnień i linki informacyjne. `src/components/SettingsSheetContent.tsx` zawiera kontrolowane arkusze wyboru języka, domyślnych parametrów treningu i godziny przypomnienia. Account-scoped stan i persystencja są w `useAccountScopedSettings`, normalizacja w `src/domain/appSettings.ts`, a `useAccountSettingsAutoSave` bezpiecznie grupuje i serializuje zdalne zapisy. `App.tsx` koordynuje uprawnienia do powiadomień, natomiast transport `/api/settings` obsługuje `accountDataApi.ts`.
 
 ### Local storage
 

@@ -49,7 +49,11 @@ zsynchronizowanych danych.
 - Typowany `src/api/authApi.ts` obsługuje transport logowania/rejestracji,
   weryfikacji emaila, resetu i zmiany hasła oraz aktywnych sesji. Moduł waliduje
   poprawne odpowiedzi i kieruje nieudane statusy przez wspólną diagnostykę API;
-  widoki nadal odpowiadają za lokalizację i stan formularzy.
+  obsługuje również odświeżenie `/auth/me` i logout bieżącej sesji. Widoki nadal
+  odpowiadają za lokalizację i stan formularzy.
+- `src/api/bugReportsApi.ts` izoluje wysłanie raportu, stabilny idempotency key,
+  walidację ID odpowiedzi oraz szczegóły błędów. Diagnostyka urządzenia i stan
+  formularza pozostają w composition root.
 - `src/api/profileApi.ts` izoluje upload/usunięcie avatara i zdalne usunięcie
   konta. Picker, przygotowanie pliku, cache avatara i lokalne czyszczenie danych
   pozostają w aplikacji, a statusy i odpowiedzi HTTP są walidowane centralnie.
@@ -57,6 +61,13 @@ zsynchronizowanych danych.
   weryfikację zakupu Google Play oraz deweloperskie zasilenie. Warstwa zachowuje
   częściową odporność odczytu: niedostępna historia lub lista pakietów nie usuwa
   ostatnich poprawnych danych, ale saldo pozostaje wymaganym źródłem prawdy.
+- `src/api/accountDataApi.ts` przejął CRUD treningów, odczyt/zapis ustawień oraz
+  requesty synchronizacji treningów, ulubionych, sesji i osiągnięć. Composition
+  root przekazuje do niego bearer headers i zachowuje wyłącznie decyzje o merge,
+  obsługę zmiany konta oraz aktualizację stanu UI.
+- `src/domain/accountWorkouts.ts` zawiera serializację treningu do API,
+  odbudowanie lokalnego modelu ze zwalidowanej odpowiedzi oraz deterministyczny
+  merge po ID. Te reguły nie są już globalnymi helperami composition root.
 - `src/api/workoutCreatorApi.ts` izoluje start planu, start rewrite i odczyt
   statusu joba Kreatora. Obsługuje zarówno aktualne odpowiedzi asynchroniczne,
   jak i zgodność ze starszym bezpośrednim wynikiem; polling, kredyty, import i
@@ -86,8 +97,8 @@ zsynchronizowanych danych.
 - Skrypt `scripts/normalize-exercise-technique-content.mjs` pozwala bezpiecznie
   odtworzyć normalizację przy kolejnej aktualizacji danych.
 
-`App.tsx` pozostaje composition root, ale nie jest już właścicielem niskopoziomowej
-obsługi requestów, części repozytoriów i kilku niezależnych cykli życia danych.
+`App.tsx` pozostaje composition root, ale nie wykonuje już bezpośrednich requestów
+HTTP i nie jest właścicielem części repozytoriów ani niezależnych cykli życia danych.
 
 ### Backend
 
@@ -117,6 +128,7 @@ Dodano testy dla:
 - normalizacji ustawień aplikacji,
 - kontraktu, odpowiedzi i scalania synchronizacji sesji treningowych.
 - kontraktów synchronizacji ulubionych ćwiczeń i osiągnięć.
+- typowanego transportu danych konta i obsługi statusów HTTP.
 
 Regresja wykryta podczas wydzielania sesji została poprawiona: identyfikator
 ćwiczenia jest teraz kanonizowany przez `resolveExerciseId` również podczas

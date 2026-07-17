@@ -59,4 +59,18 @@ describe("authApi", () => {
 
     await expect(client.logoutAll({}, "failed")).rejects.toMatchObject({ status: 503 });
   });
+
+  it("validates current-user responses and supports current-session logout", async () => {
+    const request = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ email: "user@example.com", id: "user-a", name: "User" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    const client = createAuthApiClient({
+      createError: async () => new Error("request failed"),
+      request
+    });
+
+    await expect(client.getCurrentUser({}, "failed")).resolves.toMatchObject({ id: "user-a" });
+    await expect(client.logout({}, "failed")).resolves.toBeUndefined();
+    expect(request).toHaveBeenLastCalledWith("/api/auth/logout", expect.objectContaining({ method: "POST" }));
+  });
 });

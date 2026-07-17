@@ -34,6 +34,15 @@ export function createAuthApiClient(dependencies: {
   }
 
   return {
+    async getCurrentUser(
+      headers: Record<string, string>,
+      fallbackMessage: string
+    ): Promise<AuthUserResponse | null> {
+      const response = await requireSuccess("/api/auth/me", { headers }, fallbackMessage);
+      const value = await response.json().catch(() => null);
+      return isAuthUserResponse(value) ? value : null;
+    },
+
     async authenticate(
       endpoint: "login" | "register",
       body: Record<string, string>,
@@ -144,6 +153,16 @@ export function createAuthApiClient(dependencies: {
       await requireSuccess("/api/auth/logout-all", {
         body: JSON.stringify({ exceptCurrent: false }),
         headers: { ...headers, "Content-Type": "application/json" },
+        method: "POST"
+      }, fallbackMessage);
+    },
+
+    async logout(
+      headers: Record<string, string>,
+      fallbackMessage: string
+    ) {
+      await requireSuccess("/api/auth/logout", {
+        headers,
         method: "POST"
       }, fallbackMessage);
     }

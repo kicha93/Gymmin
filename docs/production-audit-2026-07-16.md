@@ -20,7 +20,7 @@ upload key, device smoke oraz testu kilku replik.
 
 ## Wynik automatycznej weryfikacji
 
-- mobile unit tests: 196/196,
+- mobile unit tests: 208/208,
 - backend tests: 105/105; dwa pełne przebiegi zakończone sukcesem,
 - TypeScript typecheck: zaliczony,
 - backend Release build z `--warnaserror`: zaliczony, 0 ostrzeżeń,
@@ -85,7 +85,7 @@ systemowego wyboru zdjęcia na starszym Androidzie.
 
 ## Ryzyka nieblokujące
 
-- `App.tsx` pozostaje dużym composition root, ale klient API, repozytoria
+- `App.tsx` pozostaje dużym composition root, ale typowane klienty API, repozytoria
   local-first, account-scoped ustawienia i sesje, automatyczny debounce sync,
   kontrakty transportowe sesji/ulubionych/osiągnięć, account-scoped kontrolery
   ulubionych i osiągnięć, kontrolery treningów/profili/statusu oraz logika
@@ -93,10 +93,16 @@ systemowego wyboru zdjęcia na starszym Androidzie.
   wspólną bramkę stanu i ignoruje wyniki requestów poprzedniego konta. Dalszy
   automatyczny zapis ustawień jest debounced i serializowany, więc szybkie
   zmiany nie tworzą wyścigu równoległych `PUT`. Dalszy podział auth i procesów
-  AI należy wykonywać etapami.
+  AI należy wykonywać etapami. Transport CRUD treningów, ustawień oraz sync
+  treningów, ulubionych, sesji i osiągnięć znajduje się w `accountDataApi.ts`,
+  a mapowanie treningów konta i merge w `domain/accountWorkouts.ts`.
 - Operacje credentials, weryfikacji emaila, haseł i aktywnych sesji korzystają
   z typowanego klienta auth. `logout-all` usuwa lokalną sesję dopiero po udanym
-  statusie backendu; błąd serwera pozostawia użytkownika zalogowanego.
+  statusie backendu; błąd serwera pozostawia użytkownika zalogowanego. Ten sam
+  klient waliduje `/auth/me` i obsługuje best-effort logout bieżącej sesji.
+- Zgłoszenia błędów korzystają z `bugReportsApi.ts`, który zachowuje stabilny
+  klucz idempotencji, waliduje identyfikator raportu i kieruje błędy przez
+  wspólną diagnostykę HTTP.
 - Upload/usunięcie avatara i zdalne usunięcie konta korzystają z typowanego
   klienta profilu, który zachowuje rozróżnienie `401/403` dla step-up auth i nie
   uruchamia lokalnego czyszczenia po nieudanym statusie API.

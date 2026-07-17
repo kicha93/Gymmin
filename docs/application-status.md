@@ -79,13 +79,25 @@ Formularz Kreatora AI jest wydzielony do `WorkoutCreatorScreen`, a definicja ank
 
 Formularz modyfikowania treningu przez AI i ekran propozycji mają osobne moduły `WorkoutAiRewriteScreen` oraz `WorkoutAiProposalScreen`. Podgląd zachowuje hierarchię etapów, serii i ćwiczeń oraz informację o dopasowaniu do katalogu. Endpoint rewrite, polling, rozliczenie kredytu, zapis jako nowy trening i zastąpienie istniejącego planu pozostają w kompozycji aplikacji.
 
-Warstwa prezentacyjna Ustawień jest wydzielona do `SettingsScreen` i `SettingsSheetContent`. Ekran zachowuje sekcje preferencji, treningu, przypomnień, integracji i informacji, a arkusze zachowują edycję języka, wartości domyślnych oraz godzin per dzień. Normalizacja znajduje się w `src/domain/appSettings.ts`, account-scoped persystencja w `useAccountScopedSettings`, natomiast `App.tsx` koordynuje uprawnienia powiadomień i transport synchronizacji ustawień.
+Warstwa prezentacyjna Ustawień jest wydzielona do `SettingsScreen` i `SettingsSheetContent`. Ekran zachowuje sekcje preferencji, treningu, przypomnień, integracji i informacji, a arkusze zachowują edycję języka, wartości domyślnych oraz godzin per dzień. Normalizacja znajduje się w `src/domain/appSettings.ts`, account-scoped persystencja w `useAccountScopedSettings`, transport w `src/api/accountDataApi.ts`, natomiast `App.tsx` koordynuje uprawnienia powiadomień i decyzje synchronizacji ustawień.
 
 Wszystkie widoki nawigacyjne mobile mają obecnie własne moduły w `src/screens`. Dotyczy to również homepage, listy treningów, planu tygodnia, buildera treningu, aktywnej sesji, szczegółów ćwiczenia, ulubionych ćwiczeń i artykułu. Elementy używane przez kilka ekranów zostały przeniesione do `src/components`, a typy i czyste helpery do `src/domain`. `App.tsx` pozostaje kompozytorem stanu, storage, API, synchronizacji i nawigacji; nie zawiera już pełnych implementacji ekranów.
 
 Account-scoped ulubione ćwiczenia i osiągnięcia mają własne kontrolery w `src/features`. Synchronizacja ulubionych odrzuca spóźnione odpowiedzi, a osiągnięcia oraz czas użycia korzystają z jednego debounce zamiast dwóch konkurujących timerów. Kontrakty, normalizacja odpowiedzi i merge znajdują się odpowiednio w `src/domain/favoriteExerciseSync.ts` i `src/domain/achievementSync.ts`.
 
 Pierwszą synchronizację treningów, ustawień, ulubionych, sesji i osiągnięć po zalogowaniu koordynuje `useInitialAccountSync`. Każda dziedzina ma jawny stan synchronizacji, a odpowiedź rozpoczęta dla poprzedniego konta jest unieważniana po zmianie użytkownika lub właściciela lokalnego storage.
+
+HTTP dla CRUD treningów, ustawień oraz synchronizacji treningów, ulubionych,
+sesji i osiągnięć jest skupione w typowanym `src/api/accountDataApi.ts`. Moduły
+domenowe nadal budują payloady, zapisują metadata i wykonują merge, dzięki czemu
+transport nie zawiera decyzji UI ani storage. Odpowiedź listy treningów jest
+walidowana w runtime; rekordy bez stabilnego ID i wadliwe kroki są odrzucane
+przed przekazaniem do mappera oraz merge.
+
+Mapowanie treningów pomiędzy lokalnym `SavedWorkout` i kontraktem konta oraz
+deterministyczny merge po stabilnym ID znajdują się w
+`src/domain/accountWorkouts.ts`. Dane konta mają pierwszeństwo przed lokalnym
+duplikatem, a brakujące rekordy lokalne są zachowywane.
 
 Kolejne zmiany ustawień są zapisywane zdalnie przez `useAccountSettingsAutoSave`. Kontroler stosuje debounce 400 ms, utrzymuje najwyżej jeden aktywny `PUT /api/settings` i po zakończeniu wysyła wyłącznie najnowszą oczekującą rewizję. Odpowiedź starego konta ani starszej rewizji nie aktualizuje lokalnego `updatedAt`.
 
@@ -136,6 +148,11 @@ Mobile używa typowanego `src/api/authApi.ts` dla logowania, rejestracji,
 weryfikacji emaila, resetu/zmiany hasła i aktywnych sesji. Klient waliduje
 odpowiedzi przed aktualizacją UI. Akcja wylogowania wszystkich urządzeń czyści
 lokalną sesję dopiero po potwierdzonym sukcesie API.
+
+Odtworzenie zapisanej sesji korzysta z walidowanego `authApi.getCurrentUser`, a
+best-effort wylogowanie bieżącego urządzenia z `authApi.logout`. `App.tsx` nie
+interpretuje już surowej odpowiedzi `/api/auth/me` ani nie wykonuje requestu
+logout bezpośrednio.
 
 Mutacje profilu korzystają z `src/api/profileApi.ts`. Moduł obsługuje upload i
 usunięcie avatara oraz zdalny krok usunięcia konta; picker, prywatny cache pliku
@@ -457,7 +474,7 @@ Homepage pokazuje kompaktowy panel aktywnego planu tygodnia. Plan jest local-fir
 
 Kontakt ma zwarty układ: główny CTA otwiera klienta poczty dla `kontakt@gymmin.app`, informacja o czasie odpowiedzi jest krótkim paskiem, a problemy z aplikacją prowadzą do istniejącego formularza „Zgłoś błąd”. FAQ zawiera trzy zwijane odpowiedzi, dzięki czemu ekran nie powtarza długich bloków tekstu.
 
-Zgłoszenie błędu idzie do backendu przez `POST /api/bug-reports`. Aplikacja dołącza informacje o urządzeniu, systemie, języku i ekranie, bearer token oraz stabilny dla retry `X-Idempotency-Key`. Backend zapisuje raport przed dostarczeniem maila; trwały worker SMTP używa lease, retry i backoff. Request ma limit 64 KiB oraz domyślnie 10 zgłoszeń na użytkownika/IP na godzinę. `GET /api/bug-reports/{id}` zwraca status z kontrolą właściciela. Usunięcie konta usuwa powiązanie i identyfikatory z zagnieżdżonej diagnostyki. Opcjonalne endpointy admina obsługują status, odpowiedź i pojedynczą niezmienną nagrodę; klucz jest weryfikowany po SHA256, próby są limitowane per IP, a operacje zapisują `AdminAuditEvents`. Osobnym etapem pozostaje graficzny panel.
+Zgłoszenie błędu idzie do backendu przez `POST /api/bug-reports` za pośrednictwem `src/api/bugReportsApi.ts`. Aplikacja dołącza informacje o urządzeniu, systemie, języku i ekranie, bearer token oraz stabilny dla retry `X-Idempotency-Key`; klient waliduje ID utworzonego raportu i wspólną diagnostykę błędu. Backend zapisuje raport przed dostarczeniem maila; trwały worker SMTP używa lease, retry i backoff. Request ma limit 64 KiB oraz domyślnie 10 zgłoszeń na użytkownika/IP na godzinę. `GET /api/bug-reports/{id}` zwraca status z kontrolą właściciela. Usunięcie konta usuwa powiązanie i identyfikatory z zagnieżdżonej diagnostyki. Opcjonalne endpointy admina obsługują status, odpowiedź i pojedynczą niezmienną nagrodę; klucz jest weryfikowany po SHA256, próby są limitowane per IP, a operacje zapisują `AdminAuditEvents`. Osobnym etapem pozostaje graficzny panel.
 
 ### Diagnostyka i monitoring
 
@@ -605,6 +622,7 @@ Pokrycie mobile unit tests:
 - Progress screen dashboard: top summary cards, all/strength/volume filters, compact exercise metric cards and optional local SVG sparkline; per-exercise history groups all sets from one completed session into collapsible cards with compact rows and range filters,
 - workout reminders pure scheduling rules,
 - app diagnostics ring buffer i sanitization.
+- account data API routes, JSON payloads, idempotent delete i wspólną diagnostykę błędów.
 
 Mobile ma także typecheck:
 

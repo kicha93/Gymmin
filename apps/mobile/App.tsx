@@ -163,12 +163,9 @@ import {
   getCurrentWeekRange,
   getWeeklyPlanDay,
   getWeeklyPlanSummary,
-  loadWeeklyPlan,
   removeWeeklyPlanItem,
-  saveWeeklyPlan,
   toggleWeeklyPlanItemDay,
-  upsertWeeklyPlanItem,
-  type WeeklyPlanSettings
+  upsertWeeklyPlanItem
 } from "./src/domain/weeklyPlan";
 import {
   getDeleteAccountConfirmationPhrase,
@@ -324,6 +321,7 @@ import {
 import { useAccountScopedWorkouts } from "./src/features/workouts/useAccountScopedWorkouts";
 import { useAccountScopedCreatorProfiles } from "./src/features/workoutCreator/useAccountScopedCreatorProfiles";
 import { useAccountScopedCreatorJob } from "./src/features/workoutCreator/useAccountScopedCreatorJob";
+import { useAccountScopedWeeklyPlan } from "./src/features/weeklyPlan/useAccountScopedWeeklyPlan";
 import { useAccountScopedWorkoutSessions } from "./src/features/workoutSessions/useAccountScopedWorkoutSessions";
 import { useWorkoutSessionAutoSync } from "./src/features/workoutSessions/useWorkoutSessionAutoSync";
 import { useSystemStatusController } from "./src/features/systemStatus/useSystemStatusController";
@@ -881,9 +879,6 @@ function GymminApp() {
     refreshSystemStatus,
     systemStatus
   } = useSystemStatusController(apiBaseUrl, activeScreen === "home");
-  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlanSettings>({ enabled: false, items: [], updatedAt: new Date().toISOString() });
-  const [hasLoadedWeeklyPlan, setHasLoadedWeeklyPlan] = useState(false);
-  const [weeklyPlanOwnerId, setWeeklyPlanOwnerId] = useState<string | null>(null);
   const [isWorkoutSortSheetOpen, setIsWorkoutSortSheetOpen] = useState(false);
   const [hasLoadedLocalAuth, setHasLoadedLocalAuth] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string>(articles[0]?.id ?? "");
@@ -976,6 +971,7 @@ function GymminApp() {
   const [cachedAvatarUri, setCachedAvatarUri] = useState<string | null>(null);
   const [hasAvatarImageLoadFailed, setHasAvatarImageLoadFailed] = useState(false);
   const storageOwnerId = getAccountStorageOwnerId(user?.id);
+  const { weeklyPlan, setWeeklyPlan } = useAccountScopedWeeklyPlan(storageOwnerId);
   const syncedFavoriteExercisesUserIdRef = useRef<string | null>(null);
   const syncedAchievementsUserIdRef = useRef<string | null>(null);
   const [hasLoadedAccountStorageMigration, setHasLoadedAccountStorageMigration] = useState(false);
@@ -1754,36 +1750,6 @@ function GymminApp() {
     storageOwnerId,
     user?.id
   ]);
-
-  useEffect(() => {
-    let isMounted = true;
-    const ownerId = storageOwnerId;
-    setHasLoadedWeeklyPlan(false);
-    setWeeklyPlanOwnerId(null);
-
-    void loadWeeklyPlan(ownerId).then((plan) => {
-      if (!isMounted) {
-        return;
-      }
-      setWeeklyPlan(plan);
-      setWeeklyPlanOwnerId(ownerId);
-      setHasLoadedWeeklyPlan(true);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [storageOwnerId]);
-
-  useEffect(() => {
-    if (!hasLoadedWeeklyPlan || weeklyPlanOwnerId !== storageOwnerId) {
-      return;
-    }
-
-    saveWeeklyPlan(weeklyPlan, storageOwnerId).catch((error) => {
-      console.error("Failed to save weekly plan", error);
-    });
-  }, [hasLoadedWeeklyPlan, storageOwnerId, weeklyPlan, weeklyPlanOwnerId]);
 
   useEffect(() => {
     if (!hasLoadedLocalCreatorJob || loadedCreatorJobOwnerId !== storageOwnerId) {

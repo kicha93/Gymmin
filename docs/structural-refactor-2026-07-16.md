@@ -93,6 +93,9 @@ zsynchronizowanych danych.
   czyści oba storage po `401/403`, logout i usunięciu konta.
 - Odczyt, zapis, migracja i wykrywanie anonimowych danych zostały przeniesione
   do `src/storage/localDataRepositories.ts`.
+- `useAccountScopedWeeklyPlan` przejął stan gotowości, owner tracking oraz
+  odczyt/zapis planu tygodniowego. Przy zmianie konta poprzedni plan jest
+  zerowany przed asynchronicznym odczytem, co zapobiega chwilowemu wyciekowi UI.
 - Normalizacja zapisanych treningów i sortowania znajduje się w
   `src/domain/savedWorkoutNormalization.ts`.
 - Reguły grupowania aktywnej sesji, wybór poprzednich wyników i przygotowanie

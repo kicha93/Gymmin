@@ -20,7 +20,7 @@ upload key, device smoke oraz testu kilku replik.
 
 ## Wynik automatycznej weryfikacji
 
-- mobile unit tests: 219/219,
+- mobile unit tests: 220/220,
 - backend tests: 105/105; dwa pełne przebiegi zakończone sukcesem,
 - TypeScript typecheck: zaliczony,
 - backend Release build z `--warnaserror`: zaliczony, 0 ostrzeżeń,
@@ -96,6 +96,9 @@ systemowego wyboru zdjęcia na starszym Androidzie.
   AI należy wykonywać etapami. Transport CRUD treningów, ustawień oraz sync
   treningów, ulubionych, sesji i osiągnięć znajduje się w `accountDataApi.ts`,
   a mapowanie treningów konta i merge w `domain/accountWorkouts.ts`.
+- Plan tygodniowy korzysta z `useAccountScopedWeeklyPlan`; zmiana ownera
+  natychmiast zeruje poprzedni stan, a zapis jest dozwolony dopiero po odczycie
+  klucza właściwego konta.
 - Operacje credentials, weryfikacji emaila, haseł i aktywnych sesji korzystają
   z typowanego klienta auth. `logout-all` usuwa lokalną sesję dopiero po udanym
   statusie backendu; błąd serwera pozostawia użytkownika zalogowanego. Ten sam

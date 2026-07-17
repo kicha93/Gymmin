@@ -488,6 +488,10 @@ Regulamin ma układ dashboardowy: hero z najważniejszymi zasadami, sekcję „W
 
 Homepage pokazuje kompaktowy panel aktywnego planu tygodnia. Plan jest local-first i account-scoped: użytkownik przypisuje zapisane treningi do dni tygodnia, a ukończone `WorkoutSession` są liczone od poniedziałku do niedzieli niezależnie od dnia faktycznego wykonania.
 
+Cykl lokalny planu obsługuje `useAccountScopedWeeklyPlan`: hook śledzi ownera,
+blokuje zapis do niewłaściwego klucza i zeruje poprzedni plan natychmiast przy
+zmianie konta, zanim zakończy się odczyt danych nowego użytkownika.
+
 Kontakt ma zwarty układ: główny CTA otwiera klienta poczty dla `kontakt@gymmin.app`, informacja o czasie odpowiedzi jest krótkim paskiem, a problemy z aplikacją prowadzą do istniejącego formularza „Zgłoś błąd”. FAQ zawiera trzy zwijane odpowiedzi, dzięki czemu ekran nie powtarza długich bloków tekstu.
 
 Zgłoszenie błędu idzie do backendu przez `POST /api/bug-reports` za pośrednictwem `src/api/bugReportsApi.ts`. Aplikacja dołącza informacje o urządzeniu, systemie, języku i ekranie, bearer token oraz stabilny dla retry `X-Idempotency-Key`; klient waliduje ID utworzonego raportu i wspólną diagnostykę błędu. Backend zapisuje raport przed dostarczeniem maila; trwały worker SMTP używa lease, retry i backoff. Request ma limit 64 KiB oraz domyślnie 10 zgłoszeń na użytkownika/IP na godzinę. `GET /api/bug-reports/{id}` zwraca status z kontrolą właściciela. Usunięcie konta usuwa powiązanie i identyfikatory z zagnieżdżonej diagnostyki. Opcjonalne endpointy admina obsługują status, odpowiedź i pojedynczą niezmienną nagrodę; klucz jest weryfikowany po SHA256, próby są limitowane per IP, a operacje zapisują `AdminAuditEvents`. Osobnym etapem pozostaje graficzny panel.

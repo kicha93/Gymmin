@@ -67,6 +67,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/storage/localDataRepositories.ts` centralizuje account-scoped odczyt, zapis i obsługę anonimowych danych treningowych,
 - `src/features` zawiera kontrolery/hooki niezależnych cykli życia danych, obecnie treningów, sesji, ustawień, profili Kreatora i statusu systemu,
 - `src/features/workoutSessions/useAccountScopedWorkoutSessions.ts` wiąże listę sesji, aktywną sesję i pozycję wykonania z jednym właścicielem storage,
+- `src/features/weeklyPlan/useAccountScopedWeeklyPlan.ts` izoluje odczyt i zapis planu tygodniowego per owner oraz zeruje stan podczas przełączania kont,
 - `src/features/workoutSessions/useWorkoutSessionAutoSync.ts` obsługuje debounce synchronizacji sesji, odrzucanie nieaktualnych odpowiedzi i ochronę przed pętlą remote/local,
 - `src/domain/workoutSessionSync.ts` definiuje transportowy kontrakt synchronizacji sesji, waliduje odpowiedź API i zapisuje metadata pull/push,
 - `src/domain/appSettings.ts` normalizuje ustawienia, a `src/features/settings/useAccountScopedSettings.ts` wiąże ich stan z aktualnym właścicielem storage,
@@ -115,6 +116,10 @@ Taki podział nie zmienia publicznych kontraktów, storage ani modelu danych. Kr
 Mobile używa account-scoped AsyncStorage.
 
 Aktywny plan tygodnia jest przechowywany lokalnie pod `gymmin.account.{owner}.weeklyPlan.v1`. Nie jest jeszcze synchronizowany z backendem: przypisania treningów do dni tygodnia oraz podsumowanie bieżącego tygodnia są local-first.
+
+Cykl lokalny obsługuje `useAccountScopedWeeklyPlan`: hook śledzi właściciela
+odczytu, blokuje zapis do niewłaściwego klucza i natychmiast zeruje plan podczas
+zmiany konta, zanim zostaną wczytane dane nowego ownera.
 
 Format kluczy:
 

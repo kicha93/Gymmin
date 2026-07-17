@@ -1,11 +1,14 @@
-import { describe, expect, it } from "vitest";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   formatWeekRange,
   getCurrentWeekRange,
   getDefaultWeeklyPlanSettings,
   getWeeklyPlanSummary,
+  loadWeeklyPlan,
   removeWeeklyPlanItem,
+  saveWeeklyPlan,
   toggleWeeklyPlanItemDay,
   upsertWeeklyPlanItem
 } from "../weeklyPlan";
@@ -33,6 +36,10 @@ function session(overrides: Partial<WorkoutSession>): WorkoutSession {
 }
 
 describe("weeklyPlan", () => {
+  beforeEach(async () => {
+    await AsyncStorage.clear();
+  });
+
   it("starts the local week on Monday and formats ranges across months", () => {
     const range = getCurrentWeekRange(new Date(2026, 5, 3, 12));
     expect(range.start.getDay()).toBe(1);
@@ -94,5 +101,16 @@ describe("weeklyPlan", () => {
     ], new Date(2026, 5, 3, 12));
     expect(twoCompletions.completed).toBe(2);
     expect(twoCompletions.remaining).toBe(0);
+  });
+
+  it("keeps persisted plans isolated per account owner", async () => {
+    const plan = upsertWeeklyPlanItem(getDefaultWeeklyPlanSettings(), "workout-a", "monday");
+    await saveWeeklyPlan(plan, "user-a");
+
+    await expect(loadWeeklyPlan("user-a")).resolves.toMatchObject({
+      enabled: true,
+      items: [{ day: "monday", workoutId: "workout-a" }]
+    });
+    await expect(loadWeeklyPlan("user-b")).resolves.toMatchObject({ enabled: false, items: [] });
   });
 });

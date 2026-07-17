@@ -20,7 +20,7 @@ upload key, device smoke oraz testu kilku replik.
 
 ## Wynik automatycznej weryfikacji
 
-- mobile unit tests: 212/212,
+- mobile unit tests: 215/215,
 - backend tests: 105/105; dwa pełne przebiegi zakończone sukcesem,
 - TypeScript typecheck: zaliczony,
 - backend Release build z `--warnaserror`: zaliczony, 0 ostrzeżeń,
@@ -103,6 +103,9 @@ systemowego wyboru zdjęcia na starszym Androidzie.
 - Zgłoszenia błędów korzystają z `bugReportsApi.ts`, który zachowuje stabilny
   klucz idempotencji, waliduje identyfikator raportu i kieruje błędy przez
   wspólną diagnostykę HTTP.
+- Odczyt informacji o urządzeniu i budowa bezpiecznej nazwy sesji są izolowane
+  w `platform/deviceInfo.ts`; czyste formatowanie ma testy bez zależności od
+  rzeczywistego urządzenia.
 - Upload/usunięcie avatara i zdalne usunięcie konta korzystają z typowanego
   klienta profilu, który zachowuje rozróżnienie `401/403` dla step-up auth i nie
   uruchamia lokalnego czyszczenia po nieudanym statusie API.

@@ -55,6 +55,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/api/accountDataApi.ts` centralizuje CRUD treningów, ustawienia oraz endpointy synchronizacji treningów, ulubionych, sesji i osiągnięć; waliduje rekordy treningów w runtime, a algorytmy merge i metadata pozostają w modułach domenowych,
 - `src/api/authApi.ts` jest typowanym klientem credentials, weryfikacji emaila, haseł i aktywnych sesji; waliduje kształt odpowiedzi przed przekazaniem danych do UI,
 - `src/api/bugReportsApi.ts` obsługuje idempotentne wysłanie zgłoszenia, walidację odpowiedzi i szczegóły błędów backendu,
+- `src/platform/deviceInfo.ts` jest adapterem React Native dla diagnostyki urządzenia i nazwy sesji auth; czyste buildery formatują snapshot bez zależności od UI,
 - `src/api/profileApi.ts` obsługuje transport avatara i step-up account deletion; aplikacja zachowuje odpowiedzialność za picker, cache i czyszczenie account-scoped storage,
 - `src/api/aiCreditsApi.ts` obsługuje saldo, historię, pakiety, weryfikację Google Play i deweloperskie zasilenie kredytów; natywne billing UI i lokalizacja pozostają w kompozycji,
 - `src/api/workoutCreatorApi.ts` definiuje transport startu planu/rewrite i statusu joba oraz normalizuje `queued/processing/completed/failed`; polling i zastosowanie wyniku pozostają w warstwie kompozycji,

@@ -481,6 +481,11 @@ Kontakt ma zwarty układ: główny CTA otwiera klienta poczty dla `kontakt@gymmi
 
 Zgłoszenie błędu idzie do backendu przez `POST /api/bug-reports` za pośrednictwem `src/api/bugReportsApi.ts`. Aplikacja dołącza informacje o urządzeniu, systemie, języku i ekranie, bearer token oraz stabilny dla retry `X-Idempotency-Key`; klient waliduje ID utworzonego raportu i wspólną diagnostykę błędu. Backend zapisuje raport przed dostarczeniem maila; trwały worker SMTP używa lease, retry i backoff. Request ma limit 64 KiB oraz domyślnie 10 zgłoszeń na użytkownika/IP na godzinę. `GET /api/bug-reports/{id}` zwraca status z kontrolą właściciela. Usunięcie konta usuwa powiązanie i identyfikatory z zagnieżdżonej diagnostyki. Opcjonalne endpointy admina obsługują status, odpowiedź i pojedynczą niezmienną nagrodę; klucz jest weryfikowany po SHA256, próby są limitowane per IP, a operacje zapisują `AdminAuditEvents`. Osobnym etapem pozostaje graficzny panel.
 
+Snapshot platformy dla raportu oraz nazwa urządzenia wysyłana w nagłówkach auth
+są budowane przez `src/platform/deviceInfo.ts`. Adapter zbiera wyłącznie znane
+pola React Native/Expo, pomija puste wartości i ogranicza nazwę sesji do 120
+znaków.
+
 ### Diagnostyka i monitoring
 
 Readiness rozroznia dzialajacy proces od gotowej aplikacji: kontroluje polaczenie

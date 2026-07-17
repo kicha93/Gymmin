@@ -52,8 +52,11 @@ zsynchronizowanych danych.
   obsługuje również odświeżenie `/auth/me` i logout bieżącej sesji. Widoki nadal
   odpowiadają za lokalizację i stan formularzy.
 - `src/api/bugReportsApi.ts` izoluje wysłanie raportu, stabilny idempotency key,
-  walidację ID odpowiedzi oraz szczegóły błędów. Diagnostyka urządzenia i stan
-  formularza pozostają w composition root.
+  walidację ID odpowiedzi oraz szczegóły błędów. Dobór danych diagnostycznych i
+  stan formularza pozostają w composition root.
+- `src/platform/deviceInfo.ts` przejął odczyt `NativeModules`, `Platform` i
+  wymiarów ekranu, budowę raportu urządzenia oraz ograniczonej do 120 znaków
+  nazwy sesji auth. Czyste buildery są testowane na snapshotach platformy.
 - `src/api/profileApi.ts` izoluje upload/usunięcie avatara i zdalne usunięcie
   konta. Picker, przygotowanie pliku, cache avatara i lokalne czyszczenie danych
   pozostają w aplikacji, a statusy i odpowiedzi HTTP są walidowane centralnie.

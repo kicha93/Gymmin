@@ -13,7 +13,6 @@ import {
   Animated,
   AppState,
   BackHandler,
-  Dimensions,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -30,6 +29,7 @@ import {
 } from "react-native";
 
 import { BUILD_API_BASE_URL } from "./src/config/buildConfig";
+import { getAuthDeviceName, getDeviceReportInfo } from "./src/platform/deviceInfo";
 import {
   applyAvatarResponse,
   buildAvatarImageSource,
@@ -844,90 +844,6 @@ function delay(ms: number) {
   });
 }
 
-function stringifyDeviceValue(value: unknown): string {
-  if (value === null || value === undefined || value === "") {
-    return "";
-  }
-
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return "";
-  }
-}
-
-function appendDeviceField(fields: string[], label: string, value: unknown) {
-  const normalizedValue = stringifyDeviceValue(value);
-
-  if (normalizedValue) {
-    fields.push(`${label}: ${normalizedValue}`);
-  }
-}
-
-function getDeviceReportInfo() {
-  const platformConstants = {
-    ...((NativeModules.PlatformConstants ?? {}) as Record<string, unknown>),
-    ...(Platform.constants as unknown as Record<string, unknown>)
-  };
-  const expoConstants = (
-    NativeModules.ExponentConstants ??
-    NativeModules.ExpoConstants ??
-    {}
-  ) as Record<string, unknown>;
-  const screen = Dimensions.get("screen");
-  const window = Dimensions.get("window");
-  const fields: string[] = [];
-
-  appendDeviceField(fields, "platform", Platform.OS);
-  appendDeviceField(fields, "osVersion", Platform.Version);
-  appendDeviceField(fields, "isPad", Platform.OS === "ios" ? Platform.isPad : undefined);
-  appendDeviceField(fields, "brand", platformConstants.Brand);
-  appendDeviceField(fields, "manufacturer", platformConstants.Manufacturer);
-  appendDeviceField(fields, "model", platformConstants.Model);
-  appendDeviceField(fields, "release", platformConstants.Release);
-  appendDeviceField(fields, "serial", platformConstants.Serial);
-  appendDeviceField(fields, "fingerprint", platformConstants.Fingerprint);
-  appendDeviceField(fields, "systemName", platformConstants.systemName);
-  appendDeviceField(fields, "systemVersion", platformConstants.osVersion);
-  appendDeviceField(fields, "interfaceIdiom", platformConstants.interfaceIdiom);
-  appendDeviceField(fields, "reactNativeVersion", platformConstants.reactNativeVersion);
-  appendDeviceField(fields, "expoAppOwnership", expoConstants.appOwnership);
-  appendDeviceField(fields, "expoExecutionEnvironment", expoConstants.executionEnvironment);
-  appendDeviceField(fields, "expoSessionId", expoConstants.sessionId);
-  appendDeviceField(
-    fields,
-    "screen",
-    `${screen.width}x${screen.height}, scale ${screen.scale}, fontScale ${screen.fontScale}`
-  );
-  appendDeviceField(
-    fields,
-    "window",
-    `${window.width}x${window.height}, scale ${window.scale}, fontScale ${window.fontScale}`
-  );
-
-  return fields.join("\n");
-}
-
-function getAuthDeviceName() {
-  const platformConstants = {
-    ...((NativeModules.PlatformConstants ?? {}) as Record<string, unknown>),
-    ...(Platform.constants as unknown as Record<string, unknown>)
-  };
-  const brand = stringifyDeviceValue(platformConstants.Brand);
-  const manufacturer = stringifyDeviceValue(platformConstants.Manufacturer);
-  const model = stringifyDeviceValue(platformConstants.Model);
-  const systemName = stringifyDeviceValue(platformConstants.systemName);
-  const systemVersion = stringifyDeviceValue(platformConstants.osVersion ?? Platform.Version);
-  const deviceParts = [brand || manufacturer, model].filter(Boolean);
-  const systemParts = [systemName || Platform.OS, systemVersion].filter(Boolean);
-  const label = [deviceParts.join(" "), systemParts.join(" ")].filter(Boolean).join(" · ").trim();
-
-  return label.slice(0, 120) || (Platform.OS === "ios" ? "iOS device" : "Android device");
-}
 
 
 const defaultCollapsedPanels: Record<string, boolean> = {

@@ -13,6 +13,24 @@ export type AvatarImageSource = {
   uri: string;
 };
 
+export function resolveAvatarImageSource(options: {
+  cachedUri: string | null;
+  hasLoadFailed: boolean;
+  isWeb: boolean;
+  remoteSource: AvatarImageSource | null;
+}): AvatarImageSource | null {
+  if (options.hasLoadFailed) {
+    return null;
+  }
+  if (!options.isWeb && options.cachedUri) {
+    return { uri: options.cachedUri };
+  }
+  if (!options.isWeb) {
+    return null;
+  }
+  return options.remoteSource;
+}
+
 export function getSafeAvatarCacheKey(userId: string) {
   return userId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 100) || "user";
 }

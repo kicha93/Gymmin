@@ -197,7 +197,12 @@ Cykl życia prywatnego cache avatara jest wydzielony do
 `src/features/profile/useCachedAvatar.ts`. Hook wybiera istniejący plik,
 odświeża go po zmianie `avatarUpdatedAt`, nie zapisuje cache na webie, czyści go
 po usunięciu avatara i udostępnia wspólny stan błędu obrazu dla nagłówka oraz
-profilu. `App.tsx` nie zarządza już osobnym efektem pobierania avatara.
+profilu. Na Androidzie i iOS chroniony obraz jest pobierany z nagłówkiem bearer
+bezpośrednio do pliku przez natywny downloader Expo, a następnie normalizowany
+do lokalnego JPEG. Omija to zawodny most `Response.arrayBuffer()` dla danych
+binarnych i nie uruchamia równoległego żądania komponentu `Image`, które na
+Androidzie gubiło nagłówek autoryzacji. `App.tsx` nie zarządza już osobnym
+efektem pobierania avatara.
 
 Transport Kreatora AI korzysta z `src/api/workoutCreatorApi.ts`. Moduł uruchamia
 plan/rewrite, koduje identyfikator joba i normalizuje statusy

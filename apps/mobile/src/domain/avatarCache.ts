@@ -120,36 +120,31 @@ export async function refreshCachedAvatar(
     return null;
   }
 
-  const response = await fetch(source.uri, { headers: source.headers });
-  if (!response.ok) {
-    if (response.status === 404) {
-      clearCachedAvatar(user.id);
-    }
-    throw new Error(`Avatar download failed with status ${response.status}`);
-  }
-
-  const extension = getAvatarExtension(response.headers.get("Content-Type"));
-  if (!extension) {
-    throw new Error("Avatar response has an unsupported content type.");
-  }
-
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes.byteLength === 0) {
-    throw new Error("Avatar response is empty.");
-  }
-
   const directory = getAvatarCacheDirectory();
   directory.create({ idempotent: true, intermediates: true });
 
   const key = getSafeAvatarCacheKey(user.id);
-  const downloadedFile = new File(Paths.cache, `gymmin-avatar-${key}.${extension}`);
+  const downloadedFile = new File(Paths.cache, `gymmin-avatar-${key}.download`);
   let preparedFile: File | null = null;
 
   try {
-    downloadedFile.create({ intermediates: true, overwrite: true });
-    downloadedFile.write(bytes);
+    // Force a body response even if the native HTTP cache has a validator for
+    // the versioned avatar URL. A 304 has no bytes that can seed a missing file.
+    const separator = source.uri.includes("?") ? "&" : "?";
+    const downloadUri = `${source.uri}${separator}nativeCache=${Date.now()}`;
+    await File.downloadFileAsync(downloadUri, downloadedFile, {
+      headers: source.headers,
+      idempotent: true
+    });
+    if (!downloadedFile.exists || downloadedFile.size === 0) {
+      throw new Error("Downloaded avatar is empty.");
+    }
 
-    const prepared = await prepareAvatarImage(downloadedFile.uri, extension);
+    // The native downloader streams the protected response straight to disk.
+    // This avoids Expo's native Response -> ArrayBuffer bridge, which can fail
+    // for binary payloads on Android. The manipulator detects the input format
+    // from its bytes and normalizes every cached avatar to JPEG.
+    const prepared = await prepareAvatarImage(downloadedFile.uri, "jpg");
     preparedFile = new File(prepared.uri);
     const preparedBytes = await preparedFile.bytes();
     if (preparedBytes.byteLength === 0) {

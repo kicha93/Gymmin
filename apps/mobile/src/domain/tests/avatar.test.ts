@@ -3,12 +3,45 @@ import { describe, expect, it } from "vitest";
 import {
   applyAvatarResponse,
   buildAvatarImageSource,
+  resolveAvatarImageSource,
   buildAvatarImageUri,
   getAvatarExtension,
   getSafeAvatarCacheKey
 } from "../avatar";
 
 describe("avatar", () => {
+  it("only renders remote avatars on web and waits for the protected native cache", () => {
+    const remoteSource = {
+      headers: { Authorization: "Bearer token" },
+      uri: "https://api.gymmin.app/api/profile/avatar?v=1"
+    };
+
+    expect(resolveAvatarImageSource({
+      cachedUri: null,
+      hasLoadFailed: false,
+      isWeb: false,
+      remoteSource
+    })).toBeNull();
+    expect(resolveAvatarImageSource({
+      cachedUri: "file:///avatar.jpg",
+      hasLoadFailed: false,
+      isWeb: false,
+      remoteSource
+    })).toEqual({ uri: "file:///avatar.jpg" });
+    expect(resolveAvatarImageSource({
+      cachedUri: null,
+      hasLoadFailed: true,
+      isWeb: false,
+      remoteSource
+    })).toBeNull();
+    expect(resolveAvatarImageSource({
+      cachedUri: null,
+      hasLoadFailed: false,
+      isWeb: true,
+      remoteSource
+    })).toEqual(remoteSource);
+  });
+
   it("builds absolute URLs for relative backend avatar paths", () => {
     expect(buildAvatarImageUri("https://api.gymmin.app/", {
       avatarUpdatedAt: "2026-07-04T10:00:00Z",

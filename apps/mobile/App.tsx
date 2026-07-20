@@ -33,6 +33,7 @@ import { getAuthDeviceName, getDeviceReportInfo } from "./src/platform/deviceInf
 import {
   applyAvatarResponse,
   buildAvatarImageSource,
+  resolveAvatarImageSource,
   type AvatarResponse
 } from "./src/domain/avatar";
 import {
@@ -915,7 +916,7 @@ function GymminApp() {
     cachedAvatarUri,
     clearAvatarCache,
     hasAvatarImageLoadFailed,
-    markAvatarImageLoadFailed
+    handleAvatarImageLoadError
   } = useCachedAvatar({ apiBaseUrl, user });
   const storageOwnerId = getAccountStorageOwnerId(user?.id);
   const { weeklyPlan, setWeeklyPlan } = useAccountScopedWeeklyPlan(storageOwnerId);
@@ -1113,13 +1114,12 @@ function GymminApp() {
     user
   });
   const remoteUserAvatarSource = buildAvatarImageSource(apiBaseUrl, user);
-  const userAvatarSource = hasAvatarImageLoadFailed
-    ? null
-    : Platform.OS === "web"
-      ? remoteUserAvatarSource
-      : cachedAvatarUri
-        ? { uri: cachedAvatarUri }
-        : null;
+  const userAvatarSource = resolveAvatarImageSource({
+    cachedUri: cachedAvatarUri,
+    hasLoadFailed: hasAvatarImageLoadFailed,
+    isWeb: Platform.OS === "web",
+    remoteSource: remoteUserAvatarSource
+  });
   const isCreatorJobPending = pendingCreatorJob?.type === "plan";
   const isRewriteJobPending = pendingCreatorJob?.type === "rewrite";
   const syncedWorkoutSessionsUserIdRef = useRef<string | null>(null);
@@ -4060,7 +4060,7 @@ function GymminApp() {
         displayName={getProfileDisplayName(user, t("profileUser"))}
         isAvatarSubmitting={isAvatarSubmitting}
         latestAchievementTitle={latestUnlockedAchievement?.definition.title[language]}
-        onAvatarLoadError={markAvatarImageLoadFailed}
+        onAvatarLoadError={handleAvatarImageLoadError}
         t={t}
         theme={theme}
         totalAchievements={totalCount}
@@ -4365,7 +4365,7 @@ function GymminApp() {
                   resizeMode="cover"
                   source={userAvatarSource}
                   style={styles.profileHeaderAvatarImage}
-                  onError={markAvatarImageLoadFailed}
+                  onError={handleAvatarImageLoadError}
                 />
               ) : (
                 <Ionicons name={user ? "person" : "person-outline"} size={24} color={theme.primary} />

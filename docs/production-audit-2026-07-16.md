@@ -20,7 +20,7 @@ upload key, device smoke oraz testu kilku replik.
 
 ## Wynik automatycznej weryfikacji
 
-- mobile unit tests: 228/228,
+- mobile unit tests: 229/229,
 - backend tests: 105/105; dwa pełne przebiegi zakończone sukcesem,
 - TypeScript typecheck: zaliczony,
 - backend Release build z `--warnaserror`: zaliczony, 0 ostrzeżeń,
@@ -128,6 +128,10 @@ systemowego wyboru zdjęcia na starszym Androidzie.
 - Prywatny cache avatara ma jeden cykl życia w `useCachedAvatar`: odświeżenie
   reaguje na wersję avatara, spóźniony request nie aktualizuje odmontowanego
   widoku, a usunięcie czyści plik oraz URI używane przez nagłówek i profil.
+  Natywny downloader zapisuje odpowiedź 200 bezpośrednio do pliku z nagłówkiem
+  bearer, po czym obraz jest normalizowany do JPEG. Widok natywny korzysta tylko
+  z prywatnego pliku, więc nie wykonuje drugiego GET bez tokenu i nie zależy od
+  mostu `Response.arrayBuffer()` Expo/Android.
 - Upload/usunięcie avatara i zdalne usunięcie konta korzystają z typowanego
   klienta profilu, który zachowuje rozróżnienie `401/403` dla step-up auth i nie
   uruchamia lokalnego czyszczenia po nieudanym statusie API.

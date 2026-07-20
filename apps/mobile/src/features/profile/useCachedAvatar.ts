@@ -65,14 +65,20 @@ export function useCachedAvatar({ apiBaseUrl, user }: UseCachedAvatarOptions) {
     setCachedAvatarUri(null);
   }, [user?.id]);
 
-  const markAvatarImageLoadFailed = useCallback(() => {
+  const handleAvatarImageLoadError = useCallback(() => {
+    if (Platform.OS !== "web" && cachedAvatarUri && user?.id) {
+      clearCachedAvatar(user.id);
+      setCachedAvatarUri(null);
+      setHasAvatarImageLoadFailed(false);
+      return;
+    }
     setHasAvatarImageLoadFailed(true);
-  }, []);
+  }, [cachedAvatarUri, user?.id]);
 
   return {
     cachedAvatarUri,
     clearAvatarCache,
     hasAvatarImageLoadFailed,
-    markAvatarImageLoadFailed
+    handleAvatarImageLoadError
   };
 }

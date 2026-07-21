@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   createDefaultAppSettings,
   getSettingsTimestamp,
-  normalizeAppSettings
+  normalizeAppSettings,
+  resolveInitialSettingsSyncAction
 } from "../appSettings";
 
 describe("appSettings", () => {
@@ -48,5 +49,34 @@ describe("appSettings", () => {
   it("compares invalid timestamps safely", () => {
     expect(getSettingsTimestamp("invalid")).toBe(0);
     expect(getSettingsTimestamp("2026-01-01T00:00:00.000Z")).toBeGreaterThan(0);
+  });
+
+  it("pulls remote settings on a fresh device instead of overwriting them with defaults", () => {
+    expect(resolveInitialSettingsSyncAction({
+      hasPersistedLocalSettings: false,
+      localUpdatedAt: "2026-07-21T12:00:00.000Z",
+      remoteUpdatedAt: "2026-07-20T12:00:00.000Z"
+    })).toBe("apply-remote");
+  });
+
+  it("pushes local settings when the account has no remote settings", () => {
+    expect(resolveInitialSettingsSyncAction({
+      hasPersistedLocalSettings: false,
+      localUpdatedAt: "2026-07-21T12:00:00.000Z",
+      remoteUpdatedAt: null
+    })).toBe("push-local");
+  });
+
+  it("uses timestamps only when settings already existed on the device", () => {
+    expect(resolveInitialSettingsSyncAction({
+      hasPersistedLocalSettings: true,
+      localUpdatedAt: "2026-07-21T12:00:00.000Z",
+      remoteUpdatedAt: "2026-07-20T12:00:00.000Z"
+    })).toBe("push-local");
+    expect(resolveInitialSettingsSyncAction({
+      hasPersistedLocalSettings: true,
+      localUpdatedAt: "2026-07-20T12:00:00.000Z",
+      remoteUpdatedAt: "2026-07-21T12:00:00.000Z"
+    })).toBe("apply-remote");
   });
 });

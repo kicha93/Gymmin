@@ -20,7 +20,7 @@ upload key, device smoke oraz testu kilku replik.
 
 ## Wynik automatycznej weryfikacji
 
-- mobile unit tests: 229/229,
+- mobile unit tests: 239/239,
 - backend tests: 105/105; dwa pełne przebiegi zakończone sukcesem,
 - TypeScript typecheck: zaliczony,
 - backend Release build z `--warnaserror`: zaliczony, 0 ostrzeżeń,
@@ -143,6 +143,11 @@ systemowego wyboru zdjęcia na starszym Androidzie.
 - Kontrolery kredytów, przypomnień, aktywnego treningu i edytora usuwają ich
   niezależne cykle stanu z `App.tsx`. Edytor zachowuje atomowe przenoszenie
   całych grup etap → serie → ćwiczenia i ma testy kaskadowego usuwania.
+- Builder treningu nie skanuje katalogu przy dodaniu pustego elementu ani przy
+  samym wyborze typu. Picker ładuje katalog leniwie, najczęstsze sekcje są
+  przygotowywane po interakcjach, lookup ćwiczeń korzysta z indeksów, a struktura
+  draftu jest grupowana w czasie liniowym. Dodano testy dostępności ćwiczenia i
+  zachowania kolejności grup.
 - Luźne odpowiedzi Kreatora, w tym wrappery i JSON w blokach Markdown, są
   parsowane w `domain/workoutCreatorImport.ts`. Moduł odpowiada też za stabilne
   ID, mapowanie katalogu, wariant rozgrzewki i normalizację odpoczynku.

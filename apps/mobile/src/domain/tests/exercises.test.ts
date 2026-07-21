@@ -10,6 +10,7 @@ import {
   getExerciseOptionsForStageType,
   getExerciseSectionsForStageType,
   getRequiredEquipment,
+  isExerciseAvailableForStageType,
   resolveExerciseId
 } from "../exercises";
 import { getExerciseAnimationAssetKey, getExerciseImageAssetKeys } from "../exerciseImageAssets";
@@ -190,6 +191,14 @@ describe("exercise catalog cleanup", () => {
 
     expect(first.length).toBeGreaterThan(0);
     expect(second).toBe(first);
+  });
+
+  it("checks stage availability without building picker option arrays", () => {
+    const frontSquat = findExerciseById("squat-barbell-front-squat-1253");
+
+    expect(frontSquat).toBeDefined();
+    expect(frontSquat && isExerciseAvailableForStageType(frontSquat, "exercise", ["main"])).toBe(true);
+    expect(frontSquat && isExerciseAvailableForStageType(frontSquat, "warmup", ["main"])).toBe(false);
   });
 
   it("returns tier badges only for active non-main results", () => {

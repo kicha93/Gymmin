@@ -1,5 +1,6 @@
 import type { WorkoutDraft, WorkoutStep } from "./workouts";
 import { resolveExerciseId } from "./exercises";
+import { normalizeWorkoutSessionSupersets } from "./workoutSessionSupersets";
 
 export type WorkoutExecutionMode =
   | "guided"
@@ -38,6 +39,13 @@ export type WorkoutSessionEntry = {
   notes?: string;
 };
 
+export type WorkoutSessionSuperset = {
+  id: string;
+  entryIds: [string, string];
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type WorkoutSession = {
   id: string;
   sourceWorkoutId: string;
@@ -51,6 +59,7 @@ export type WorkoutSession = {
   deletedAt?: string | null;
   planSnapshot: WorkoutDraft;
   entries: WorkoutSessionEntry[];
+  supersets?: WorkoutSessionSuperset[];
   notes?: string;
 };
 
@@ -298,6 +307,13 @@ export function normalizeWorkoutSessions(value: unknown): WorkoutSession[] {
       : typeof raw.planSnapshot?.name === "string" && raw.planSnapshot.name.trim()
         ? raw.planSnapshot.name
         : "Workout";
+    const entries = Array.isArray(raw.entries) ? raw.entries
+      .filter((entry): entry is WorkoutSessionEntry => Boolean(entry && typeof entry === "object" && typeof entry.id === "string"))
+      .map((entry) => ({
+        ...entry,
+        exerciseId: entry.exerciseId?.trim() ? resolveExerciseId(entry.exerciseId.trim()) : entry.exerciseId
+      })) : [];
+    const supersets = normalizeWorkoutSessionSupersets(raw.supersets, entries, startedAt);
     const session: WorkoutSession = {
       id,
       sourceWorkoutId: getLegacySourceWorkoutId(record),
@@ -310,12 +326,8 @@ export function normalizeWorkoutSessions(value: unknown): WorkoutSession[] {
       updatedAt: getWorkoutSessionUpdatedAt(raw),
       deletedAt: typeof raw.deletedAt === "string" ? raw.deletedAt : null,
       planSnapshot: cloneWorkoutDraft(raw.planSnapshot, sourceWorkoutName),
-      entries: Array.isArray(raw.entries) ? raw.entries
-        .filter((entry): entry is WorkoutSessionEntry => Boolean(entry && typeof entry === "object" && typeof entry.id === "string"))
-        .map((entry) => ({
-          ...entry,
-          exerciseId: entry.exerciseId?.trim() ? resolveExerciseId(entry.exerciseId.trim()) : entry.exerciseId
-        })) : [],
+      entries,
+      supersets: supersets.length ? supersets : undefined,
       notes: typeof raw.notes === "string" ? raw.notes : undefined
     };
 

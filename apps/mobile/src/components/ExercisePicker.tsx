@@ -1,20 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Input, InputField } from "@gluestack-ui/themed";
-import { useCallback, useDeferredValue, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Modal, Platform, Pressable, SafeAreaView, SectionList, StatusBar, Text, View } from "react-native";
 import type { SectionListData, SectionListRenderItemInfo } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { InlineSheetSelectControl } from "./AppControls";
 import {
+  activeExerciseLibraryTiers,
   buildExerciseSections,
   filterExerciseOptionsForPicker,
+  getCachedExerciseOptionsForStageType,
   getExerciseDisplayName,
   getExerciseOptionTierBadge,
   getExerciseSectionsForStageType,
   getMuscleOptions,
   type ExerciseLibraryTier,
-  type ExerciseOption,
   type ExerciseSection,
   type MuscleKey
 } from "../domain/exercises";
@@ -38,8 +39,6 @@ type ExercisePickerProps = {
   muscleFilterLabel: string;
   onChange: (value: string) => void;
   onToggleFavorite: (exerciseId: string) => void;
-  optionByValue: ReadonlyMap<string, ExerciseOption>;
-  options: readonly ExerciseOption[];
   placeholder: string;
   searchPlaceholder: string;
   stageType: StageType | "";
@@ -63,8 +62,6 @@ export function ExercisePicker({
   muscleFilterLabel,
   onChange,
   onToggleFavorite,
-  optionByValue,
-  options,
   placeholder,
   searchPlaceholder,
   stageType,
@@ -79,20 +76,35 @@ export function ExercisePicker({
   const [favoriteFilter, setFavoriteFilter] = useState<"all" | "favorites">("all");
   const [showAdditionalExercises, setShowAdditionalExercises] = useState(false);
   const [enabledAdditionalTiers, setEnabledAdditionalTiers] = useState<Set<Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">>>(new Set());
+  const [isCatalogReady, setIsCatalogReady] = useState(false);
   const pickerInsets = useSafeAreaInsets();
   const pickerHeaderTopPadding = Math.max(pickerInsets.top, 20) + 6;
-  const selectedOption = value ? optionByValue.get(value) : undefined;
+  const selectedLabel = value ? getExerciseDisplayName(value, language) : "";
   const deferredQuery = useDeferredValue(query);
   const normalizedQuery = deferredQuery.trim().toLowerCase();
+  const usesDefaultSections =
+    !normalizedQuery &&
+    favoriteFilter === "all" &&
+    enabledAdditionalTiers.size === 0 &&
+    selectedMuscle === "all";
   const defaultGroupedOptions = useMemo(
-    () => getExerciseSectionsForStageType(language, stageType, "all"),
-    [language, stageType]
+    () => isCatalogReady ? getExerciseSectionsForStageType(language, stageType, "all") : [],
+    [isCatalogReady, language, stageType]
   );
   const visibleOptions = useMemo(() => {
+    if (!isCatalogReady || usesDefaultSections) {
+      return [];
+    }
+
+    const options = getCachedExerciseOptionsForStageType(
+      language,
+      stageType,
+      activeExerciseLibraryTiers
+    );
     return favoriteFilter === "favorites"
       ? filterExerciseOptionsForPicker(options, normalizedQuery, enabledAdditionalTiers).filter((option) => favoriteExerciseIds.has(option.exerciseId))
       : filterExerciseOptionsForPicker(options, normalizedQuery, enabledAdditionalTiers);
-  }, [enabledAdditionalTiers, favoriteExerciseIds, favoriteFilter, normalizedQuery, options]);
+  }, [enabledAdditionalTiers, favoriteExerciseIds, favoriteFilter, isCatalogReady, language, normalizedQuery, stageType, usesDefaultSections]);
   const muscleOptions = useMemo(
     () => [
       { label: muscleFilterAllLabel, value: "all" as const },
@@ -101,32 +113,38 @@ export function ExercisePicker({
     [language, muscleFilterAllLabel]
   );
   const groupedOptions = useMemo<ExerciseSection[]>(() => {
-    if (!isOpen) {
+    if (!isCatalogReady) {
       return [];
     }
 
-    if (
-      !normalizedQuery &&
-      favoriteFilter === "all" &&
-      enabledAdditionalTiers.size === 0 &&
-      selectedMuscle === "all"
-    ) {
+    if (usesDefaultSections) {
       return defaultGroupedOptions;
     }
 
     const nextOptions = visibleOptions;
 
     return buildExerciseSections(nextOptions, language, selectedMuscle);
-  }, [defaultGroupedOptions, enabledAdditionalTiers, favoriteFilter, isOpen, language, normalizedQuery, selectedMuscle, visibleOptions]);
-  const exerciseListEmptyText = isOpen ? emptyText : loadingText;
+  }, [defaultGroupedOptions, isCatalogReady, language, selectedMuscle, usesDefaultSections, visibleOptions]);
+  const exerciseListEmptyText = isCatalogReady ? emptyText : loadingText;
   const exerciseListExtraData = useMemo(
     () => ({ favoriteExerciseIds, value }),
     [favoriteExerciseIds, value]
   );
 
+  useEffect(() => {
+    if (!isOpen) {
+      setIsCatalogReady(false);
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => setIsCatalogReady(true));
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen]);
+
   const selectExercise = useCallback((nextValue: string) => {
     onChange(nextValue);
     setIsOpen(false);
+    setIsCatalogReady(false);
     setQuery("");
     setIsSearchOpen(false);
     setSelectedMuscle("all");
@@ -252,10 +270,10 @@ export function ExercisePicker({
           numberOfLines={1}
           style={[
             styles.exercisePickerTriggerText,
-            { color: selectedOption ? theme.inputText : theme.muted }
+            { color: selectedLabel ? theme.inputText : theme.muted }
           ]}
         >
-          {selectedOption?.label ?? placeholder}
+          {selectedLabel || placeholder}
         </Text>
         <Ionicons name="chevron-down" size={19} color={theme.muted} />
       </Pressable>

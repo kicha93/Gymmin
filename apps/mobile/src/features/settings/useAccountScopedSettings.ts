@@ -41,6 +41,7 @@ export function useAccountScopedSettings(
   const [localSettingsUpdatedAt, setLocalSettingsUpdatedAt] =
     useState(() => new Date().toISOString());
   const [hasLoadedLocalSettings, setHasLoadedLocalSettings] = useState(false);
+  const [hadPersistedLocalSettingsOnLoad, setHadPersistedLocalSettingsOnLoad] = useState(false);
   const [loadedSettingsOwnerId, setLoadedSettingsOwnerId] = useState<string | null>(null);
   const isApplyingAccountSettingsRef = useRef(false);
   const hasPersistedLocalSettingsRef = useRef(false);
@@ -97,15 +98,17 @@ export function useAccountScopedSettings(
 
       const ownerId = storageOwnerId;
       setHasLoadedLocalSettings(false);
+      setHadPersistedLocalSettingsOnLoad(false);
       setLoadedSettingsOwnerId(null);
       hasPersistedLocalSettingsRef.current = false;
       isApplyingAccountSettingsRef.current = false;
-      const settings = await loadSettingsForOwner(ownerId, collapsedPanelDefaults);
+      const loadedSettings = await loadSettingsForOwner(ownerId, collapsedPanelDefaults);
       if (!isMounted) {
         return;
       }
 
-      applySettings(settings);
+      applySettings(loadedSettings.settings);
+      setHadPersistedLocalSettingsOnLoad(loadedSettings.exists);
       setLoadedSettingsOwnerId(ownerId);
       setHasLoadedLocalSettings(true);
     }
@@ -162,6 +165,7 @@ export function useAccountScopedSettings(
     defaultWeight,
     defaultWorkoutExecutionMode,
     defaultWorkoutTableOrientation,
+    hadPersistedLocalSettingsOnLoad,
     hasLoadedLocalSettings,
     isApplyingAccountSettingsRef,
     isAuthPanelDismissed,

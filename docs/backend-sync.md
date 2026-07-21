@@ -422,6 +422,7 @@ Zasady:
 
 - `clientSessionId` = mobile `WorkoutSession.id`,
 - backend przechowuje pełną sesję jako `SessionJson`,
+- opcjonalne `WorkoutSession.supersets` (dwa sąsiadujące entry IDs, session-only) jest częścią tego samego `SessionJson`; nie ma osobnej tabeli ani endpointu superserii,
 - najważniejsze metadane są osobnymi polami,
 - `active`, `completed`, `abandoned` są synchronizowane,
 - `deletedAt` jest tombstone,
@@ -441,6 +442,12 @@ gymmin.account.{owner}.workoutSessionsSync
 ```
 
 Historia i progres nadal liczą dane lokalnie po scaleniu cache.
+
+Mobile normalizuje `supersets` przy odczycie: odrzuca uszkodzone odwołania,
+niesąsiadujące pary i nakładające się grupy. Wyniki A/B pozostają w istniejących
+`entries`, więc starszy backend i starsze sesje bez pola `supersets` są zgodne
+wstecznie. Backend nie wymagał zmiany kontraktu, ponieważ `SessionJson` jest
+przechowywany jako pełny dokument JSON.
 
 Usuniecie pojedynczego wpisu historii na mobile oznacza `WorkoutSession`
 przez `deletedAt`. Taki tombstone jest zachowywany lokalnie, znika z UI

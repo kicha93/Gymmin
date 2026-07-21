@@ -1,9 +1,32 @@
 import { describe, expect, it } from "vitest";
 
-import { addWorkoutStep, moveWorkoutStep, removeWorkoutStep } from "../workoutEditor";
+import { addWorkoutStep, groupWorkoutBuilderSteps, moveWorkoutStep, removeWorkoutStep } from "../workoutEditor";
 import { createDefaultWorkout, createStep } from "../workouts";
 
 describe("workout editor mutations", () => {
+  it("groups stages, sets and exercises in their original order", () => {
+    const firstStage = createStep({ kind: "stage" });
+    const firstSet = createStep({ kind: "set", parentStageId: firstStage.id });
+    const firstExercise = createStep({ kind: "exercise", parentSetId: firstSet.id });
+    const secondSet = createStep({ kind: "set", parentStageId: firstStage.id });
+    const secondExercise = createStep({ kind: "exercise", parentSetId: secondSet.id });
+    const secondStage = createStep({ kind: "stage" });
+
+    const groups = groupWorkoutBuilderSteps([
+      firstStage,
+      firstSet,
+      firstExercise,
+      secondSet,
+      secondExercise,
+      secondStage
+    ]);
+
+    expect(groups.map((group) => group.stage.id)).toEqual([firstStage.id, secondStage.id]);
+    expect(groups[0]?.series.map((series) => series.set.id)).toEqual([firstSet.id, secondSet.id]);
+    expect(groups[0]?.series.map((series) => series.elements.map((element) => element.id)))
+      .toEqual([[firstExercise.id], [secondExercise.id]]);
+  });
+
   it("removes a stage together with nested sets and exercises", () => {
     const stage = createStep({ kind: "stage" });
     const set = createStep({ kind: "set", parentStageId: stage.id });

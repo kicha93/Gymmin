@@ -2154,6 +2154,7 @@ export const styles = StyleSheet.create({
   },
   sessionQuickFillSlot: {
     flex: 1,
+    flexBasis: 0,
     minWidth: 0
   },
   sessionQuickFillButton: {
@@ -2255,6 +2256,138 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "900"
   },
+  guidedSupersetBadgeRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    justifyContent: "space-between"
+  },
+  guidedSupersetBadge: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 7,
+    minHeight: 38,
+    paddingHorizontal: 13
+  },
+  guidedSupersetBadgeText: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  guidedSupersetSplitButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 38,
+    paddingHorizontal: 11
+  },
+  guidedSupersetSplitText: {
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  guidedSupersetCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 16,
+    padding: 18
+  },
+  guidedSupersetExercise: {
+    gap: 16
+  },
+  guidedSupersetSeparator: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10
+  },
+  guidedSupersetSeparatorLine: {
+    flex: 1,
+    height: 1
+  },
+  guidedSupersetSeparatorText: {
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  guidedSupersetTableCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden",
+    paddingVertical: 8
+  },
+  guidedSupersetTableScrollContent: {
+    paddingBottom: 2,
+    paddingHorizontal: 8
+  },
+  guidedSupersetTable: {
+    width: 548
+  },
+  guidedSupersetTableRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    minHeight: 54
+  },
+  guidedSupersetTableHeader: {
+    minHeight: 44
+  },
+  guidedSupersetPrefillRow: {
+    minHeight: 48
+  },
+  guidedSupersetStatusCell: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 44
+  },
+  guidedSupersetValueCell: {
+    alignItems: "stretch",
+    justifyContent: "center",
+    paddingVertical: 4
+  },
+  guidedSupersetWeightCell: {
+    width: 148
+  },
+  guidedSupersetRepsCell: {
+    width: 88
+  },
+  guidedSupersetHeaderText: {
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+    textAlign: "center"
+  },
+  guidedSupersetPrefillButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 40,
+    paddingHorizontal: 5
+  },
+  guidedSupersetPrefillEmpty: {
+    minHeight: 40
+  },
+  guidedSupersetPrefillText: {
+    fontSize: 11,
+    fontWeight: "900",
+    textAlign: "center"
+  },
+  guidedSupersetInputDisabled: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 44
+  },
+  guidedSupersetRestTimer: {
+    gap: 8
+  },
+  guidedSupersetRestLabel: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
   guidedEntryTable: {
     borderRadius: 8,
     borderWidth: 1,
@@ -2279,7 +2412,9 @@ export const styles = StyleSheet.create({
     gap: 10
   },
   guidedEntryInput: {
-    flex: 1
+    flex: 1,
+    flexBasis: 0,
+    minWidth: 0
   },
   restTimerCard: {
     alignItems: "center",

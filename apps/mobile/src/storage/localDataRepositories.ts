@@ -138,10 +138,16 @@ export async function loadSettingsForOwner(
       LOCAL_SETTINGS_STORAGE_BASE_KEY,
       ownerId
     );
-    return normalizeAppSettings(storedData, collapsedPanelDefaults);
+    return {
+      exists: Boolean(storedData),
+      settings: normalizeAppSettings(storedData, collapsedPanelDefaults)
+    };
   } catch (error) {
     console.error("Failed to load local settings", error);
-    return normalizeAppSettings(null, collapsedPanelDefaults);
+    return {
+      exists: false,
+      settings: normalizeAppSettings(null, collapsedPanelDefaults)
+    };
   }
 }
 

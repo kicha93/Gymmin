@@ -105,6 +105,8 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
         var empty = await client.GetAsync("/api/settings");
         Assert.Equal(HttpStatusCode.NoContent, empty.StatusCode);
 
+        var reminderUpdatedAt = new DateTimeOffset(2026, 7, 21, 14, 59, 0, TimeSpan.Zero);
+        var settingsUpdatedAt = new DateTimeOffset(2026, 7, 21, 15, 0, 0, TimeSpan.Zero);
         var reminder = new WorkoutReminderSettings(
             true,
             null,
@@ -121,7 +123,7 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
             "Time to train",
             "Open Gymmin and complete your planned workout.",
             true,
-            DateTimeOffset.UtcNow);
+            reminderUpdatedAt);
         var request = new UpsertUserSettingsRequest(
             "en",
             "dark",
@@ -133,7 +135,7 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
             new Dictionary<string, bool> { ["settings"] = true },
             true,
             reminder,
-            DateTimeOffset.UtcNow,
+            settingsUpdatedAt,
             false);
 
         var put = await client.PutAsJsonAsync("/api/settings", request);
@@ -144,13 +146,23 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
 
         var settings = await get.Content.ReadFromJsonAsync<UserSettings>(TestJson.Options);
         Assert.NotNull(settings);
+        Assert.Equal("en", settings!.Language);
         Assert.Equal("dark", settings!.ThemeName);
+        Assert.Equal("4", settings.DefaultSetCount);
+        Assert.Equal("80", settings.DefaultWeight);
+        Assert.Equal(StageType.Exercise, settings.DefaultStageType);
         Assert.Equal("guided", settings.DefaultWorkoutExecutionMode);
         Assert.Equal("vertical", settings.DefaultWorkoutTableOrientation);
         Assert.False(settings.ShowRestTimer);
+        Assert.True(settings.CollapsedPanels["settings"]);
+        Assert.True(settings.IsAuthPanelDismissed);
+        Assert.Equal(settingsUpdatedAt, settings.UpdatedAt);
         Assert.NotNull(settings.WorkoutReminders);
         Assert.True(settings.WorkoutReminders!.Enabled);
+        Assert.Equal("Time to train", settings.WorkoutReminders.Message);
         Assert.Equal("Open Gymmin and complete your planned workout.", settings.WorkoutReminders.Description);
+        Assert.True(settings.WorkoutReminders.OnlyIfNoWorkoutToday);
+        Assert.Equal(reminderUpdatedAt, settings.WorkoutReminders.UpdatedAt);
         Assert.NotNull(settings.WorkoutReminders.WeeklySchedule);
         Assert.Contains(settings.WorkoutReminders.WeeklySchedule!, item => item.Day == "monday" && item.Enabled && item.Time == "18:00");
         Assert.Contains(settings.WorkoutReminders.WeeklySchedule!, item => item.Day == "wednesday" && item.Enabled && item.Time == "19:30");

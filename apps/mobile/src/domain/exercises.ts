@@ -238,6 +238,22 @@ export function getExerciseOptionsForStageType(
     }));
 }
 
+export function isExerciseAvailableForStageType(
+  exercise: Exercise,
+  stageType: StageType | "",
+  visibleTiers: readonly ExerciseLibraryTier[] = ["main"]
+) {
+  if (!visibleTiers.includes(exercise.libraryTier ?? "main")) {
+    return false;
+  }
+
+  if (!stageType || stageType === "other") {
+    return true;
+  }
+
+  return stageExerciseCategories[stageType].includes(exercise.garminCategory);
+}
+
 function formatGarminCategory(category: string) {
   return category
     .toLowerCase()
@@ -395,14 +411,26 @@ export function getMuscleOptions(language: ExerciseLanguage) {
     .sort((first, second) => first.label.localeCompare(second.label, language));
 }
 
+const exerciseById = new Map((exercises as readonly Exercise[]).map((exercise) => [exercise.id, exercise]));
+const exerciseByExactName = new Map<string, Exercise>();
+
+for (const exercise of exercises as readonly Exercise[]) {
+  if (!exerciseByExactName.has(exercise.name)) {
+    exerciseByExactName.set(exercise.name, exercise);
+  }
+  if (!exerciseByExactName.has(exercise.polishName)) {
+    exerciseByExactName.set(exercise.polishName, exercise);
+  }
+}
+
 export function findExerciseByName(name: string) {
   const resolvedName = resolveExerciseAliasName(name);
-  return exercises.find((exercise) => exercise.name === resolvedName || exercise.polishName === resolvedName);
+  return exerciseByExactName.get(resolvedName);
 }
 
 export function findExerciseById(exerciseId: string) {
   const resolvedId = resolveExerciseId(exerciseId);
-  return exercises.find((exercise) => exercise.id === resolvedId);
+  return exerciseById.get(resolvedId);
 }
 
 export function resolveExerciseId(exerciseId: string) {
@@ -457,6 +485,25 @@ export function resolveExerciseAliasName(name: string) {
   return current;
 }
 
+const exerciseByNormalizedLookupValue = new Map<string, Exercise>();
+
+for (const exercise of exercises as readonly Exercise[]) {
+  const candidates = [
+    exercise.id,
+    exercise.name,
+    exercise.polishName,
+    exercise.garminName,
+    `${exercise.garminCategory} ${exercise.garminName}`
+  ];
+
+  for (const candidate of candidates) {
+    const normalizedCandidate = normalizeExerciseLookupValue(candidate);
+    if (!exerciseByNormalizedLookupValue.has(normalizedCandidate)) {
+      exerciseByNormalizedLookupValue.set(normalizedCandidate, exercise);
+    }
+  }
+}
+
 export function findCatalogExerciseBestEffort(name: string): Exercise | undefined {
   const byId = findExerciseById(name);
   if (byId) {
@@ -470,17 +517,7 @@ export function findCatalogExerciseBestEffort(name: string): Exercise | undefine
     return undefined;
   }
 
-  return (exercises as readonly Exercise[]).find((exercise) => {
-    const candidates: string[] = [
-      exercise.id,
-      exercise.name,
-      exercise.polishName,
-      exercise.garminName,
-      `${exercise.garminCategory} ${exercise.garminName}`
-    ];
-
-    return candidates.some((candidate) => normalizeExerciseLookupValue(candidate) === normalizedName);
-  });
+  return exerciseByNormalizedLookupValue.get(normalizedName);
 }
 
 export function getPrimaryMuscles(exercise: Exercise) {

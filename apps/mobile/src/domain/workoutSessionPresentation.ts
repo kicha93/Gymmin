@@ -1,15 +1,14 @@
 import { getExerciseDisplayName, resolveExerciseId } from "./exercises";
 import { getExerciseProgressSummary, type WorkoutSession, type WorkoutSessionEntry } from "./workoutSessions";
+import {
+  getWorkoutSessionExerciseGroups,
+  type WorkoutSessionExerciseGroup
+} from "./workoutSessionSupersets";
 import { formatExerciseSetTarget } from "./workoutExerciseSummary";
 import { createStep, type GoalType, type StageType, type WorkoutStep } from "./workouts";
 import type { LanguageCode } from "../i18n/translations";
 
-export type GuidedWorkoutEntryGroup = {
-  entries: WorkoutSessionEntry[];
-  firstIndex: number;
-  key: string;
-  restEntry?: WorkoutSessionEntry;
-};
+export type GuidedWorkoutEntryGroup = WorkoutSessionExerciseGroup;
 
 export type InlineWorkoutEntryGroup = {
   entries: WorkoutSessionEntry[];
@@ -69,39 +68,7 @@ export function getSessionEntrySetTarget(entry: WorkoutSessionEntry, setCount = 
 }
 
 export function getGuidedEntryGroups(session: WorkoutSession): GuidedWorkoutEntryGroup[] {
-  const exerciseEntries = session.entries.filter((entry) => entry.type !== "rest");
-  const sourceEntries = exerciseEntries.length ? exerciseEntries : session.entries;
-  const groups: GuidedWorkoutEntryGroup[] = [];
-  const grouped = new Map<string, GuidedWorkoutEntryGroup>();
-
-  sourceEntries.forEach((entry) => {
-    const key = [entry.sourceStageId, entry.sourceSeriesId, entry.sourceElementId ?? entry.id]
-      .filter(Boolean)
-      .join(":");
-    const firstIndex = session.entries.findIndex((item) => item.id === entry.id);
-    const existing = grouped.get(key);
-
-    if (existing) {
-      existing.entries.push(entry);
-      return;
-    }
-
-    const group = { entries: [entry], firstIndex, key };
-    grouped.set(key, group);
-    groups.push(group);
-  });
-
-  return groups.map((group) => {
-    const referenceEntry = group.entries[0];
-    const restEntry = session.entries.find(
-      (entry) =>
-        entry.type === "rest" &&
-        entry.sourceSeriesId === referenceEntry.sourceSeriesId &&
-        entry.elementIndex > referenceEntry.elementIndex
-    );
-
-    return { ...group, restEntry };
-  });
+  return getWorkoutSessionExerciseGroups(session);
 }
 
 export function getGuidedGroupIndex(

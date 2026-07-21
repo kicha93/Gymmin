@@ -1,5 +1,42 @@
 import { createStep, type StageType, type WorkoutDraft, type WorkoutStep, type WorkoutStepKind } from "./workouts";
 
+export type WorkoutStageGroup = {
+  stage: WorkoutStep;
+  series: Array<{
+    elements: WorkoutStep[];
+    set: WorkoutStep;
+  }>;
+};
+
+export function groupWorkoutBuilderSteps(steps: readonly WorkoutStep[]): WorkoutStageGroup[] {
+  const stages = steps.filter((step) => step.kind === "stage");
+  const seriesByStageId = new Map<string, WorkoutStageGroup["series"]>();
+  const seriesBySetId = new Map<string, WorkoutStageGroup["series"][number]>();
+
+  for (const step of steps) {
+    if (step.kind !== "set" || !step.parentStageId) {
+      continue;
+    }
+
+    const series = { elements: [], set: step };
+    const stageSeries = seriesByStageId.get(step.parentStageId) ?? [];
+    stageSeries.push(series);
+    seriesByStageId.set(step.parentStageId, stageSeries);
+    seriesBySetId.set(step.id, series);
+  }
+
+  for (const step of steps) {
+    if (step.kind === "exercise" && step.parentSetId) {
+      seriesBySetId.get(step.parentSetId)?.elements.push(step);
+    }
+  }
+
+  return stages.map((stage) => ({
+    stage,
+    series: seriesByStageId.get(stage.id) ?? []
+  }));
+}
+
 export function updateWorkoutStep(draft: WorkoutDraft, stepId: string, nextStep: WorkoutStep): WorkoutDraft {
   return { ...draft, steps: draft.steps.map((step) => step.id === stepId ? nextStep : step) };
 }

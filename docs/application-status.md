@@ -105,6 +105,14 @@ treningu. Czyste operacje na hierarchii etapów/serii/ćwiczeń są w
 `src/domain/workoutEditor.ts`; composition root koordynuje już głównie
 nawigację, dialogi i przepływ danych między funkcjami.
 
+Ścieżka dodawania elementów w builderze nie inicjalizuje już katalogu 964
+ćwiczeń. Pusty element montuje tylko pola typu i celu, wybór typu sprawdza
+zgodność istniejącego ćwiczenia przez indeks katalogowy bez budowania tablicy
+opcji, a `ExercisePicker` tworzy sekcje dopiero po faktycznym otwarciu. Domyślne
+sekcje dla typu `exercise` są przygotowywane po zakończeniu interakcji wejścia na
+ekran. Hierarchia etap → serie → elementy jest grupowana liniowo i memoizowana
+zamiast wielokrotnie filtrować cały draft podczas każdego renderu.
+
 Startowa migracja starszych kluczy AsyncStorage jest skupiona w
 `src/features/storage/useAccountStorageMigration.ts`. Moduł zachowuje komplet
 dziesięciu mapowań treningów, ustawień, profili i joba Kreatora, sesji oraz
@@ -356,6 +364,17 @@ Sesje:
 - synchronizują się z kontem po zalogowaniu,
 - mogą mieć status `active`, `completed`, `abandoned`,
 - mogą być kontynuowane po restarcie aplikacji.
+
+Tryb `guided` obsługuje tymczasowe superserie na poziomie aktywnej sesji:
+
+- MVP łączy dokładnie dwa sąsiadujące ćwiczenia i nie zmienia definicji treningu,
+- połączony krok pokazuje zakres, np. `Ćwiczenia 2–3/8`, oba opisy ćwiczeń i wspólną tabelę rund,
+- liczba rund jest większą z liczb serii ćwiczenia A/B; brakująca strona ostatniej rundy jest nieaktywna,
+- pola poprzedniego ciężaru i powtórzeń pozostają dostępne osobno dla ćwiczenia A i B,
+- wyniki są nadal zapisywane do oryginalnych `entries`, dlatego historia, progres i achievements działają bez osobnego modelu wyników,
+- Wstecz/Dalej traktuje superserię jako jeden krok i pomija drugi element,
+- rozłączenie usuwa wyłącznie powiązanie i zachowuje wyniki,
+- `supersets` jest normalizowane przy odczycie, zapisuje się w account-scoped AsyncStorage i synchronizuje w pełnym `SessionJson`.
 
 ### Historia i progres
 
@@ -678,6 +697,7 @@ Pokrycie mobile unit tests:
 - account-scoped AsyncStorage keys i legacy migration,
 - favorite exercises tombstones/merge,
 - workout sessions conflict resolution, deletedAt filtering i progress filtering,
+- workout session supersets: tworzenie, walidacja sąsiedztwa/overlap, normalizacja po wznowieniu, rundy A/B, zachowanie wyników i nawigacja grupowa,
 - active workout UI helpers for elapsed time, exercise progress percentage and rest-duration formatting,
 - Progress screen dashboard: top summary cards, all/strength/volume filters, compact exercise metric cards and optional local SVG sparkline; per-exercise history groups all sets from one completed session into collapsible cards with compact rows and range filters,
 - workout reminders pure scheduling rules,

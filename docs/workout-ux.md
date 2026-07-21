@@ -64,6 +64,20 @@ This note tracks the current workout-view UX decisions.
 - The rest timer remains a separate lightweight card and uses the same elapsed-time formatting helpers as the header.
 - Execution entries use compact headers like `[2] Squat` or `[2] Rest` instead of repeating a separate `Set N` label.
 - Workout tables use the device/system orientation without a manual toggle or `rotate(90deg)` transform. With system auto-rotate enabled, portrait and landscape layouts are detected from the current window dimensions and table widths adapt automatically.
+
+## Guided supersets
+
+- A user can combine the current and next exercise from the guided workout screen. The confirmation makes clear that the change applies only to the active session; the workout definition is not edited.
+- The MVP accepts exactly two adjacent, non-rest exercise groups. An exercise cannot belong to two supersets at the same time.
+- A combined step renders `Exercises X–Y/Total`, a `Superset A` badge, both exercise cards, the `Alternate exercises` separator and one round table.
+- The round count is the larger set count of exercise A and B. If one exercise has fewer sets, its missing cells are rendered disabled rather than creating synthetic result entries.
+- Weight and reps inputs update the original entries of exercise A or B. The existing previous-weight and previous-reps prefill actions remain visible separately for both sides.
+- The round checkbox completes the entries which actually exist in that round. Splitting the superset removes only the grouping and preserves all entered values.
+- Back/Next navigates between logical groups: a superset covering exercises 2–3 moves back to 1 and forward to 4. After splitting, standard 2 → 3 → 4 navigation returns.
+- The superset uses one rest timer with the larger planned rest value from A/B. Each exercise still shows its own planned rest pill.
+- Supersets persist in the account-scoped active `WorkoutSession`, survive app restart/resume and are safely ignored by inline-table and readonly-post-workout modes.
+- On narrow screens the round table scrolls horizontally, keeping inputs and checkboxes at usable touch sizes.
+
 ## Timer odpoczynku
 
 W `Ustawienia -> Trening` użytkownik może włączyć albo wyłączyć widoczność timera odpoczynku podczas aktywnego treningu. Ustawienie jest domyślnie włączone, zapisuje się per konto lokalnie oraz synchronizuje przez ustawienia konta. Wyłączenie ukrywa wyłącznie kontrolkę timera; planowany odpoczynek pozostaje widoczny w karcie ćwiczenia.

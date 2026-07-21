@@ -159,7 +159,11 @@ try {
 
 $buildScript = Join-Path $PSScriptRoot "build-github-apk.ps1"
 
-Write-Step "Building and publishing APK to GitHub Release $GitHubRepo@$ReleaseTag"
+if ($SkipPublish) {
+  Write-Step "Building local APK (GitHub publishing disabled)"
+} else {
+  Write-Step "Building and publishing APK to GitHub Release $GitHubRepo@$ReleaseTag"
+}
 Write-Step "Backend URL: $ApiBaseUrl"
 Write-Step "Architectures: $Architectures"
 

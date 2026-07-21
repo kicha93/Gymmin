@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Input, InputField } from "@gluestack-ui/themed";
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { Pressable, Text, View } from "react-native";
+import { InteractionManager, Pressable, Text, View } from "react-native";
 
 import { AppButton, AppInput, AppTextarea, SelectControl, SuffixedInput } from "../components/AppControls";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
@@ -12,8 +12,11 @@ import {
   activeExerciseLibraryTiers,
   findCatalogExerciseBestEffort,
   getCachedExerciseOptionsForStageType,
-  getExerciseDisplayName
+  getExerciseDisplayName,
+  getExerciseSectionsForStageType,
+  isExerciseAvailableForStageType
 } from "../domain/exercises";
+import { groupWorkoutBuilderSteps } from "../domain/workoutEditor";
 import {
   createStep,
   type StageType,
@@ -226,22 +229,14 @@ function StepConfiguration({
   updateStep
 }: StepConfigurationProps) {
   const includeSetCount = false;
-  const shouldShowExerciseFields = step.stageType !== "rest" && step.stageType !== "warmup";
+  const hasSelectedType = Boolean(step.stageType);
+  const shouldShowExerciseFields = hasSelectedType && step.stageType !== "rest" && step.stageType !== "warmup";
   const exerciseCatalogStageType =
     step.stageType === "exercise" &&
     (parentStageType === "warmup" || parentStageType === "recovery" || parentStageType === "cooldown")
       ? parentStageType
       : step.stageType;
-  const filteredExerciseOptions = useMemo(
-    () => shouldShowExerciseFields ? getCachedExerciseOptionsForStageType(language, exerciseCatalogStageType, activeExerciseLibraryTiers) : [],
-    [exerciseCatalogStageType, language, shouldShowExerciseFields]
-  );
-  const filteredExerciseOptionByValue = useMemo(
-    () => new Map(filteredExerciseOptions.map((option) => [option.value, option])),
-    [filteredExerciseOptions]
-  );
-  const canSelectExercise = filteredExerciseOptions.length > 0;
-  const hasSelectedType = Boolean(step.stageType);
+  const canSelectExercise = shouldShowExerciseFields;
 
   useEffect(() => {
     if (!shouldShowExerciseFields && (step.exerciseId || step.exerciseName || step.loadKg)) {
@@ -254,40 +249,35 @@ function StepConfiguration({
       return;
     }
 
-    if (step.exerciseName && filteredExerciseOptionByValue.has(step.exerciseName)) {
+    if (step.exerciseName) {
       const catalogExercise = findCatalogExerciseBestEffort(step.exerciseName);
+      const isAvailable = Boolean(catalogExercise && isExerciseAvailableForStageType(
+        catalogExercise,
+        exerciseCatalogStageType,
+        activeExerciseLibraryTiers
+      ));
 
-      if (catalogExercise && step.exerciseId !== catalogExercise.id) {
-        updateStep(step.id, {
-          ...step,
-          exerciseId: catalogExercise.id,
-          exerciseName: catalogExercise.name
-        });
-      }
-      return;
-    }
-
-    if (step.exerciseName && !filteredExerciseOptionByValue.has(step.exerciseName)) {
-      const canonicalExercise = findCatalogExerciseBestEffort(step.exerciseName);
-      const canonicalExerciseName = canonicalExercise?.name;
-
-      if (canonicalExerciseName && filteredExerciseOptionByValue.has(canonicalExerciseName)) {
-        updateStep(step.id, {
-          ...step,
-          exerciseId: canonicalExercise?.id ?? "",
-          exerciseName: canonicalExerciseName
-        });
+      if (catalogExercise && isAvailable) {
+        if (step.exerciseId !== catalogExercise.id || step.exerciseName !== catalogExercise.name) {
+          updateStep(step.id, {
+            ...step,
+            exerciseId: catalogExercise.id,
+            exerciseName: catalogExercise.name
+          });
+        }
         return;
       }
 
-      updateStep(step.id, {
-        ...step,
-        exerciseId: "",
-        exerciseName: "",
-        loadKg: ""
-      });
+      if (!isAvailable) {
+        updateStep(step.id, {
+          ...step,
+          exerciseId: "",
+          exerciseName: "",
+          loadKg: ""
+        });
+      }
     }
-  }, [filteredExerciseOptionByValue, shouldShowExerciseFields, step, updateStep]);
+  }, [exerciseCatalogStageType, shouldShowExerciseFields, step, updateStep]);
 
   function updateStageType(stageType: StageType | "") {
     if (stageType === "rest" || stageType === "warmup") {
@@ -306,8 +296,16 @@ function StepConfiguration({
       (parentStageType === "warmup" || parentStageType === "recovery" || parentStageType === "cooldown")
         ? parentStageType
         : stageType;
-    const nextOptions = getCachedExerciseOptionsForStageType(language, nextExerciseCatalogStageType, activeExerciseLibraryTiers);
-    const hasCurrentExercise = nextOptions.some((option) => option.value === step.exerciseName);
+    const currentExercise = step.exerciseName
+      ? findCatalogExerciseBestEffort(step.exerciseName)
+      : undefined;
+    const hasCurrentExercise = Boolean(
+      currentExercise && isExerciseAvailableForStageType(
+        currentExercise,
+        nextExerciseCatalogStageType,
+        activeExerciseLibraryTiers
+      )
+    );
 
     updateStep(step.id, {
       ...step,
@@ -377,8 +375,6 @@ function StepConfiguration({
                 });
               }}
               onToggleFavorite={onToggleFavoriteExercise}
-              optionByValue={filteredExerciseOptionByValue}
-              options={filteredExerciseOptions}
               placeholder={t("select")}
               searchPlaceholder={t("searchExercise")}
               stageType={exerciseCatalogStageType}
@@ -460,17 +456,24 @@ export function WorkoutBuilderScreen({
     (step) => step.kind === "exercise" && Boolean(step.exerciseName)
   );
   const overviewCollapsed = collapsedPanels["builder-overview"] ?? true;
-  const stageGroups = workout.steps
-    .filter((step) => step.kind === "stage")
-    .map((stage) => ({
-      stage,
-      series: workout.steps
-        .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
-        .map((set) => ({
-          set,
-          elements: workout.steps.filter((step) => step.kind === "exercise" && step.parentSetId === set.id)
-        }))
-    }));
+  const stageGroups = useMemo(() => groupWorkoutBuilderSteps(workout.steps), [workout.steps]);
+
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const task = InteractionManager.runAfterInteractions(() => {
+      timeoutId = setTimeout(() => {
+        getExerciseSectionsForStageType(language, "exercise", "all");
+        getCachedExerciseOptionsForStageType(language, "exercise", activeExerciseLibraryTiers);
+      }, 600);
+    });
+
+    return () => {
+      task.cancel();
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [language]);
 
   function addSeriesToStage(stageId: string) {
     setWorkout((current) => {

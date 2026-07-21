@@ -6,14 +6,17 @@ import {
   hasAnonymousMergeHandled,
   loadActiveWorkoutSessionForOwner,
   loadCreatorJobForOwner,
+  loadSettingsForOwner,
   loadWorkoutsForOwner,
   markAnonymousMergeHandled,
   mergeCreatorProfilesById,
   saveActiveWorkoutSessionForOwner,
   saveCreatorJobForOwner,
+  saveSettingsForOwner,
   saveWorkoutsForOwner
 } from "../../storage/localDataRepositories";
 import { getAccountStorageKey } from "../accountStorage";
+import type { AppSettings } from "../appSettings";
 
 describe("localDataRepositories", () => {
   beforeEach(async () => {
@@ -31,6 +34,62 @@ describe("localDataRepositories", () => {
     expect(stored.selectedWorkoutId).toBe("plan-1");
     expect(stored.sort).toEqual({ direction: "asc", field: "name" });
     expect(stored.workouts).toHaveLength(1);
+  });
+
+  it("distinguishes missing settings from an existing account-scoped record", async () => {
+    const panels = { "settings-training": true };
+    const missing = await loadSettingsForOwner("user-a", panels);
+    expect(missing.exists).toBe(false);
+
+    await saveSettingsForOwner("user-a", missing.settings);
+
+    const stored = await loadSettingsForOwner("user-a", panels);
+    expect(stored.exists).toBe(true);
+    expect(stored.settings.showRestTimer).toBe(true);
+  });
+
+  it("round-trips every account setting without dropping fields", async () => {
+    const panels = {
+      "settings-notifications": false,
+      "settings-preferences": true,
+      "settings-training": false
+    };
+    const settings: AppSettings = {
+      collapsedPanels: panels,
+      defaultSetCount: "5",
+      defaultStageType: "exercise",
+      defaultWorkoutExecutionMode: "inline-table",
+      defaultWorkoutTableOrientation: "horizontal",
+      defaultWeight: "82.5",
+      isAuthPanelDismissed: true,
+      language: "pl",
+      showRestTimer: false,
+      themeName: "dark",
+      updatedAt: "2026-07-21T15:00:00.000Z",
+      workoutReminders: {
+        description: "Zrób zaplanowany trening.",
+        enabled: true,
+        message: "Czas na trening",
+        onlyIfNoWorkoutToday: false,
+        updatedAt: "2026-07-21T14:59:00.000Z",
+        weeklySchedule: [
+          { day: "monday", enabled: true, time: "06:30" },
+          { day: "tuesday", enabled: false, time: "18:00" },
+          { day: "wednesday", enabled: true, time: "19:15" },
+          { day: "thursday", enabled: false, time: "18:00" },
+          { day: "friday", enabled: true, time: "17:45" },
+          { day: "saturday", enabled: false, time: "10:00" },
+          { day: "sunday", enabled: true, time: "09:00" }
+        ]
+      }
+    };
+
+    await saveSettingsForOwner("user-all-settings", settings);
+
+    await expect(loadSettingsForOwner("user-all-settings", panels)).resolves.toEqual({
+      exists: true,
+      settings
+    });
   });
 
   it("detects invalid or populated anonymous data", async () => {

@@ -14,6 +14,7 @@ import {
   AppState,
   BackHandler,
   Image,
+  InteractionManager,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -104,18 +105,26 @@ import type {
 } from "./src/domain/workoutSessions";
 import { clampWorkoutSessionEntryIndex } from "./src/domain/workoutSessionPresentation";
 import {
-  getSettingsTimestamp,
+  getWorkoutSessionSupersetCandidate,
+  type WorkoutSessionSupersetSide,
+  type WorkoutSessionSupersetValueField
+} from "./src/domain/workoutSessionSupersets";
+import {
   normalizeAppSettings,
+  resolveInitialSettingsSyncAction,
   type AppSettings
 } from "./src/domain/appSettings";
 import {
   synchronizeWorkoutSessions,
 } from "./src/domain/workoutSessionSync";
 import {
+  activeExerciseLibraryTiers,
   findExerciseById,
   findCatalogExerciseBestEffort,
   getCachedExerciseOptions,
+  getCachedExerciseOptionsForStageType,
   getExerciseDisplayName,
+  getExerciseSectionsForStageType,
 } from "./src/domain/exercises";
 import {
   resolveWorkoutStartExecutionMode
@@ -932,6 +941,7 @@ function GymminApp() {
     defaultWeight,
     defaultWorkoutExecutionMode,
     defaultWorkoutTableOrientation,
+    hadPersistedLocalSettingsOnLoad,
     hasLoadedLocalSettings,
     isApplyingAccountSettingsRef,
     isAuthPanelDismissed,
@@ -1021,6 +1031,10 @@ function GymminApp() {
       ? (favorites) => syncAccountFavoriteExercises(user, favorites)
       : null
   });
+  const validFavoriteExerciseIds = useMemo(
+    () => getValidFavoriteExerciseIds(favoriteExercises),
+    [favoriteExercises]
+  );
   const {
     achievementsSyncState,
     appUsageStats,
@@ -1541,16 +1555,26 @@ function GymminApp() {
   }, [splashOpacity]);
 
   useEffect(() => {
-    if (isAppLoading) {
+    if (isAppLoading || activeScreen !== "home") {
       return;
     }
 
-    const timeoutId = setTimeout(() => {
-      getCachedExerciseOptions(language);
-    }, 1200);
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const task = InteractionManager.runAfterInteractions(() => {
+      timeoutId = setTimeout(() => {
+        getCachedExerciseOptions(language);
+        getCachedExerciseOptionsForStageType(language, "exercise", activeExerciseLibraryTiers);
+        getExerciseSectionsForStageType(language, "exercise", "all");
+      }, 600);
+    });
 
-    return () => clearTimeout(timeoutId);
-  }, [isAppLoading, language]);
+    return () => {
+      task.cancel();
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [activeScreen, isAppLoading, language]);
 
   useEffect(() => {
     if (activeScreen !== "bugReportSuccess") {
@@ -2087,12 +2111,13 @@ function GymminApp() {
   async function synchronizeAccountSettings(session: UserSession) {
     const accountSettings = await fetchAccountSettings(session);
 
-    if (!accountSettings) {
-      await saveAccountSettings(buildCurrentSettingsPayload(), session);
-      return;
-    }
+    const action = resolveInitialSettingsSyncAction({
+      hasPersistedLocalSettings: hadPersistedLocalSettingsOnLoad,
+      localUpdatedAt: localSettingsUpdatedAt,
+      remoteUpdatedAt: accountSettings?.updatedAt ?? null
+    });
 
-    if (getSettingsTimestamp(accountSettings.updatedAt ?? "") > getSettingsTimestamp(localSettingsUpdatedAt)) {
+    if (action === "apply-remote" && accountSettings) {
       applyAccountSettings(accountSettings);
       return;
     }
@@ -2274,6 +2299,60 @@ function GymminApp() {
 
   function updateWorkoutSessionEntry(entryId: string, patch: Partial<WorkoutSessionEntry>) {
     activeWorkoutController.updateEntry(entryId, patch);
+  }
+
+  function requestCreateWorkoutSessionSuperset(currentEntryId: string) {
+    if (!activeWorkoutSession || activeWorkoutSession.executionMode !== "guided") {
+      showInfoDialog(t("superset"), t("supersetUnsupported"));
+      return;
+    }
+
+    const candidate = getWorkoutSessionSupersetCandidate(activeWorkoutSession, currentEntryId);
+    if (candidate.status === "no-next") {
+      showInfoDialog(t("superset"), t("supersetNoNext"));
+      return;
+    }
+    if (candidate.status === "overlap") {
+      showInfoDialog(t("superset"), t("supersetOverlap"));
+      return;
+    }
+    if (candidate.status !== "ready") {
+      showInfoDialog(t("superset"), t("supersetInvalid"));
+      return;
+    }
+
+    const nextEntry = activeWorkoutSession.entries.find(
+      (entry) => entry.id === candidate.entryIds[1]
+    );
+    const nextExerciseName = nextEntry
+      ? formatSessionEntryTitle(nextEntry)
+      : t("elementWithoutExercise");
+
+    showConfirmDialog({
+      confirmLabel: t("supersetCreateConfirm"),
+      message: `${t("supersetNextExercise")}: ${nextExerciseName}\n\n${t("supersetCreateCopy")}`,
+      onConfirm: () => activeWorkoutController.createSuperset(currentEntryId),
+      title: t("supersetCreateTitle")
+    });
+  }
+
+  function requestRemoveWorkoutSessionSuperset(supersetId: string) {
+    showConfirmDialog({
+      confirmLabel: t("supersetSplitConfirm"),
+      message: t("supersetSplitCopy"),
+      onConfirm: () => activeWorkoutController.removeSuperset(supersetId),
+      title: t("supersetSplitTitle")
+    });
+  }
+
+  function updateWorkoutSessionSupersetRound(
+    supersetId: string,
+    roundIndex: number,
+    exerciseSide: WorkoutSessionSupersetSide,
+    field: WorkoutSessionSupersetValueField,
+    value: string
+  ) {
+    activeWorkoutController.updateSupersetRound(supersetId, roundIndex, exerciseSide, field, value);
   }
 
   function finishActiveWorkoutSession() {
@@ -3848,7 +3927,7 @@ function GymminApp() {
           defaultStageType={defaultStageType}
           defaultWeight={defaultWeight}
           isEditing={Boolean(editingWorkoutId)}
-          favoriteExerciseIds={getValidFavoriteExerciseIds(favoriteExercises)}
+          favoriteExerciseIds={validFavoriteExerciseIds}
           language={language}
           moveStep={moveStep}
           onToggleFavoriteExercise={toggleCatalogExerciseFavorite}
@@ -4259,7 +4338,9 @@ function GymminApp() {
         isWorkoutSessionEntryFillRequired={isWorkoutSessionEntryFillRequired}
         language={language}
         openExerciseDetail={openExerciseDetail}
+        requestCreateWorkoutSessionSuperset={requestCreateWorkoutSessionSuperset}
         requestFinishActiveWorkoutSession={requestFinishActiveWorkoutSession}
+        requestRemoveWorkoutSessionSuperset={requestRemoveWorkoutSessionSuperset}
         sessionEntryIndex={sessionEntryIndex}
         setIsPostWorkoutFillMode={setIsPostWorkoutFillMode}
         setSelectedExerciseMuscleStep={setSelectedExerciseMuscleStep}
@@ -4269,7 +4350,9 @@ function GymminApp() {
         t={t}
         theme={theme}
         toggleReadOnlyWorkoutPanel={toggleReadOnlyWorkoutPanel}
+        toggleWorkoutSessionSupersetRound={activeWorkoutController.toggleSupersetRound}
         updateWorkoutSessionEntry={updateWorkoutSessionEntry}
+        updateWorkoutSessionSupersetRound={updateWorkoutSessionSupersetRound}
         visibleWorkoutSessions={visibleWorkoutSessions}
         windowSize={windowSize}
       />

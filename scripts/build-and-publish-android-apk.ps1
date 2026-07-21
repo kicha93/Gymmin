@@ -279,6 +279,13 @@ if (-not (Test-Path $apkPath)) {
 }
 
 $safeArchitectureName = ($Architectures -replace "[^a-zA-Z0-9_-]+", "-").Trim("-")
+$normalizedArchitectureSet = (($Architectures -split ",") |
+  ForEach-Object { $_.Trim().ToLowerInvariant() } |
+  Where-Object { $_ } |
+  Sort-Object -Unique) -join ","
+if ($normalizedArchitectureSet -eq "arm64-v8a,armeabi-v7a,x86,x86_64") {
+  $safeArchitectureName = "universal"
+}
 if (-not $safeArchitectureName) {
   $safeArchitectureName = "android"
 }

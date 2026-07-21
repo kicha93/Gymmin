@@ -2,6 +2,14 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import { clampWorkoutSessionEntryIndex } from "../../domain/workoutSessionPresentation";
 import {
+  createWorkoutSessionSuperset,
+  removeWorkoutSessionSuperset,
+  toggleSupersetRoundCompleted,
+  updateSupersetRoundValue,
+  type WorkoutSessionSupersetSide,
+  type WorkoutSessionSupersetValueField
+} from "../../domain/workoutSessionSupersets";
+import {
   completeWorkoutSession,
   createWorkoutSessionFromWorkout,
   markWorkoutSessionDeleted,
@@ -80,6 +88,37 @@ export function useActiveWorkoutController(options: UseActiveWorkoutControllerOp
       : session));
   }
 
+  function updateActiveSession(transform: (session: WorkoutSession) => WorkoutSession) {
+    if (!options.activeSessionId) return;
+    options.setSessions((current) => current.map((session) =>
+      session.id === options.activeSessionId ? transform(session) : session
+    ));
+  }
+
+  function createSuperset(currentEntryId: string) {
+    updateActiveSession((session) => createWorkoutSessionSuperset(session, currentEntryId));
+  }
+
+  function removeSuperset(supersetId: string) {
+    updateActiveSession((session) => removeWorkoutSessionSuperset(session, supersetId));
+  }
+
+  function updateSupersetRound(
+    supersetId: string,
+    roundIndex: number,
+    exerciseSide: WorkoutSessionSupersetSide,
+    field: WorkoutSessionSupersetValueField,
+    value: string
+  ) {
+    updateActiveSession((session) =>
+      updateSupersetRoundValue(session, supersetId, roundIndex, exerciseSide, field, value)
+    );
+  }
+
+  function toggleSupersetRound(supersetId: string, roundIndex: number) {
+    updateActiveSession((session) => toggleSupersetRoundCompleted(session, supersetId, roundIndex));
+  }
+
   function finish() {
     if (!options.activeSession) return;
     const completed = completeWorkoutSession(options.activeSession);
@@ -98,5 +137,15 @@ export function useActiveWorkoutController(options: UseActiveWorkoutControllerOp
     options.onNavigate("home");
   }
 
-  return { abandon, continueSession, finish, start, updateEntry };
+  return {
+    abandon,
+    continueSession,
+    createSuperset,
+    finish,
+    removeSuperset,
+    start,
+    toggleSupersetRound,
+    updateEntry,
+    updateSupersetRound
+  };
 }

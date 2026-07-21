@@ -125,6 +125,26 @@ export function getSettingsTimestamp(value: string) {
   return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
+export type InitialSettingsSyncAction = "apply-remote" | "push-local";
+
+export function resolveInitialSettingsSyncAction(params: {
+  hasPersistedLocalSettings: boolean;
+  localUpdatedAt: string;
+  remoteUpdatedAt: string | null;
+}): InitialSettingsSyncAction {
+  if (!params.remoteUpdatedAt) {
+    return "push-local";
+  }
+
+  if (!params.hasPersistedLocalSettings) {
+    return "apply-remote";
+  }
+
+  return getSettingsTimestamp(params.remoteUpdatedAt) > getSettingsTimestamp(params.localUpdatedAt)
+    ? "apply-remote"
+    : "push-local";
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }

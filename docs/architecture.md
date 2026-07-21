@@ -75,7 +75,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/features` zawiera kontrolery/hooki niezależnych cykli życia danych, obecnie treningów, sesji, ustawień, profili Kreatora i statusu systemu,
 - `src/features/workoutSessions/useAccountScopedWorkoutSessions.ts` wiąże listę sesji, aktywną sesję i pozycję wykonania z jednym właścicielem storage,
 - `src/features/workoutSessions/useActiveWorkoutController.ts` centralizuje start, kontynuację, edycję wpisów, zakończenie i porzucenie aktywnego treningu,
-- `src/features/workouts/useWorkoutEditorController.ts` posiada cykl nowego/edytowanego treningu, a czyste mutacje hierarchii kroków znajdują się w `src/domain/workoutEditor.ts`,
+- `src/features/workouts/useWorkoutEditorController.ts` posiada cykl nowego/edytowanego treningu i stabilne callbacki mutacji, a czyste mutacje oraz liniowe grupowanie hierarchii kroków znajdują się w `src/domain/workoutEditor.ts`,
 - `src/features/weeklyPlan/useAccountScopedWeeklyPlan.ts` izoluje odczyt i zapis planu tygodniowego per owner oraz zeruje stan podczas przełączania kont,
 - `src/features/reminders/useWorkoutReminderScheduling.ts` synchronizuje język domyślnych treści, zmianę właściciela, anulowanie oraz ponowne planowanie lokalnych powiadomień,
 - `src/features/workoutCreator/useWorkoutCreatorJobPolling.ts` posiada cykl wznowienia joba i anulowanie po zmianie zależności, a `workoutCreatorPolling.ts` testowalną pętlę statusów, timeout i mapowanie `401`,
@@ -108,6 +108,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/domain/workoutAi.ts` zawiera testowalne podsumowanie dopasowania ćwiczeń z propozycji AI do katalogu,
 - `src/domain/workoutSessionPresentation.ts` zawiera grupowanie aktywnej sesji, dane tabeli i lookup poprzednich wyników,
 - `src/domain/workoutBuilderConfiguration.ts` zawiera typowane opcje i normalizację wejścia buildera,
+- `src/components/ExercisePicker.tsx` ładuje opcje i sekcje katalogu leniwie po otwarciu; builder przygotowuje najczęstszy typ poza aktywną interakcją i używa indeksów katalogowych do walidacji wyboru,
 - `src/domain` pozostaje miejscem dla logiki domenowej i testowalnych helperów niezależnych od UI.
 
 Podział warstwy mobile jest zakończony na poziomie ekranów:

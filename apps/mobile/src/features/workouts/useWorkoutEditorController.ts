@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import type { SavedWorkout } from "../../domain/savedWorkouts";
@@ -24,13 +25,18 @@ type Options = {
 };
 
 export function useWorkoutEditorController(options: Options) {
-  const updateStep = (stepId: string, nextStep: WorkoutStep) =>
-    options.setWorkout((current) => updateWorkoutStep(current, stepId, nextStep));
-  const removeStep = (stepId: string) => options.setWorkout((current) => removeWorkoutStep(current, stepId));
-  const moveStep = (stepId: string, direction: -1 | 1) =>
-    options.setWorkout((current) => moveWorkoutStep(current, stepId, direction));
-  const addStep = (kind: WorkoutStepKind) => options.setWorkout((current) =>
-    addWorkoutStep(current, kind, options.defaultStageType, options.defaultSetCount));
+  const updateStep = useCallback((stepId: string, nextStep: WorkoutStep) =>
+    options.setWorkout((current) => updateWorkoutStep(current, stepId, nextStep)), [options.setWorkout]);
+  const removeStep = useCallback((stepId: string) =>
+    options.setWorkout((current) => removeWorkoutStep(current, stepId)), [options.setWorkout]);
+  const moveStep = useCallback((stepId: string, direction: -1 | 1) =>
+    options.setWorkout((current) => moveWorkoutStep(current, stepId, direction)), [options.setWorkout]);
+  const addStep = useCallback((kind: WorkoutStepKind) => options.setWorkout((current) =>
+    addWorkoutStep(current, kind, options.defaultStageType, options.defaultSetCount)), [
+      options.defaultSetCount,
+      options.defaultStageType,
+      options.setWorkout
+    ]);
 
   function openNew() {
     options.setEditingWorkoutId(null);

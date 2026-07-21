@@ -4,6 +4,10 @@ Use this when you want to test Gymmin as a standalone Android app.
 
 The current preferred phone-testing path is local `arm64-v8a` release APK build plus GitHub Release upload.
 Expo Go and EAS cloud builds are no longer the default testing flow.
+The canonical one-command entry point is `npm run mobile:github:apk:oneclick`.
+There is no separate repository wrapper for `x86_64` or universal emulator APKs;
+the lower-level local commands below are development tools, not a second
+supported one-click distribution flow.
 
 ## Prerequisites
 
@@ -274,41 +278,6 @@ Direct APK URL:
 https://github.com/kicha93/gymmin-apk/releases/download/v1.0/Gymmin-arm64-v8a-release-latest.apk
 ```
 
-### Local emulator APK
-
-Build a standalone release APK for an Android emulator without publishing
-anything to GitHub:
-
-```powershell
-npm run mobile:emulator:apk
-```
-
-The default target is `x86_64` and writes:
-
-```text
-.artifacts/Gymmin-x86_64-release-latest.apk
-```
-
-For a single universal APK containing `armeabi-v7a`, `arm64-v8a`, `x86` and
-`x86_64`:
-
-```powershell
-npm run mobile:emulator:apk -- -Target universal
-```
-
-The universal artifact is:
-
-```text
-.artifacts/Gymmin-universal-release-latest.apk
-```
-
-The emulator wrapper always disables publishing and does not accept an API URL
-argument. It delegates URL resolution to the same flow as the phone one-click
-build: `GYMMIN_APK_API_BASE_URL` is checked when present, and a missing or stale
-URL causes the wrapper to start or attach a backend tunnel automatically. Use
-`-NoEnsureBackendTunnel` only when the standard environment URL must already be
-healthy. Release signing is loaded from the same local signing environment
-file, but no `gh` command is executed.
 
 To only build locally without uploading:
 

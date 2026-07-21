@@ -190,7 +190,7 @@ function GoalTargetControl({ step, t, theme, updateStep }: GoalTargetControlProp
   );
 }
 
-function StageConfiguration({ stage, t, theme, updateStep }: StageConfigurationProps) {
+export function StageConfiguration({ stage, t, theme, updateStep }: StageConfigurationProps) {
   return (
     <>
       <View style={styles.fieldGroup}>
@@ -217,7 +217,7 @@ function StageConfiguration({ stage, t, theme, updateStep }: StageConfigurationP
   );
 }
 
-function StepConfiguration({
+export function StepConfiguration({
   favoriteExerciseIds,
   language,
   onToggleFavoriteExercise,

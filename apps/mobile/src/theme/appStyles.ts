@@ -2486,6 +2486,237 @@ export const styles = StyleSheet.create({
   builderBlock: {
     gap: 14
   },
+  workoutEditorStepper: {
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: "row",
+    overflow: "hidden",
+    padding: 3
+  },
+  workoutEditorStepperItem: {
+    alignItems: "center",
+    borderRadius: 9,
+    borderWidth: 1,
+    flex: 1,
+    flexDirection: "row",
+    gap: 5,
+    justifyContent: "center",
+    minHeight: 48,
+    paddingHorizontal: 6
+  },
+  workoutEditorStepperText: {
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  workoutEditorCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 16,
+    padding: 16
+  },
+  workoutEditorCardHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between"
+  },
+  workoutEditorCardTitle: {
+    flexShrink: 1,
+    fontSize: 20,
+    fontWeight: "900",
+    lineHeight: 25
+  },
+  workoutEditorEyebrow: {
+    fontSize: 12,
+    fontWeight: "800",
+    marginBottom: 3,
+    textTransform: "uppercase"
+  },
+  workoutEditorFieldError: {
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 18
+  },
+  workoutEditorCompactSummary: {
+    alignItems: "center",
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    padding: 14
+  },
+  workoutEditorSummaryIcon: {
+    alignItems: "center",
+    borderRadius: 10,
+    height: 46,
+    justifyContent: "center",
+    width: 46
+  },
+  workoutEditorStagePicker: {
+    gap: 8
+  },
+  workoutEditorStageTabs: {
+    gap: 9,
+    paddingRight: 4
+  },
+  workoutEditorStageTab: {
+    borderRadius: 22,
+    borderWidth: 1,
+    justifyContent: "center",
+    maxWidth: 170,
+    minHeight: 46,
+    minWidth: 100,
+    paddingHorizontal: 16
+  },
+  workoutEditorStageTabText: {
+    fontSize: 14,
+    fontWeight: "800",
+    textAlign: "center"
+  },
+  workoutEditorAddStageTab: {
+    alignItems: "center",
+    borderRadius: 12,
+    borderWidth: 1,
+    height: 46,
+    justifyContent: "center",
+    width: 52
+  },
+  workoutEditorElementActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 0,
+    gap: 14,
+    minHeight: 40,
+    paddingHorizontal: 4
+  },
+  workoutEditorListSection: {
+    gap: 4
+  },
+  workoutEditorSectionTitle: {
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 5
+  },
+  workoutEditorRow: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 11,
+    minHeight: 64,
+    paddingVertical: 9
+  },
+  workoutEditorRowIndex: {
+    alignItems: "center",
+    borderRadius: 18,
+    height: 36,
+    justifyContent: "center",
+    width: 36
+  },
+  workoutEditorRowIndexText: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  workoutEditorRowCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  workoutEditorRowTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    lineHeight: 20
+  },
+  workoutEditorRowMeta: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
+    marginTop: 2
+  },
+  workoutEditorEmptyText: {
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20,
+    paddingVertical: 8
+  },
+  workoutEditorPreview: {
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 8,
+    padding: 14
+  },
+  workoutEditorPreviewHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  workoutEditorPreviewItem: {
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20
+  },
+  workoutEditorBreadcrumb: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: 7,
+    minHeight: 38
+  },
+  workoutEditorBreadcrumbText: {
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  workoutEditorValidation: {
+    borderRadius: 10,
+    gap: 7,
+    padding: 12
+  },
+  workoutEditorValidationRow: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 8
+  },
+  workoutEditorValidationText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 18
+  },
+  workoutEditorSummaryName: {
+    fontSize: 22,
+    fontWeight: "900"
+  },
+  workoutEditorSummaryNotes: {
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 20
+  },
+  workoutEditorSummaryCounts: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  workoutEditorSummaryStages: {
+    gap: 2
+  },
+  workoutEditorSummaryStage: {
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    minHeight: 58,
+    paddingVertical: 9
+  },
+  workoutEditorContextActions: {
+    borderTopWidth: 1,
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+    paddingTop: 12
+  },
+  workoutEditorActionRow: {
+    flexDirection: "row",
+    gap: 10
+  },
+  workoutEditorActionButton: {
+    flex: 1,
+    minHeight: 50,
+    paddingHorizontal: 8
+  },
   emptyBuilder: {
     alignItems: "flex-start",
     borderRadius: 8,

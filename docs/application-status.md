@@ -289,6 +289,14 @@ Sortowanie treningów:
 
 ### Model treningu
 
+Ręczne tworzenie i edycja treningu korzystają z kreatora `Dane -> Etapy -> Zapis`.
+Krok `Etapy` pokazuje poziome zakładki etapów i tylko jeden kontekst edycji:
+aktywny etap, jedną serię albo jedno ćwiczenie. Pełna hierarchia nie jest już
+renderowana jako zagnieżdżone formularze w jednym scrollu. Podsumowanie i
+walidacja są liczone przez czyste helpery `workoutBuilderFlow.ts`; zapis nadal
+przekazuje niezmieniony `WorkoutDraft`, więc backend oraz synchronizacja nie
+wymagały zmian.
+
 Aktualny model:
 
 - trening ma nazwę i uwagi,
@@ -342,7 +350,7 @@ Picker ćwiczeń ma:
 
 ### Przegląd mięśni
 
-Panel `Przegląd` pokazuje sylwetkę przód/tył i koloruje mięśnie zależnie od ćwiczeń użytych w treningu. Działa w podglądzie read-only oraz w edycji treningu. W edycji jest domyślnie zwinięty i ukryty, jeśli trening nie ma ćwiczeń.
+Panel `Przegląd` pokazuje sylwetkę przód/tył i koloruje mięśnie zależnie od ćwiczeń użytych w treningu. Działa w podglądzie read-only. Kreator edycji korzysta zamiast niego z lekkiego, tekstowego szybkiego podglądu aktywnego etapu lub serii, aby nie renderować ciężkiej prezentacji podczas wprowadzania danych.
 
 ### Wykonywanie treningu
 
@@ -502,9 +510,18 @@ Działa:
 - domyślny ciężar,
 - domyślny typ etapu,
 - domyślny tryb wykonywania treningu,
+- widoczność timera odpoczynku,
 - lokalne przypomnienia treningowe,
 - ulubione ćwiczenia,
 - zwijanie paneli i zapis ich stanu.
+
+Cały model `AppSettings` jest local-first i account-scoped. Po zalogowaniu
+język, motyw, domyślna liczba serii, domyślny ciężar, domyślny typ etapu,
+domyślny tryb wykonywania, widoczność timera odpoczynku, stan zwiniętych paneli,
+stan ukrycia panelu logowania oraz konfiguracja przypomnień synchronizują się
+przez `GET/PUT /api/settings`. Na innym urządzeniu zostają odtworzone po
+pierwszej synchronizacji konta. Lokalne identyfikatory już zaplanowanych
+powiadomień nie są synchronizowane, ponieważ należą do konkretnego urządzenia.
 
 Integracje są disabled/placeholder.
 
@@ -789,20 +806,26 @@ Widok szczegolow cwiczenia ma kompaktowy, panelowy layout:
 
 ## APK poza Expo Go
 
-Aktualny, sprawdzony sposob przygotowania paczki na telefon:
+Aktualny, sprawdzony sposób przygotowania paczki na telefon:
 
 ```powershell
-npm run mobile:github:apk -- -ApiBaseUrl "https://your-backend-url.example.com"
+npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://your-backend-url.example.com"
 ```
 
-Skrypt buduje release APK dla `arm64-v8a`, zapisuje go jako `.artifacts/Gymmin-arm64-v8a-release-latest.apk` i publikuje jako asset GitHub Release w prywatnym repo:
+Wrapper sprawdza backend `/health`, w razie potrzeby uruchamia lub podpina tunel,
+buduje release APK dla `arm64-v8a`, zapisuje go jako
+`.artifacts/Gymmin-arm64-v8a-release-latest.apk` i publikuje jako asset GitHub
+Release w prywatnym repo:
 
 ```text
 kicha93/gymmin-apk
 release: v1.0
 ```
 
-To jest aktualny, sprawdzony flow pobierania i instalacji APK na Androidzie. Debug APK zostaje tylko jako awaryjna opcja developerska.
+To jest jedyny preferowany one-click flow pobierania i instalacji APK na
+Androidzie. Osobny wrapper budujący `x86_64` / universal APK dla emulatora został
+wycofany; debug APK i niższe skrypty buildowe zostają wyłącznie jako narzędzia
+developerskie.
 
 Google Play / Store nie uzywa tej paczki APK. Dla Store uzywamy release AAB:
 

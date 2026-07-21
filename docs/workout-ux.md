@@ -2,6 +2,18 @@
 
 This note tracks the current workout-view UX decisions.
 
+## Manual workout builder
+
+- Creating and editing a manual workout uses a three-step wizard: `Details -> Stages -> Save` (`Dane -> Etapy -> Zapis` in Polish).
+- The Details step contains only the workout name and optional notes. A name is required before continuing.
+- The Stages step shows horizontal stage pills and only one active editing context at a time. The stage view contains a compact set list; selecting a set replaces it with the set editor, and selecting an exercise replaces that with the exercise form.
+- Stage, set and exercise ordering/removal remain available only for the active item. Destructive actions require confirmation.
+- New exercises are edited as a temporary UI draft. Cancel discards that draft; Save exercise inserts or updates the original `WorkoutDraft` element.
+- A compact exercise preview replaces the full nested forms previously shown below every stage and set.
+- The Save step shows workout/stage/set/exercise counts, stage summaries and validation errors. Critical errors disable the final save action.
+- Context actions replace the old global `+ Stage / + Set / Save workout` bar. The app bottom navigation remains unchanged and does not overlap editor controls.
+- The persisted workout model, backend payload, synchronization and AI flows are unchanged.
+
 ## Exercise rows
 
 - Read-only workout details use compact exercise rows.

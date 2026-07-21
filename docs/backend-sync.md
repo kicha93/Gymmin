@@ -313,8 +313,14 @@ Synchronizowane pola obejmują:
 - `defaultWorkoutExecutionMode`
 - `collapsedPanels`
 - `isAuthPanelDismissed`
+- `showRestTimer`
 - `workoutReminders`
 - `updatedAt`
+
+`showRestTimer` steruje widocznością kontrolki timera odpoczynku podczas aktywnego
+treningu. Jest ustawieniem konta: zapisuje się local-first, a po zalogowaniu jest
+wysyłane i odtwarzane razem z pozostałym payloadem `/api/settings`. Wyłączenie
+timera nie zmienia zaplanowanych czasów odpoczynku w definicji treningu.
 
 Przykład `workoutReminders`:
 

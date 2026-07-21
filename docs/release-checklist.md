@@ -114,8 +114,11 @@ multi-replica and device smoke checks listed below.
 - GitHub APK build command:
 
   ```powershell
-  npm run mobile:apk:share -- -ApiBaseUrl "https://your-backend-url.example.com"
+  npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://your-backend-url.example.com"
   ```
+
+- Dedicated `x86_64` / universal emulator wrapper is not part of the release
+  process. The phone-test artifact remains the signed `arm64-v8a` APK above.
 
 - Store AAB uses release upload-key signing, not debug signing.
 - Store/EAS production build rejects Cloudflare/ngrok/local API URLs and embeds the permanent HTTPS backend URL through `EXPO_PUBLIC_API_BASE_URL`.

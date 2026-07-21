@@ -239,7 +239,7 @@ import { WorkoutAiRewriteScreen } from "./src/screens/WorkoutAiRewriteScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { SettingsSheetContent } from "./src/components/SettingsSheetContent";
 import { ArticleDetailScreen } from "./src/screens/ArticleDetailScreen";
-import { WorkoutBuilderScreen } from "./src/screens/WorkoutBuilderScreen";
+import { WorkoutBuilderWizardScreen } from "./src/screens/WorkoutBuilderWizardScreen";
 import { ExerciseDetailScreen } from "./src/screens/ExerciseDetailScreen";
 import { FavoriteExercisesScreen } from "./src/screens/FavoriteExercisesScreen";
 import { WeeklyPlanScreen } from "./src/screens/WeeklyPlanScreen";
@@ -1776,7 +1776,6 @@ function GymminApp() {
     setSessions: setWorkoutSessions
   });
   const {
-    addStep,
     moveStep,
     openExisting: openWorkoutEditor,
     openNew: openWorkoutBuilder,
@@ -1922,7 +1921,6 @@ function GymminApp() {
   const bottomInset = Math.max(insets.bottom, isLandscape ? 4 : 18);
   const bottomSheetBottomPadding = Math.max(insets.bottom, 72) + 24;
   const bottomNavHeight = (isLandscape ? 48 : 58) + bottomInset;
-  const stickyActionBottom = bottomNavHeight - 4;
   const scrollViewportBottomMargin = isLandscape ? 0 : bottomNavHeight;
 
   function getAuthHeaders(session = user): Record<string, string> {
@@ -3922,14 +3920,20 @@ function GymminApp() {
   function renderBuilder() {
     return (
       <>
-      <WorkoutBuilderScreen
+      <WorkoutBuilderWizardScreen
+          confirmDelete={(title, message, onConfirm) => showConfirmDialog({
+            confirmLabel: t("delete"),
+            message,
+            onConfirm,
+            title
+          })}
           defaultSetCount={defaultSetCount}
           defaultStageType={defaultStageType}
           defaultWeight={defaultWeight}
-          isEditing={Boolean(editingWorkoutId)}
           favoriteExerciseIds={validFavoriteExerciseIds}
           language={language}
           moveStep={moveStep}
+          onSaveWorkout={saveWorkout}
           onToggleFavoriteExercise={toggleCatalogExerciseFavorite}
           removeStep={removeStep}
           t={t}
@@ -4501,9 +4505,7 @@ function GymminApp() {
                 paddingLeft: 20 + insets.left,
                 paddingRight: 20 + insets.right,
                 paddingBottom:
-                  activeScreen === "builder"
-                    ? stickyActionBottom + 118 - scrollViewportBottomMargin
-                    : activeScreen === "workoutSession"
+                  activeScreen === "workoutSession"
                       ? bottomNavHeight + (isKeyboardVisible ? 260 : 28) - scrollViewportBottomMargin
                       : bottomNavHeight + 28 - scrollViewportBottomMargin
               }
@@ -4768,46 +4770,6 @@ function GymminApp() {
             {activeScreen === "activeSessions" && renderActiveSessions()}
           </ScrollView>
         </KeyboardAvoidingView>
-
-        {activeScreen === "builder" && (
-          <View
-            style={[
-              styles.stickyActionBar,
-              {
-                backgroundColor: theme.background,
-                borderTopColor: theme.border,
-                bottom: stickyActionBottom
-              }
-            ]}
-          >
-            <View style={styles.stickyActionRow}>
-              <AppButton
-                icon="add"
-                style={styles.stickySmallButton}
-                theme={theme}
-                onPress={() => addStep("stage")}
-              >
-                {t("stage")}
-              </AppButton>
-              <AppButton
-                icon="add"
-                style={styles.stickySmallButton}
-                theme={theme}
-                onPress={() => addStep("set")}
-              >
-                {t("set")}
-              </AppButton>
-              <AppButton
-                icon="save-outline"
-                style={styles.stickySaveButton}
-                theme={theme}
-                onPress={saveWorkout}
-              >
-                {t("saveWorkout")}
-              </AppButton>
-            </View>
-          </View>
-        )}
 
         <View
           style={[

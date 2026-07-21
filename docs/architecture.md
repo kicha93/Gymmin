@@ -76,6 +76,8 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/features/workoutSessions/useAccountScopedWorkoutSessions.ts` wiąże listę sesji, aktywną sesję i pozycję wykonania z jednym właścicielem storage,
 - `src/features/workoutSessions/useActiveWorkoutController.ts` centralizuje start, kontynuację, edycję wpisów, zakończenie i porzucenie aktywnego treningu,
 - `src/features/workouts/useWorkoutEditorController.ts` posiada cykl nowego/edytowanego treningu i stabilne callbacki mutacji, a czyste mutacje oraz liniowe grupowanie hierarchii kroków znajdują się w `src/domain/workoutEditor.ts`,
+- `src/screens/WorkoutBuilderWizardScreen.tsx` prezentuje ręczny edytor jako trzy kroki `Dane -> Etapy -> Zapis` i utrzymuje tylko jeden aktywny kontekst: etap, serię albo ćwiczenie,
+- `src/domain/workoutBuilderFlow.ts` wylicza podsumowania i błędy walidacji kreatora bez zależności od React Native; zapis nadal przekazuje niezmieniony `WorkoutDraft`,
 - `src/features/weeklyPlan/useAccountScopedWeeklyPlan.ts` izoluje odczyt i zapis planu tygodniowego per owner oraz zeruje stan podczas przełączania kont,
 - `src/features/reminders/useWorkoutReminderScheduling.ts` synchronizuje język domyślnych treści, zmianę właściciela, anulowanie oraz ponowne planowanie lokalnych powiadomień,
 - `src/features/workoutCreator/useWorkoutCreatorJobPolling.ts` posiada cykl wznowienia joba i anulowanie po zmianie zależności, a `workoutCreatorPolling.ts` testowalną pętlę statusów, timeout i mapowanie `401`,
@@ -489,10 +491,10 @@ Znane ograniczenie: przed releasem warto zdecydować, czy niedopasowane ćwiczen
 
 ## Dystrybucja Android APK
 
-Preferowany flow:
+Preferowany i jedyny wspierany one-click flow dla APK instalowanego na telefonie:
 
 ```powershell
-npm run mobile:apk:share -- -ApiBaseUrl "https://your-backend-url.example.com"
+npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://your-backend-url.example.com"
 ```
 
 Skrypt:
@@ -502,6 +504,10 @@ Skrypt:
 3. buduje release APK dla `arm64-v8a`,
 4. kopiuje artefakt do `.artifacts`,
 5. publikuje APK do GitHub Release.
+
+Repozytorium nie utrzymuje osobnego wrappera `x86_64` / universal dla emulatora.
+Niższe skrypty lokalne pozostają narzędziami developerskimi, natomiast nie są
+drugim wspieranym one-click flow dystrybucji.
 
 Domyślny target:
 

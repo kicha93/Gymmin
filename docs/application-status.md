@@ -843,3 +843,12 @@ mobile lokalnie wykryje `offline`. Status `ok` nie pokazuje callouta. Komunikat
 nie blokuje local-first uzycia aplikacji; dla `offline` informuje, ze lokalne
 treningi zostaja bezpieczne na urzadzeniu. Szczegoly konfiguracji sa w
 `docs/system-status.md`.
+
+## Security follow-up 2026-07-21
+
+The follow-up audit is documented in `docs/security-audit-2026-07-21.md`.
+Production `/api/health` no longer discloses infrastructure details, CI actions
+are pinned to commit SHAs, the one-click published APK flow requires HTTPS, and
+the dependency gate has no high or critical advisories. Ten moderate advisories
+remain in Expo/Xcode build tooling; npm's proposed Expo 57 to 46 downgrade was
+intentionally rejected.

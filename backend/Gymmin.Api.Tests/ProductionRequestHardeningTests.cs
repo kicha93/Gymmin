@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Gymmin.Api.Domain;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -94,6 +95,25 @@ public sealed class ProductionCorsTests : IClassFixture<ProductionCorsFactory>
         rejectedRequest.Headers.Add("Origin", "https://attacker.example");
         var rejected = await client.SendAsync(rejectedRequest);
         Assert.False(rejected.Headers.Contains("Access-Control-Allow-Origin"));
+    }
+
+    [Fact]
+    public async Task Production_api_health_does_not_disclose_infrastructure_details()
+    {
+        using var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        var response = await client.GetAsync("/api/health");
+        var json = await response.Content.ReadAsStringAsync();
+        using var body = JsonDocument.Parse(json);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("ok", body.RootElement.GetProperty("status").GetString());
+        Assert.False(body.RootElement.TryGetProperty("storageProvider", out _));
+        Assert.False(body.RootElement.TryGetProperty("databaseProvider", out _));
+        Assert.False(body.RootElement.TryGetProperty("database", out _));
     }
 }
 

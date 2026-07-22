@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   getUniqueWorkoutBuilderValidationCodes,
-  getWorkoutBuilderSummary
+  getWorkoutBuilderStagePreviewRows,
+  getWorkoutBuilderSummary,
+  getWorkoutBuilderValidationCodesForStage
 } from "../workoutBuilderFlow";
 import { addWorkoutStep, removeWorkoutStep, updateWorkoutStep } from "../workoutEditor";
 import { createDefaultWorkout, createStep } from "../workouts";
@@ -73,5 +75,36 @@ describe("workoutBuilderFlow", () => {
 
     expect(issues).toContain("exercise-required");
     expect(issues).toContain("nonnegative-values-required");
+  });
+
+  it("shows missing-set validation only for the stage that is actually empty", () => {
+    const firstStage = createStep({ kind: "stage", stageType: "exercise" });
+    const firstSet = createStep({ kind: "set", parentStageId: firstStage.id, setCount: "4" });
+    const secondStage = createStep({ kind: "stage", stageType: "exercise" });
+    const draft = { ...createDefaultWorkout(), steps: [firstStage, firstSet, secondStage] };
+
+    expect(getUniqueWorkoutBuilderValidationCodes(draft)).toContain("set-required");
+    expect(getWorkoutBuilderValidationCodesForStage(draft, firstStage.id)).not.toContain("set-required");
+    expect(getWorkoutBuilderValidationCodesForStage(draft, secondStage.id)).toContain("set-required");
+  });
+
+  it("returns every exercise in the stage preview with its parent set target", () => {
+    const stage = createStep({ kind: "stage", stageType: "exercise" });
+    const firstSet = createStep({ kind: "set", parentStageId: stage.id, setCount: "4" });
+    const secondSet = createStep({ kind: "set", parentStageId: stage.id, setCount: "3" });
+    const exercises = Array.from({ length: 5 }, (_, index) => createStep({
+      exerciseName: `Exercise ${index + 1}`,
+      goalType: "repetitions",
+      kind: "exercise",
+      parentSetId: index < 3 ? firstSet.id : secondSet.id,
+      stageType: "exercise",
+      targetValue: index < 3 ? "12" : "8"
+    }));
+    const draft = { ...createDefaultWorkout(), steps: [stage, firstSet, ...exercises.slice(0, 3), secondSet, ...exercises.slice(3)] };
+
+    const preview = getWorkoutBuilderStagePreviewRows(draft, stage.id);
+
+    expect(preview).toHaveLength(5);
+    expect(preview.map((row) => row.target)).toEqual(["4×12", "4×12", "4×12", "3×8", "3×8"]);
   });
 });

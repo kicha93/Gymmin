@@ -35,6 +35,7 @@ docs/
   build-android-apk.md
   deployment.md
   production-audit-2026-07-16.md
+  security-audit-2026-07-21.md
   release-checklist.md
   run-mobile-tunnel.md
   system-status.md
@@ -45,6 +46,9 @@ scripts/
 
 Aktualny audyt gotowości produkcyjnej, wykryte blokery i kolejność napraw są
 opisane w `docs/production-audit-2026-07-16.md`.
+
+The current security follow-up and applied fixes are documented in
+`docs/security-audit-2026-07-21.md`.
 
 The mobile UI is split by responsibility: route-level views live in
 `apps/mobile/src/screens`, reusable controls and view fragments in
@@ -168,7 +172,7 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - Registration includes username, email, password, repeated password and password preview in the mobile UI. The backend contract still receives a single password field.
 - Signed-in users can upload, replace and delete a profile avatar from the Profile screen. Avatars are uploaded as `multipart/form-data`; production Database mode stores bytes and metadata in the database, while File mode remains a development fallback. They are exposed through authenticated `GET /api/profile/avatar`. Native mobile downloads the image with the bearer token into an account-scoped private cache and limits the rendered/uploaded copy to 1024 px on its longest side, preventing high-resolution camera images from exhausting Android image memory. `avatarUpdatedAt` invalidates the cache; anonymous users keep the default icon.
 - Signed-in users can permanently delete their account from Profile -> Account. Mobile requires the current password plus typing `USUŃ` / `DELETE`; the backend verifies both, rate-limits attempts per user/IP, deletes private user-owned data and avatar, and anonymizes retained bug reports.
-- Installed APKs contain the API base URL used at build time. For GitHub Release phone builds, run `npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://..."` or set `GYMMIN_APK_API_BASE_URL`; the wrapper checks `/health` and, if the URL is missing or stale, starts or attaches a backend tunnel automatically. A running local backend on `http://127.0.0.1:5198` is reused instead of restarted. The current tunnel URL is written to `.artifacts/backend-url.txt`.
+- Installed APKs contain the API base URL used at build time. For GitHub Release phone builds, run `npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://..."` or set `GYMMIN_APK_API_BASE_URL`; published APKs reject non-HTTPS API URLs. The wrapper checks `/health` and, if the URL is missing or stale, starts or attaches a backend tunnel automatically. A running local backend on `http://127.0.0.1:5198` can be reused behind that HTTPS tunnel instead of restarted. The current tunnel URL is written to `.artifacts/backend-url.txt`.
 - Auth hardening is implemented: token expiry, active sessions, single-session revoke, logout-all, change password and password reset by email/token. Reset tokens are stored only as hashes. Mobile bearer tokens live in OS-backed SecureStore/Keychain and legacy plaintext AsyncStorage sessions migrate on first launch. New accounts must confirm a six-digit email code before AI use; registration and AI generation are rate-limited per IP/user with shared Database-provider buckets.
 - After login, workouts are synchronized to the user's backend account and kept locally as a cache/offline copy.
 - After login, the complete `AppSettings` payload is synchronized to the user's backend account and kept locally as an account-scoped cache/offline copy. This includes language, theme, workout defaults, rest-timer visibility, collapsed panels and reminder configuration; only device-specific scheduled-notification IDs remain local.

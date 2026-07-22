@@ -7,7 +7,9 @@ import { AppButton, AppInput, AppTextarea } from "../components/AppControls";
 import { getExerciseDisplayName } from "../domain/exercises";
 import {
   getUniqueWorkoutBuilderValidationCodes,
+  getWorkoutBuilderStagePreviewRows,
   getWorkoutBuilderSummary,
+  getWorkoutBuilderValidationCodesForStage,
   requiresCatalogExercise,
   type WorkoutBuilderValidationCode,
   type WorkoutEditorFocus,
@@ -68,6 +70,10 @@ export function WorkoutBuilderWizardScreen(props: Props) {
   const activeStage = stageGroups.find((group) => group.stage.id === focus?.stageId) ?? stageGroups[0] ?? null;
   const focusedSetId = focus?.type === "set" || focus?.type === "exercise" ? focus.setId : "";
   const activeSet = activeStage?.series.find((group) => group.set.id === focusedSetId) ?? null;
+  const activeStageValidationCodes = useMemo(
+    () => activeStage ? getWorkoutBuilderValidationCodesForStage(workout, activeStage.stage.id) : validationCodes.filter((code) => code === "stage-required"),
+    [activeStage, validationCodes, workout]
+  );
 
   useEffect(() => {
     if (editorStep !== "stages") return;
@@ -96,8 +102,8 @@ export function WorkoutBuilderWizardScreen(props: Props) {
     return stage.label.trim() || `${t("stage")} ${index + 1}`;
   }
 
-  function counts(stageCount: number, setCount: number, exerciseCount: number) {
-    return `${stageCount} ${t("stages").toLowerCase()} · ${setCount} ${t("setsPlural")} · ${exerciseCount} ${t("exercisePlural").toLowerCase()}`;
+  function counts(stageCount: number, exerciseCount: number) {
+    return `${stageCount} ${t("stages").toLowerCase()} · ${exerciseCount} ${t("exercisePlural").toLowerCase()}`;
   }
 
   function validationMessage(code: WorkoutBuilderValidationCode) {
@@ -278,7 +284,10 @@ export function WorkoutBuilderWizardScreen(props: Props) {
         <Text style={[styles.workoutEditorCardTitle, { color: theme.text }]}>{t("workoutEditorDetailsTitle")}</Text>
         <View style={styles.fieldGroup}>
           <Text style={[styles.label, { color: theme.muted }]}>{t("workoutName")}</Text>
-          <AppInput
+          <AppTextarea
+            autoGrow
+            maxHeight={132}
+            minHeight={48}
             placeholder={t("workoutEditorNamePlaceholder")}
             theme={theme}
             value={workout.name}
@@ -291,7 +300,15 @@ export function WorkoutBuilderWizardScreen(props: Props) {
         </View>
         <View style={styles.fieldGroup}>
           <Text style={[styles.label, { color: theme.muted }]}>{t("workoutEditorNotesOptional")}</Text>
-          <AppTextarea placeholder={t("workoutEditorNotesPlaceholder")} theme={theme} value={workout.notes} onChangeText={(notes) => setWorkout((current) => ({ ...current, notes }))} />
+          <AppTextarea
+            autoGrow
+            maxHeight={240}
+            minHeight={112}
+            placeholder={t("workoutEditorNotesPlaceholder")}
+            theme={theme}
+            value={workout.notes}
+            onChangeText={(notes) => setWorkout((current) => ({ ...current, notes }))}
+          />
         </View>
       </View>
     );
@@ -328,7 +345,7 @@ export function WorkoutBuilderWizardScreen(props: Props) {
       );
     }
     const stageIndex = stageGroups.findIndex((group) => group.stage.id === activeStage.stage.id);
-    const preview = activeStage.series.flatMap((group) => group.elements).slice(0, 4);
+    const preview = getWorkoutBuilderStagePreviewRows(workout, activeStage.stage.id);
     return (
       <>
         {stageTabs()}
@@ -363,7 +380,11 @@ export function WorkoutBuilderWizardScreen(props: Props) {
           <View style={styles.workoutEditorPreviewHeader}><Text style={[styles.workoutEditorSectionTitle, { color: theme.text }]}>{t("workoutEditorQuickPreview")}</Text><Ionicons name="eye-outline" size={20} color={theme.primary} /></View>
           {preview.length === 0
             ? <Text style={[styles.workoutEditorEmptyText, { color: theme.muted }]}>{t("workoutEditorNoExercises")}</Text>
-            : preview.map((element) => <Text key={element.id} style={[styles.workoutEditorPreviewItem, { color: theme.text }]}>{element.exerciseName ? getExerciseDisplayName(element.exerciseName, language) : t("elementWithoutExercise")}</Text>)}
+            : preview.map(({ element, target }) => (
+              <Text key={element.id} style={[styles.workoutEditorPreviewItem, { color: theme.text }]}>
+                {element.exerciseName ? getExerciseDisplayName(element.exerciseName, language) : t("elementWithoutExercise")} - {target}
+              </Text>
+            ))}
         </View>
       </>
     );
@@ -432,10 +453,10 @@ export function WorkoutBuilderWizardScreen(props: Props) {
       <>
         <View style={[styles.workoutEditorCompactSummary, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={[styles.workoutEditorSummaryIcon, { backgroundColor: theme.secondaryBand }]}><Ionicons name="clipboard-outline" size={23} color={theme.primary} /></View>
-          <View style={styles.workoutEditorRowCopy}><Text style={[styles.workoutEditorRowTitle, { color: theme.text }]}>{workout.name.trim() || t("addNewWorkout")}</Text><Text style={[styles.workoutEditorRowMeta, { color: theme.muted }]}>{counts(summary.stageCount, summary.setCount, summary.exerciseCount)}</Text></View>
+          <View style={styles.workoutEditorRowCopy}><Text style={[styles.workoutEditorRowTitle, { color: theme.text }]}>{workout.name.trim() || t("addNewWorkout")}</Text><Text style={[styles.workoutEditorRowMeta, { color: theme.muted }]}>{counts(summary.stageCount, summary.exerciseCount)}</Text></View>
         </View>
         {focus?.type === "exercise" ? exerciseView() : focus?.type === "set" ? setView() : stageView()}
-        {focus?.type !== "exercise" ? validationList(validationCodes.filter((code) => code !== "name-required")) : null}
+        {focus?.type !== "exercise" ? validationList(activeStageValidationCodes) : null}
       </>
     );
   }
@@ -447,7 +468,7 @@ export function WorkoutBuilderWizardScreen(props: Props) {
         <Text style={[styles.workoutEditorCardTitle, { color: theme.text }]}>{t("workoutEditorSummaryTitle")}</Text>
         <Text style={[styles.workoutEditorSummaryName, { color: theme.text }]}>{workout.name.trim() || t("addNewWorkout")}</Text>
         {workout.notes.trim() ? <Text style={[styles.workoutEditorSummaryNotes, { color: theme.muted }]}>{workout.notes.trim()}</Text> : null}
-        <Text style={[styles.workoutEditorSummaryCounts, { color: theme.primary }]}>{counts(summary.stageCount, summary.setCount, summary.exerciseCount)}</Text>
+        <Text style={[styles.workoutEditorSummaryCounts, { color: theme.primary }]}>{counts(summary.stageCount, summary.exerciseCount)}</Text>
         <View style={styles.workoutEditorSummaryStages}>
           {summary.stages.map((stage, index) => <View key={stage.id} style={[styles.workoutEditorSummaryStage, { borderBottomColor: theme.border }]}><View style={styles.workoutEditorRowCopy}><Text style={[styles.workoutEditorRowTitle, { color: theme.text }]}>{stage.name === `Stage ${index + 1}` ? `${t("stage")} ${index + 1}` : stage.name}</Text><Text style={[styles.workoutEditorRowMeta, { color: theme.muted }]}>{stage.setCount} {t("setsPlural")} · {stage.exerciseCount} {t("exercisePlural").toLowerCase()}</Text></View></View>)}
         </View>

@@ -1,4 +1,5 @@
 import { groupWorkoutBuilderSteps } from "./workoutEditor";
+import { formatExerciseSetTarget } from "./workoutExerciseSummary";
 import type { WorkoutDraft, WorkoutStep } from "./workouts";
 
 export type WorkoutEditorStep = "details" | "stages" | "summary";
@@ -36,6 +37,23 @@ export function getWorkoutBuilderSummary(draft: WorkoutDraft) {
   };
 }
 
+export function getWorkoutBuilderStagePreviewRows(draft: WorkoutDraft, stageId: string) {
+  const stage = groupWorkoutBuilderSteps(draft.steps).find((group) => group.stage.id === stageId);
+  if (!stage) {
+    return [];
+  }
+
+  return stage.series.flatMap(({ elements, set }) => elements.map((element) => ({
+    element,
+    target: formatExerciseSetTarget({
+      goalType: element.goalType,
+      setCount: set.setCount,
+      stageType: element.stageType,
+      targetValue: element.targetValue
+    }).replace(" x ", "×")
+  })));
+}
+
 export function getWorkoutBuilderValidationIssues(draft: WorkoutDraft): WorkoutBuilderValidationIssue[] {
   const issues: WorkoutBuilderValidationIssue[] = [];
   const groups = groupWorkoutBuilderSteps(draft.steps);
@@ -66,19 +84,37 @@ export function getWorkoutBuilderValidationIssues(draft: WorkoutDraft): WorkoutB
     });
   });
 
-  const hasNegativeValue = draft.steps.some((step) =>
-    [step.loadKg, step.setCount, step.goalType === "time" ? "" : step.targetValue]
-      .some(isNegativeNumericValue)
-  );
-  if (hasNegativeValue) {
-    issues.push({ code: "nonnegative-values-required" });
-  }
+  draft.steps.forEach((step) => {
+    const hasNegativeValue = [step.loadKg, step.setCount, step.goalType === "time" ? "" : step.targetValue]
+      .some(isNegativeNumericValue);
+    if (hasNegativeValue) {
+      issues.push({ code: "nonnegative-values-required", stepId: step.id });
+    }
+  });
 
   return issues;
 }
 
 export function getUniqueWorkoutBuilderValidationCodes(draft: WorkoutDraft) {
   return Array.from(new Set(getWorkoutBuilderValidationIssues(draft).map((issue) => issue.code)));
+}
+
+export function getWorkoutBuilderValidationCodesForStage(draft: WorkoutDraft, stageId: string) {
+  const stage = groupWorkoutBuilderSteps(draft.steps).find((group) => group.stage.id === stageId);
+  if (!stage) {
+    return [];
+  }
+
+  const stageStepIds = new Set([
+    stage.stage.id,
+    ...stage.series.flatMap(({ elements, set }) => [set.id, ...elements.map((element) => element.id)])
+  ]);
+
+  return Array.from(new Set(
+    getWorkoutBuilderValidationIssues(draft)
+      .filter((issue) => issue.stepId && stageStepIds.has(issue.stepId))
+      .map((issue) => issue.code)
+  ));
 }
 
 export function requiresCatalogExercise(step: WorkoutStep) {

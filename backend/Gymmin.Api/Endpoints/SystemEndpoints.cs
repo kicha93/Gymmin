@@ -41,6 +41,13 @@ internal static class SystemEndpoints
         app.MapGet("/api/health", async (IServiceProvider services, ILogger<Program> logger) =>
         {
             var database = await GetDatabaseHealthAsync(useDatabaseStorage, services, logger);
+            if (app.Environment.IsProduction())
+            {
+                return !IsDatabaseReady(database)
+                    ? Results.Json(new { status = "not_ready" }, statusCode: StatusCodes.Status503ServiceUnavailable)
+                    : Results.Ok(new { status = "ok" });
+            }
+
             var response = new
             {
                 status = IsDatabaseReady(database) ? "ok" : "not_ready",

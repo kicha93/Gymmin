@@ -20,7 +20,7 @@ import {
 import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import type { TextInputProps } from "react-native";
+import type { NativeSyntheticEvent, TextInputContentSizeChangeEventData, TextInputProps } from "react-native";
 
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
@@ -129,19 +129,53 @@ export function PasswordInput({ isVisible, setIsVisible, theme, style, ...props 
   );
 }
 
-export function AppTextarea({ inputStyle, theme, style, ...props }: AppInputProps) {
+type AppTextareaProps = AppInputProps & {
+  autoGrow?: boolean;
+  maxHeight?: number;
+  minHeight?: number;
+};
+
+export function AppTextarea({
+  autoGrow = false,
+  inputStyle,
+  maxHeight = 220,
+  minHeight = 84,
+  onContentSizeChange,
+  scrollEnabled,
+  theme,
+  style,
+  ...props
+}: AppTextareaProps) {
+  const [contentHeight, setContentHeight] = useState(minHeight);
+  const controlHeight = Math.min(maxHeight, Math.max(minHeight, contentHeight + 24));
+
+  function handleContentSizeChange(event: NativeSyntheticEvent<TextInputContentSizeChangeEventData>) {
+    if (autoGrow) {
+      setContentHeight(event.nativeEvent.contentSize.height);
+    }
+    onContentSizeChange?.(event);
+  }
+
   return (
     <Textarea
       style={[
         styles.gluestackTextarea,
         { backgroundColor: theme.control, borderColor: theme.border },
+        autoGrow ? { height: controlHeight, minHeight } : null,
         style
       ]}
     >
       <TextareaInput
         multiline
         placeholderTextColor={theme.muted}
-        style={[styles.gluestackTextareaInput, inputStyle, { color: theme.inputText }]}
+        scrollEnabled={scrollEnabled ?? (autoGrow ? controlHeight >= maxHeight : true)}
+        style={[
+          styles.gluestackTextareaInput,
+          autoGrow ? { minHeight } : null,
+          inputStyle,
+          { color: theme.inputText }
+        ]}
+        onContentSizeChange={handleContentSizeChange}
         {...props}
       />
     </Textarea>

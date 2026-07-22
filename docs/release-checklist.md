@@ -26,6 +26,10 @@ and covered by automated tests:
   replicas cannot process the same job concurrently.
 - `production-gate` runs for the actual release branch and a native Android
   release build is part of the required gate.
+- The 2026-07-21 security follow-up is recorded in
+  `docs/security-audit-2026-07-21.md`; production health details are hidden,
+  GitHub Actions are commit-pinned, the published APK flow requires HTTPS and
+  the npm gate has no high/critical advisories.
 
 Public release still requires the deployment-owned backup/restore,
 multi-replica and device smoke checks listed below.
@@ -44,6 +48,8 @@ multi-replica and device smoke checks listed below.
 - `/health/live` returns `200` and `/health/ready` returns `200` after deployment;
   alerting treats readiness `503` as unavailable without restarting a live process.
   Readiness covers both database connectivity and pending EF migrations.
+- Production `/api/health` exposes only readiness status and does not reveal the
+  storage provider, database engine or migration state.
 - `/api/diagnostics` is disabled or protected in Production.
 - HTTPS/reverse proxy is configured.
 - Forwarded headers are enabled only for explicitly trusted proxy IPs, so registration and AI rate limits use the real client IP.

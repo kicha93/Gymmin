@@ -68,8 +68,8 @@ function Test-BackendUrl {
   }
 
   $normalized = $Url.Trim().TrimEnd("/")
-  if (-not ($normalized -match "^https?://")) {
-    throw "ApiBaseUrl must start with http:// or https://. Received: $Url"
+  if (-not ($normalized -match "^https://")) {
+    throw "ApiBaseUrl must use HTTPS for a published APK. Received: $Url"
   }
 
   $healthUrl = "$normalized/health"

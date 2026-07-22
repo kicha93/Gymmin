@@ -76,9 +76,35 @@ describe("avatar", () => {
     });
 
     expect(buildAvatarImageSource("https://api.gymmin.app", {
+      avatarUrl: "https://api.gymmin.app/api/profile/avatar",
+      token: "auth-token"
+    })).toEqual({
+      headers: {
+        Authorization: "Bearer auth-token"
+      },
+      uri: "https://api.gymmin.app/api/profile/avatar"
+    });
+
+    expect(buildAvatarImageSource("https://api.gymmin.app", {
       avatarUrl: "/api/profile/avatar"
     })).toEqual({
       uri: "https://api.gymmin.app/api/profile/avatar"
+    });
+  });
+
+  it("never sends the bearer token to an external avatar origin", () => {
+    expect(buildAvatarImageSource("https://api.gymmin.app", {
+      avatarUrl: "https://cdn.example.com/avatar.jpg",
+      token: "auth-token"
+    })).toEqual({
+      uri: "https://cdn.example.com/avatar.jpg"
+    });
+
+    expect(buildAvatarImageSource("https://api.gymmin.app", {
+      avatarUrl: "https://api.gymmin.app.evil.example/avatar.jpg",
+      token: "auth-token"
+    })).toEqual({
+      uri: "https://api.gymmin.app.evil.example/avatar.jpg"
     });
   });
 

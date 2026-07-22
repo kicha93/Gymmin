@@ -78,10 +78,11 @@ internal static class AuthEndpoints
             AuthRateLimiter rateLimiter) =>
         {
             if (!rateLimiter.TryConsume(
-                "Login",
-                AuthRateLimiter.BuildKey(
-                    EndpointRequest.GetClientIpAddress(request),
-                    body.Email)))
+                    "LoginIp",
+                    AuthRateLimiter.BuildKey(EndpointRequest.GetClientIpAddress(request))) ||
+                !rateLimiter.TryConsume(
+                    "LoginAccount",
+                    AuthRateLimiter.BuildKey(body.Email)))
             {
                 return EndpointResults.RateLimited(request);
             }
@@ -163,12 +164,23 @@ internal static class AuthEndpoints
         app.MapPost("/api/auth/change-password", (
             ChangePasswordRequest body,
             HttpRequest request,
-            IUserStore users) =>
+            IUserStore users,
+            AuthRateLimiter rateLimiter) =>
         {
             var context = EndpointAuthorization.GetBearerSession(request, users);
             if (context is null)
             {
                 return Results.Unauthorized();
+            }
+
+            if (!rateLimiter.TryConsume(
+                    "ChangePasswordUser",
+                    AuthRateLimiter.BuildKey(context.User.Id)) ||
+                !rateLimiter.TryConsume(
+                    "ChangePasswordIp",
+                    AuthRateLimiter.BuildKey(EndpointRequest.GetClientIpAddress(request))))
+            {
+                return EndpointResults.RateLimited(request);
             }
 
             var result = users.ChangePassword(
@@ -191,10 +203,11 @@ internal static class AuthEndpoints
             CancellationToken cancellationToken) =>
         {
             if (!rateLimiter.TryConsume(
-                "PasswordResetRequest",
-                AuthRateLimiter.BuildKey(
-                    EndpointRequest.GetClientIpAddress(request),
-                    body.Email)))
+                    "PasswordResetRequestIp",
+                    AuthRateLimiter.BuildKey(EndpointRequest.GetClientIpAddress(request))) ||
+                !rateLimiter.TryConsume(
+                    "PasswordResetRequestAccount",
+                    AuthRateLimiter.BuildKey(body.Email)))
             {
                 return EndpointResults.RateLimited(request);
             }
@@ -228,10 +241,11 @@ internal static class AuthEndpoints
             AuthRateLimiter rateLimiter) =>
         {
             if (!rateLimiter.TryConsume(
-                "PasswordResetConfirm",
-                AuthRateLimiter.BuildKey(
-                    EndpointRequest.GetClientIpAddress(request),
-                    AuthSecurity.HashToken(body.Token))))
+                    "PasswordResetConfirmIp",
+                    AuthRateLimiter.BuildKey(EndpointRequest.GetClientIpAddress(request))) ||
+                !rateLimiter.TryConsume(
+                    "PasswordResetConfirmToken",
+                    AuthRateLimiter.BuildKey(AuthSecurity.HashToken(body.Token))))
             {
                 return EndpointResults.RateLimited(request);
             }

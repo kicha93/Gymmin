@@ -68,7 +68,7 @@ export function buildAvatarImageSource(apiBaseUrl: string, user?: (AvatarUser & 
   }
 
   const token = user?.token?.trim();
-  if (!token) {
+  if (!token || !hasSameOrigin(apiBaseUrl, uri)) {
     return { uri };
   }
 
@@ -78,6 +78,14 @@ export function buildAvatarImageSource(apiBaseUrl: string, user?: (AvatarUser & 
     },
     uri
   };
+}
+
+function hasSameOrigin(apiBaseUrl: string, resourceUrl: string) {
+  try {
+    return new URL(apiBaseUrl).origin === new URL(resourceUrl).origin;
+  } catch {
+    return false;
+  }
 }
 
 export function applyAvatarResponse<TUser extends AvatarUser>(user: TUser, response: AvatarResponse): TUser {

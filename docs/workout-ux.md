@@ -23,6 +23,16 @@ This note tracks the current workout-view UX decisions.
 - Long exercise names can wrap to two lines while the set/target tiles keep stable dimensions.
 - Repeated textual set-count labels are intentionally hidden when the same value is already represented in the target tiles.
 
+## Workout definition export
+
+- Read-only workout details show `Edit | Export | Delete`; on narrow screens the three equal actions move below the workout name instead of overflowing.
+- Export opens a local format sheet for CSV or Excel XLSX and shows a disabled/loading state while the file is generated.
+- CSV uses UTF-8 with BOM, `;` separators, RFC-style quote escaping and neutralizes formula-like user text before it reaches a spreadsheet application.
+- XLSX contains a localized `Summary/Podsumowanie` sheet and a `Structure/Struktura` sheet with numeric cells and practical column widths.
+- Exercise IDs are resolved through the catalog alias map, names follow the current PL/EN language, and missing catalog entries fall back safely to their stored name or ID.
+- Files are generated in the application cache and passed to the native share sheet with the correct MIME type. The flow needs no backend or network and requests no broad storage permission.
+- Only the selected workout definition is exported. Workout sessions/history, achievements, credits and account data are excluded.
+
 ## Per-Exercise Muscles
 
 - Catalog exercises show a `body-outline` button on the right side of the row.

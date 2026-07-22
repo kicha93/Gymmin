@@ -1,9 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppButton } from "../components/AppControls";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { ExerciseSummaryRow, WorkoutMuscleOverviewContent } from "../components/WorkoutPresentation";
+import { WorkoutExportSheet } from "../components/WorkoutExportSheet";
+import { addDiagnosticEvent } from "../domain/appDiagnostics";
+import {
+  exportWorkoutToFile,
+  WorkoutExportSharingUnavailableError
+} from "../domain/workoutExport/workoutExportFileService";
+import type { WorkoutExportFormat } from "../domain/workoutExport/workoutExportTypes";
 import { formatExerciseSetTarget, isRestTargetStep } from "../domain/workoutExerciseSummary";
 import type { WorkoutDraft, WorkoutStep } from "../domain/workouts";
 import type { WorkoutSession } from "../domain/workoutSessions";
@@ -60,6 +69,12 @@ export function WorkoutDetailScreen({
   theme,
   workout
 }: WorkoutDetailScreenProps) {
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const [isExportSheetOpen, setIsExportSheetOpen] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<WorkoutExportFormat | null>(null);
+  const useCompactHeaderActions = width < 480;
+
   if (!workout) {
     return (
       <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -68,6 +83,31 @@ export function WorkoutDetailScreen({
         <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("noWorkoutCopy")}</Text>
       </View>
     );
+  }
+
+  async function handleExport(format: WorkoutExportFormat) {
+    if (!workout || exportingFormat) return;
+    setExportingFormat(format);
+    try {
+      await exportWorkoutToFile({ format, locale: language, workout: workout.draft });
+      setIsExportSheetOpen(false);
+    } catch (error) {
+      addDiagnosticEvent({
+        area: "workout",
+        extra: { errorName: error instanceof Error ? error.name : "UnknownError", format },
+        level: "error",
+        message: "workout_export_failed",
+        screen: "workoutDetail"
+      });
+      Alert.alert(
+        t("workoutExportFailedTitle"),
+        error instanceof WorkoutExportSharingUnavailableError
+          ? t("workoutExportSharingUnavailable")
+          : t("workoutExportFailedDescription")
+      );
+    } finally {
+      setExportingFormat(null);
+    }
   }
 
   const stageGroups = workout.draft.steps
@@ -87,14 +127,14 @@ export function WorkoutDetailScreen({
 
   return (
     <>
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionHeaderCopy}>
+      <View style={[styles.sectionHeader, useCompactHeaderActions ? styles.workoutDetailHeaderCompact : null]}>
+        <View style={[styles.sectionHeaderCopy, useCompactHeaderActions ? styles.workoutDetailHeaderCopyCompact : null]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>{workout.name}</Text>
         </View>
-        <View style={styles.workoutDetailActions}>
+        <View style={[styles.workoutDetailActions, useCompactHeaderActions ? styles.workoutDetailActionsCompact : null]}>
           <AppButton
             icon="create-outline"
-            style={styles.builderBackButton}
+            style={[styles.builderBackButton, styles.workoutDetailActionButton, useCompactHeaderActions ? styles.workoutDetailActionButtonCompact : null]}
             textStyle={styles.builderBackButtonText}
             theme={theme}
             variant="outline"
@@ -103,8 +143,19 @@ export function WorkoutDetailScreen({
             {t("edit")}
           </AppButton>
           <AppButton
+            disabled={Boolean(exportingFormat)}
+            icon="download-outline"
+            style={[styles.builderBackButton, styles.workoutDetailActionButton, useCompactHeaderActions ? styles.workoutDetailActionButtonCompact : null]}
+            textStyle={styles.builderBackButtonText}
+            theme={theme}
+            variant="outline"
+            onPress={() => setIsExportSheetOpen(true)}
+          >
+            {t("workoutExportAction")}
+          </AppButton>
+          <AppButton
             icon="trash-outline"
-            style={[styles.builderBackButton, { borderColor: theme.danger }]}
+            style={[styles.builderBackButton, styles.workoutDetailActionButton, useCompactHeaderActions ? styles.workoutDetailActionButtonCompact : null, { borderColor: theme.danger }]}
             textStyle={[styles.builderBackButtonText, { color: theme.danger }]}
             theme={theme}
             variant="outline"
@@ -291,6 +342,18 @@ export function WorkoutDetailScreen({
           <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("empty")}</Text>
         )}
       </CollapsiblePanel>
+
+      <WorkoutExportSheet
+        bottomPadding={Math.max(insets.bottom, 24) + 12}
+        exportingFormat={exportingFormat}
+        isOpen={isExportSheetOpen}
+        t={t}
+        theme={theme}
+        onClose={() => {
+          if (!exportingFormat) setIsExportSheetOpen(false);
+        }}
+        onSelect={(format) => void handleExport(format)}
+      />
     </>
   );
 }

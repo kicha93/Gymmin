@@ -178,8 +178,11 @@ failures, failed RTDN deliveries and PostgreSQL backup/restore job failure.
 Production data-retention cleanup runs every six hours by default. It deletes
 expired password-reset tokens after a 7-day grace period, expired/revoked sessions
 after 30 days, expired distributed rate-limit buckets immediately, and technical
-RTDN inbox events after 90 days; it also clears obsolete email-verification code
-hashes. Configure these bounded values under `Gymmin:DataRetention`. User workouts,
+RTDN inbox events after 90 days. Completed and failed workout-creator jobs,
+including their request/result JSON, are deleted after
+`WorkoutCreatorJobDays` (90 days by default); queued and processing jobs are
+preserved. The worker also clears obsolete email-verification code hashes.
+Configure these bounded values under `Gymmin:DataRetention`. User workouts,
 purchase/credit ledgers, bug reports and admin audits are intentionally excluded
 until their legal/business retention periods are approved.
 

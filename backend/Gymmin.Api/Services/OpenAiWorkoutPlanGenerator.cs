@@ -72,9 +72,14 @@ public sealed class OpenAiWorkoutPlanGenerator : IWorkoutPlanGenerator
 
         var model = OpenAiConfiguration.GetModel(_configuration);
         var reasoningEffort = OpenAiConfiguration.GetReasoningEffort(_configuration);
+        var maxOutputTokens = Math.Clamp(
+            _configuration.GetValue("OpenAI:MaxOutputTokens", 12_000),
+            1_000,
+            32_000);
         var openAiRequest = new
         {
             model,
+            max_output_tokens = maxOutputTokens,
             reasoning = new
             {
                 effort = reasoningEffort
@@ -116,13 +121,13 @@ public sealed class OpenAiWorkoutPlanGenerator : IWorkoutPlanGenerator
             "application/json");
 
         using var httpResponse = await _httpClient.SendAsync(httpRequest, cancellationToken);
-        var responseText = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
-
         if (!httpResponse.IsSuccessStatusCode)
         {
-            throw new InvalidOperationException($"OpenAI API returned {(int)httpResponse.StatusCode}: {responseText}");
+            throw new InvalidOperationException(
+                $"OpenAI API request failed with status {(int)httpResponse.StatusCode}.");
         }
 
+        var responseText = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
         var planText = ExtractOutputText(responseText);
 
         return new CreateWorkoutPlanResponse(

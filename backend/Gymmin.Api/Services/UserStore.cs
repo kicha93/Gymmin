@@ -59,6 +59,9 @@ internal static class AuthSecurity
     public static bool IsValidNewPassword(string? password) =>
         !string.IsNullOrWhiteSpace(password) && password.Length >= 8 && password.Length <= 200;
 
+    public static bool IsValidName(string? name) =>
+        !string.IsNullOrWhiteSpace(name) && name.Trim().Length <= 200;
+
     public static PersistedPassword CreatePasswordHash(string password)
     {
         var salt = RandomNumberGenerator.GetBytes(SaltSize);
@@ -162,7 +165,7 @@ public sealed class FileBackedUserStore : IUserStore, IUserScopedDataStore
         var name = request.Name?.Trim() ?? "";
         var password = request.Password ?? "";
 
-        if (!IsValidEmail(email) || !AuthSecurity.IsValidNewPassword(password) || string.IsNullOrWhiteSpace(name))
+        if (!IsValidEmail(email) || !AuthSecurity.IsValidNewPassword(password) || !AuthSecurity.IsValidName(name))
         {
             return new AuthResult(false, null, "Invalid registration data.", StatusCodes.Status400BadRequest);
         }

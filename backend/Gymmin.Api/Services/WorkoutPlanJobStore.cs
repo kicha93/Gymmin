@@ -13,6 +13,7 @@ public interface IWorkoutPlanJobStore
 
 public sealed class FileBackedWorkoutPlanJobStore : IWorkoutPlanJobStore, IUserScopedDataStore
 {
+    private const string PublicFailureMessage = "Workout generation failed. Try again.";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
@@ -174,7 +175,7 @@ public sealed class FileBackedWorkoutPlanJobStore : IWorkoutPlanJobStore, IUserS
             catch (Exception error)
             {
                 _logger.LogError(error, "Workout creator job {JobId} failed. UserId={UserId} JobType={JobType}", jobId, job.UserId, job.JobType);
-                UpdateJob(jobId, "failed", null, error.Message, refundToken: true);
+                UpdateJob(jobId, "failed", null, PublicFailureMessage, refundToken: true);
             }
         });
     }

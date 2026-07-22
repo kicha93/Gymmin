@@ -222,6 +222,8 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
             var statusDetails = await client.GetAsync($"/api/workout-creator/plan/{job.JobId}");
             var body = await statusDetails.Content.ReadFromJsonAsync<WorkoutPlanJobStatusResponse>();
             Assert.Equal("failed", body!.Status);
+            Assert.Equal("Workout generation failed. Try again.", body.Error);
+            Assert.DoesNotContain("Synthetic generator failure", await statusDetails.Content.ReadAsStringAsync());
 
             var balance = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
             Assert.Equal(1, balance!.Balance);
@@ -398,6 +400,8 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest("", "token", null))).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest("ai_tokens_missing", "token", null))).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest("ai_tokens_10", new string('t', 4097), null))).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest("ai_tokens_10", "token", new string('o', 161)))).StatusCode);
 
         var purchase = await client.PostAsJsonAsync("/api/ai-credits/purchases/google-play/verify", new VerifyGooglePlayPurchaseRequest("ai_tokens_10", "secret-purchase-token", null));
         Assert.Equal(HttpStatusCode.OK, purchase.StatusCode);

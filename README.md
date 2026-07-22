@@ -13,6 +13,7 @@ Gymmin is a mobile-first workout builder for strength training.
 - AI creator: OpenAI Responses API through the backend
 - Workout UX: compact Exercise Detail Page with hero summary, optional local media, worked-muscle anatomy toggle and collapsible technique panels; Progress uses a dashboard with summary cards, filters and compact exercise metric cards. Rest timer visibility is a per-user training preference.
 - Manual workout editor: three-step `Details -> Stages -> Save` wizard. It edits one stage, set or exercise at a time while preserving the existing `WorkoutDraft` model and account synchronization format.
+- Workout export: a selected local workout can be exported offline to Excel-compatible UTF-8 CSV or a two-sheet XLSX workbook and handed to the native Android/iOS share sheet. Execution history and account data are intentionally excluded.
 - Exercise catalog: 964 validated records with stable IDs, canonical ID aliases for reviewed merges, dedicated front-raise/step-up/good-morning/rope-climb categories, explicit `libraryTier` classification and a fail-fast validator available through `npm run exercise:catalog:validate`. Historical IDs are normalized when plans, sessions, favorites, technique content and image assets are read. The detailed migration report is in `docs/exercise-catalog-refactor.md`.
 - Exercise picker: shows `main` exercises by default and provides compact opt-in filters for variations, advanced, sport-specific and rehabilitation movements. Search can find all active tiers and marks non-main results with a tier badge; deprecated and progression records remain history-only.
 - Bug reports: durable File/Database storage with optional account linkage and SMTP notification
@@ -36,6 +37,7 @@ docs/
   deployment.md
   production-audit-2026-07-16.md
   security-audit-2026-07-21.md
+  security-audit-2026-07-22.md
   release-checklist.md
   run-mobile-tunnel.md
   system-status.md
@@ -48,7 +50,8 @@ Aktualny audyt gotowości produkcyjnej, wykryte blokery i kolejność napraw są
 opisane w `docs/production-audit-2026-07-16.md`.
 
 The current security follow-up and applied fixes are documented in
-`docs/security-audit-2026-07-21.md`.
+`docs/security-audit-2026-07-22.md` (with the previous pass retained in
+`docs/security-audit-2026-07-21.md`).
 
 The mobile UI is split by responsibility: route-level views live in
 `apps/mobile/src/screens`, reusable controls and view fragments in

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Gymmin.Api.Domain;
+using Microsoft.Extensions.Configuration;
 
 namespace Gymmin.Api.Tests;
 
@@ -76,10 +77,17 @@ public sealed class DiagnosticsTests : IClassFixture<GymminApiFactory>
     [Fact]
     public async Task Rate_limit_error_uses_consistent_error_shape()
     {
-        using var client = _factory.CreateClient();
+        using var rateLimitedFactory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureAppConfiguration((_, configuration) =>
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Gymmin:Auth:RateLimits:LoginIp:Limit"] = "2",
+                    ["Gymmin:Auth:RateLimits:LoginAccount:Limit"] = "2"
+                })));
+        using var client = rateLimitedFactory.CreateClient();
 
         HttpResponseMessage? latest = null;
-        for (var attempt = 0; attempt < 11; attempt++)
+        for (var attempt = 0; attempt < 3; attempt++)
         {
             latest?.Dispose();
             latest = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest("limited@example.com", "badpass"));

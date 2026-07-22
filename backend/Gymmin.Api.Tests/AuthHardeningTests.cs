@@ -213,23 +213,23 @@ public sealed class AuthHardeningTests : IClassFixture<GymminApiFactory>
     }
 
     [Fact]
-    public void Auth_rate_limiter_blocks_after_configured_limit()
+    public void Login_account_rate_limiter_blocks_after_configured_limit()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Gymmin:Auth:RateLimits:Enabled"] = "true",
-                ["Gymmin:Auth:RateLimits:Login:Limit"] = "2",
-                ["Gymmin:Auth:RateLimits:Login:WindowMinutes"] = "5"
+                ["Gymmin:Auth:RateLimits:LoginAccount:Limit"] = "2",
+                ["Gymmin:Auth:RateLimits:LoginAccount:WindowMinutes"] = "5"
             })
             .Build();
 
         var limiter = new AuthRateLimiter(configuration);
         var key = AuthRateLimiter.BuildKey("127.0.0.1", "user@example.com");
 
-        Assert.True(limiter.TryConsume("Login", key));
-        Assert.True(limiter.TryConsume("Login", key));
-        Assert.False(limiter.TryConsume("Login", key));
+        Assert.True(limiter.TryConsume("LoginAccount", key));
+        Assert.True(limiter.TryConsume("LoginAccount", key));
+        Assert.False(limiter.TryConsume("LoginAccount", key));
     }
 
     [Fact]
@@ -260,14 +260,26 @@ public sealed class AuthHardeningTests : IClassFixture<GymminApiFactory>
     public void Production_abuse_limits_cover_registration_and_ai()
     {
         var limiter = new AuthRateLimiter(new ConfigurationBuilder().Build());
+        for (var attempt = 0; attempt < 50; attempt++) Assert.True(limiter.TryConsume("LoginIp", "login-client"));
+        Assert.False(limiter.TryConsume("LoginIp", "login-client"));
+        for (var attempt = 0; attempt < 10; attempt++) Assert.True(limiter.TryConsume("LoginAccount", "login-user"));
+        Assert.False(limiter.TryConsume("LoginAccount", "login-user"));
         for (var attempt = 0; attempt < 10; attempt++) Assert.True(limiter.TryConsume("RegisterIp", "registration-client"));
         Assert.False(limiter.TryConsume("RegisterIp", "registration-client"));
         for (var attempt = 0; attempt < 10; attempt++) Assert.True(limiter.TryConsume("WorkoutCreatorUser", "verified-user"));
         Assert.False(limiter.TryConsume("WorkoutCreatorUser", "verified-user"));
         for (var attempt = 0; attempt < 5; attempt++) Assert.True(limiter.TryConsume("AccountDeletionUser", "delete-user"));
         Assert.False(limiter.TryConsume("AccountDeletionUser", "delete-user"));
+        for (var attempt = 0; attempt < 5; attempt++) Assert.True(limiter.TryConsume("ChangePasswordUser", "password-user"));
+        Assert.False(limiter.TryConsume("ChangePasswordUser", "password-user"));
+        for (var attempt = 0; attempt < 20; attempt++) Assert.True(limiter.TryConsume("PasswordResetRequestIp", "reset-client"));
+        Assert.False(limiter.TryConsume("PasswordResetRequestIp", "reset-client"));
+        for (var attempt = 0; attempt < 10; attempt++) Assert.True(limiter.TryConsume("PasswordResetConfirmToken", "reset-token"));
+        Assert.False(limiter.TryConsume("PasswordResetConfirmToken", "reset-token"));
         for (var attempt = 0; attempt < 10; attempt++) Assert.True(limiter.TryConsume("AvatarUploadUser", "avatar-user"));
         Assert.False(limiter.TryConsume("AvatarUploadUser", "avatar-user"));
+        for (var attempt = 0; attempt < 20; attempt++) Assert.True(limiter.TryConsume("PurchaseVerificationUser", "purchase-user"));
+        Assert.False(limiter.TryConsume("PurchaseVerificationUser", "purchase-user"));
     }
 
     [Fact]

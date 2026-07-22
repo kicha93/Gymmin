@@ -182,6 +182,11 @@ public sealed class EfAiCreditPurchaseService : IAiCreditPurchaseService
             return BadRequest("purchase_token_too_long", "Purchase token is too long.");
         }
 
+        if ((request.OrderId?.Trim().Length ?? 0) > 160)
+        {
+            return BadRequest("order_id_too_long", "Order id is too long.");
+        }
+
         if (GetActivePack(request.ProductId.Trim()) is null)
         {
             return BadRequest("unknown_ai_credit_pack", "AI credit pack is not active or does not exist.");
@@ -496,6 +501,12 @@ public sealed class FileBackedAiCreditPurchaseService : IAiCreditPurchaseService
         if (string.IsNullOrWhiteSpace(request.ProductId) || string.IsNullOrWhiteSpace(request.PurchaseToken))
         {
             return new VerifyGooglePlayPurchaseResult(false, false, false, "invalid_purchase_request", "ProductId and purchaseToken are required.", null);
+        }
+
+        if (request.PurchaseToken.Trim().Length > EfAiCreditPurchaseService.MaxPurchaseTokenLength ||
+            (request.OrderId?.Trim().Length ?? 0) > 160)
+        {
+            return new VerifyGooglePlayPurchaseResult(false, false, false, "invalid_purchase_request", "Purchase request is too large.", null);
         }
 
         var pack = _options.Value.Packs.FirstOrDefault(item => item.Active && item.ProductId == request.ProductId);

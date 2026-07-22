@@ -44,6 +44,18 @@ public sealed class DataRetentionWorkerTests : IClassFixture<GymminApiFactory>
                 MessageId = $"retention-{suffix}", PackageName = "com.gymmin.app", NotificationKind = "test",
                 ProcessingStatus = "test", ReceivedAt = old, ProcessedAt = old
             });
+            db.WorkoutCreatorJobs.AddRange(
+                new WorkoutCreatorJobEntity
+                {
+                    Id = $"completed-job-{suffix}", UserId = user.User.Id, Status = "completed",
+                    RequestJson = "{\"health\":\"sensitive\"}", ResultJson = "{}",
+                    CreatedAt = old, UpdatedAt = old, CompletedAt = old
+                },
+                new WorkoutCreatorJobEntity
+                {
+                    Id = $"active-job-{suffix}", UserId = user.User.Id, Status = "processing",
+                    RequestJson = "{}", CreatedAt = old, UpdatedAt = old
+                });
             await db.SaveChangesAsync();
         }
 
@@ -54,6 +66,8 @@ public sealed class DataRetentionWorkerTests : IClassFixture<GymminApiFactory>
         Assert.False(await verification.UserSessions.AnyAsync(item => item.Id == $"session-{suffix}"));
         Assert.False(await verification.AbuseRateLimitBuckets.AnyAsync(item => item.Id == $"bucket-{suffix}"));
         Assert.False(await verification.GooglePlayRtdnEvents.AnyAsync(item => item.MessageId == $"retention-{suffix}"));
+        Assert.False(await verification.WorkoutCreatorJobs.AnyAsync(item => item.Id == $"completed-job-{suffix}"));
+        Assert.True(await verification.WorkoutCreatorJobs.AnyAsync(item => item.Id == $"active-job-{suffix}"));
         var retainedUser = await verification.Users.SingleAsync(item => item.Id == user.User.Id);
         Assert.Null(retainedUser.EmailVerificationCodeHash);
         Assert.True(await verification.UserSessions.AnyAsync(item => item.UserId == user.User.Id && item.RevokedAt == null));

@@ -39,6 +39,18 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
     }
 
     [Fact]
+    public async Task Registration_rejects_name_larger_than_database_limit()
+    {
+        using var client = _factory.CreateClient();
+        var response = await client.PostAsJsonAsync("/api/auth/register", new RegisterRequest(
+            $"oversized-name-{Guid.NewGuid():N}@example.com",
+            "pass1234",
+            new string('x', 201)));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Account_endpoints_require_bearer_token()
     {
         using var client = _factory.CreateClient();

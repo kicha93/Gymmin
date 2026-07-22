@@ -274,10 +274,19 @@ Użytkownik może:
 
 - tworzyć trening ręcznie,
 - edytować trening,
+- eksportować definicję wybranego treningu do CSV albo XLSX bez backendu i bez internetu,
 - usuwać trening,
 - przeglądać trening read-only,
 - wyszukiwać treningi,
 - sortować listę treningów.
+
+Eksport jest dostępny na ekranie szczegółów między akcjami `Edytuj` i `Usuń`.
+CSV używa UTF-8 BOM oraz separatora `;`, dzięki czemu zachowuje polskie znaki i
+jest zgodny z polskim Excelem. XLSX zawiera arkusze `Podsumowanie/Summary` oraz
+`Struktura/Structure`. Oba formaty obejmują wyłącznie definicję wybranego
+treningu (etapy, serie, elementy, cele i uwagi), bez historii wykonań, sesji,
+osiągnięć i danych konta. Plik powstaje w cache aplikacji i trafia do natywnego
+panelu udostępniania. Funkcja działa dla konta i użytkownika anonimowego.
 
 Sortowanie treningów:
 
@@ -852,3 +861,15 @@ are pinned to commit SHAs, the one-click published APK flow requires HTTPS, and
 the dependency gate has no high or critical advisories. Ten moderate advisories
 remain in Expo/Xcode build tooling; npm's proposed Expo 57 to 46 downgrade was
 intentionally rejected.
+
+## Security follow-up 2026-07-22
+
+The current audit is documented in `docs/security-audit-2026-07-22.md`.
+Bearer headers for avatars are now restricted to the configured API origin.
+Login, password change, password reset and Google Play verification use
+independent user/account and IP abuse buckets. External AI response bodies and
+internal generator exceptions are no longer exposed through job status, AI
+output size is bounded, completed AI jobs have a 90-day default retention, and
+registration names are validated against the database limit. Automated checks
+pass with no high or critical dependency advisory; eleven moderate Expo/Xcode
+build-tool advisories remain accepted and monitored.

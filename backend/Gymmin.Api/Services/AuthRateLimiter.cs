@@ -103,7 +103,8 @@ public sealed class AuthRateLimiter
 
     private static int GetDefaultLimit(string action) => action switch
     {
-        "Login" => 10,
+        "LoginIp" => 50,
+        "LoginAccount" => 10,
         "RegisterIp" => 10,
         "RegisterEmail" => 3,
         "EmailVerificationRequestUser" => 3,
@@ -114,17 +115,24 @@ public sealed class AuthRateLimiter
         "WorkoutCreatorIp" => 30,
         "AccountDeletionUser" => 5,
         "AccountDeletionIp" => 20,
+        "ChangePasswordUser" => 5,
+        "ChangePasswordIp" => 20,
         "AvatarUploadUser" => 10,
+        "PurchaseVerificationUser" => 20,
+        "PurchaseVerificationIp" => 50,
         "DataSyncUser" => 120,
-        "PasswordResetRequest" => 5,
-        "PasswordResetConfirm" => 10,
+        "PasswordResetRequestIp" => 20,
+        "PasswordResetRequestAccount" => 5,
+        "PasswordResetConfirmIp" => 50,
+        "PasswordResetConfirmToken" => 10,
         "BugReport" => 10,
         _ => 20
     };
 
     private static int GetDefaultWindowMinutes(string action) => action switch
     {
-        "Login" => 5,
+        "LoginIp" => 5,
+        "LoginAccount" => 5,
         "RegisterIp" => 60,
         "RegisterEmail" => 60,
         "EmailVerificationRequestUser" => 15,
@@ -135,10 +143,16 @@ public sealed class AuthRateLimiter
         "WorkoutCreatorIp" => 60,
         "AccountDeletionUser" => 15,
         "AccountDeletionIp" => 60,
+        "ChangePasswordUser" => 15,
+        "ChangePasswordIp" => 60,
         "AvatarUploadUser" => 60,
+        "PurchaseVerificationUser" => 15,
+        "PurchaseVerificationIp" => 15,
         "DataSyncUser" => 15,
-        "PasswordResetRequest" => 15,
-        "PasswordResetConfirm" => 15,
+        "PasswordResetRequestIp" => 60,
+        "PasswordResetRequestAccount" => 15,
+        "PasswordResetConfirmIp" => 15,
+        "PasswordResetConfirmToken" => 15,
         "BugReport" => 60,
         _ => 15
     };

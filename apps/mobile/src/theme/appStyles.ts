@@ -1110,7 +1110,72 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    justifyContent: "flex-end"
+    justifyContent: "flex-end",
+    maxWidth: "100%"
+  },
+  workoutDetailHeaderCompact: {
+    alignItems: "stretch",
+    flexDirection: "column",
+    gap: 12
+  },
+  workoutDetailHeaderCopyCompact: {
+    paddingRight: 0
+  },
+  workoutDetailActionsCompact: {
+    flexWrap: "nowrap",
+    justifyContent: "flex-start",
+    width: "100%"
+  },
+  workoutDetailActionButton: {
+    minWidth: 0,
+    paddingHorizontal: 8
+  },
+  workoutDetailActionButtonCompact: {
+    flex: 1,
+    paddingHorizontal: 5
+  },
+  workoutExportDescription: {
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 20
+  },
+  workoutExportOption: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    minHeight: 86,
+    paddingHorizontal: 14,
+    paddingVertical: 12
+  },
+  workoutExportIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 46,
+    justifyContent: "center",
+    width: 46
+  },
+  workoutExportOptionCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  workoutExportOptionTitle: {
+    fontSize: 16,
+    fontWeight: "800"
+  },
+  workoutExportOptionDescription: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
+    marginTop: 3
+  },
+  workoutExportCancel: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 46
+  },
+  workoutExportCancelText: {
+    fontSize: 15,
+    fontWeight: "800"
   },
   workoutDetailDescription: {
     fontSize: 14,

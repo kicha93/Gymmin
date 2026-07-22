@@ -27,6 +27,10 @@ public sealed class DataRetentionWorker(
         var resetGrace = TimeSpan.FromDays(Math.Clamp(configuration.GetValue("Gymmin:DataRetention:ExpiredResetTokenDays", 7), 1, 30));
         var sessionGrace = TimeSpan.FromDays(Math.Clamp(configuration.GetValue("Gymmin:DataRetention:ExpiredSessionDays", 30), 1, 365));
         var rtdnRetention = TimeSpan.FromDays(Math.Clamp(configuration.GetValue("Gymmin:DataRetention:RtdnEventDays", 90), 30, 365));
+        var workoutCreatorJobRetention = TimeSpan.FromDays(Math.Clamp(
+            configuration.GetValue("Gymmin:DataRetention:WorkoutCreatorJobDays", 90),
+            7,
+            365));
         await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
         var resetTokens = await db.PasswordResetTokens
@@ -38,6 +42,12 @@ public sealed class DataRetentionWorker(
             .ExecuteDeleteAsync(cancellationToken);
         var rateLimits = await db.AbuseRateLimitBuckets.Where(bucket => bucket.ExpiresAt < now).ExecuteDeleteAsync(cancellationToken);
         var rtdn = await db.GooglePlayRtdnEvents.Where(item => item.ReceivedAt < now.Subtract(rtdnRetention)).ExecuteDeleteAsync(cancellationToken);
+        var workoutCreatorJobs = await db.WorkoutCreatorJobs
+            .Where(job =>
+                job.CompletedAt != null &&
+                job.CompletedAt < now.Subtract(workoutCreatorJobRetention) &&
+                (job.Status == "completed" || job.Status == "failed"))
+            .ExecuteDeleteAsync(cancellationToken);
         var verificationCodes = await db.Users
             .Where(user => user.EmailVerificationCodeHash != null &&
                 (user.EmailVerifiedAt != null || user.EmailVerificationCodeExpiresAt < now.Subtract(resetGrace)))
@@ -46,7 +56,7 @@ public sealed class DataRetentionWorker(
                 .SetProperty(user => user.EmailVerificationCodeExpiresAt, (DateTimeOffset?)null), cancellationToken);
 
         logger.LogInformation(
-            "Data retention cleanup removed ResetTokens={ResetTokens} Sessions={Sessions} RateLimits={RateLimits} RtdnEvents={RtdnEvents}; cleared VerificationCodes={VerificationCodes}.",
-            resetTokens, sessions, rateLimits, rtdn, verificationCodes);
+            "Data retention cleanup removed ResetTokens={ResetTokens} Sessions={Sessions} RateLimits={RateLimits} RtdnEvents={RtdnEvents} WorkoutCreatorJobs={WorkoutCreatorJobs}; cleared VerificationCodes={VerificationCodes}.",
+            resetTokens, sessions, rateLimits, rtdn, workoutCreatorJobs, verificationCodes);
     }
 }

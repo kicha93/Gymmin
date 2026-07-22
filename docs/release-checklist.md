@@ -30,6 +30,10 @@ and covered by automated tests:
   `docs/security-audit-2026-07-21.md`; production health details are hidden,
   GitHub Actions are commit-pinned, the published APK flow requires HTTPS and
   the npm gate has no high/critical advisories.
+- The 2026-07-22 security follow-up is recorded in
+  `docs/security-audit-2026-07-22.md`; avatar bearer headers are same-origin,
+  auth and purchase verification have independent IP/account limits, public AI
+  job failures are sanitized and completed AI jobs have bounded retention.
 
 Public release still requires the deployment-owned backup/restore,
 multi-replica and device smoke checks listed below.
@@ -60,15 +64,23 @@ multi-replica and device smoke checks listed below.
   to `no-store` unless an endpoint explicitly uses authenticated `private` caching,
   and neither Kestrel nor the proxy discloses a software version.
 - Auth rate limiting is enabled.
+- Verify the deployed limits for login IP/account, password-change user/IP,
+  password-reset request IP/account, password-reset confirmation IP/token and
+  purchase-verification user/IP. Confirm two backend replicas share the same
+  database-backed buckets.
 - Account deletion requires the current password on the server, and oversized/chunked payloads return `413` instead of reaching JSON/form processing.
 - Registration is limited per IP/email, AI is limited per user/IP, and Database provider shares counters through `AbuseRateLimitBuckets`.
 - New accounts cannot use AI before confirming the six-digit email code; existing accounts remain verified after migration.
 - Release build stores bearer tokens in OS SecureStore/Keychain and removes legacy plaintext tokens from AsyncStorage.
 - JSON console logs are collected with retention and alerts for readiness, 5xx,
   SMTP outbox, RTDN and backup failures; request bodies and auth headers are excluded.
+- Log access is restricted; public AI job errors stay generic while diagnostic
+  exceptions remain server-side only.
 - Automatic cleanup of expired reset tokens, sessions, rate-limit buckets,
-  verification codes and RTDN inbox events is enabled; business/legal retention
-  periods for ledgers, bug reports and admin audits are documented separately.
+  verification codes, RTDN inbox events and completed/failed workout-creator
+  jobs is enabled. `WorkoutCreatorJobDays` matches the privacy policy (default
+  90 days); business/legal retention periods for ledgers, bug reports and admin
+  audits are documented separately.
 - PostgreSQL backups are stored encrypted outside the application host, their
   SHA256 manifests are retained, and `verify-postgres-restore.ps1` has passed on
   the target PostgreSQL major version.

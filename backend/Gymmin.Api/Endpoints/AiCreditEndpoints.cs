@@ -84,12 +84,23 @@ internal static class AiCreditEndpoints
             HttpRequest request,
             IUserStore users,
             IAiCreditPurchaseService purchases,
+            AuthRateLimiter rateLimiter,
             CancellationToken cancellationToken) =>
         {
             var userId = EndpointAuthorization.GetBearerUserId(request, users);
             if (userId is null)
             {
                 return Results.Unauthorized();
+            }
+
+            if (!rateLimiter.TryConsume(
+                    "PurchaseVerificationUser",
+                    AuthRateLimiter.BuildKey(userId)) ||
+                !rateLimiter.TryConsume(
+                    "PurchaseVerificationIp",
+                    AuthRateLimiter.BuildKey(EndpointRequest.GetClientIpAddress(request))))
+            {
+                return EndpointResults.RateLimited(request);
             }
 
             var result = await purchases.VerifyGooglePlayPurchaseAsync(

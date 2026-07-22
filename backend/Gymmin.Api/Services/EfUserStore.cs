@@ -26,7 +26,7 @@ public sealed class EfUserStore : IUserStore
         var name = request.Name?.Trim() ?? "";
         var password = request.Password ?? "";
 
-        if (!IsValidEmail(email) || !AuthSecurity.IsValidNewPassword(password) || string.IsNullOrWhiteSpace(name))
+        if (!IsValidEmail(email) || !AuthSecurity.IsValidNewPassword(password) || !AuthSecurity.IsValidName(name))
         {
             return new AuthResult(false, null, "Invalid registration data.", StatusCodes.Status400BadRequest);
         }

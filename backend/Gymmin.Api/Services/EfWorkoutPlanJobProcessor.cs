@@ -14,6 +14,7 @@ public sealed record ClaimedWorkoutPlanJob(
 
 public sealed class EfWorkoutPlanJobProcessor
 {
+    private const string PublicFailureMessage = "Workout generation failed. Try again.";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly IDbContextFactory<GymminDbContext> _dbFactory;
@@ -76,7 +77,7 @@ public sealed class EfWorkoutPlanJobProcessor
                 claimed.Id,
                 claimed.UserId,
                 claimed.JobType);
-            await FailAsync(claimed, error.Message, CancellationToken.None);
+            await FailAsync(claimed, PublicFailureMessage, CancellationToken.None);
         }
         finally
         {

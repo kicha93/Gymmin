@@ -1,6 +1,16 @@
-import type { WorkoutDraft, WorkoutStep } from "./workouts";
+import {
+  formatWorkoutDuration,
+  normalizeWorkoutRestBetweenSets,
+  parseWorkoutDurationSeconds,
+  type WorkoutDraft,
+  type WorkoutStep
+} from "./workouts";
 import { resolveExerciseId } from "./exercises";
-import { normalizeWorkoutSessionSupersets } from "./workoutSessionSupersets";
+import { groupWorkoutBuilderSteps } from "./workoutEditor";
+import {
+  createWorkoutSessionSupersetsFromPlan,
+  normalizeWorkoutSessionSupersets
+} from "./workoutSessionSupersets";
 
 export type WorkoutExecutionMode =
   | "guided"
@@ -524,20 +534,20 @@ export function getExerciseProgressSummary(
 
 export function flattenWorkoutToSessionEntries(workout: WorkoutDraft): WorkoutSessionEntry[] {
   const entries: WorkoutSessionEntry[] = [];
-  const stages = workout.steps.filter((step) => step.kind === "stage");
+  const normalizedWorkout = normalizeWorkoutRestBetweenSets(workout);
+  const stages = groupWorkoutBuilderSteps(normalizedWorkout.steps);
 
-  stages.forEach((stage, stageIndex) => {
-    const stageSets = workout.steps.filter((step) => step.kind === "set" && step.parentStageId === stage.id);
+  stages.forEach(({ stage, series: stageSets }, stageIndex) => {
     const sourceStageName = getStageName(stage, `Stage ${stageIndex + 1}`);
 
-    stageSets.forEach((series, seriesIndex) => {
-      const elements = workout.steps.filter((step) => step.kind === "exercise" && step.parentSetId === series.id);
+    stageSets.forEach(({ elements, set: series }, seriesIndex) => {
       const setCount = parseSetCount(series.setCount);
 
       elements.forEach((element, elementIndex) => {
         for (let iteration = 1; iteration <= setCount; iteration += 1) {
+          const entryId = `${stage.id}-${series.id}-${element.id}-${iteration}`;
           entries.push({
-            id: `${stage.id}-${series.id}-${element.id}-${iteration}`,
+            id: entryId,
             sourceElementId: element.id,
             sourceSeriesId: series.id,
             sourceStageId: stage.id,
@@ -554,6 +564,25 @@ export function flattenWorkoutToSessionEntries(workout: WorkoutDraft): WorkoutSe
             plannedWeight: element.loadKg || undefined,
             isCompleted: true
           });
+
+          const restSeconds = parseWorkoutDurationSeconds(element.restSeconds);
+          if (restSeconds && element.stageType !== "rest") {
+            entries.push({
+              id: `${entryId}-rest`,
+              sourceElementId: `${element.id}-rest`,
+              sourceSeriesId: series.id,
+              sourceStageId: stage.id,
+              sourceStageName,
+              stageIndex,
+              seriesIndex,
+              setIteration: iteration,
+              elementIndex: elementIndex + 0.5,
+              type: "rest",
+              plannedTargetType: "time",
+              plannedTarget: formatWorkoutDuration(restSeconds),
+              isCompleted: true
+            });
+          }
         }
       });
     });
@@ -562,27 +591,92 @@ export function flattenWorkoutToSessionEntries(workout: WorkoutDraft): WorkoutSe
   return entries;
 }
 
+export function recoverWorkoutRestSecondsFromSessions(
+  workout: WorkoutDraft,
+  sourceWorkoutId: string,
+  sessions: WorkoutSession[]
+): WorkoutDraft {
+  const relevantSessions = sessions
+    .filter((session) => !session.deletedAt && session.sourceWorkoutId === sourceWorkoutId)
+    .sort((left, right) => getSessionStartedAtTime(right) - getSessionStartedAtTime(left));
+  if (relevantSessions.length === 0) {
+    return workout;
+  }
+
+  let changed = false;
+  const steps = workout.steps.map((step) => {
+    if (
+      step.kind !== "exercise"
+      || step.stageType === "rest"
+      || parseWorkoutDurationSeconds(step.restSeconds)
+    ) {
+      return step;
+    }
+
+    for (const session of relevantSessions) {
+      const snapshot = normalizeWorkoutRestBetweenSets(session.planSnapshot);
+      const snapshotStep = snapshot.steps.find((candidate) => candidate.id === step.id);
+      const snapshotRestSeconds = parseWorkoutDurationSeconds(snapshotStep?.restSeconds);
+      if (snapshotRestSeconds) {
+        changed = true;
+        return { ...step, restSeconds: String(snapshotRestSeconds) };
+      }
+
+      const anchor = session.entries.find((entry) =>
+        entry.type !== "rest" && entry.sourceElementId === step.id
+      );
+      if (!anchor) {
+        continue;
+      }
+
+      const restEntry = session.entries
+        .filter((entry) =>
+          entry.type === "rest"
+          && entry.sourceSeriesId === anchor.sourceSeriesId
+          && entry.setIteration === anchor.setIteration
+          && entry.elementIndex > anchor.elementIndex
+        )
+        .sort((left, right) => left.elementIndex - right.elementIndex)[0];
+      const sessionRestSeconds = parseWorkoutDurationSeconds(restEntry?.plannedTarget);
+      if (sessionRestSeconds) {
+        changed = true;
+        return { ...step, restSeconds: String(sessionRestSeconds) };
+      }
+    }
+
+    return step;
+  });
+
+  return changed ? { ...workout, steps } : workout;
+}
+
 export function createWorkoutSessionFromWorkout(
   workout: WorkoutDraft,
   sourceWorkoutId: string,
   executionMode: WorkoutExecutionMode
 ): WorkoutSession {
   const startedAt = new Date().toISOString();
+  const normalizedWorkout = normalizeWorkoutRestBetweenSets(workout);
+  const entries = flattenWorkoutToSessionEntries(normalizedWorkout);
+  const supersets = executionMode === "guided"
+    ? createWorkoutSessionSupersetsFromPlan(normalizedWorkout, entries, startedAt)
+    : [];
 
   return {
     id: `session-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     sourceWorkoutId,
-    sourceWorkoutName: workout.name,
+    sourceWorkoutName: normalizedWorkout.name,
     executionMode,
     status: "active",
     startedAt,
     updatedAt: startedAt,
     deletedAt: null,
     planSnapshot: {
-      ...workout,
-      steps: workout.steps.map((step) => ({ ...step }))
+      ...normalizedWorkout,
+      steps: normalizedWorkout.steps.map((step) => ({ ...step }))
     },
-    entries: flattenWorkoutToSessionEntries(workout)
+    entries,
+    supersets: supersets.length ? supersets : undefined
   };
 }
 

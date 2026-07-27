@@ -4,25 +4,38 @@ import type { AppSettings } from "../../domain/appSettings";
 
 const settingsSaveDebounceMs = 400;
 
-export function useAccountSettingsAutoSave(params: {
-  buildSettings: (updatedAt: string) => AppSettings;
+export function shouldScheduleAccountSettingsSave(params: {
+  enabled: boolean;
+  isApplyingRemoteSettings: boolean;
+  nextChangeKey: string;
+  observedChangeKey: string;
+}) {
+  return params.nextChangeKey !== params.observedChangeKey
+    && params.enabled
+    && !params.isApplyingRemoteSettings;
+}
+
+export function useAccountSettingsAutoSave<TSettings extends AppSettings>(params: {
+  buildSettings: (updatedAt: string) => TSettings;
   changeKey: string;
   enabled: boolean;
   isApplyingRemoteSettingsRef: { current: boolean };
   onError: (error: unknown) => void;
-  onSaved: (settings: AppSettings) => void;
+  onSaving?: (settings: TSettings) => void;
+  onSaved: (settings: TSettings) => void;
   ownerId: string;
-  saveSettings: (settings: AppSettings) => Promise<AppSettings | null>;
+  saveSettings: (settings: TSettings) => Promise<TSettings | null>;
   userId: string | null;
 }) {
   const revisionRef = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSavingRef = useRef(false);
-  const hasObservedBaselineRef = useRef(false);
+  const observedChangeKeyRef = useRef(params.changeKey);
   const enabledRef = useRef(params.enabled);
   const buildSettingsRef = useRef(params.buildSettings);
   const saveSettingsRef = useRef(params.saveSettings);
   const onSavedRef = useRef(params.onSaved);
+  const onSavingRef = useRef(params.onSaving);
   const onErrorRef = useRef(params.onError);
   const flushRef = useRef<() => void>(() => undefined);
 
@@ -30,6 +43,7 @@ export function useAccountSettingsAutoSave(params: {
   buildSettingsRef.current = params.buildSettings;
   saveSettingsRef.current = params.saveSettings;
   onSavedRef.current = params.onSaved;
+  onSavingRef.current = params.onSaving;
   onErrorRef.current = params.onError;
 
   const clearPendingSave = () => {
@@ -57,6 +71,7 @@ export function useAccountSettingsAutoSave(params: {
 
     const revision = revisionRef.current;
     const settings = buildSettingsRef.current(new Date().toISOString());
+    onSavingRef.current?.(settings);
     isSavingRef.current = true;
     void saveSettingsRef.current(settings).then((savedSettings) => {
       if (savedSettings && enabledRef.current && revisionRef.current === revision) {
@@ -77,18 +92,23 @@ export function useAccountSettingsAutoSave(params: {
   useEffect(() => {
     revisionRef.current += 1;
     clearPendingSave();
-    hasObservedBaselineRef.current = false;
+    observedChangeKeyRef.current = params.changeKey;
   }, [params.ownerId, params.userId]);
 
   useEffect(() => {
-    if (!params.enabled || params.isApplyingRemoteSettingsRef.current) {
-      clearPendingSave();
-      hasObservedBaselineRef.current = false;
+    const previousChangeKey = observedChangeKeyRef.current;
+    if (previousChangeKey === params.changeKey) {
       return;
     }
 
-    if (!hasObservedBaselineRef.current) {
-      hasObservedBaselineRef.current = true;
+    observedChangeKeyRef.current = params.changeKey;
+    if (!shouldScheduleAccountSettingsSave({
+      enabled: params.enabled,
+      isApplyingRemoteSettings: params.isApplyingRemoteSettingsRef.current,
+      nextChangeKey: params.changeKey,
+      observedChangeKey: previousChangeKey
+    })) {
+      clearPendingSave();
       return;
     }
 

@@ -101,21 +101,11 @@ export function createSavedWorkoutsFromApiResponse(
           kind: "exercise",
           notes,
           parentSetId: setId,
+          restSeconds: restSeconds ? String(restSeconds) : "",
           stageType: "exercise",
           targetValue: repetitions ? String(repetitions) : ""
         })
       );
-
-      if (restSeconds) {
-        steps.push(createStep({
-          goalType: "time",
-          id: `${workoutId}-rest-${exerciseIndex}`,
-          kind: "exercise",
-          parentSetId: setId,
-          stageType: "rest",
-          targetValue: formatSecondsAsTimeTarget(restSeconds)
-        }));
-      }
     });
 
     const draft: WorkoutDraft = {
@@ -255,13 +245,6 @@ function normalizePositiveNumber(value: unknown) {
   const match = value.replace(",", ".").match(/\d+(\.\d+)?/);
   const parsed = match ? Number(match[0]) : Number.NaN;
   return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : undefined;
-}
-
-function formatSecondsAsTimeTarget(totalSeconds: number) {
-  const seconds = Math.max(0, Math.round(totalSeconds));
-  return [Math.floor(seconds / 3600), Math.floor((seconds % 3600) / 60), seconds % 60]
-    .map((part) => String(part).padStart(2, "0"))
-    .join(":");
 }
 
 function normalizeKey(key: string) {

@@ -20,11 +20,12 @@ describe("workoutCreatorImport", () => {
     expect(result[0]).toMatchObject({ name: "Plan A", draft: { steps: expect.any(Array) } });
   });
 
-  it("adds configured warmup and normalized rest targets", () => {
+  it("adds configured warmup and stores rest on the exercise", () => {
     const ready = createSavedWorkoutsFromApiResponse([workout], "ready", 1)[0];
     const button = createSavedWorkoutsFromApiResponse([workout], "button", 1)[0];
     expect(ready.draft.steps.some((step) => step.id.includes("warmup"))).toBe(true);
-    expect(ready.draft.steps.some((step) => step.stageType === "rest" && step.targetValue === "00:01:30")).toBe(true);
+    expect(ready.draft.steps.some((step) => step.stageType === "exercise" && step.restSeconds === "90")).toBe(true);
+    expect(ready.draft.steps.some((step) => step.stageType === "rest")).toBe(false);
     expect(button.draft.steps.some((step) => step.goalType === "buttonPress")).toBe(true);
   });
 

@@ -50,4 +50,37 @@ describe("workout editor mutations", () => {
     expect(added.steps.map((step) => step.kind)).toEqual(["stage", "set"]);
     expect(added.steps[1].parentStageId).toBe(added.steps[0].id);
   });
+
+  it("moves complete set and exercise groups without losing nested data", () => {
+    const stage = createStep({ kind: "stage" });
+    const firstSet = createStep({ kind: "set", parentStageId: stage.id });
+    const firstExercise = createStep({ kind: "exercise", parentSetId: firstSet.id });
+    const secondExercise = createStep({ kind: "exercise", parentSetId: firstSet.id });
+    const secondSet = createStep({ kind: "set", parentStageId: stage.id });
+    const thirdExercise = createStep({ kind: "exercise", parentSetId: secondSet.id });
+    const draft = {
+      ...createDefaultWorkout(),
+      steps: [stage, firstSet, firstExercise, secondExercise, secondSet, thirdExercise]
+    };
+
+    const reorderedExercises = moveWorkoutStep(draft, secondExercise.id, -1);
+    expect(reorderedExercises.steps.map((step) => step.id)).toEqual([
+      stage.id,
+      firstSet.id,
+      secondExercise.id,
+      firstExercise.id,
+      secondSet.id,
+      thirdExercise.id
+    ]);
+
+    const reorderedSets = moveWorkoutStep(draft, secondSet.id, -1);
+    expect(reorderedSets.steps.map((step) => step.id)).toEqual([
+      stage.id,
+      secondSet.id,
+      thirdExercise.id,
+      firstSet.id,
+      firstExercise.id,
+      secondExercise.id
+    ]);
+  });
 });

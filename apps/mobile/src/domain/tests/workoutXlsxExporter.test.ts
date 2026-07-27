@@ -6,8 +6,8 @@ import { createWorkoutXlsx } from "../workoutExport/workoutXlsxExporter";
 import { createStep } from "../workouts";
 
 describe("createWorkoutXlsx", () => {
-  it("creates localized summary and structure sheets with headers and numeric cells", () => {
-    const stage = createStep({ id: "stage", kind: "stage", label: "Główna" });
+  it("creates one simple localized workout sheet with readable columns", () => {
+    const stage = createStep({ id: "stage", kind: "stage", label: "Główna", stageType: "exercise" });
     const set = createStep({ id: "set", kind: "set", parentStageId: stage.id, setCount: "4" });
     const element = createStep({
       exerciseName: "Przysiad",
@@ -15,23 +15,30 @@ describe("createWorkoutXlsx", () => {
       id: "element",
       kind: "exercise",
       loadKg: "80",
+      notes: "Pełny zakres",
       parentSetId: set.id,
       parentStageId: stage.id,
+      restSeconds: "90",
       targetValue: "10"
     });
     const data = buildWorkoutExportData({ name: "Siła", notes: "Żółć", sport: "strength", steps: [stage, set, element] }, "pl");
-    const bytes = createWorkoutXlsx(data, "pl", new Date("2026-07-22T10:00:00.000Z"));
+    const bytes = createWorkoutXlsx(data, "pl");
     const workbook = XLSX.read(bytes, { type: "array" });
 
     expect(bytes.byteLength).toBeGreaterThan(1000);
-    expect(workbook.SheetNames).toEqual(["Podsumowanie", "Struktura"]);
-    const summary = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets.Podsumowanie, { header: 1 });
-    const structure = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets.Struktura, { header: 1 });
-    expect(summary).toContainEqual(["Nazwa treningu", "Siła"]);
-    expect(summary).toContainEqual(["Data eksportu", "2026-07-22T10:00:00.000Z"]);
-    expect(structure[0]).toContain("Ćwiczenie");
-    expect(structure).toHaveLength(2);
-    expect(structure[1]).toContain(80);
-    expect(structure[1]).toContain(10);
+    expect(workbook.SheetNames).toEqual(["Trening"]);
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets.Trening, { header: 1 });
+    expect(rows[0]).toEqual([
+      "Etap",
+      "Typ",
+      "Ćwiczenie",
+      "Serie",
+      "Powtórzenia / cel",
+      "Ciężar (kg)",
+      "Uwagi",
+      "Przerwa"
+    ]);
+    expect(rows).toHaveLength(2);
+    expect(rows[1]).toEqual(["Główna", "Ćwiczenie", "Przysiad", 4, "10", 80, "Pełny zakres", "1 min 30 s"]);
   });
 });

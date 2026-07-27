@@ -16,8 +16,14 @@ import {
   muscleKeys,
   type MuscleKey
 } from "../domain/exercises";
-import { isRestTargetStep } from "../domain/workoutExerciseSummary";
-import type { StageType, WorkoutDraft, WorkoutStep } from "../domain/workouts";
+import { getExerciseTargetDisplay, isRestTargetStep } from "../domain/workoutExerciseSummary";
+import {
+  formatWorkoutDuration,
+  parseWorkoutDurationSeconds,
+  type StageType,
+  type WorkoutDraft,
+  type WorkoutStep
+} from "../domain/workouts";
 import { translate, type LanguageCode, type TranslationKey } from "../i18n/translations";
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
@@ -125,6 +131,7 @@ export function ExerciseSummaryRow({
 }: ExerciseSummaryRowProps) {
   const isRestTarget = isRestTargetStep(step);
   const target = isRestTarget ? targetText : "";
+  const [sets, exerciseTarget] = targetText.split(" x ");
   const [pairedSets, pairedTarget] = pairedTargetText ? pairedTargetText.split(" x ") : ["", ""];
   const rawExerciseName = typeof step.exerciseName === "string" ? step.exerciseName : "";
   const rawExerciseId = typeof step.exerciseId === "string" ? step.exerciseId : "";
@@ -133,72 +140,104 @@ export function ExerciseSummaryRow({
     : step.stageType
       ? t(stageTypeTranslationKeys[step.stageType])
       : t("elementWithoutExercise");
+  const restSeconds = parseWorkoutDurationSeconds(step.restSeconds);
+  const restText = restSeconds
+    ? getExerciseTargetDisplay({ goalType: "time", targetValue: formatWorkoutDuration(restSeconds) })
+    : "-";
   const meta = step.loadKg ? `${step.loadKg} kg` : "";
   const canShowMuscleButton = Boolean(rawExerciseId.trim() || rawExerciseName.trim());
 
   if (isRestTarget) {
     return (
-      <Pressable accessibilityRole="button" style={styles.exerciseSummaryRow} onPress={onPressDetails}>
-        <View style={styles.exerciseSummaryRestCopy}>
-          <Text style={[styles.workoutDetailExerciseName, { color: theme.text }]} numberOfLines={2}>
-            {exerciseName}
-          </Text>
-          <View style={[styles.exerciseSummaryTile, styles.exerciseSummarySingleTile, { backgroundColor: theme.secondaryBand }]}>
-            <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{target || "-"}</Text>
+      <Pressable accessibilityRole="button" style={styles.exerciseSummaryContainer} onPress={onPressDetails}>
+        <View style={styles.exerciseSummaryRow}>
+          <View style={styles.exerciseSummaryRestCopy}>
+            <Text style={[styles.workoutDetailExerciseName, { color: theme.text }]} numberOfLines={2}>
+              {exerciseName}
+            </Text>
+            <View style={[styles.exerciseSummaryTile, styles.exerciseSummarySingleTile, { backgroundColor: theme.secondaryBand }]}>
+              <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{target || "-"}</Text>
+            </View>
           </View>
+          {pairedTargetText ? (
+            <View style={styles.exerciseSummaryTiles} accessibilityLabel={`${pairedSets || "-"} x ${pairedTarget || "-"}`}>
+              <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
+                <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{pairedSets || "-"}</Text>
+              </View>
+              <Text style={[styles.exerciseSummaryTimes, { color: theme.muted }]}>x</Text>
+              <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
+                <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{pairedTarget || "-"}</Text>
+              </View>
+            </View>
+          ) : null}
         </View>
-        {pairedTargetText ? (
-          <View style={styles.exerciseSummaryTiles} accessibilityLabel={`${pairedSets || "-"} x ${pairedTarget || "-"}`}>
-            <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
-              <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{pairedSets || "-"}</Text>
-            </View>
-            <Text style={[styles.exerciseSummaryTimes, { color: theme.muted }]}>x</Text>
-            <View style={[styles.exerciseSummaryTile, { backgroundColor: theme.secondaryBand }]}>
-              <Text style={[styles.exerciseSummaryTileText, { color: theme.primary }]}>{pairedTarget || "-"}</Text>
-            </View>
-          </View>
+        {step.notes ? (
+          <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{step.notes}</Text>
         ) : null}
       </Pressable>
     );
   }
 
   return (
-    <Pressable accessibilityRole="button" style={styles.exerciseSummaryRow} onPress={onPressDetails}>
-      <View style={styles.exerciseSummaryCopy}>
-        {hideTitle ? null : (
-          <View style={styles.exerciseSummaryTitleRow}>
-            {typeof seriesIndex === "number" ? (
-              <View style={[styles.workoutDetailSeriesBadge, { backgroundColor: theme.secondaryBand }]}>
-                <Text style={[styles.workoutDetailStageBadgeText, { color: theme.primary }]}>{seriesIndex}</Text>
-              </View>
-            ) : null}
-            <Text style={[styles.workoutDetailExerciseName, styles.workoutDetailSeriesTitle, { color: theme.text }]} numberOfLines={2}>
-              {exerciseName}
+    <Pressable accessibilityRole="button" style={styles.exerciseSummaryContainer} onPress={onPressDetails}>
+      <View style={styles.exerciseSummaryRow}>
+        <View style={styles.exerciseSummaryCopy}>
+          {hideTitle ? null : (
+            <View style={styles.exerciseSummaryTitleRow}>
+              {typeof seriesIndex === "number" ? (
+                <View style={[styles.workoutDetailSeriesBadge, { backgroundColor: theme.secondaryBand }]}>
+                  <Text style={[styles.workoutDetailStageBadgeText, { color: theme.primary }]}>{seriesIndex}</Text>
+                </View>
+              ) : null}
+              <Text style={[styles.workoutDetailExerciseName, styles.workoutDetailSeriesTitle, { color: theme.text }]} numberOfLines={2}>
+                {exerciseName}
+              </Text>
+            </View>
+          )}
+          {meta ? (
+            <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={1}>
+              {meta}
             </Text>
+          ) : null}
+        </View>
+        {canShowMuscleButton ? (
+          <View style={styles.exerciseSummaryRight}>
+            <Pressable
+              accessibilityLabel={t("showDetails")}
+              accessibilityRole="button"
+              hitSlop={8}
+              style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
+              onPress={(event) => {
+                event.stopPropagation();
+                onPressMuscles();
+              }}
+            >
+              <Ionicons name="body-outline" size={20} color={theme.primary} />
+            </Pressable>
           </View>
-        )}
-        {meta ? (
-          <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={1}>
-            {meta}
-          </Text>
         ) : null}
       </View>
-      {canShowMuscleButton ? (
-        <View style={styles.exerciseSummaryRight}>
-          <Pressable
-            accessibilityLabel={t("showDetails")}
-            accessibilityRole="button"
-            hitSlop={8}
-            style={[styles.exerciseMuscleButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-            onPress={(event) => {
-              event.stopPropagation();
-              onPressMuscles();
-            }}
-          >
-            <Ionicons name="body-outline" size={20} color={theme.primary} />
-          </Pressable>
-        </View>
+      {step.notes ? (
+        <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{step.notes}</Text>
       ) : null}
+      <View style={styles.guidedExerciseMetaRow}>
+        <View style={styles.guidedRestGroup}>
+          <Text style={[styles.guidedRestLabel, { color: theme.text }]}>{t("stageRest")}</Text>
+          <View style={[styles.guidedRestPill, { backgroundColor: theme.secondaryBand }]}>
+            <Ionicons name="time-outline" size={16} color={theme.text} />
+            <Text style={[styles.guidedRestPillText, { color: theme.primary }]}>{restText}</Text>
+          </View>
+        </View>
+        <View accessibilityLabel={`${sets || "-"} x ${exerciseTarget || "-"}`} style={styles.guidedTargetGroup}>
+          <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
+            <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{sets || "-"}</Text>
+          </View>
+          <Text style={[styles.guidedTargetSeparator, { color: theme.text }]}>x</Text>
+          <View style={[styles.guidedTargetPill, { backgroundColor: theme.secondaryBand }]}>
+            <Text style={[styles.guidedTargetText, { color: theme.primary }]}>{exerciseTarget || "-"}</Text>
+          </View>
+        </View>
+      </View>
     </Pressable>
   );
 }

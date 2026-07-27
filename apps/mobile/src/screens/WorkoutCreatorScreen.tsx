@@ -347,6 +347,7 @@ export function WorkoutCreatorScreen({
           <View style={styles.fieldGroup}>
             <Text style={[styles.label, { color: theme.muted }]}>{t("aiCreatorProfileName")}</Text>
             <AppInput
+              maxLength={120}
               placeholder={t("aiCreatorProfileNamePlaceholder")}
               theme={theme}
               value={profileName}

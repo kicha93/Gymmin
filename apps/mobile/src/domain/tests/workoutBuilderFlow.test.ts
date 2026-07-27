@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  formatWorkoutBuilderPreviewTarget,
   getUniqueWorkoutBuilderValidationCodes,
   getWorkoutBuilderStagePreviewRows,
   getWorkoutBuilderSummary,
@@ -106,5 +107,16 @@ describe("workoutBuilderFlow", () => {
 
     expect(preview).toHaveLength(5);
     expect(preview.map((row) => row.target)).toEqual(["4×12", "4×12", "4×12", "3×8", "3×8"]);
+  });
+
+  it("does not show a meaningless one-times target for a simple warmup", () => {
+    const warmup = createStep({
+      goalType: "buttonPress",
+      kind: "exercise",
+      stageType: "warmup",
+      targetValue: ""
+    });
+
+    expect(formatWorkoutBuilderPreviewTarget(warmup, "1")).toBe("");
   });
 });

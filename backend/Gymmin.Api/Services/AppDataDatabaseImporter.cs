@@ -122,6 +122,9 @@ public sealed class AppDataDatabaseImporter
             db.UserSettings.Add(new UserSettingsEntity
             {
                 CollapsedPanelsJson = JsonSerializer.Serialize(settings.CollapsedPanels ?? new Dictionary<string, bool>(), JsonOptions),
+                CreatorProfilesJson = settings.CreatorProfiles is null
+                    ? null
+                    : JsonSerializer.Serialize(settings.CreatorProfiles, JsonOptions),
                 DefaultSetCount = settings.DefaultSetCount,
                 DefaultStageType = settings.DefaultStageType?.ToString(),
                 DefaultWeight = settings.DefaultWeight,
@@ -132,6 +135,10 @@ public sealed class AppDataDatabaseImporter
                     ? "vertical"
                     : settings.DefaultWorkoutTableOrientation,
                 ShowRestTimer = settings.ShowRestTimer,
+                SelectedCreatorProfileId = settings.SelectedCreatorProfileId,
+                WeeklyPlanJson = settings.WeeklyPlan is null
+                    ? null
+                    : JsonSerializer.Serialize(settings.WeeklyPlan, JsonOptions),
                 IsAuthPanelDismissed = settings.IsAuthPanelDismissed,
                 Language = settings.Language,
                 ThemeName = settings.ThemeName,

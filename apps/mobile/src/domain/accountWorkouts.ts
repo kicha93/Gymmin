@@ -9,6 +9,7 @@ import {
   repairTextEncoding
 } from "./savedWorkoutNormalization";
 import type { SavedWorkout } from "./savedWorkouts";
+import { formatWorkoutDuration, parseWorkoutDurationSeconds } from "./workouts";
 
 export function mapSavedWorkoutToApiRequest(workout: SavedWorkout) {
   const normalizedWorkout = normalizeSavedWorkoutTextFields(workout);
@@ -20,22 +21,52 @@ export function mapSavedWorkoutToApiRequest(workout: SavedWorkout) {
     name: normalizedWorkout.name || normalizedWorkout.draft.name || "Workout",
     notes: normalizedWorkout.draft.notes ?? "",
     sport: normalizedWorkout.draft.sport,
-    steps: normalizedWorkout.draft.steps.map((step) => ({
-      clientStepId: step.id,
-      exerciseId: step.exerciseId ?? "",
-      exerciseName: step.exerciseName,
-      goalType: step.goalType || null,
-      kind: step.kind,
-      label: step.label,
-      loadKg: step.loadKg,
-      notes: step.notes,
-      parentSetClientId: step.parentSetId ?? "",
-      parentStageClientId: step.parentStageId ?? "",
-      setCount: step.setCount,
-      stageType: step.stageType || null,
-      targetComparator: step.targetComparator || null,
-      targetValue: step.targetValue
-    }))
+    steps: normalizedWorkout.draft.steps.flatMap((step) => {
+      const apiStep = {
+        clientStepId: step.id,
+        exerciseId: step.exerciseId ?? "",
+        exerciseName: step.exerciseName,
+        goalType: step.goalType || null,
+        kind: step.kind,
+        label: step.label,
+        loadKg: step.loadKg,
+        notes: step.notes,
+        parentSetClientId: step.parentSetId ?? "",
+        parentStageClientId: step.parentStageId ?? "",
+        // An explicit zero distinguishes "no rest" from an older client that
+        // did not send the field at all. The backend can preserve repaired
+        // values for legacy payloads while still allowing users to clear rest.
+        restSeconds: step.restSeconds?.trim() || "0",
+        setCount: step.setCount,
+        stageType: step.stageType || null,
+        targetComparator: step.targetComparator || null,
+        targetValue: step.targetValue
+      };
+      const restSeconds = parseWorkoutDurationSeconds(step.restSeconds);
+      if (!restSeconds || step.kind !== "exercise" || step.stageType === "rest") {
+        return [apiStep];
+      }
+
+      // Compatibility shadow for an older backend that does not know
+      // restSeconds yet. A current backend canonicalizes this back to one step.
+      return [apiStep, {
+        clientStepId: `${step.id}-rest-compat`,
+        exerciseId: "",
+        exerciseName: "",
+        goalType: "time" as const,
+        kind: "exercise" as const,
+        label: "",
+        loadKg: "",
+        notes: "",
+        parentSetClientId: step.parentSetId ?? "",
+        parentStageClientId: step.parentStageId ?? "",
+        restSeconds: "",
+        setCount: "",
+        stageType: "rest" as const,
+        targetComparator: null,
+        targetValue: formatWorkoutDuration(restSeconds)
+      }];
+    })
   };
 }
 
@@ -59,6 +90,7 @@ export function mapApiWorkoutToSavedWorkout(apiWorkout: ApiWorkout): SavedWorkou
         notes: repairTextEncoding(step.notes ?? ""),
         parentSetId: step.parentSetClientId || undefined,
         parentStageId: step.parentStageClientId || undefined,
+        restSeconds: repairTextEncoding(step.restSeconds ?? ""),
         setCount: repairTextEncoding(step.setCount ?? ""),
         stageType: step.stageType ?? "",
         targetComparator: step.targetComparator ?? "",

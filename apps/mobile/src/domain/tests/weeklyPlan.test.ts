@@ -7,6 +7,7 @@ import {
   getDefaultWeeklyPlanSettings,
   getWeeklyPlanSummary,
   loadWeeklyPlan,
+  mergeWeeklyPlans,
   removeWeeklyPlanItem,
   saveWeeklyPlan,
   toggleWeeklyPlanItemDay,
@@ -83,6 +84,19 @@ describe("weeklyPlan", () => {
     plan = toggleWeeklyPlanItemDay(plan, "workout-a", "monday");
     expect(plan.items.map((item) => item.day)).toEqual(["friday"]);
     expect(removeWeeklyPlanItem(plan, "workout-a").items).toEqual([]);
+  });
+
+  it("merges anonymous and account plans without duplicate workout days", () => {
+    let accountPlan = upsertWeeklyPlanItem(getDefaultWeeklyPlanSettings(), "workout-a", "monday");
+    accountPlan = upsertWeeklyPlanItem(accountPlan, "workout-b", "wednesday");
+    let anonymousPlan = upsertWeeklyPlanItem(getDefaultWeeklyPlanSettings(), "workout-a", "monday");
+    anonymousPlan = upsertWeeklyPlanItem(anonymousPlan, "workout-a", "friday");
+
+    expect(mergeWeeklyPlans(accountPlan, anonymousPlan).items).toEqual([
+      { day: "monday", order: 0, workoutId: "workout-a" },
+      { day: "wednesday", order: 1, workoutId: "workout-b" },
+      { day: "friday", order: 2, workoutId: "workout-a" }
+    ]);
   });
 
   it("requires one completed session for each planned weekday occurrence", () => {

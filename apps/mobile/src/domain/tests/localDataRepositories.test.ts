@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   hasAnonymousAccountData,
   hasAnonymousMergeHandled,
+  LOCAL_WORKOUTS_STORAGE_BASE_KEY,
   loadActiveWorkoutSessionForOwner,
   loadCreatorJobForOwner,
   loadSettingsForOwner,
@@ -17,6 +18,7 @@ import {
 } from "../../storage/localDataRepositories";
 import { getAccountStorageKey } from "../accountStorage";
 import type { AppSettings } from "../appSettings";
+import { createStep } from "../workouts";
 
 describe("localDataRepositories", () => {
   beforeEach(async () => {
@@ -34,6 +36,54 @@ describe("localDataRepositories", () => {
     expect(stored.selectedWorkoutId).toBe("plan-1");
     expect(stored.sort).toEqual({ direction: "asc", field: "name" });
     expect(stored.workouts).toHaveLength(1);
+  });
+
+  it("migrates and persists legacy rest elements for existing workouts", async () => {
+    const stage = createStep({ id: "stage", kind: "stage", stageType: "exercise" });
+    const set = createStep({ id: "set", kind: "set", parentStageId: stage.id, setCount: "3" });
+    const exercise = createStep({
+      exerciseName: "Squat",
+      id: "exercise",
+      kind: "exercise",
+      parentSetId: set.id,
+      stageType: "exercise"
+    });
+    const rest = createStep({
+      goalType: "time",
+      id: "rest",
+      kind: "exercise",
+      parentSetId: set.id,
+      stageType: "rest",
+      targetValue: "00:02:00"
+    });
+    const storageKey = getAccountStorageKey(LOCAL_WORKOUTS_STORAGE_BASE_KEY, "user-legacy");
+
+    await AsyncStorage.setItem(storageKey, JSON.stringify({
+      selectedWorkoutId: "legacy-plan",
+      updatedAt: "2026-07-01T00:00:00.000Z",
+      version: 1,
+      workouts: [{
+        draft: { name: "Legacy", notes: "", sport: "strength", steps: [stage, set, exercise, rest] },
+        id: "legacy-plan",
+        name: "Legacy"
+      }]
+    }));
+
+    const loaded = await loadWorkoutsForOwner("user-legacy");
+    expect(loaded.workouts[0].draft.steps).toHaveLength(3);
+    expect(loaded.workouts[0].draft.steps.find((step) => step.id === "exercise")?.restSeconds).toBe("120");
+
+    await saveWorkoutsForOwner(
+      "user-legacy",
+      loaded.workouts,
+      loaded.selectedWorkoutId,
+      loaded.sort
+    );
+    const persisted = JSON.parse((await AsyncStorage.getItem(storageKey))!) as {
+      workouts: Array<{ draft: { steps: Array<{ id: string; restSeconds?: string; stageType: string }> } }>;
+    };
+    expect(persisted.workouts[0].draft.steps.some((step) => step.stageType === "rest")).toBe(false);
+    expect(persisted.workouts[0].draft.steps.find((step) => step.id === "exercise")?.restSeconds).toBe("120");
   });
 
   it("distinguishes missing settings from an existing account-scoped record", async () => {

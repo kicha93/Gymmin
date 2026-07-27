@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   areCreatorDraftsEqual,
   cloneCreatorDraft,
+  normalizeWorkoutCreatorProfiles,
   workoutCreatorSections,
   type WorkoutCreatorDraft
 } from "../workoutCreator";
@@ -43,5 +44,21 @@ describe("workout creator domain", () => {
     );
 
     expect(new Set(fieldIds).size).toBe(fieldIds.length);
+  });
+
+  it("normalizes persisted creator profiles and rejects unsafe values", () => {
+    expect(normalizeWorkoutCreatorProfiles([
+      {
+        draft: { age: "31", days: ["Monday", "Friday"], invalid: 7 },
+        id: " profile-1 ",
+        name: " Kasia "
+      },
+      { draft: {}, id: "profile-1", name: "Duplicate" },
+      { draft: {}, id: "", name: "Broken" }
+    ])).toEqual([{
+      draft: { age: "31", days: ["Monday", "Friday"] },
+      id: "profile-1",
+      name: "Kasia"
+    }]);
   });
 });

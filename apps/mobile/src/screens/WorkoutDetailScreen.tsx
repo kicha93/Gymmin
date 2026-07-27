@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -8,9 +8,11 @@ import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { ExerciseSummaryRow, WorkoutMuscleOverviewContent } from "../components/WorkoutPresentation";
 import { WorkoutExportSheet } from "../components/WorkoutExportSheet";
 import { addDiagnosticEvent } from "../domain/appDiagnostics";
+import { groupWorkoutBuilderSteps } from "../domain/workoutEditor";
 import {
   exportWorkoutToFile,
-  WorkoutExportSharingUnavailableError
+  openWorkoutExportFile,
+  WorkoutExportCancelledError
 } from "../domain/workoutExport/workoutExportFileService";
 import type { WorkoutExportFormat } from "../domain/workoutExport/workoutExportTypes";
 import { formatExerciseSetTarget, isRestTargetStep } from "../domain/workoutExerciseSummary";
@@ -74,6 +76,13 @@ export function WorkoutDetailScreen({
   const [isExportSheetOpen, setIsExportSheetOpen] = useState(false);
   const [exportingFormat, setExportingFormat] = useState<WorkoutExportFormat | null>(null);
   const useCompactHeaderActions = width < 480;
+  const stageGroups = useMemo(
+    () => workout
+      ? groupWorkoutBuilderSteps(workout.draft.steps)
+          .filter(({ stage }) => stage.stageType !== "warmup")
+      : [],
+    [workout?.draft.steps]
+  );
 
   if (!workout) {
     return (
@@ -89,9 +98,45 @@ export function WorkoutDetailScreen({
     if (!workout || exportingFormat) return;
     setExportingFormat(format);
     try {
-      await exportWorkoutToFile({ format, locale: language, workout: workout.draft });
+      const result = await exportWorkoutToFile({
+        format,
+        locale: language,
+        notificationCopy: {
+          openLabel: t("workoutExportOpenFile"),
+          title: t("workoutExportDownloadedNotificationTitle")
+        },
+        workout: workout.draft
+      });
       setIsExportSheetOpen(false);
+      if (!result.notificationShown) {
+        Alert.alert(
+          t("workoutExportSavedTitle"),
+          `${t("workoutExportSavedDescription")}\n${result.filename}`,
+          [
+            { style: "cancel", text: t("cancel") },
+            {
+              onPress: () => {
+                void openWorkoutExportFile(result.uri, format).catch((error) => {
+                  addDiagnosticEvent({
+                    area: "workout",
+                    extra: { errorName: error instanceof Error ? error.name : "UnknownError", format },
+                    level: "error",
+                    message: "workout_export_open_failed",
+                    screen: "workoutDetail"
+                  });
+                  Alert.alert(
+                    t("workoutExportOpenFailedTitle"),
+                    t("workoutExportOpenFailedDescription")
+                  );
+                });
+              },
+              text: t("workoutExportOpenFile")
+            }
+          ]
+        );
+      }
     } catch (error) {
+      if (error instanceof WorkoutExportCancelledError) return;
       addDiagnosticEvent({
         area: "workout",
         extra: { errorName: error instanceof Error ? error.name : "UnknownError", format },
@@ -101,28 +146,13 @@ export function WorkoutDetailScreen({
       });
       Alert.alert(
         t("workoutExportFailedTitle"),
-        error instanceof WorkoutExportSharingUnavailableError
-          ? t("workoutExportSharingUnavailable")
-          : t("workoutExportFailedDescription")
+        t("workoutExportFailedDescription")
       );
     } finally {
       setExportingFormat(null);
     }
   }
 
-  const stageGroups = workout.draft.steps
-    .filter((step) => step.kind === "stage" && step.stageType !== "warmup")
-    .map((stage) => ({
-      stage,
-      series: workout.draft.steps
-        .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
-        .map((set) => ({
-          set,
-          elements: workout.draft.steps.filter(
-            (step) => step.kind === "exercise" && step.parentSetId === set.id
-          )
-        }))
-    }));
   const isAiRewriteDisabled = isAiRewriteCreditBlocked || isAiRewriteOnlineBlocked;
 
   return (
@@ -166,6 +196,40 @@ export function WorkoutDetailScreen({
         </View>
       </View>
 
+      <View style={styles.workoutDetailPrimaryActions}>
+        <AppButton
+          icon="play-outline"
+          style={styles.workoutDetailPrimaryAction}
+          textStyle={styles.workoutDetailPrimaryActionText}
+          theme={theme}
+          onPress={onStartWorkout}
+        >
+          {t("startWorkout")}
+        </AppButton>
+        <AppButton
+          icon="sparkles-outline"
+          style={[
+            styles.workoutDetailPrimaryAction,
+            isAiRewriteDisabled ? styles.disabledActionButton : null
+          ]}
+          textStyle={[
+            styles.workoutDetailPrimaryActionText,
+            isAiRewriteDisabled ? { color: theme.muted } : null
+          ]}
+          theme={theme}
+          variant="outline"
+          onPress={() => onAiRewrite(workout.id)}
+        >
+          {t("aiRewriteAction")}
+        </AppButton>
+      </View>
+
+      {isAiRewriteCreditBlocked && showAiRewriteCreditTooltip ? (
+        <View style={[styles.inlineTooltip, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
+          <Text style={[styles.inlineTooltipText, { color: theme.text }]}>{t("aiCreditsInsufficient")}</Text>
+        </View>
+      ) : null}
+
       {workout.draft.notes ? (
         <CollapsiblePanel
           collapseLabel={t("collapse")}
@@ -178,27 +242,6 @@ export function WorkoutDetailScreen({
           <Text style={[styles.workoutDetailDescription, { color: theme.muted }]}>{workout.draft.notes}</Text>
         </CollapsiblePanel>
       ) : null}
-
-      <AppButton icon="play-outline" theme={theme} onPress={onStartWorkout}>
-        {t("startWorkout")}
-      </AppButton>
-
-      {isAiRewriteCreditBlocked && showAiRewriteCreditTooltip ? (
-        <View style={[styles.inlineTooltip, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
-          <Text style={[styles.inlineTooltipText, { color: theme.text }]}>{t("aiCreditsInsufficient")}</Text>
-        </View>
-      ) : null}
-
-      <AppButton
-        icon="sparkles-outline"
-        style={isAiRewriteDisabled ? styles.disabledActionButton : undefined}
-        textStyle={isAiRewriteDisabled ? { color: theme.muted } : undefined}
-        theme={theme}
-        variant="outline"
-        onPress={() => onAiRewrite(workout.id)}
-      >
-        {t("aiRewriteAction")}
-      </AppButton>
 
       <CollapsiblePanel
         collapseLabel={t("collapse")}
@@ -279,9 +322,6 @@ export function WorkoutDetailScreen({
                                 onPressDetails={() => onOpenExercise(element)}
                                 onPressMuscles={() => onOpenExercise(element)}
                               />
-                              {element.notes ? (
-                                <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>{element.notes}</Text>
-                              ) : null}
                             </View>
                           ))}
                         </View>

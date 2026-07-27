@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getExerciseElementTypeOptions,
   getGoalTypeOptions,
   getStageTypeOptions,
   getTargetComparatorOptions,
@@ -20,6 +21,7 @@ describe("workoutBuilderConfiguration", () => {
       "other"
     ]);
     expect(getGoalTypeOptions(translate).map((option) => option.value)).toContain("heartRate");
+    expect(getExerciseElementTypeOptions(translate).map((option) => option.value)).not.toContain("rest");
     expect(getTargetComparatorOptions(translate).map((option) => option.value)).toEqual(["below", "above"]);
   });
 

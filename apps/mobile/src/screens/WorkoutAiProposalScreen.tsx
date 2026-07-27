@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useMemo } from "react";
 import { Text, View } from "react-native";
 
 import { AppButton } from "../components/AppControls";
 import { ExerciseSummaryRow } from "../components/WorkoutPresentation";
 import { getWorkoutCatalogMatchSummary } from "../domain/workoutAi";
+import { groupWorkoutBuilderSteps } from "../domain/workoutEditor";
 import { formatExerciseSetTarget } from "../domain/workoutExerciseSummary";
 import type { WorkoutDraft, WorkoutStep } from "../domain/workouts";
 import type { LanguageCode, TranslationKey } from "../i18n/translations";
@@ -41,6 +43,15 @@ export function WorkoutAiProposalScreen({
   t,
   theme
 }: WorkoutAiProposalScreenProps) {
+  const matchSummary = useMemo(
+    () => proposedWorkout ? getWorkoutCatalogMatchSummary(proposedWorkout.draft) : null,
+    [proposedWorkout?.draft]
+  );
+  const stageGroups = useMemo(
+    () => proposedWorkout ? groupWorkoutBuilderSteps(proposedWorkout.draft.steps) : [],
+    [proposedWorkout?.draft.steps]
+  );
+
   if (!proposedWorkout) {
     return (
       <View style={[styles.emptyBuilder, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -52,21 +63,6 @@ export function WorkoutAiProposalScreen({
       </View>
     );
   }
-
-  const matchSummary = getWorkoutCatalogMatchSummary(proposedWorkout.draft);
-  const stageGroups = proposedWorkout.draft.steps
-    .filter((step) => step.kind === "stage")
-    .map((stage) => ({
-      stage,
-      series: proposedWorkout.draft.steps
-        .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
-        .map((set) => ({
-          set,
-          elements: proposedWorkout.draft.steps.filter(
-            (step) => step.kind === "exercise" && step.parentSetId === set.id
-          )
-        }))
-    }));
 
   return (
     <View style={styles.creatorForm}>
@@ -85,9 +81,9 @@ export function WorkoutAiProposalScreen({
 
         <View style={[styles.creatorPlanBox, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
           <Text style={[styles.creatorPlanText, { color: theme.text }]}>
-            {matchSummary.unmatched ? t("aiRewriteUnmatchedTitle") : t("aiRewriteMatched")}
+            {matchSummary?.unmatched ? t("aiRewriteUnmatchedTitle") : t("aiRewriteMatched")}
           </Text>
-          {matchSummary.unmatched ? (
+          {matchSummary?.unmatched ? (
             <Text style={[styles.creatorDescription, { color: theme.muted }]}>
               {t("aiRewriteUnmatchedCopy")} {matchSummary.matched}/{matchSummary.total}
             </Text>

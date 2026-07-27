@@ -1,64 +1,70 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("expo-file-system", () => ({
-  File: class {},
-  Paths: { cache: {} }
-}));
-vi.mock("expo-sharing", () => ({
-  isAvailableAsync: vi.fn(async () => true),
-  shareAsync: vi.fn(async () => undefined)
-}));
-
 import {
   exportWorkoutToFile,
-  type WorkoutExportFileDependencies,
-  WorkoutExportSharingUnavailableError
+  type WorkoutExportFileDependencies
 } from "../workoutExport/workoutExportFileService";
 import type { WorkoutDraft } from "../workouts";
 
 const workout: WorkoutDraft = { name: "Plan testowy", notes: "", sport: "strength", steps: [] };
 const now = new Date("2026-07-22T08:00:00.000Z");
 
-function dependencies(isAvailable = true) {
-  const writeFile = vi.fn(async (filename: string) => `file:///cache/${filename}`);
-  const shareFile = vi.fn(async () => undefined);
+function dependencies() {
+  const saveFile = vi.fn(async (
+    filename: string,
+    _mimeType: string,
+    _content: Uint8Array,
+    _notificationCopy: { openLabel: string; title: string }
+  ) => ({
+    notificationShown: true,
+    uri: `content://downloads/${filename}`
+  }));
   const value: WorkoutExportFileDependencies = {
-    isSharingAvailable: vi.fn(async () => isAvailable),
     now: () => now,
-    shareFile,
-    writeFile
+    saveFile
   };
-  return { shareFile, value, writeFile };
+  return { saveFile, value };
 }
 
 describe("exportWorkoutToFile", () => {
-  it("writes a CSV to cache and opens sharing with the CSV MIME type", async () => {
+  it("saves exact UTF-8 CSV bytes with BOM instead of opening a share sheet", async () => {
     const mocks = dependencies();
     const result = await exportWorkoutToFile({ dependencies: mocks.value, format: "csv", locale: "pl", workout });
 
-    expect(result.filename).toBe("Gymmin_Plan_testowy_2026-07-22.csv");
-    expect(mocks.writeFile).toHaveBeenCalledWith(result.filename, expect.stringMatching(/^\uFEFF/));
-    expect(mocks.shareFile).toHaveBeenCalledWith(result.uri, {
-      dialogTitle: "Eksportuj trening",
-      mimeType: "text/csv"
-    });
+    expect(result.filename).toBe("Plan testowy.csv");
+    expect(mocks.saveFile).toHaveBeenCalledWith(
+      result.filename,
+      "text/csv",
+      expect.any(Uint8Array),
+      { openLabel: "Otwórz", title: "Plik treningu został pobrany" }
+    );
+    expect(result.notificationShown).toBe(true);
+    const bytes = mocks.saveFile.mock.calls[0]?.[2] as Uint8Array;
+    expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
   });
 
-  it("writes XLSX bytes and uses the Office Open XML MIME type", async () => {
+  it("saves XLSX bytes with the Office Open XML MIME type", async () => {
     const mocks = dependencies();
     const result = await exportWorkoutToFile({ dependencies: mocks.value, format: "xlsx", locale: "en", workout });
 
-    expect(mocks.writeFile).toHaveBeenCalledWith(result.filename, expect.any(Uint8Array));
-    expect(mocks.shareFile).toHaveBeenCalledWith(result.uri, expect.objectContaining({
-      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    }));
+    expect(mocks.saveFile).toHaveBeenCalledWith(
+      result.filename,
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      expect.any(Uint8Array),
+      { openLabel: "Open", title: "Workout file downloaded" }
+    );
+    const bytes = mocks.saveFile.mock.calls[0]?.[2] as Uint8Array;
+    expect(Array.from(bytes.slice(0, 2))).toEqual([0x50, 0x4b]);
   });
 
-  it("reports unavailable sharing without invoking the share sheet", async () => {
-    const mocks = dependencies(false);
-    await expect(exportWorkoutToFile({ dependencies: mocks.value, format: "csv", locale: "en", workout }))
-      .rejects.toBeInstanceOf(WorkoutExportSharingUnavailableError);
-    expect(mocks.writeFile).toHaveBeenCalledOnce();
-    expect(mocks.shareFile).not.toHaveBeenCalled();
+  it("propagates a save failure without attempting another write", async () => {
+    const saveFile = vi.fn(async () => {
+      throw new Error("write failed");
+    });
+    const value: WorkoutExportFileDependencies = { now: () => now, saveFile };
+
+    await expect(exportWorkoutToFile({ dependencies: value, format: "csv", locale: "en", workout }))
+      .rejects.toThrow("write failed");
+    expect(saveFile).toHaveBeenCalledOnce();
   });
 });

@@ -15,7 +15,10 @@ import {
   WORKOUT_SESSIONS_STORAGE_BASE_KEY,
   type WorkoutSession
 } from "../domain/workoutSessions";
-import type { WorkoutCreatorProfile } from "../domain/workoutCreator";
+import {
+  normalizeWorkoutCreatorProfiles,
+  type WorkoutCreatorProfile
+} from "../domain/workoutCreator";
 import {
   normalizePendingWorkoutCreatorJob,
   type PendingWorkoutCreatorJob
@@ -200,7 +203,7 @@ export async function loadCreatorProfilesForOwner(ownerId: string) {
       ownerId
     );
     return {
-      profiles: Array.isArray(storedData?.profiles) ? storedData.profiles : [],
+      profiles: normalizeWorkoutCreatorProfiles(storedData?.profiles),
       selectedProfileId: typeof storedData?.selectedProfileId === "string"
         ? storedData.selectedProfileId
         : null
@@ -216,11 +219,12 @@ export async function saveCreatorProfilesForOwner(
   profiles: WorkoutCreatorProfile[],
   selectedProfileId: string | null
 ) {
-  const selectedId = selectedProfileId && profiles.some((profile) => profile.id === selectedProfileId)
+  const normalizedProfiles = normalizeWorkoutCreatorProfiles(profiles);
+  const selectedId = selectedProfileId && normalizedProfiles.some((profile) => profile.id === selectedProfileId)
     ? selectedProfileId
     : null;
   const payload: LocalCreatorProfilesStorage = {
-    profiles,
+    profiles: normalizedProfiles,
     selectedProfileId: selectedId,
     updatedAt: new Date().toISOString(),
     version: 1

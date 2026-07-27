@@ -33,6 +33,12 @@ export function getStageTypeOptions(t: Translate) {
   return stageTypeValues.map((value) => ({ label: t(stageTypeTranslationKeys[value]), value }));
 }
 
+export function getExerciseElementTypeOptions(t: Translate) {
+  return stageTypeValues
+    .filter((value) => value !== "rest")
+    .map((value) => ({ label: t(stageTypeTranslationKeys[value]), value }));
+}
+
 export function getStageTypeTranslationKey(value: StageType) {
   return stageTypeTranslationKeys[value];
 }

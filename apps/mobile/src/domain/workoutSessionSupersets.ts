@@ -3,6 +3,8 @@ import type {
   WorkoutSessionEntry,
   WorkoutSessionSuperset
 } from "./workoutSessions";
+import { groupWorkoutBuilderSteps, isWorkoutSeriesSuperset } from "./workoutEditor";
+import type { WorkoutDraft } from "./workouts";
 
 export type WorkoutSessionExerciseGroup = {
   entries: WorkoutSessionEntry[];
@@ -160,6 +162,43 @@ export function normalizeWorkoutSessionSupersets(
   });
 
   return normalized;
+}
+
+export function createWorkoutSessionSupersetsFromPlan(
+  workout: WorkoutDraft,
+  entries: WorkoutSessionEntry[],
+  timestamp: string
+): WorkoutSessionSuperset[] {
+  const groups = getWorkoutSessionExerciseGroups({ entries });
+  const groupBySourceElementId = new Map(
+    groups
+      .map((group) => [group.entries[0]?.sourceElementId, group] as const)
+      .filter((item): item is [string, WorkoutSessionExerciseGroup] => Boolean(item[0]))
+  );
+  const candidates = groupWorkoutBuilderSteps(workout.steps).flatMap(({ stage, series }) =>
+    series.flatMap(({ elements, set }) => {
+      if (!isWorkoutSeriesSuperset(elements)) {
+        return [];
+      }
+
+      const groupA = groupBySourceElementId.get(elements[0].id);
+      const groupB = groupBySourceElementId.get(elements[1].id);
+      const entryIds: [string, string] = [
+        groupA ? getGroupAnchorId(groupA) : "",
+        groupB ? getGroupAnchorId(groupB) : ""
+      ];
+      const safeId = `${stage.id}-${set.id}`.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 140);
+
+      return [{
+        createdAt: timestamp,
+        entryIds,
+        id: `planned-superset-${safeId}`,
+        updatedAt: timestamp
+      }];
+    })
+  );
+
+  return normalizeWorkoutSessionSupersets(candidates, entries, timestamp);
 }
 
 function getNormalizedSupersets(session: WorkoutSession) {

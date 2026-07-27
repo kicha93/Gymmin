@@ -45,13 +45,25 @@ export function getWorkoutBuilderStagePreviewRows(draft: WorkoutDraft, stageId: 
 
   return stage.series.flatMap(({ elements, set }) => elements.map((element) => ({
     element,
-    target: formatExerciseSetTarget({
-      goalType: element.goalType,
-      setCount: set.setCount,
-      stageType: element.stageType,
-      targetValue: element.targetValue
-    }).replace(" x ", "×")
+    target: formatWorkoutBuilderPreviewTarget(element, set.setCount)
   })));
+}
+
+export function formatWorkoutBuilderPreviewTarget(element: WorkoutStep, setCount: string) {
+  const isSimpleWarmup =
+    element.stageType === "warmup" &&
+    (!element.targetValue.trim() || element.goalType === "buttonPress");
+
+  if (isSimpleWarmup) {
+    return "";
+  }
+
+  return formatExerciseSetTarget({
+    goalType: element.goalType,
+    setCount,
+    stageType: element.stageType,
+    targetValue: element.targetValue
+  }).replace(" x ", "×");
 }
 
 export function getWorkoutBuilderValidationIssues(draft: WorkoutDraft): WorkoutBuilderValidationIssue[] {

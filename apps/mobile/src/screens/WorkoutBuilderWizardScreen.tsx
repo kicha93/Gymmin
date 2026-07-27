@@ -6,6 +6,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { AppButton, AppInput, AppTextarea } from "../components/AppControls";
 import { getExerciseDisplayName } from "../domain/exercises";
 import {
+  formatWorkoutBuilderPreviewTarget,
   getUniqueWorkoutBuilderValidationCodes,
   getWorkoutBuilderStagePreviewRows,
   getWorkoutBuilderSummary,
@@ -15,9 +16,16 @@ import {
   type WorkoutEditorFocus,
   type WorkoutEditorStep
 } from "../domain/workoutBuilderFlow";
-import { groupWorkoutBuilderSteps } from "../domain/workoutEditor";
+import { groupWorkoutBuilderSteps, isWorkoutSeriesSuperset } from "../domain/workoutEditor";
 import { normalizeSetCountInput } from "../domain/workoutBuilderConfiguration";
-import { createStep, type StageType, type WorkoutDraft, type WorkoutStep } from "../domain/workouts";
+import {
+  createStep,
+  formatWorkoutDuration,
+  parseWorkoutDurationSeconds,
+  type StageType,
+  type WorkoutDraft,
+  type WorkoutStep
+} from "../domain/workouts";
 import type { LanguageCode, TranslationKey } from "../i18n/translations";
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
@@ -184,7 +192,11 @@ export function WorkoutBuilderWizardScreen(props: Props) {
 
   function saveExercise() {
     if (!exerciseDraft || focus?.type !== "exercise") return;
-    const hasNegativeValue = [exerciseDraft.loadKg, exerciseDraft.goalType === "time" ? "" : exerciseDraft.targetValue]
+    const hasNegativeValue = [
+      exerciseDraft.loadKg,
+      exerciseDraft.goalType === "time" ? "" : exerciseDraft.targetValue,
+      exerciseDraft.restSeconds ?? ""
+    ]
       .some((value) => value.trim() !== "" && Number(value.replace(",", ".")) < 0);
     if ((requiresCatalogExercise(exerciseDraft) && !exerciseDraft.exerciseName.trim()) || hasNegativeValue) {
       setExerciseError(true);
@@ -366,9 +378,30 @@ export function WorkoutBuilderWizardScreen(props: Props) {
             ) : activeStage.series.map(({ set, elements }, index) => (
               <Pressable key={set.id} style={[styles.workoutEditorRow, { borderBottomColor: theme.border }]} onPress={() => setFocus({ type: "set", stageId: activeStage.stage.id, setId: set.id })}>
                 <View style={[styles.workoutEditorRowIndex, { backgroundColor: theme.secondaryBand }]}><Text style={[styles.workoutEditorRowIndexText, { color: theme.text }]}>{index + 1}</Text></View>
-                <View style={styles.workoutEditorRowCopy}>
-                  <Text style={[styles.workoutEditorRowTitle, { color: theme.text }]}>{t("set")} {index + 1}</Text>
-                  <Text style={[styles.workoutEditorRowMeta, { color: theme.muted }]}>{elements.length} {t("exercisePlural").toLowerCase()}</Text>
+                <View style={styles.workoutEditorSetExercises}>
+                  {isWorkoutSeriesSuperset(elements) ? (
+                    <View style={styles.workoutEditorSupersetLabel}>
+                      <Ionicons name="link-outline" size={15} color={theme.primary} />
+                      <Text style={[styles.workoutEditorSupersetLabelText, { color: theme.primary }]}>{t("superset")}</Text>
+                    </View>
+                  ) : null}
+                  {elements.length === 0 ? (
+                    <View style={styles.workoutEditorRowCopy}>
+                      <Text style={[styles.workoutEditorRowTitle, { color: theme.text }]}>{t("set")} {index + 1}</Text>
+                      <Text style={[styles.workoutEditorRowMeta, { color: theme.muted }]}>{t("workoutEditorNoExercises")}</Text>
+                    </View>
+                  ) : elements.map((element) => {
+                    const target = formatWorkoutBuilderPreviewTarget(element, set.setCount);
+                    const elementName = element.exerciseName
+                      ? getExerciseDisplayName(element.exerciseName, language)
+                      : element.label.trim() || (element.stageType === "warmup" ? t("stageWarmup") : t("elementWithoutExercise"));
+                    return (
+                      <View key={element.id} style={styles.workoutEditorSetExercise}>
+                        <Text style={[styles.workoutEditorRowTitle, { color: theme.text }]}>{elementName}</Text>
+                        {target ? <Text style={[styles.workoutEditorRowMeta, { color: theme.muted }]}>{target}</Text> : null}
+                      </View>
+                    );
+                  })}
                 </View>
                 <Ionicons name="chevron-forward" size={22} color={theme.muted} />
               </Pressable>
@@ -382,7 +415,10 @@ export function WorkoutBuilderWizardScreen(props: Props) {
             ? <Text style={[styles.workoutEditorEmptyText, { color: theme.muted }]}>{t("workoutEditorNoExercises")}</Text>
             : preview.map(({ element, target }) => (
               <Text key={element.id} style={[styles.workoutEditorPreviewItem, { color: theme.text }]}>
-                {element.exerciseName ? getExerciseDisplayName(element.exerciseName, language) : t("elementWithoutExercise")} - {target}
+                {element.exerciseName
+                  ? getExerciseDisplayName(element.exerciseName, language)
+                  : element.label.trim() || (element.stageType === "warmup" ? t("stageWarmup") : t("elementWithoutExercise"))}
+                {target ? ` - ${target}` : ""}
               </Text>
             ))}
         </View>
@@ -405,12 +441,40 @@ export function WorkoutBuilderWizardScreen(props: Props) {
           <AppInput keyboardType="number-pad" maxLength={2} placeholder="0" theme={theme} value={activeSet.set.setCount} onChangeText={(setCount) => updateStep(activeSet.set.id, { ...activeSet.set, setCount: normalizeSetCountInput(setCount) })} />
         </View>
         <View style={styles.workoutEditorListSection}>
-          <Text style={[styles.workoutEditorSectionTitle, { color: theme.text }]}>{t("setElements")}</Text>
+          <View style={styles.workoutEditorSectionHeader}>
+            <Text style={[styles.workoutEditorSectionTitle, { color: theme.text }]}>{t("setElements")}</Text>
+            {isWorkoutSeriesSuperset(activeSet.elements) ? (
+              <View style={styles.workoutEditorSupersetLabel}>
+                <Ionicons name="link-outline" size={15} color={theme.primary} />
+                <Text style={[styles.workoutEditorSupersetLabelText, { color: theme.primary }]}>{t("superset")}</Text>
+              </View>
+            ) : null}
+          </View>
+          {isWorkoutSeriesSuperset(activeSet.elements) ? (
+            <Text style={[styles.workoutEditorSupersetHint, { color: theme.muted }]}>
+              {t("workoutEditorSupersetHint")}
+            </Text>
+          ) : null}
           {activeSet.elements.length === 0 ? <Text style={[styles.workoutEditorEmptyText, { color: theme.muted }]}>{t("workoutEditorNoExercises")}</Text> : activeSet.elements.map((element, index) => (
             <Pressable key={element.id} style={[styles.workoutEditorRow, { borderBottomColor: theme.border }]} onPress={() => startExerciseEdit(activeStage.stage.id, activeSet.set.id, element)}>
               <View style={styles.workoutEditorRowCopy}>
-                <Text style={[styles.workoutEditorRowTitle, { color: theme.text }]}>{element.exerciseName ? getExerciseDisplayName(element.exerciseName, language) : `${t("addElement")} ${index + 1}`}</Text>
-                <Text style={[styles.workoutEditorRowMeta, { color: theme.muted }]}>{activeSet.set.setCount || "—"} × {element.targetValue || "—"}{element.loadKg ? ` · ${element.loadKg} kg` : ""}</Text>
+                <Text style={[styles.workoutEditorRowTitle, { color: theme.text }]}>
+                  {element.exerciseName
+                    ? getExerciseDisplayName(element.exerciseName, language)
+                    : element.label.trim() || (element.stageType === "warmup" ? t("stageWarmup") : `${t("addElement")} ${index + 1}`)}
+                </Text>
+                {(() => {
+                  const details = [
+                    formatWorkoutBuilderPreviewTarget(element, activeSet.set.setCount),
+                    element.loadKg ? `${element.loadKg} kg` : "",
+                    parseWorkoutDurationSeconds(element.restSeconds)
+                      ? `${t("restBetweenSets")}: ${formatWorkoutDuration(parseWorkoutDurationSeconds(element.restSeconds) ?? 0)}`
+                      : ""
+                  ].filter(Boolean);
+                  return details.length
+                    ? <Text style={[styles.workoutEditorRowMeta, { color: theme.muted }]}>{details.join(" · ")}</Text>
+                    : null;
+                })()}
               </View>
               <Ionicons name="chevron-forward" size={22} color={theme.muted} />
             </Pressable>

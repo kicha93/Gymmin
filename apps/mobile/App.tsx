@@ -93,6 +93,7 @@ import {
   markWorkoutSessionDeleted,
   mergeWorkoutSessions,
   normalizeWorkoutSessions,
+  recoverWorkoutRestSecondsFromSessions,
   workoutHasHistory,
   WORKOUT_SESSIONS_STORAGE_BASE_KEY,
   WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY
@@ -110,10 +111,16 @@ import {
   type WorkoutSessionSupersetValueField
 } from "./src/domain/workoutSessionSupersets";
 import {
-  normalizeAppSettings,
-  resolveInitialSettingsSyncAction,
-  type AppSettings
+  resolveInitialSettingsSyncAction
 } from "./src/domain/appSettings";
+import {
+  buildSyncedAccountSettings,
+  getSyncedAccountSettingsFieldPresence,
+  normalizeSyncedAccountSettings,
+  preserveLocalCreatorProfilesDuringInitialSync,
+  resolveWeeklyPlanDuringInitialSync,
+  type SyncedAccountSettings
+} from "./src/domain/accountSettings";
 import {
   synchronizeWorkoutSessions,
 } from "./src/domain/workoutSessionSync";
@@ -160,7 +167,10 @@ import {
   getCurrentWeekRange,
   getWeeklyPlanDay,
   getWeeklyPlanSummary,
+  loadWeeklyPlan,
+  mergeWeeklyPlans,
   removeWeeklyPlanItem,
+  saveWeeklyPlan,
   toggleWeeklyPlanItemDay,
   upsertWeeklyPlanItem
 } from "./src/domain/weeklyPlan";
@@ -287,6 +297,7 @@ import {
   markAnonymousMergeHandled,
   mergeCreatorProfilesById,
   saveCreatorProfilesForOwner as saveCreatorProfilesForStorageOwner,
+  saveSettingsForOwner as saveSettingsForStorageOwner,
   saveWorkoutSessionsForOwner as saveWorkoutSessionsForStorageOwner,
   saveWorkoutsForOwner as saveWorkoutsForStorageOwner
 } from "./src/storage/localDataRepositories";
@@ -380,7 +391,8 @@ const anonymousAccountDataBaseKeys = [
   ACHIEVEMENTS_STORAGE_BASE_KEY,
   APP_USAGE_STATS_STORAGE_BASE_KEY,
   localCreatorProfilesStorageBaseKey,
-  localCreatorJobStorageBaseKey
+  localCreatorJobStorageBaseKey,
+  localWeeklyPlanStorageBaseKey
 ];
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
@@ -481,7 +493,7 @@ function getReminderWeekdayFromNumber(value: number): ReminderWeekday {
   }
 }
 
-type ApiUserSettings = AppSettings;
+type ApiUserSettings = SyncedAccountSettings;
 
 const initialWorkouts = [
   {
@@ -797,11 +809,7 @@ const trainingFacts: Record<LanguageCode, string[]> = {
 };
 
 function normalizeApiUserSettings(value: unknown): ApiUserSettings | null {
-  if (!isRecord(value)) {
-    return null;
-  }
-
-  return normalizeAppSettings(value, defaultCollapsedPanels);
+  return normalizeSyncedAccountSettings(value, defaultCollapsedPanels);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -928,10 +936,19 @@ function GymminApp() {
     handleAvatarImageLoadError
   } = useCachedAvatar({ apiBaseUrl, user });
   const storageOwnerId = getAccountStorageOwnerId(user?.id);
-  const { weeklyPlan, setWeeklyPlan } = useAccountScopedWeeklyPlan(storageOwnerId);
   const syncedFavoriteExercisesUserIdRef = useRef<string | null>(null);
   const syncedAchievementsUserIdRef = useRef<string | null>(null);
   const hasLoadedAccountStorageMigration = useAccountStorageMigration();
+  const {
+    hasLoadedWeeklyPlan,
+    hadPersistedWeeklyPlanOnLoad,
+    loadedWeeklyPlanOwnerId,
+    weeklyPlan,
+    setWeeklyPlan
+  } = useAccountScopedWeeklyPlan(
+    storageOwnerId,
+    hasLoadedAccountStorageMigration
+  );
   const {
     applySettings: applyAccountSettingsState,
     buildSettings: buildCurrentSettingsPayload,
@@ -1141,6 +1158,40 @@ function GymminApp() {
   const bugReportSubmissionRef = useRef<{ key: string; signature: string } | null>(null);
   const appUsageStartedAtRef = useRef<number | null>(Date.now());
   const isApplyingAccountWorkoutSessionsRef = useRef(false);
+  useEffect(() => {
+    if (
+      !hasLoadedLocalWorkouts
+      || loadedWorkoutsOwnerId !== storageOwnerId
+      || !hasLoadedWorkoutSessions
+      || loadedWorkoutSessionsOwnerId !== storageOwnerId
+    ) {
+      return;
+    }
+
+    setSavedWorkouts((current) => {
+      let changed = false;
+      const recovered = current.map((savedWorkout) => {
+        const draft = recoverWorkoutRestSecondsFromSessions(
+          savedWorkout.draft,
+          savedWorkout.id,
+          workoutSessions
+        );
+        if (draft !== savedWorkout.draft) {
+          changed = true;
+          return { ...savedWorkout, draft };
+        }
+        return savedWorkout;
+      });
+      return changed ? recovered : current;
+    });
+  }, [
+    hasLoadedLocalWorkouts,
+    hasLoadedWorkoutSessions,
+    loadedWorkoutSessionsOwnerId,
+    loadedWorkoutsOwnerId,
+    storageOwnerId,
+    workoutSessions
+  ]);
   const workoutsInitialSync = useInitialAccountSync({
     enabled: Boolean(
       hasLoadedLocalAuth &&
@@ -1163,7 +1214,11 @@ function GymminApp() {
     enabled: Boolean(
       hasLoadedLocalAuth &&
       hasLoadedLocalSettings &&
+      hasLoadedLocalCreatorProfiles &&
+      hasLoadedWeeklyPlan &&
       loadedSettingsOwnerId === storageOwnerId &&
+      loadedCreatorProfilesOwnerId === storageOwnerId &&
+      loadedWeeklyPlanOwnerId === storageOwnerId &&
       user
     ),
     onError: (error) => {
@@ -1243,10 +1298,12 @@ function GymminApp() {
       && hasLoadedFavoriteExercises
       && hasLoadedWorkoutSessions
       && hasLoadedLocalCreatorProfiles
+      && hasLoadedWeeklyPlan
       && loadedWorkoutsOwnerId === storageOwnerId
       && loadedFavoriteExercisesOwnerId === storageOwnerId
       && loadedWorkoutSessionsOwnerId === storageOwnerId
       && loadedCreatorProfilesOwnerId === storageOwnerId
+      && loadedWeeklyPlanOwnerId === storageOwnerId
       && user
     ),
     onAccountSwitch: () => showInfoDialog(t("accountSwitchDetected"), t("accountSwitchCopy")),
@@ -1267,19 +1324,59 @@ function GymminApp() {
     settings: workoutReminders,
     updateSettings: updateWorkoutReminderSettings
   });
-  const settingsAutoSaveChangeKey = JSON.stringify(buildCurrentSettingsPayload(""));
+  function buildAccountSettingsPayload(updatedAt = localSettingsUpdatedAt): ApiUserSettings {
+    return buildSyncedAccountSettings(
+      buildCurrentSettingsPayload(updatedAt),
+      creatorProfiles,
+      selectedCreatorProfileId,
+      weeklyPlan
+    );
+  }
+
+  const settingsAutoSaveChangeKey = useMemo(
+    () => JSON.stringify(buildAccountSettingsPayload("")),
+    [
+      collapsedPanels,
+      creatorProfiles,
+      defaultSetCount,
+      defaultStageType,
+      defaultWeight,
+      defaultWorkoutExecutionMode,
+      defaultWorkoutTableOrientation,
+      isAuthPanelDismissed,
+      language,
+      selectedCreatorProfileId,
+      showRestTimer,
+      themeName,
+      weeklyPlan,
+      workoutReminders
+    ]
+  );
   useAccountSettingsAutoSave({
-    buildSettings: buildCurrentSettingsPayload,
+    buildSettings: buildAccountSettingsPayload,
     changeKey: settingsAutoSaveChangeKey,
     enabled: Boolean(
       hasLoadedLocalSettings &&
+      hasLoadedLocalCreatorProfiles &&
+      hasLoadedWeeklyPlan &&
       loadedSettingsOwnerId === storageOwnerId &&
+      loadedCreatorProfilesOwnerId === storageOwnerId &&
+      loadedWeeklyPlanOwnerId === storageOwnerId &&
       user &&
       settingsInitialSync.isSynced
     ),
     isApplyingRemoteSettingsRef: isApplyingAccountSettingsRef,
     onError: (error) => {
       console.error("Failed to save account settings", error);
+    },
+    onSaving: (settings) => {
+      setLocalSettingsUpdatedAt(settings.updatedAt);
+      saveSettingsForStorageOwner(
+        storageOwnerId,
+        buildCurrentSettingsPayload(settings.updatedAt)
+      ).catch((error) => {
+        console.error("Failed to persist pending account settings", error);
+      });
     },
     onSaved: (savedSettings) => {
       setLocalSettingsUpdatedAt(savedSettings.updatedAt);
@@ -1421,6 +1518,12 @@ function GymminApp() {
       anonymousProfiles.selectedProfileId ||
       null;
 
+    const [anonymousWeeklyPlan, accountWeeklyPlan] = await Promise.all([
+      loadWeeklyPlan(ANONYMOUS_LOCAL_OWNER),
+      loadWeeklyPlan(accountOwnerId)
+    ]);
+    const mergedWeeklyPlan = mergeWeeklyPlans(accountWeeklyPlan, anonymousWeeklyPlan);
+
     const [anonymousAchievements, accountAchievements] = await Promise.all([
       loadUserAchievements(ANONYMOUS_LOCAL_OWNER),
       loadUserAchievements(accountOwnerId)
@@ -1439,6 +1542,7 @@ function GymminApp() {
       saveFavoriteExercises(mergedFavorites, accountOwnerId),
       saveWorkoutSessionsForStorageOwner(accountOwnerId, mergedSessions),
       saveCreatorProfilesForStorageOwner(accountOwnerId, mergedProfiles, selectedProfileAfterMerge),
+      saveWeeklyPlan(mergedWeeklyPlan, accountOwnerId),
       saveUserAchievements(accountOwnerId, mergedAchievements),
       saveAppUsageStats(accountOwnerId, mergedUsageStats),
       removeAccountJson(FAVORITE_EXERCISES_SYNC_STORAGE_BASE_KEY, accountOwnerId),
@@ -1458,12 +1562,14 @@ function GymminApp() {
       setActiveWorkoutSessionId(mergedSessions.find((item) => item.status === "active" && !item.deletedAt)?.id ?? null);
       setCreatorProfiles(mergedProfiles);
       setSelectedCreatorProfileId(selectedProfileAfterMerge);
+      setWeeklyPlan(mergedWeeklyPlan);
       setUserAchievements(mergedAchievements);
       setAppUsageStats(mergedUsageStats);
       setAchievementsSyncState({});
     }
 
     workoutsInitialSync.markSyncing();
+    settingsInitialSync.markSyncing();
     favoritesInitialSync.markSyncing();
     workoutSessionsInitialSync.markSyncing();
     achievementsInitialSync.markSyncing();
@@ -1471,6 +1577,12 @@ function GymminApp() {
 
     try {
       await synchronizeAccountWorkouts(session, mergedWorkouts);
+      await saveAccountSettings(buildSyncedAccountSettings(
+        buildCurrentSettingsPayload(),
+        mergedProfiles,
+        selectedProfileAfterMerge,
+        mergedWeeklyPlan
+      ), session);
       const syncedFavorites = await syncAccountFavoriteExercises(session, mergedFavorites, true);
       const syncedSessions = await syncAccountWorkoutSessions(session, mergedSessions, true);
       const syncedAchievements = await syncAccountAchievements(session, mergedAchievements, mergedUsageStats, true);
@@ -1488,12 +1600,14 @@ function GymminApp() {
         }, 0);
       }
       workoutsInitialSync.markSynced();
+      settingsInitialSync.markSynced();
       favoritesInitialSync.markSynced();
       workoutSessionsInitialSync.markSynced();
       achievementsInitialSync.markSynced();
     } catch (error) {
       console.error("Failed to sync merged anonymous data", error);
       workoutsInitialSync.markFailed();
+      settingsInitialSync.markFailed();
       favoritesInitialSync.markFailed();
       workoutSessionsInitialSync.markFailed();
       achievementsInitialSync.markFailed();
@@ -1932,26 +2046,40 @@ function GymminApp() {
   }
 
   async function fetchAccountWorkouts(session: UserSession) {
-    const workouts = await accountDataApi.getWorkouts(
+    const apiWorkouts = await accountDataApi.getWorkouts(
       getAuthHeaders(session),
       "Workout fetch failed"
     );
-    return workouts.map(mapApiWorkoutToSavedWorkout);
+    const workouts = apiWorkouts.map(mapApiWorkoutToSavedWorkout);
+    const migratedWorkoutIds = new Set(
+      apiWorkouts
+        .filter((apiWorkout, index) => workouts[index].draft.steps.length < apiWorkout.steps.length)
+        .map((apiWorkout) => apiWorkout.clientWorkoutId)
+    );
+    return { migratedWorkoutIds, workouts };
   }
 
   async function synchronizeAccountWorkouts(session: UserSession, localWorkouts: SavedWorkout[]) {
+    const recoveredLocalWorkouts = localWorkouts.map((savedWorkout) => ({
+      ...savedWorkout,
+      draft: recoverWorkoutRestSecondsFromSessions(
+        savedWorkout.draft,
+        savedWorkout.id,
+        workoutSessions
+      )
+    }));
     await accountDataApi.syncWorkouts(
       {
         deletedClientWorkoutIds: [],
         lastPulledAt: null,
-        workouts: localWorkouts.map(mapSavedWorkoutToApiRequest)
+        workouts: recoveredLocalWorkouts.map(mapSavedWorkoutToApiRequest)
       },
       getAuthHeaders(session),
       "Workout sync failed"
     );
 
-    const accountWorkouts = await fetchAccountWorkouts(session);
-    const mergedWorkouts = mergeWorkoutsById(accountWorkouts, localWorkouts);
+    const { migratedWorkoutIds, workouts: accountWorkouts } = await fetchAccountWorkouts(session);
+    const mergedWorkouts = mergeWorkoutsById(accountWorkouts, recoveredLocalWorkouts);
 
     setSavedWorkouts(mergedWorkouts);
     setSelectedWorkoutId((current) =>
@@ -1959,6 +2087,19 @@ function GymminApp() {
         ? current
         : mergedWorkouts[0]?.id ?? ""
     );
+
+    const migratedAccountWorkouts = mergedWorkouts.filter((workout) => migratedWorkoutIds.has(workout.id));
+    if (migratedAccountWorkouts.length > 0) {
+      await accountDataApi.syncWorkouts(
+        {
+          deletedClientWorkoutIds: [],
+          lastPulledAt: null,
+          workouts: migratedAccountWorkouts.map(mapSavedWorkoutToApiRequest)
+        },
+        getAuthHeaders(session),
+        "Workout rest migration sync failed"
+      );
+    }
   }
 
   async function upsertAccountWorkout(nextWorkout: SavedWorkout, session = user) {
@@ -2074,6 +2215,9 @@ function GymminApp() {
 
   function applyAccountSettings(settings: ApiUserSettings) {
     applyAccountSettingsState(settings, true);
+    setCreatorProfiles(settings.creatorProfiles);
+    setSelectedCreatorProfileId(settings.selectedCreatorProfileId);
+    setWeeklyPlan(settings.weeklyPlan);
     setPendingLanguage(settings.language);
     setPendingDefaultSetCount(settings.defaultSetCount);
     setPendingDefaultWeight(settings.defaultWeight);
@@ -2087,10 +2231,15 @@ function GymminApp() {
       getAuthHeaders(session),
       "Settings fetch failed"
     );
-    return normalizeApiUserSettings(responseBody);
+    const fieldPresence = getSyncedAccountSettingsFieldPresence(responseBody);
+    return {
+      includedCreatorProfiles: fieldPresence.creatorProfiles,
+      includedWeeklyPlan: fieldPresence.weeklyPlan,
+      settings: normalizeApiUserSettings(responseBody)
+    };
   }
 
-  async function saveAccountSettings(payload = buildCurrentSettingsPayload(), session = user) {
+  async function saveAccountSettings(payload = buildAccountSettingsPayload(), session = user) {
     if (!session) {
       return null;
     }
@@ -2107,7 +2256,16 @@ function GymminApp() {
   }
 
   async function synchronizeAccountSettings(session: UserSession) {
-    const accountSettings = await fetchAccountSettings(session);
+    const fetchedSettings = await fetchAccountSettings(session);
+    const accountSettings = fetchedSettings.settings;
+    const settingsWithResolvedWeeklyPlan = accountSettings
+      ? resolveWeeklyPlanDuringInitialSync(
+          accountSettings,
+          weeklyPlan,
+          fetchedSettings.includedWeeklyPlan,
+          hadPersistedWeeklyPlanOnLoad
+        )
+      : null;
 
     const action = resolveInitialSettingsSyncAction({
       hasPersistedLocalSettings: hadPersistedLocalSettingsOnLoad,
@@ -2115,12 +2273,28 @@ function GymminApp() {
       remoteUpdatedAt: accountSettings?.updatedAt ?? null
     });
 
-    if (action === "apply-remote" && accountSettings) {
-      applyAccountSettings(accountSettings);
+    if (action === "apply-remote" && settingsWithResolvedWeeklyPlan) {
+      let settingsWithMigratedLocalData = preserveLocalCreatorProfilesDuringInitialSync(
+        settingsWithResolvedWeeklyPlan,
+        creatorProfiles,
+        selectedCreatorProfileId,
+        fetchedSettings.includedCreatorProfiles
+      );
+      applyAccountSettings(settingsWithMigratedLocalData);
+      if (settingsWithMigratedLocalData !== accountSettings) {
+        await saveAccountSettings(settingsWithMigratedLocalData, session);
+      }
       return;
     }
 
-    await saveAccountSettings(buildCurrentSettingsPayload(), session);
+    const weeklyPlanForPush = settingsWithResolvedWeeklyPlan?.weeklyPlan ?? weeklyPlan;
+    if (weeklyPlanForPush !== weeklyPlan) {
+      setWeeklyPlan(weeklyPlanForPush);
+    }
+    await saveAccountSettings({
+      ...buildAccountSettingsPayload(),
+      weeklyPlan: weeklyPlanForPush
+    }, session);
   }
 
   async function syncAccountFavoriteExercises(

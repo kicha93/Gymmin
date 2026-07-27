@@ -16,6 +16,10 @@ export type WeeklyPlanSettings = {
   items: WeeklyPlanItem[];
   updatedAt: string;
 };
+export type LoadedWeeklyPlan = {
+  hadPersistedPlan: boolean;
+  plan: WeeklyPlanSettings;
+};
 
 export type WeeklyPlanWorkout = { id: string; name: string };
 export type WeeklyPlanWeekRange = { start: Date; end: Date };
@@ -30,6 +34,10 @@ export type WeeklyPlanSummary = {
 
 export const WEEKLY_PLAN_STORAGE_BASE_KEY = "weeklyPlan.v1";
 export const weeklyPlanDays: WeeklyPlanDay[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+export const weeklyPlanLimits = {
+  itemCount: 100,
+  workoutIdLength: 128
+} as const;
 
 export function getDefaultWeeklyPlanSettings(now = new Date()): WeeklyPlanSettings {
   return { enabled: false, items: [], updatedAt: now.toISOString() };
@@ -43,36 +51,81 @@ export function normalizeWeeklyPlanSettings(value: unknown, now = new Date()): W
   const candidate = value as Partial<WeeklyPlanSettings>;
   const seen = new Set<string>();
   const items = Array.isArray(candidate.items)
-    ? candidate.items.flatMap((item, index) => {
+    ? candidate.items.slice(0, weeklyPlanLimits.itemCount).flatMap((item, index) => {
       if (!item || typeof item !== "object") {
         return [];
       }
       const value = item as Partial<WeeklyPlanItem>;
-      const workoutId = typeof value.workoutId === "string" ? value.workoutId.trim() : "";
+      const workoutId = typeof value.workoutId === "string"
+        ? value.workoutId.trim().slice(0, weeklyPlanLimits.workoutIdLength)
+        : "";
       const day = value.day as WeeklyPlanDay;
       const uniqueKey = `${workoutId}:${day}`;
       if (!workoutId || seen.has(uniqueKey) || !weeklyPlanDays.includes(day)) {
         return [];
       }
       seen.add(uniqueKey);
-      return [{ workoutId, day, order: Number.isFinite(value.order) ? Number(value.order) : index }];
+      const order = typeof value.order === "number"
+        && Number.isSafeInteger(value.order)
+        && value.order >= 0
+        ? value.order
+        : index;
+      return [{ workoutId, day, order }];
     })
     : [];
+  const updatedAt = typeof candidate.updatedAt === "string"
+    && Number.isFinite(Date.parse(candidate.updatedAt))
+    ? candidate.updatedAt
+    : now.toISOString();
 
   return {
     enabled: candidate.enabled === true && items.length > 0,
-    items: items.sort((left, right) => left.order - right.order || left.workoutId.localeCompare(right.workoutId)),
-    updatedAt: typeof candidate.updatedAt === "string" ? candidate.updatedAt : now.toISOString()
+    items: items
+      .sort((left, right) => left.order - right.order || left.workoutId.localeCompare(right.workoutId))
+      .map((item, index) => ({ ...item, order: index })),
+    updatedAt
   };
 }
 
-export async function loadWeeklyPlan(ownerId?: string | null): Promise<WeeklyPlanSettings> {
+export function mergeWeeklyPlans(
+  primary: WeeklyPlanSettings,
+  secondary: WeeklyPlanSettings,
+  now = new Date()
+): WeeklyPlanSettings {
+  const primaryPlan = normalizeWeeklyPlanSettings(primary, now);
+  const secondaryPlan = normalizeWeeklyPlanSettings(secondary, now);
+  const seen = new Set<string>();
+  const items = [...primaryPlan.items, ...secondaryPlan.items]
+    .filter((item) => {
+      const key = `${item.workoutId}:${item.day}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, weeklyPlanLimits.itemCount)
+    .map((item, index) => ({ ...item, order: index }));
+
+  return {
+    enabled: items.length > 0,
+    items,
+    updatedAt: now.toISOString()
+  };
+}
+
+export async function loadWeeklyPlanState(ownerId?: string | null): Promise<LoadedWeeklyPlan> {
   try {
     const raw = await AsyncStorage.getItem(getAccountStorageKey(WEEKLY_PLAN_STORAGE_BASE_KEY, ownerId));
-    return raw ? normalizeWeeklyPlanSettings(JSON.parse(raw)) : getDefaultWeeklyPlanSettings();
+    return {
+      hadPersistedPlan: raw !== null,
+      plan: raw ? normalizeWeeklyPlanSettings(JSON.parse(raw)) : getDefaultWeeklyPlanSettings()
+    };
   } catch {
-    return getDefaultWeeklyPlanSettings();
+    return { hadPersistedPlan: false, plan: getDefaultWeeklyPlanSettings() };
   }
+}
+
+export async function loadWeeklyPlan(ownerId?: string | null): Promise<WeeklyPlanSettings> {
+  return (await loadWeeklyPlanState(ownerId)).plan;
 }
 
 export async function saveWeeklyPlan(plan: WeeklyPlanSettings, ownerId?: string | null) {

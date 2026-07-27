@@ -78,7 +78,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/features/workouts/useWorkoutEditorController.ts` posiada cykl nowego/edytowanego treningu i stabilne callbacki mutacji, a czyste mutacje oraz liniowe grupowanie hierarchii kroków znajdują się w `src/domain/workoutEditor.ts`,
 - `src/screens/WorkoutBuilderWizardScreen.tsx` prezentuje ręczny edytor jako trzy kroki `Dane -> Etapy -> Zapis` i utrzymuje tylko jeden aktywny kontekst: etap, serię albo ćwiczenie,
 - `src/domain/workoutBuilderFlow.ts` wylicza podsumowania i błędy walidacji kreatora bez zależności od React Native; zapis nadal przekazuje niezmieniony `WorkoutDraft`,
-- `src/features/weeklyPlan/useAccountScopedWeeklyPlan.ts` izoluje odczyt i zapis planu tygodniowego per owner oraz zeruje stan podczas przełączania kont,
+- `src/features/weeklyPlan/useAccountScopedWeeklyPlan.ts` izoluje odczyt i zapis planu tygodniowego per owner, czeka na migrację storage, zeruje stan podczas przełączania kont i nie wykonuje zbędnego zapisu bezpośrednio po odczycie; synchronizacja między urządzeniami korzysta z payloadu ustawień konta,
 - `src/features/reminders/useWorkoutReminderScheduling.ts` synchronizuje język domyślnych treści, zmianę właściciela, anulowanie oraz ponowne planowanie lokalnych powiadomień,
 - `src/features/workoutCreator/useWorkoutCreatorJobPolling.ts` posiada cykl wznowienia joba i anulowanie po zmianie zależności, a `workoutCreatorPolling.ts` testowalną pętlę statusów, timeout i mapowanie `401`,
 - `src/features/workoutSessions/useWorkoutSessionAutoSync.ts` obsługuje debounce synchronizacji sesji, odrzucanie nieaktualnych odpowiedzi i ochronę przed pętlą remote/local,
@@ -87,7 +87,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/features/favorites/useAccountScopedFavoriteExercises.ts` wiąże ulubione z właścicielem storage i chroni auto-sync przed spóźnionymi odpowiedziami; kontrakt transportowy znajduje się w `src/domain/favoriteExerciseSync.ts`,
 - `src/features/achievements/useAccountScopedAchievements.ts` zarządza osiągnięciami, czasem użycia i jednym kontrolowanym debounce synchronizacji; walidacja i merge odpowiedzi API znajdują się w `src/domain/achievementSync.ts`,
 - `src/features/sync/useInitialAccountSync.ts` jest wspólną bramką pierwszej synchronizacji po zalogowaniu dla treningów, ustawień, ulubionych, sesji i osiągnięć; zmiana konta unieważnia request poprzedniego użytkownika,
-- `src/features/settings/useAccountSettingsAutoSave.ts` grupuje kolejne zmiany ustawień i serializuje zapisy `PUT /api/settings`, dzięki czemu równoległe odpowiedzi nie cofają rewizji ustawień,
+- `src/features/settings/useAccountSettingsAutoSave.ts` grupuje kolejne zmiany ustawień i serializuje zapisy `PUT /api/settings`, dzięki czemu równoległe odpowiedzi nie cofają rewizji ustawień; stan zastosowany z serwera jest traktowany jako nowa baza, ale pierwsza późniejsza zmiana użytkownika nadal jest zapisywana,
 - `src/i18n/translations.ts` zawiera typowane tłumaczenia PL/EN oraz helper `translate`,
 - `src/theme/theme.ts` i `src/theme/appStyles.ts` zawierają motywy oraz wspólne style,
 - `src/components/AppControls.tsx` zawiera współdzielone kontrolki formularzy i wyboru,
@@ -107,6 +107,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - transport wywołań Kreatora jest w `src/api/workoutCreatorApi.ts`, a cykl lokalnego pending joba w `useAccountScopedCreatorJob`; `App.tsx` koordynuje polling, saldo kredytów, reakcję UI po odtworzeniu i import wyniku,
 - `src/screens/WorkoutAiRewriteScreen.tsx` i `src/screens/WorkoutAiProposalScreen.tsx` rozdzielają formularz instrukcji modyfikacji od podglądu propozycji AI; zapis, zastąpienie treningu, kredyty, endpoint rewrite i polling pozostają w `App.tsx`,
 - `src/domain/workoutCreator.ts` zawiera typy, statyczną definicję ankiety oraz czyste helpery kopiowania i porównywania profili Kreatora,
+- `modules/gymmin-file-export` jest lokalnym modułem Expo/Kotlin dla Androida: zapisuje gotowe bajty CSV/XLSX do `MediaStore.Downloads/Gymmin`, wystawia bezpieczny content URI oraz notyfikację i akcję otwarcia bez żądania szerokiego dostępu do pamięci,
 - `src/domain/workoutAi.ts` zawiera testowalne podsumowanie dopasowania ćwiczeń z propozycji AI do katalogu,
 - `src/domain/workoutSessionPresentation.ts` zawiera grupowanie aktywnej sesji, dane tabeli i lookup poprzednich wyników,
 - `src/domain/workoutBuilderConfiguration.ts` zawiera typowane opcje i normalizację wejścia buildera,
@@ -129,11 +130,12 @@ Taki podział nie zmienia publicznych kontraktów, storage ani modelu danych. Kr
 
 Mobile używa account-scoped AsyncStorage.
 
-Aktywny plan tygodnia jest przechowywany lokalnie pod `gymmin.account.{owner}.weeklyPlan.v1`. Nie jest jeszcze synchronizowany z backendem: przypisania treningów do dni tygodnia oraz podsumowanie bieżącego tygodnia są local-first.
+Aktywny plan tygodnia jest przechowywany lokalnie pod `gymmin.account.{owner}.weeklyPlan.v1`. Przypisania treningów do dni tygodnia są local-first, a po zalogowaniu synchronizują się jako `weeklyPlan` przez `/api/settings`. Podsumowanie ukończeń nadal jest wyliczane lokalnie z synchronizowanych `WorkoutSession`.
 
 Cykl lokalny obsługuje `useAccountScopedWeeklyPlan`: hook śledzi właściciela
 odczytu, blokuje zapis do niewłaściwego klucza i natychmiast zeruje plan podczas
-zmiany konta, zanim zostaną wczytane dane nowego ownera.
+zmiany konta, zanim zostaną wczytane dane nowego ownera. Synchronizacja porównuje
+własne `weeklyPlan.updatedAt`, niezależnie od czasu zmiany innych ustawień.
 
 Format kluczy:
 

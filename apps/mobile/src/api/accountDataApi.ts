@@ -27,6 +27,7 @@ export type ApiWorkoutStep = {
   notes?: string;
   parentSetClientId?: string;
   parentStageClientId?: string;
+  restSeconds?: string;
   setCount?: string;
   stageType?: StageType | null;
   targetComparator?: TargetComparator | null;
@@ -203,6 +204,7 @@ function normalizeApiWorkoutStep(value: unknown): ApiWorkoutStep[] {
     notes: normalizeOptionalString(value.notes),
     parentSetClientId: normalizeOptionalString(value.parentSetClientId),
     parentStageClientId: normalizeOptionalString(value.parentStageClientId),
+    restSeconds: normalizeOptionalString(value.restSeconds),
     setCount: normalizeOptionalString(value.setCount),
     stageType: stageType === "warmup" || stageType === "exercise" || stageType === "recovery"
       || stageType === "rest" || stageType === "cooldown" || stageType === "other" ? stageType : null,

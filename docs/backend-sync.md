@@ -315,12 +315,42 @@ Synchronizowane pola obejmują:
 - `isAuthPanelDismissed`
 - `showRestTimer`
 - `workoutReminders`
+- `creatorProfiles`
+- `selectedCreatorProfileId`
+- `weeklyPlan`
 - `updatedAt`
 
 `showRestTimer` steruje widocznością kontrolki timera odpoczynku podczas aktywnego
 treningu. Jest ustawieniem konta: zapisuje się local-first, a po zalogowaniu jest
 wysyłane i odtwarzane razem z pozostałym payloadem `/api/settings`. Wyłączenie
 timera nie zmienia zaplanowanych czasów odpoczynku w definicji treningu.
+
+`creatorProfiles` przechowuje maksymalnie 25 nazwanych profili ankiety Kreatora AI,
+a `selectedCreatorProfileId` wskazuje aktualnie wybrany profil tylko wtedy, gdy jego
+ID istnieje w tej liście. Profile zapisują się local-first w account-scoped
+AsyncStorage i są wysyłane tym samym mechanizmem debounce oraz rozstrzygania
+`updatedAt`, co pozostałe ustawienia. Po zalogowaniu na drugim telefonie odpowiedź
+`GET /api/settings` odtwarza profile i wybór. Odpowiedź starszego backendu bez pola
+`creatorProfiles` uruchamia jednorazową migrację istniejących profili lokalnych;
+jawna pusta lista z nowego kontraktu pozostaje usunięciem i nie odtwarza starych
+danych z cache. W bazie `NULL` oznacza rekord konta sprzed pierwszej synchronizacji,
+natomiast zapisane `[]` oznacza świadomie pustą listę. Backend ogranicza rozmiar
+całej kolekcji do 128 KiB i waliduje
+liczbę profili, długości nazw/ID, liczbę pól oraz tekstowe wartości draftu. W
+Database provider dane są zapisane w `UserSettings.CreatorProfilesJson` oraz
+`UserSettings.SelectedCreatorProfileId`.
+
+`weeklyPlan` zawiera aktywność planu, maksymalnie 100 przypisań
+`workoutId + weekday`, kolejność oraz własne `updatedAt`. Mobile przechowuje plan
+local-first pod `gymmin.account.{owner}.weeklyPlan.v1`, a po zalogowaniu porównuje
+czas zmiany planu niezależnie od głównego `settings.updatedAt`. Świeże urządzenie
+pobiera plan konta, nowsza zmiana offline jest dosyłana przy synchronizacji, a
+jawna pusta lista usuwa plan również na innych urządzeniach. Plan anonimowy jest
+scalany z planem konta po świadomym wyborze użytkownika. Backend waliduje dni
+tygodnia, unikalność par trening/dzień, identyfikatory, kolejność oraz limit
+64 KiB. `NULL` w kolumnie oznacza plan jeszcze niesynchronizowany; jawny pusty
+obiekt planu oznacza usunięcie. Database provider zapisuje obiekt w
+`UserSettings.WeeklyPlanJson`.
 
 Przykład `workoutReminders`:
 
@@ -375,6 +405,40 @@ Mobile przechowuje treningi lokalnie per-user. Lokalny storage treningów zawier
 - `sort`.
 
 Sortowanie jest tylko preferencją UI mobile i nie jest osobnym polem backendowym.
+
+Każdy krok ćwiczenia może zawierać `restSeconds` jako tekstową, nieujemną liczbę
+sekund (maksymalnie `359999`). Pole jest częścią kontraktu workout CRUD/sync i
+przenosi przerwę między seriami pomiędzy urządzeniami. Mobile nie zapisuje już
+nowych przerw jako oddzielnych elementów `StageType.Rest`; starsze poprawne
+elementy są migrowane lokalnie na `restSeconds`. Wynik migracji jest utrwalany
+w account-scoped storage, a trening pobrany wyłącznie z backendu jest odsyłany
+w nowej strukturze w tym samym cyklu synchronizacji. Podczas tworzenia
+`WorkoutSession` mobile generuje techniczny wpis odpoczynku dla timera, więc
+format sesji i historia wyników pozostają kompatybilne.
+
+W okresie przejściowym request mobile zawiera również element zgodności z
+identyfikatorem kończącym się na `-rest-compat`. Starszy backend, który nie zna
+`restSeconds`, zachowuje dzięki niemu czas jako zwykły krok odpoczynku. Aktualny
+backend rozpoznaje taki krok, scala go z poprzedzającym ćwiczeniem i zapisuje
+wyłącznie kanoniczne `restSeconds`. Konfliktowych lub osieroconych odpoczynków
+nie usuwa automatycznie.
+
+Mobile potrafi również naprawić definicję, z której wcześniejsza synchronizacja
+usunęła oba warianty. Źródłem jest najpierw snapshot planu w zapisanej
+`WorkoutSession`, a następnie techniczny wpis odpoczynku dopasowany do
+oryginalnego elementu i iteracji serii. Naprawiony workout jest zapisywany
+local-first i wysyłany w kolejnym cyklu synchronizacji.
+
+Dla historycznych planów z Kreatora AI dostępne jest narzędzie serwisowe
+`scripts/repair-workout-rest-from-creator-jobs.mjs`. Domyślnie wykonuje dry-run,
+a z flagą `--apply` uzupełnia wyłącznie puste wartości po jednoznacznym
+dopasowaniu użytkownika, nazwy planu, liczby i kolejności ćwiczeń, celów oraz
+notatek. Przed zapisem tworzy kopię `workouts.json`.
+
+Brak pola lub pusty `restSeconds` w starszym payloadzie nie usuwa już dodatniej
+wartości istniejącej na serwerze. Aktualny klient wysyła jawne `"0"` dla
+świadomego braku odpoczynku, dzięki czemu użytkownik nadal może wyzerować czas,
+a stara kopia aplikacji nie cofnie przeprowadzonej naprawy.
 
 Domyślne sortowanie:
 
@@ -435,6 +499,11 @@ Zasady:
 - dane są scoped po `UserId`.
 
 Conflict resolution:
+
+Planowana superseria nie wymaga nowego kontraktu planu ani backendu. Mobile
+rozpoznaje serię z dokładnie dwoma ćwiczeniami przy tworzeniu sesji guided i
+zapisuje standardowe, usuwalne powiązanie w istniejącym
+`WorkoutSession.supersets`. Dalej synchronizuje się ono w pełnym `SessionJson`.
 
 - nowszy `clientUpdatedAt` wygrywa,
 - `deletedAt` nowszy niż aktywny rekord wygrywa,

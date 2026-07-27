@@ -12,8 +12,8 @@ Gymmin is a mobile-first workout builder for strength training.
 - Auth: backend email/password auth with bearer tokens
 - AI creator: OpenAI Responses API through the backend
 - Workout UX: compact Exercise Detail Page with hero summary, optional local media, worked-muscle anatomy toggle and collapsible technique panels; Progress uses a dashboard with summary cards, filters and compact exercise metric cards. Rest timer visibility is a per-user training preference.
-- Manual workout editor: three-step `Details -> Stages -> Save` wizard. It edits one stage, set or exercise at a time while preserving the existing `WorkoutDraft` model and account synchronization format.
-- Workout export: a selected local workout can be exported offline to Excel-compatible UTF-8 CSV or a two-sheet XLSX workbook and handed to the native Android/iOS share sheet. Execution history and account data are intentionally excluded.
+- Manual workout editor: three-step `Details -> Stages -> Save` wizard. It edits one stage, set or exercise at a time while preserving the existing `WorkoutDraft` model and account synchronization format. A set containing exactly two executable exercises is marked as a planned superset.
+- Workout export: a selected local workout can be saved offline as a simple Excel-compatible UTF-8 CSV or a one-sheet XLSX workbook. Both formats contain the same compact exercise table, and the file uses the workout name. Android writes exact bytes directly to the public `Downloads/Gymmin` collection through MediaStore, then shows a notification that can open the saved file; execution history and account data are intentionally excluded.
 - Exercise catalog: 964 validated records with stable IDs, canonical ID aliases for reviewed merges, dedicated front-raise/step-up/good-morning/rope-climb categories, explicit `libraryTier` classification and a fail-fast validator available through `npm run exercise:catalog:validate`. Historical IDs are normalized when plans, sessions, favorites, technique content and image assets are read. The detailed migration report is in `docs/exercise-catalog-refactor.md`.
 - Exercise picker: shows `main` exercises by default and provides compact opt-in filters for variations, advanced, sport-specific and rehabilitation movements. Search can find all active tiers and marks non-main results with a tier badge; deprecated and progression records remain history-only.
 - Bug reports: durable File/Database storage with optional account linkage and SMTP notification
@@ -36,6 +36,7 @@ docs/
   build-android-apk.md
   deployment.md
   production-audit-2026-07-16.md
+  performance-audit-2026-07-23.md
   security-audit-2026-07-21.md
   security-audit-2026-07-22.md
   release-checklist.md
@@ -52,6 +53,9 @@ opisane w `docs/production-audit-2026-07-16.md`.
 The current security follow-up and applied fixes are documented in
 `docs/security-audit-2026-07-22.md` (with the previous pass retained in
 `docs/security-audit-2026-07-21.md`).
+
+The latest correctness and performance review is documented in
+`docs/performance-audit-2026-07-23.md`.
 
 The mobile UI is split by responsibility: route-level views live in
 `apps/mobile/src/screens`, reusable controls and view fragments in
@@ -171,14 +175,14 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - The Profile screen uses a dashboard layout: avatar, name/email and avatar actions live in one profile card, achievements sit directly below it, quick actions link to Credits/change password/sessions/bug reports, and the Account section contains account details, delete account and logout. Settings are kept for app preferences.
 - Contact uses a compact mail-first layout: a single email CTA opens the device mail client, app issues link to the existing Report a bug form, and the three FAQ answers are collapsible.
 - Terms use a short dashboard layout with a hero summary, three key rules, an issue-reporting callout and seven expandable detailed sections.
-- Homepage includes an account-scoped, local-first weekly plan. Planned workouts are assigned to weekdays and completed workout sessions are counted from Monday through Sunday.
+- Homepage includes an account-scoped, local-first weekly plan. Planned workouts are assigned to weekdays and completed workout sessions are counted from Monday through Sunday. For signed-in users the assignments sync through account settings and are restored on other devices.
 - Registration includes username, email, password, repeated password and password preview in the mobile UI. The backend contract still receives a single password field.
 - Signed-in users can upload, replace and delete a profile avatar from the Profile screen. Avatars are uploaded as `multipart/form-data`; production Database mode stores bytes and metadata in the database, while File mode remains a development fallback. They are exposed through authenticated `GET /api/profile/avatar`. Native mobile downloads the image with the bearer token into an account-scoped private cache and limits the rendered/uploaded copy to 1024 px on its longest side, preventing high-resolution camera images from exhausting Android image memory. `avatarUpdatedAt` invalidates the cache; anonymous users keep the default icon.
 - Signed-in users can permanently delete their account from Profile -> Account. Mobile requires the current password plus typing `USUŃ` / `DELETE`; the backend verifies both, rate-limits attempts per user/IP, deletes private user-owned data and avatar, and anonymizes retained bug reports.
 - Installed APKs contain the API base URL used at build time. For GitHub Release phone builds, run `npm run mobile:github:apk:oneclick -- -ApiBaseUrl "https://..."` or set `GYMMIN_APK_API_BASE_URL`; published APKs reject non-HTTPS API URLs. The wrapper checks `/health` and, if the URL is missing or stale, starts or attaches a backend tunnel automatically. A running local backend on `http://127.0.0.1:5198` can be reused behind that HTTPS tunnel instead of restarted. The current tunnel URL is written to `.artifacts/backend-url.txt`.
 - Auth hardening is implemented: token expiry, active sessions, single-session revoke, logout-all, change password and password reset by email/token. Reset tokens are stored only as hashes. Mobile bearer tokens live in OS-backed SecureStore/Keychain and legacy plaintext AsyncStorage sessions migrate on first launch. New accounts must confirm a six-digit email code before AI use; registration and AI generation are rate-limited per IP/user with shared Database-provider buckets.
 - After login, workouts are synchronized to the user's backend account and kept locally as a cache/offline copy.
-- After login, the complete `AppSettings` payload is synchronized to the user's backend account and kept locally as an account-scoped cache/offline copy. This includes language, theme, workout defaults, rest-timer visibility, collapsed panels and reminder configuration; only device-specific scheduled-notification IDs remain local.
+- After login, the complete account-settings payload is synchronized to the user's backend account and kept locally as an account-scoped cache/offline copy. This includes language, theme, workout defaults, rest-timer visibility, collapsed panels, reminder configuration, AI workout-creator profiles, the selected creator profile and the homepage weekly plan; only device-specific scheduled-notification IDs remain local. Creator profiles and weekly-plan assignments created on one signed-in phone are therefore restored on another phone after login and settings sync.
 - After login, catalog-only favorite exercises are synchronized to the user's backend account and remain available locally/offline.
 - After login, workout execution sessions are synchronized to the user's backend account and remain available locally/offline. History and progress are still calculated on-device from the local synchronized session cache.
 - The Progress screen is local-first and dashboard-style: it shows tracked exercises, best-result count, current-month volume, filters for all/strength/volume and compact exercise cards with latest result, best weight, best volume and optional SVG sparkline. Per-exercise history is grouped by completed workout session, so all sets from one workout appear as compact rows in one collapsible card.
@@ -186,13 +190,18 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - Users can delete a single workout history entry. Mobile marks the `WorkoutSession` with `deletedAt`, hides it from history/progress immediately, and syncs the tombstone later when account sync is available.
 - Deleting a workout definition does not delete workout history. If the workout already has active history entries, the mobile app shows a stronger irreversible-action confirmation before soft-deleting the workout definition.
 - The read-only workout view has collapsible sections, and session status labels are localized instead of rendering raw enum values such as `abandoned`.
-- The read-only workout view shows compact exercise rows with set/target tiles such as `[3] x [8]`; rest elements use a single tile such as `[2m]`.
+- Rest between sets is configured directly in the exercise editor (hours,
+  minutes and seconds), stored as `WorkoutStep.restSeconds` and synchronized
+  with the workout. The AI creator writes the same field instead of appending a
+  standalone rest element. Existing valid legacy rest elements migrate to the
+  preceding exercise; the active session still creates an internal rest entry
+  so the guided timer and supersets keep working.
 - The `body-outline` button on exercise rows opens the same exercise detail page as tapping the row.
 - The per-exercise anatomy view reuses the same front/back SVG anatomy map as the workout overview, filtered to one exercise.
 - Tapping an exercise row opens a dedicated exercise detail page with metadata, optional exercise images, worked muscles, technique placeholders and exercise history/progress when local data exists. The media panel is hidden when no exercise images are mapped yet.
 - Starting a workout no longer asks for execution mode every time. The app uses the workout execution mode saved in Settings for the next session.
 - The guided active workout screen now uses a compact workout header with a clock icon and elapsed time, an `Exercises X/Y` progress card, a clearer current-exercise card, rest duration pills and set/target tiles.
-- Guided active sessions support temporary, session-only supersets of two adjacent exercises. A combined step shows both exercises and their original previous-value prefill actions, records A/B results in the existing session entries, survives local resume and account sync, and makes Back/Next skip the second exercise. Splitting the superset keeps all entered results.
+- Guided active sessions support supersets of two adjacent exercises. They can be created during a session or seeded automatically from a saved workout set containing exactly two exercises. The removable grouping remains session-only: a combined step shows both exercises and their original previous-value prefill actions, records A/B results in the existing session entries, survives local resume and account sync, and makes Back/Next skip the second exercise. Splitting it keeps all entered results and does not modify the saved workout.
 - Workout tables follow the device orientation. With system auto-rotate enabled, Android switches the whole screen between portrait and landscape; tables adapt their width automatically and retain horizontal scrolling when needed. Legacy orientation values in synced settings remain accepted but are no longer exposed in the UI.
 - Mobile account-scoped data uses per-user AsyncStorage keys: `gymmin.account.anonymous.*` for signed-out data and `gymmin.account.{userId}.*` for signed-in cache/sync metadata. Account switching does not silently merge data from the previous account.
 - If signed-out local data exists after login, the app asks whether to merge it into the current account, keep it for later, or delete only the anonymous local data.

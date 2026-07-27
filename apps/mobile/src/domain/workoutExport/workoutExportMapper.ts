@@ -1,5 +1,14 @@
 import { getWorkoutStepCatalogExercise } from "../workoutExerciseSummary";
-import type { GoalType, IntensityTarget, StageType, TargetComparator, WorkoutDraft } from "../workouts";
+import { groupWorkoutBuilderSteps } from "../workoutEditor";
+import {
+  normalizeWorkoutRestBetweenSets,
+  parseWorkoutDurationSeconds,
+  type GoalType,
+  type IntensityTarget,
+  type StageType,
+  type TargetComparator,
+  type WorkoutDraft
+} from "../workouts";
 import type { WorkoutExportData, WorkoutExportLocale, WorkoutExportRow } from "./workoutExportTypes";
 
 const unknownExerciseLabels: Record<WorkoutExportLocale, string> = {
@@ -52,21 +61,16 @@ function localizeGoalType(value: GoalType | "", locale: WorkoutExportLocale) {
 }
 
 export function buildWorkoutExportData(workout: WorkoutDraft, locale: WorkoutExportLocale): WorkoutExportData {
-  const stages = workout.steps.filter((step) => step.kind === "stage");
+  const normalizedWorkout = normalizeWorkoutRestBetweenSets(workout);
+  const stages = groupWorkoutBuilderSteps(normalizedWorkout.steps);
   const rows: WorkoutExportRow[] = [];
   let seriesCount = 0;
   let exerciseCount = 0;
 
-  stages.forEach((stage, stageIndex) => {
-    const series = workout.steps.filter(
-      (step) => step.kind === "set" && step.parentStageId === stage.id
-    );
+  stages.forEach(({ stage, series }, stageIndex) => {
     seriesCount += series.length;
 
-    series.forEach((set, seriesIndex) => {
-      const elements = workout.steps.filter(
-        (step) => step.kind === "exercise" && step.parentSetId === set.id
-      );
+    series.forEach(({ elements, set }, seriesIndex) => {
       exerciseCount += elements.length;
 
       elements.forEach((element, elementIndex) => {
@@ -90,7 +94,7 @@ export function buildWorkoutExportData(workout: WorkoutDraft, locale: WorkoutExp
           intensity: intensityLabels[locale][element.intensity],
           notes: element.notes,
           repetitions: element.goalType === "repetitions" ? optionalNumber(element.targetValue) : null,
-          restSeconds: isRest ? timeSeconds : null,
+          restSeconds: isRest ? timeSeconds : parseWorkoutDurationSeconds(element.restSeconds),
           seriesCount: optionalNumber(set.setCount),
           seriesName: set.label,
           seriesOrder: seriesIndex + 1,
@@ -100,7 +104,7 @@ export function buildWorkoutExportData(workout: WorkoutDraft, locale: WorkoutExp
           stageType: localizeStageType(stage.stageType, locale),
           targetComparator: element.targetComparator ? comparatorLabels[locale][element.targetComparator] : "",
           weightKg: optionalNumber(element.loadKg),
-          workoutName: workout.name
+          workoutName: normalizedWorkout.name
         });
       });
     });
@@ -112,8 +116,8 @@ export function buildWorkoutExportData(workout: WorkoutDraft, locale: WorkoutExp
       exerciseCount,
       seriesCount,
       stageCount: stages.length,
-      workoutName: workout.name,
-      workoutNotes: workout.notes
+      workoutName: normalizedWorkout.name,
+      workoutNotes: normalizedWorkout.notes
     }
   };
 }

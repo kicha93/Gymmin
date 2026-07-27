@@ -883,6 +883,9 @@ namespace Gymmin.Api.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CreatorProfilesJson")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("DefaultSetCount")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -914,6 +917,10 @@ namespace Gymmin.Api.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SelectedCreatorProfileId")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("ShowRestTimer")
                         .HasColumnType("INTEGER");
 
@@ -924,6 +931,9 @@ namespace Gymmin.Api.Data.Migrations
 
                     b.Property<string>("UpdatedAt")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WeeklyPlanJson")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("WorkoutRemindersJson")

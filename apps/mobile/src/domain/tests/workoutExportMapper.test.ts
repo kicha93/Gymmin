@@ -68,7 +68,7 @@ describe("buildWorkoutExportData", () => {
     const data = buildWorkoutExportData(workoutFixture(), "pl");
 
     expect(data.summary).toEqual({
-      exerciseCount: 4,
+      exerciseCount: 3,
       seriesCount: 3,
       stageCount: 2,
       workoutName: "FBW siła",
@@ -76,23 +76,22 @@ describe("buildWorkoutExportData", () => {
     });
     expect(data.rows.map((row) => [row.stageOrder, row.seriesOrder, row.elementOrder])).toEqual([
       [1, 1, 1],
-      [1, 1, 2],
       [1, 2, 1],
       [2, 1, 1]
     ]);
     expect(data.rows[0]).toMatchObject({
       exerciseId: "squat-barbell-back-squat-1251",
       repetitions: 8,
+      restSeconds: 90,
       seriesCount: 4,
       weightKg: 82.5
     });
-    expect(data.rows[1]).toMatchObject({ durationSeconds: null, restSeconds: 90 });
-    expect(data.rows[2]).toMatchObject({
+    expect(data.rows[1]).toMatchObject({
       durationSeconds: 125,
       exerciseId: "custom-missing-id",
       exerciseName: "Ćwiczenie własne"
     });
-    expect(data.rows[3]).toMatchObject({ goalValue: "120", targetComparator: "Poniżej" });
+    expect(data.rows[2]).toMatchObject({ goalValue: "120", targetComparator: "Poniżej" });
   });
 
   it("returns headers-ready empty data for a workout without elements", () => {

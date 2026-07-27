@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Gymmin.Api.Domain;
 
 public sealed record UserSettings(
@@ -13,10 +15,20 @@ public sealed record UserSettings(
     bool IsAuthPanelDismissed,
     WorkoutReminderSettings? WorkoutReminders,
     DateTimeOffset UpdatedAt,
-    bool ShowRestTimer = true)
+    bool ShowRestTimer = true,
+    IReadOnlyList<WorkoutCreatorProfile>? CreatorProfiles = null,
+    string? SelectedCreatorProfileId = null,
+    WeeklyPlanSettings? WeeklyPlan = null)
 {
     public static UserSettings FromRequest(string userId, UpsertUserSettingsRequest request, UserSettings? existing = null)
     {
+        var creatorProfiles = request.CreatorProfiles ?? existing?.CreatorProfiles;
+        var selectedCreatorProfileId = request.CreatorProfiles is null
+            ? existing?.SelectedCreatorProfileId
+            : creatorProfiles?.Any(profile => profile.Id == request.SelectedCreatorProfileId) == true
+                ? request.SelectedCreatorProfileId
+                : null;
+
         return new UserSettings(
             userId,
             NormalizeOption(request.Language, existing?.Language ?? "en"),
@@ -30,7 +42,10 @@ public sealed record UserSettings(
             request.IsAuthPanelDismissed,
             request.WorkoutReminders ?? existing?.WorkoutReminders,
             request.UpdatedAt ?? DateTimeOffset.UtcNow,
-            request.ShowRestTimer ?? existing?.ShowRestTimer ?? true);
+            request.ShowRestTimer ?? existing?.ShowRestTimer ?? true,
+            creatorProfiles,
+            selectedCreatorProfileId,
+            request.WeeklyPlan ?? existing?.WeeklyPlan);
     }
 
     private static string NormalizeOption(string? value, string fallback)
@@ -61,6 +76,21 @@ public sealed record ReminderDaySchedule(
     bool Enabled,
     string Time);
 
+public sealed record WorkoutCreatorProfile(
+    string Id,
+    string Name,
+    IReadOnlyDictionary<string, JsonElement> Draft);
+
+public sealed record WeeklyPlanSettings(
+    bool Enabled,
+    IReadOnlyList<WeeklyPlanItem> Items,
+    DateTimeOffset UpdatedAt);
+
+public sealed record WeeklyPlanItem(
+    string WorkoutId,
+    string Day,
+    int Order);
+
 public sealed record UpsertUserSettingsRequest(
     string? Language,
     string? ThemeName,
@@ -73,4 +103,7 @@ public sealed record UpsertUserSettingsRequest(
     bool IsAuthPanelDismissed,
     WorkoutReminderSettings? WorkoutReminders,
     DateTimeOffset? UpdatedAt,
-    bool? ShowRestTimer = null);
+    bool? ShowRestTimer = null,
+    IReadOnlyList<WorkoutCreatorProfile>? CreatorProfiles = null,
+    string? SelectedCreatorProfileId = null,
+    WeeklyPlanSettings? WeeklyPlan = null);

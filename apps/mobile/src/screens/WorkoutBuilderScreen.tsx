@@ -19,12 +19,15 @@ import {
 import { groupWorkoutBuilderSteps } from "../domain/workoutEditor";
 import {
   createStep,
+  formatWorkoutDuration,
+  parseWorkoutDurationSeconds,
   type StageType,
   type WorkoutDraft,
   type WorkoutStep
 } from "../domain/workouts";
 import {
   getGoalTypeOptions,
+  getExerciseElementTypeOptions,
   getStageTypeOptions,
   getStageTypeTranslationKey,
   getTargetComparatorOptions,
@@ -119,6 +122,22 @@ function TimeTargetInput({ onChange, t, theme, value }: TimeTargetInputProps) {
         </View>
       ))}
     </View>
+  );
+}
+
+function RestBetweenSetsInput({ onChange, t, theme, value }: TimeTargetInputProps) {
+  const seconds = parseWorkoutDurationSeconds(value) ?? 0;
+
+  return (
+    <TimeTargetInput
+      t={t}
+      theme={theme}
+      value={formatWorkoutDuration(seconds)}
+      onChange={(duration) => {
+        const nextSeconds = parseWorkoutDurationSeconds(duration) ?? 0;
+        onChange(nextSeconds > 0 ? String(nextSeconds) : "");
+      }}
+    />
   );
 }
 
@@ -337,7 +356,7 @@ export function StepConfiguration({
           <Text style={[styles.label, { color: theme.muted }]}>{typeLabel}</Text>
           <SelectControl
             onChange={updateStageType}
-            options={getStageTypeOptions(t)}
+            options={getExerciseElementTypeOptions(t)}
             placeholder={t("select")}
             theme={theme}
             value={step.stageType}
@@ -421,6 +440,19 @@ export function StepConfiguration({
       </View>
 
       <GoalTargetControl step={step} t={t} theme={theme} updateStep={updateStep} />
+
+      {shouldShowExerciseFields ? (
+        <View style={[styles.fieldGroup, styles.stepParagraph]}>
+          <Text style={[styles.label, { color: theme.muted }]}>{t("restBetweenSets")}</Text>
+          <RestBetweenSetsInput
+            t={t}
+            theme={theme}
+            value={step.restSeconds ?? ""}
+            onChange={(restSeconds) => updateStep(step.id, { ...step, restSeconds })}
+          />
+          <Text style={[styles.timeTargetLabel, { color: theme.muted }]}>{t("restBetweenSetsHint")}</Text>
+        </View>
+      ) : null}
 
       <View style={[styles.fieldGroup, styles.stepParagraph]}>
         <Text style={[styles.label, { color: theme.muted }]}>{t("workoutNotes")}</Text>

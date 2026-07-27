@@ -168,8 +168,11 @@ internal static class WorkoutEndpoints
                 (step.ExerciseName?.Length ?? 0) > 500 ||
                 (step.Notes?.Length ?? 0) > 2_000 ||
                 (step.TargetValue?.Length ?? 0) > 100 ||
+                (step.RestSeconds?.Length ?? 0) > 10 ||
                 (step.LoadKg?.Length ?? 0) > 100 ||
-                (step.SetCount?.Length ?? 0) > 100)
+                (step.SetCount?.Length ?? 0) > 100 ||
+                (!string.IsNullOrWhiteSpace(step.RestSeconds) &&
+                 (!int.TryParse(step.RestSeconds, out var restSeconds) || restSeconds < 0 || restSeconds > 359_999)))
             {
                 return "Workout step is invalid or too large.";
             }

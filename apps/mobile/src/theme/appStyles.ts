@@ -1134,6 +1134,21 @@ export const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 5
   },
+  workoutDetailPrimaryActions: {
+    flexDirection: "row",
+    gap: 8,
+    width: "100%"
+  },
+  workoutDetailPrimaryAction: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 6
+  },
+  workoutDetailPrimaryActionText: {
+    flexShrink: 1,
+    fontSize: 13,
+    textAlign: "center"
+  },
   workoutExportDescription: {
     fontSize: 14,
     fontWeight: "600",
@@ -1726,6 +1741,10 @@ export const styles = StyleSheet.create({
   workoutDetailExerciseName: {
     fontSize: 15,
     fontWeight: "800"
+  },
+  exerciseSummaryContainer: {
+    gap: 8,
+    paddingVertical: 4
   },
   exerciseSummaryRow: {
     alignItems: "center",
@@ -2684,6 +2703,35 @@ export const styles = StyleSheet.create({
   workoutEditorRowCopy: {
     flex: 1,
     minWidth: 0
+  },
+  workoutEditorSetExercises: {
+    flex: 1,
+    gap: 7,
+    minWidth: 0
+  },
+  workoutEditorSetExercise: {
+    minWidth: 0
+  },
+  workoutEditorSectionHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "space-between"
+  },
+  workoutEditorSupersetLabel: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5
+  },
+  workoutEditorSupersetLabelText: {
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  workoutEditorSupersetHint: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 19,
+    marginTop: -4
   },
   workoutEditorRowTitle: {
     fontSize: 15,

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Gymmin.Api.Domain;
 
 namespace Gymmin.Api.Tests;
@@ -148,7 +149,23 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
             true,
             reminder,
             settingsUpdatedAt,
-            false);
+            false,
+            [new WorkoutCreatorProfile(
+                "profile-1",
+                "Kasia",
+                new Dictionary<string, JsonElement>
+                {
+                    ["primaryGoal"] = JsonSerializer.SerializeToElement("Strength increase"),
+                    ["availableDays"] = JsonSerializer.SerializeToElement(new[] { "Monday", "Friday" })
+                })],
+            "profile-1",
+            new WeeklyPlanSettings(
+                true,
+                [
+                    new WeeklyPlanItem("workout-1", "monday", 0),
+                    new WeeklyPlanItem("workout-2", "friday", 1)
+                ],
+                settingsUpdatedAt));
 
         var put = await client.PutAsJsonAsync("/api/settings", request);
         Assert.Equal(HttpStatusCode.OK, put.StatusCode);
@@ -170,6 +187,15 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
         Assert.True(settings.IsAuthPanelDismissed);
         Assert.Equal(settingsUpdatedAt, settings.UpdatedAt);
         Assert.NotNull(settings.WorkoutReminders);
+        Assert.Single(settings.CreatorProfiles!);
+        Assert.Equal("profile-1", settings.CreatorProfiles![0].Id);
+        Assert.Equal("Kasia", settings.CreatorProfiles[0].Name);
+        Assert.Equal("Strength increase", settings.CreatorProfiles[0].Draft["primaryGoal"].GetString());
+        Assert.Equal("profile-1", settings.SelectedCreatorProfileId);
+        Assert.NotNull(settings.WeeklyPlan);
+        Assert.True(settings.WeeklyPlan!.Enabled);
+        Assert.Equal(2, settings.WeeklyPlan.Items.Count);
+        Assert.Contains(settings.WeeklyPlan.Items, item => item.WorkoutId == "workout-2" && item.Day == "friday");
         Assert.True(settings.WorkoutReminders!.Enabled);
         Assert.Equal("Time to train", settings.WorkoutReminders.Message);
         Assert.Equal("Open Gymmin and complete your planned workout.", settings.WorkoutReminders.Description);
@@ -179,5 +205,61 @@ public sealed class AuthAndSettingsTests : IClassFixture<GymminApiFactory>
         Assert.Contains(settings.WorkoutReminders.WeeklySchedule!, item => item.Day == "monday" && item.Enabled && item.Time == "18:00");
         Assert.Contains(settings.WorkoutReminders.WeeklySchedule!, item => item.Day == "wednesday" && item.Enabled && item.Time == "19:30");
         Assert.Contains(settings.WorkoutReminders.WeeklySchedule!, item => item.Day == "friday" && item.Enabled && item.Time == "17:00");
+
+        var legacyClientUpdate = request with
+        {
+            CreatorProfiles = null,
+            SelectedCreatorProfileId = null,
+            WeeklyPlan = null,
+            Language = "pl"
+        };
+        var legacyPut = await client.PutAsJsonAsync("/api/settings", legacyClientUpdate);
+        Assert.Equal(HttpStatusCode.OK, legacyPut.StatusCode);
+        var legacyGet = await client.GetAsync("/api/settings");
+        var settingsAfterLegacyUpdate = await legacyGet.Content.ReadFromJsonAsync<UserSettings>(TestJson.Options);
+        Assert.NotNull(settingsAfterLegacyUpdate);
+        Assert.Equal("pl", settingsAfterLegacyUpdate!.Language);
+        Assert.Single(settingsAfterLegacyUpdate.CreatorProfiles!);
+        Assert.Equal(2, settingsAfterLegacyUpdate.WeeklyPlan!.Items.Count);
+    }
+
+    [Fact]
+    public async Task Settings_reject_invalid_creator_profile_payload()
+    {
+        using var client = _factory.CreateClient();
+        var auth = await TestPayloads.RegisterAsync(client, "settings-profile-validation");
+        client.Authorize(auth.Token);
+
+        var request = new UpsertUserSettingsRequest(
+            "en", "light", "", "", null, "guided", "vertical",
+            new Dictionary<string, bool>(), false, null, DateTimeOffset.UtcNow, true,
+            [new WorkoutCreatorProfile(
+                "profile-1",
+                new string('x', 121),
+                new Dictionary<string, JsonElement>())],
+            "profile-1");
+
+        var response = await client.PutAsJsonAsync("/api/settings", request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Settings_reject_invalid_weekly_plan_payload()
+    {
+        using var client = _factory.CreateClient();
+        var auth = await TestPayloads.RegisterAsync(client, "settings-weekly-plan-validation");
+        client.Authorize(auth.Token);
+
+        var request = new UpsertUserSettingsRequest(
+            "en", "light", "", "", null, "guided", "vertical",
+            new Dictionary<string, bool>(), false, null, DateTimeOffset.UtcNow, true,
+            null, null,
+            new WeeklyPlanSettings(
+                true,
+                [new WeeklyPlanItem("workout-1", "not-a-day", 0)],
+                DateTimeOffset.UtcNow));
+
+        var response = await client.PutAsJsonAsync("/api/settings", request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }

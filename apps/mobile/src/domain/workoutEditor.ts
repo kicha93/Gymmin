@@ -37,17 +37,36 @@ export function groupWorkoutBuilderSteps(steps: readonly WorkoutStep[]): Workout
   }));
 }
 
+/**
+ * A set containing exactly two executable exercises is the persistent workout
+ * definition of a superset. Its session grouping remains removable, so
+ * splitting a running superset never mutates the saved workout.
+ */
+export function isWorkoutSeriesSuperset(elements: readonly WorkoutStep[]): boolean {
+  return elements.length === 2 && elements.every((element) =>
+    element.kind === "exercise"
+    && element.stageType !== "rest"
+    && Boolean(element.exerciseId?.trim() || element.exerciseName.trim())
+  );
+}
+
 export function updateWorkoutStep(draft: WorkoutDraft, stepId: string, nextStep: WorkoutStep): WorkoutDraft {
   return { ...draft, steps: draft.steps.map((step) => step.id === stepId ? nextStep : step) };
 }
 
 export function removeWorkoutStep(draft: WorkoutDraft, stepId: string): WorkoutDraft {
+  const parentStageIdBySetId = new Map<string, string>();
+  for (const step of draft.steps) {
+    if (step.kind === "set" && step.parentStageId) {
+      parentStageIdBySetId.set(step.id, step.parentStageId);
+    }
+  }
+
   return {
     ...draft,
     steps: draft.steps.filter((step) => {
       if (step.id === stepId || step.parentStageId === stepId || step.parentSetId === stepId) return false;
-      const parentSet = draft.steps.find((item) => item.id === step.parentSetId);
-      return parentSet?.parentStageId !== stepId;
+      return !step.parentSetId || parentStageIdBySetId.get(step.parentSetId) !== stepId;
     })
   };
 }
@@ -73,9 +92,9 @@ export function moveWorkoutStep(draft: WorkoutDraft, stepId: string, direction: 
   }
 
   if (movedStep.kind === "set") {
-    const groups = draft.steps
-      .filter((step) => step.kind === "set" && step.parentStageId === movedStep.parentStageId)
-      .map((set) => ({ set, elements: draft.steps.filter((step) => step.kind === "exercise" && step.parentSetId === set.id) }));
+    const groups = groupWorkoutBuilderSteps(draft.steps)
+      .find(({ stage }) => stage.id === movedStep.parentStageId)
+      ?.series ?? [];
     const currentIndex = groups.findIndex((group) => group.set.id === stepId);
     const nextIndex = currentIndex + direction;
     if (currentIndex < 0 || nextIndex < 0 || nextIndex >= groups.length) return draft;
@@ -95,19 +114,20 @@ export function moveWorkoutStep(draft: WorkoutDraft, stepId: string, direction: 
     };
   }
 
-  const groups = draft.steps.filter((step) => step.kind === "stage").map((stage) => ({
-    stage,
-    series: draft.steps
-      .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
-      .flatMap((set) => [set, ...draft.steps.filter((step) => step.kind === "exercise" && step.parentSetId === set.id)])
-  }));
+  const groups = groupWorkoutBuilderSteps(draft.steps);
   const currentIndex = groups.findIndex((group) => group.stage.id === stepId);
   const nextIndex = currentIndex + direction;
   if (currentIndex < 0 || nextIndex < 0 || nextIndex >= groups.length) return draft;
   const reordered = [...groups];
   const [group] = reordered.splice(currentIndex, 1);
   reordered.splice(nextIndex, 0, group);
-  return { ...draft, steps: reordered.flatMap((item) => [item.stage, ...item.series]) };
+  return {
+    ...draft,
+    steps: reordered.flatMap(({ stage, series }) => [
+      stage,
+      ...series.flatMap(({ elements, set }) => [set, ...elements])
+    ])
+  };
 }
 
 export function addWorkoutStep(

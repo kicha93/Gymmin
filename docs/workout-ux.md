@@ -7,18 +7,37 @@ This note tracks the current workout-view UX decisions.
 - Creating and editing a manual workout uses a three-step wizard: `Details -> Stages -> Save` (`Dane -> Etapy -> Zapis` in Polish).
 - The Details step contains only the workout name and optional notes. A name is required before continuing.
 - The Stages step shows horizontal stage pills and only one active editing context at a time. The stage view contains a compact set list; selecting a set replaces it with the set editor, and selecting an exercise replaces that with the exercise form.
+- Rows in `Sets in stage` identify their actual exercises and show each
+  set/target pair, for example `Barbell squat` with `4×12`, instead of an
+  ambiguous exercise count. Multiple elements are listed vertically. A simple
+  button-confirmed warm-up shows only its name and omits the meaningless `1×-`.
 - Stage, set and exercise ordering/removal remain available only for the active item. Destructive actions require confirmation.
 - New exercises are edited as a temporary UI draft. Cancel discards that draft; Save exercise inserts or updates the original `WorkoutDraft` element.
 - A compact exercise preview replaces the full nested forms previously shown below every stage and set.
 - The Save step shows workout/stage/set/exercise counts, stage summaries and validation errors. Critical errors disable the final save action.
 - Context actions replace the old global `+ Stage / + Set / Save workout` bar. The app bottom navigation remains unchanged and does not overlap editor controls.
-- The persisted workout model, backend payload, synchronization and AI flows are unchanged.
+- Rest between sets is edited directly on an exercise with hour/minute/second
+  controls. The value is persisted as `restSeconds`, synchronized with the
+  workout and populated directly by the AI creator.
+- Standalone rest elements are no longer offered for new series elements.
+  Legacy rest elements are migrated to the preceding exercise when safe;
+  orphaned values remain untouched rather than being discarded.
+- Account synchronization keeps a temporary compatibility rest step for older
+  API deployments. If a previous mixed-version sync already removed the value,
+  the app recovers it from the workout-session snapshot or technical rest entry
+  and persists the repaired workout.
+- A set containing exactly two valid, non-rest exercises is shown as a planned
+  superset. This reuses the existing stage/set/exercise model: there is no
+  second superset field in the workout definition.
 
 ## Exercise rows
 
 - Read-only workout details use compact exercise rows.
-- The right side of an exercise row shows set and target tiles, for example `[3] x [8]`.
-- Rest elements use a single target tile, for example `[2m]`, instead of repeating a set multiplier.
+- Under the exercise description, the read-only workout details show the same
+  parameter strip as guided mode: a rest pill and set/target tiles, for example
+  `Rest [2m 30s]` and `[3] x [8]`. A missing rest value is shown safely as `-`.
+- Legacy rest elements remain renderable as a compatibility fallback, but new
+  workout definitions store rest on the exercise.
 - Time targets are shortened for display when possible, for example `00:00:45` becomes `45s`.
 - Long exercise names can wrap to two lines while the set/target tiles keep stable dimensions.
 - Repeated textual set-count labels are intentionally hidden when the same value is already represented in the target tiles.
@@ -28,9 +47,15 @@ This note tracks the current workout-view UX decisions.
 - Read-only workout details show `Edit | Export | Delete`; on narrow screens the three equal actions move below the workout name instead of overflowing.
 - Export opens a local format sheet for CSV or Excel XLSX and shows a disabled/loading state while the file is generated.
 - CSV uses UTF-8 with BOM, `;` separators, RFC-style quote escaping and neutralizes formula-like user text before it reaches a spreadsheet application.
-- XLSX contains a localized `Summary/Podsumowanie` sheet and a `Structure/Struktura` sheet with numeric cells and practical column widths.
+- CSV and XLSX contain the same compact columns: stage, type, exercise, sets,
+  repetitions/target, weight, notes and rest. XLSX uses one localized
+  `Workout/Trening` sheet with practical column widths and a header filter.
+- The saved filename is the sanitized workout name plus `.csv` or `.xlsx`;
+  there is no `Gymmin_` prefix or export date suffix.
 - Exercise IDs are resolved through the catalog alias map, names follow the current PL/EN language, and missing catalog entries fall back safely to their stored name or ID.
-- Files are generated in the application cache and passed to the native share sheet with the correct MIME type. The flow needs no backend or network and requests no broad storage permission.
+- Android 10+ saves the selected format directly to the public `Downloads/Gymmin` collection through a small local Expo/Kotlin MediaStore module. It does not open a share sheet or a folder-tree picker, whose root `Download` directory cannot be granted on Android 11+.
+- After a successful save Android posts a system notification with an `Open` action and a read-granted content URI. Android 13+ asks for notification permission before the file is written. If notifications are unavailable, the in-app success dialog still offers `Open`.
+- The flow needs no backend, network or broad storage permission. Exact UTF-8 CSV and XLSX bytes are written without a text conversion path.
 - Only the selected workout definition is exported. Workout sessions/history, achievements, credits and account data are excluded.
 
 ## Per-Exercise Muscles
@@ -90,6 +115,9 @@ This note tracks the current workout-view UX decisions.
 ## Guided supersets
 
 - A user can combine the current and next exercise from the guided workout screen. The confirmation makes clear that the change applies only to the active session; the workout definition is not edited.
+- Starting a guided workout also creates the same session grouping
+  automatically for every saved set containing exactly two valid exercises.
+  Inline-table and readonly-post-workout modes do not create this grouping.
 - The MVP accepts exactly two adjacent, non-rest exercise groups. An exercise cannot belong to two supersets at the same time.
 - A combined step renders `Exercises X–Y/Total`, a `Superset A` badge, both exercise cards, the `Alternate exercises` separator and one round table.
 - The round count is the larger set count of exercise A and B. If one exercise has fewer sets, its missing cells are rendered disabled rather than creating synthetic result entries.
@@ -98,6 +126,9 @@ This note tracks the current workout-view UX decisions.
 - Back/Next navigates between logical groups: a superset covering exercises 2–3 moves back to 1 and forward to 4. After splitting, standard 2 → 3 → 4 navigation returns.
 - The superset uses one rest timer with the larger planned rest value from A/B. Each exercise still shows its own planned rest pill.
 - Supersets persist in the account-scoped active `WorkoutSession`, survive app restart/resume and are safely ignored by inline-table and readonly-post-workout modes.
+- Splitting a planned superset affects only that active session. The saved
+  two-exercise set remains unchanged, so a later workout starts with the
+  planned superset again.
 - On narrow screens the round table scrolls horizontally, keeping inputs and checkboxes at usable touch sizes.
 
 ## Timer odpoczynku

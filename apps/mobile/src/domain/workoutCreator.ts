@@ -29,6 +29,17 @@ export type WorkoutCreatorProfile = {
   name: string;
 };
 
+export const workoutCreatorProfileLimits = {
+  draftFieldCount: 100,
+  draftFieldKeyLength: 120,
+  draftListLength: 50,
+  draftListValueLength: 500,
+  draftTextLength: 4_000,
+  idLength: 128,
+  nameLength: 120,
+  profileCount: 25
+} as const;
+
 const yesNoOptions: LocalizedText[] = [
   { en: "Yes", pl: "Tak" },
   { en: "No", pl: "Nie" }
@@ -282,6 +293,47 @@ export function cloneCreatorDraft(draft: WorkoutCreatorDraft): WorkoutCreatorDra
   );
 }
 
+export function normalizeWorkoutCreatorProfiles(value: unknown): WorkoutCreatorProfile[] {
+  if (!Array.isArray(value)) return [];
+
+  const profiles: WorkoutCreatorProfile[] = [];
+  const seenIds = new Set<string>();
+
+  for (const candidate of value.slice(0, workoutCreatorProfileLimits.profileCount)) {
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) continue;
+    const record = candidate as Record<string, unknown>;
+    const id = typeof record.id === "string"
+      ? record.id.trim().slice(0, workoutCreatorProfileLimits.idLength)
+      : "";
+    const name = typeof record.name === "string"
+      ? record.name.trim().slice(0, workoutCreatorProfileLimits.nameLength)
+      : "";
+    if (!id || !name || seenIds.has(id)) continue;
+
+    const rawDraft = record.draft && typeof record.draft === "object" && !Array.isArray(record.draft)
+      ? record.draft as Record<string, unknown>
+      : {};
+    const draftEntries: Array<[string, WorkoutCreatorValue]> = [];
+    for (const [rawKey, rawValue] of Object.entries(rawDraft)
+      .slice(0, workoutCreatorProfileLimits.draftFieldCount)) {
+      const key = rawKey.trim().slice(0, workoutCreatorProfileLimits.draftFieldKeyLength);
+      if (!key) continue;
+      if (typeof rawValue === "string") {
+        draftEntries.push([key, rawValue.slice(0, workoutCreatorProfileLimits.draftTextLength)]);
+      } else if (Array.isArray(rawValue) && rawValue.every((item) => typeof item === "string")) {
+        draftEntries.push([key, rawValue
+          .slice(0, workoutCreatorProfileLimits.draftListLength)
+          .map((item) => item.slice(0, workoutCreatorProfileLimits.draftListValueLength))]);
+      }
+    }
+
+    seenIds.add(id);
+    profiles.push({ draft: Object.fromEntries(draftEntries), id, name });
+  }
+
+  return profiles;
+}
+
 export function areCreatorValuesEqual(
   left: WorkoutCreatorValue | undefined,
   right: WorkoutCreatorValue | undefined
@@ -304,4 +356,3 @@ export function areCreatorDraftsEqual(left: WorkoutCreatorDraft, right: WorkoutC
 
   return fieldIds.every((fieldId) => areCreatorValuesEqual(left[fieldId], right[fieldId]));
 }
-

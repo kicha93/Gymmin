@@ -75,7 +75,7 @@ Historia treningów i szczegóły wykonanej sesji są wydzielone do osobnych ekr
 
 Widok definicji treningu jest wydzielony do `WorkoutDetailScreen`. Ekran prezentuje notatki, start treningu, modyfikację AI, podsumowanie mięśni, zwijane etapy z seriami oraz skróconą historię. Wspólne elementy prezentacji ćwiczeń i panel zwijany zostały przeniesione do `src/components`, natomiast operacje na danych i nawigacja pozostają w `App.tsx`.
 
-Formularz Kreatora AI jest wydzielony do `WorkoutCreatorScreen`, a definicja ankiety i helpery profili do `src/domain/workoutCreator.ts`. Ekran zachowuje profile, zwijane sekcje, kontrolę salda kredytów i wszystkie fazy prezentacji, natomiast wysyłanie ankiety, polling joba, import treningów i account-scoped storage są nadal koordynowane przez `App.tsx`.
+Formularz Kreatora AI jest wydzielony do `WorkoutCreatorScreen`, a definicja ankiety i helpery profili do `src/domain/workoutCreator.ts`. Ekran zachowuje profile, zwijane sekcje, kontrolę salda kredytów i wszystkie fazy prezentacji, natomiast wysyłanie ankiety, polling joba, import treningów oraz local-first zapis i synchronizacja profili są nadal koordynowane przez `App.tsx`. Profile Kreatora i wybrany profil należą do payloadu ustawień konta, więc po zalogowaniu odtwarzają się na innych urządzeniach. Starsze profile zapisane wyłącznie lokalnie są jednorazowo dosyłane, gdy odpowiedź serwera pochodzi ze starego kontraktu bez pola `creatorProfiles`.
 
 Formularz modyfikowania treningu przez AI i ekran propozycji mają osobne moduły `WorkoutAiRewriteScreen` oraz `WorkoutAiProposalScreen`. Podgląd zachowuje hierarchię etapów, serii i ćwiczeń oraz informację o dopasowaniu do katalogu. Endpoint rewrite, polling, rozliczenie kredytu, zapis jako nowy trening i zastąpienie istniejącego planu pozostają w kompozycji aplikacji.
 
@@ -125,7 +125,7 @@ deterministyczny merge po stabilnym ID znajdują się w
 `src/domain/accountWorkouts.ts`. Dane konta mają pierwszeństwo przed lokalnym
 duplikatem, a brakujące rekordy lokalne są zachowywane.
 
-Kolejne zmiany ustawień są zapisywane zdalnie przez `useAccountSettingsAutoSave`. Kontroler stosuje debounce 400 ms, utrzymuje najwyżej jeden aktywny `PUT /api/settings` i po zakończeniu wysyła wyłącznie najnowszą oczekującą rewizję. Odpowiedź starego konta ani starszej rewizji nie aktualizuje lokalnego `updatedAt`.
+Kolejne zmiany ustawień są zapisywane zdalnie przez `useAccountSettingsAutoSave`. Kontroler stosuje debounce 400 ms, utrzymuje najwyżej jeden aktywny `PUT /api/settings` i po zakończeniu wysyła wyłącznie najnowszą oczekującą rewizję. Odpowiedź starego konta ani starszej rewizji nie aktualizuje lokalnego `updatedAt`. Zastosowanie ustawień z serwera aktualizuje bazę obserwacji bez odsyłania ich echem, natomiast pierwsza późniejsza zmiana użytkownika jest zapisywana normalnie. Duży klucz zmian obejmujący profile Kreatora i plan tygodnia jest memoizowany, więc nie jest ponownie serializowany przy każdym renderze aplikacji.
 
 ### Logowanie i rejestracja
 
@@ -282,11 +282,19 @@ Użytkownik może:
 
 Eksport jest dostępny na ekranie szczegółów między akcjami `Edytuj` i `Usuń`.
 CSV używa UTF-8 BOM oraz separatora `;`, dzięki czemu zachowuje polskie znaki i
-jest zgodny z polskim Excelem. XLSX zawiera arkusze `Podsumowanie/Summary` oraz
-`Struktura/Structure`. Oba formaty obejmują wyłącznie definicję wybranego
+jest zgodny z polskim Excelem. CSV i XLSX zawierają tę samą prostą tabelę:
+etap, typ, ćwiczenie, serie, powtórzenia/cel, ciężar, uwagi i przerwę.
+XLSX ma tylko jeden arkusz `Trening/Workout`, a nazwa pliku odpowiada
+oczyszczonej nazwie treningu bez prefiksu i daty. Oba formaty obejmują wyłącznie definicję wybranego
 treningu (etapy, serie, elementy, cele i uwagi), bez historii wykonań, sesji,
-osiągnięć i danych konta. Plik powstaje w cache aplikacji i trafia do natywnego
-panelu udostępniania. Funkcja działa dla konta i użytkownika anonimowego.
+osiągnięć i danych konta. Android zapisuje plik bez selektora bezpośrednio w
+publicznej kolekcji `Pobrane/Gymmin` przez MediaStore, bez panelu udostępniania
+i bez szerokiego dostępu do pamięci. Na Androidzie 13+ aplikacja prosi przed
+zapisem o zgodę na powiadomienia. Po zakończeniu wyświetla systemową notyfikację
+z akcją `Otwórz`, która przekazuje lokalny URI pliku do zgodnej aplikacji.
+CSV jest zapisywany jako jawne bajty UTF-8 z pojedynczym BOM, a XLSX jako dokładne
+bajty binarne, żeby nie uszkodzić skoroszytu. Funkcja działa dla konta i
+użytkownika anonimowego.
 
 Sortowanie treningów:
 
@@ -298,13 +306,23 @@ Sortowanie treningów:
 
 ### Model treningu
 
+Seria zawierająca dokładnie dwa prawidłowe ćwiczenia jest oznaczana w
+edytorze jako planowana superseria. Wykorzystuje istniejącą strukturę
+etap/seria/element, więc `WorkoutDraft` i jego format synchronizacji nie
+otrzymują dodatkowego pola.
+
 Ręczne tworzenie i edycja treningu korzystają z kreatora `Dane -> Etapy -> Zapis`.
 Krok `Etapy` pokazuje poziome zakładki etapów i tylko jeden kontekst edycji:
 aktywny etap, jedną serię albo jedno ćwiczenie. Pełna hierarchia nie jest już
 renderowana jako zagnieżdżone formularze w jednym scrollu. Podsumowanie i
-walidacja są liczone przez czyste helpery `workoutBuilderFlow.ts`; zapis nadal
-przekazuje niezmieniony `WorkoutDraft`, więc backend oraz synchronizacja nie
-wymagały zmian.
+walidacja są liczone przez czyste helpery `workoutBuilderFlow.ts`. Definicja
+`WorkoutStep` ma opcjonalne `restSeconds`, które synchronizuje się razem z
+pozostałymi polami ćwiczenia.
+
+Lista `Serie w etapie` nie pokazuje już samej liczby elementów. Każdy wiersz
+wypisuje nazwy zawartych ćwiczeń i ich parametry `serie×cel`, spójnie z szybkim
+podglądem. W serii wieloelementowej ćwiczenia są ułożone pionowo. Prosta
+rozgrzewka potwierdzana przyciskiem nie pokazuje sztucznego `1×-`.
 
 Aktualny model:
 
@@ -313,9 +331,34 @@ Aktualny model:
 - etap ma nazwę, typ, uwagi i wiele serii,
 - seria ma liczbę serii,
 - seria ma wiele elementów,
-- element ma typ, ćwiczenie, typ celu, cel, ciężar i uwagi.
+- element ma typ, ćwiczenie, typ celu, cel, ciężar, przerwę między seriami i uwagi.
 
-Element typu `Odpoczynek` ukrywa pole ćwiczenia i ciężaru. Element typu `Rozgrzewka` także ukrywa pole ćwiczenia. Pole ćwiczenia jest dostępne dopiero po wybraniu typu. Liczba serii jest ograniczona do 20.
+Przerwę ustawia się w formularzu `Edytuj ćwiczenie` jako godziny, minuty i
+sekundy. Nie jest już dodawana jako osobny element serii. Import planu z
+Kreatora AI mapuje `restSeconds` bezpośrednio na ćwiczenie. Przy odczycie starsze
+poprawne elementy `Odpoczynek` są automatycznie przenoszone na poprzedzające
+ćwiczenie w tej samej serii; osierocone lub uszkodzone elementy są zachowywane,
+aby migracja nie usuwała danych. Zmigrowana definicja jest od razu zapisywana
+lokalnie. Jeżeli stary trening został dopiero pobrany z konta, mobile odsyła jego
+nową postać do backendu jeszcze w tym samym cyklu synchronizacji. Podczas
+uruchamiania treningu przerwa tworzy
+wyłącznie techniczny wpis sesji dla istniejącego timera, nie osobny element
+definicji treningu. Element typu `Rozgrzewka` nadal ukrywa pole ćwiczenia. Pole
+ćwiczenia jest dostępne dopiero po wybraniu typu. Liczba serii jest ograniczona
+do 20.
+
+Synchronizacja zachowuje też przejściowy element `*-rest-compat` obok
+`restSeconds`. Dzięki temu backend uruchomiony jeszcze na kontrakcie sprzed
+`restSeconds` nie zgubi wartości: zachowa element odpoczynku, a aktualny backend
+scala go z poprzedzającym ćwiczeniem i nie zapisuje duplikatu. Jeżeli wartość
+została już utracona w definicji treningu, mobile próbuje odzyskać ją z
+`WorkoutSession.planSnapshot`, a następnie z technicznego wpisu odpoczynku
+zapisanej sesji. Odzyskane dane są utrwalane lokalnie i ponownie synchronizowane.
+Plany bez historii sesji mogą zostać naprawione z zachowanego wyniku Kreatora AI
+przez kontrolowane narzędzie serwisowe, które wymaga jednoznacznego dopasowania
+i wykonuje kopię danych przed zapisem. Backend odróżnia brak pola w starszym
+kliencie od jawnego `"0"` wysyłanego przez aktualną aplikację, więc starszy
+payload nie usuwa odzyskanego czasu, a świadome wyzerowanie nadal działa.
 
 ### Katalog ćwiczeń
 
@@ -395,6 +438,13 @@ Tryb `guided` obsługuje tymczasowe superserie na poziomie aktywnej sesji:
 
 ### Historia i progres
 
+W trybie guided nowa sesja automatycznie tworzy `WorkoutSession.supersets` dla
+każdej zapisanej serii zawierającej dokładnie dwa prawidłowe ćwiczenia. Dzięki
+temu para od razu otwiera wspólny ekran A/B. Rozłączenie usuwa powiązanie tylko
+z bieżącej sesji i zachowuje wyniki; zapisany plan pozostaje bez zmian i utworzy
+superserię ponownie podczas kolejnego wykonania. Pozostałe tryby wykonania nie
+inicjalizują planowanych superserii.
+
 Historia i progres są liczone lokalnie z `WorkoutSession`.
 
 Aktualne zachowanie historii:
@@ -410,9 +460,11 @@ Aktualne zachowanie historii:
 Read-only workout view ma zwijane/rozwijane sekcje, m.in. przeglad, notatki,
 etapy i historie wykonania. Sekcja `Ostatni wynik` zostala usunieta z tego
 widoku.
-Wiersze cwiczen uzywaja kompaktowych kafelkow celu, np. `[3] x [8]`, a odpoczynek
-pokazuje pojedynczy kafelek, np. `[2m]`. Ikona `body-outline` w wierszu cwiczenia
-otwiera strone szczegolow cwiczenia, tak samo jak tapniecie wiersza.
+Wiersze ćwiczeń pokazują pod opisem taki sam pasek parametrów jak tryb guided:
+etykietę i kafelek odpoczynku oraz kompaktowe kafelki celu, np.
+`Odpoczynek [2m 30s]` i `[3] x [8]`. Brak czasu jest prezentowany jako `-`.
+Ikona `body-outline` w wierszu ćwiczenia otwiera stronę szczegółów ćwiczenia,
+tak samo jak tapnięcie wiersza.
 
 Historia pokazuje:
 
@@ -566,11 +618,13 @@ Są ekrany:
 
 Regulamin ma układ dashboardowy: hero z najważniejszymi zasadami, sekcję „W skrócie”, callout do zgłaszania błędów oraz siedem szczegółowych sekcji rozwijanych lokalnie przez użytkownika.
 
-Homepage pokazuje kompaktowy panel aktywnego planu tygodnia. Plan jest local-first i account-scoped: użytkownik przypisuje zapisane treningi do dni tygodnia, a ukończone `WorkoutSession` są liczone od poniedziałku do niedzieli niezależnie od dnia faktycznego wykonania.
+Homepage pokazuje kompaktowy panel aktywnego planu tygodnia. Plan jest local-first i account-scoped: użytkownik przypisuje zapisane treningi do dni tygodnia, a ukończone `WorkoutSession` są liczone od poniedziałku do niedzieli niezależnie od dnia faktycznego wykonania. Po zalogowaniu przypisania i aktywność planu synchronizują się przez `/api/settings` oraz odtwarzają na innych urządzeniach. Konflikty planu są rozstrzygane osobno na podstawie jego `updatedAt`, więc zmiana innej preferencji konta nie nadpisuje nowszego planu.
 
 Cykl lokalny planu obsługuje `useAccountScopedWeeklyPlan`: hook śledzi ownera,
 blokuje zapis do niewłaściwego klucza i zeruje poprzedni plan natychmiast przy
-zmianie konta, zanim zakończy się odczyt danych nowego użytkownika.
+zmianie konta, zanim zakończy się odczyt danych nowego użytkownika. Odczyt czeka
+na migrację account-scoped storage, a plan anonimowy jest scalany z planem konta
+po zaakceptowaniu dialogu łączenia danych.
 
 Kontakt ma zwarty układ: główny CTA otwiera klienta poczty dla `kontakt@gymmin.app`, informacja o czasie odpowiedzi jest krótkim paskiem, a problemy z aplikacją prowadzą do istniejącego formularza „Zgłoś błąd”. FAQ zawiera trzy zwijane odpowiedzi, dzięki czemu ekran nie powtarza długich bloków tekstu.
 
@@ -617,7 +671,8 @@ Dotyczy to:
 - ulubionych ćwiczeń,
 - metadanych sync,
 - sesji wykonania,
-- profili kreatora,
+- profili kreatora (local-first cache; po zalogowaniu synchronizowanych przez `/api/settings`),
+- planu tygodniowego (local-first cache; po zalogowaniu synchronizowanego przez `/api/settings`),
 - aktywnego joba kreatora,
 - notification IDs przypomnień.
 
@@ -871,5 +926,5 @@ independent user/account and IP abuse buckets. External AI response bodies and
 internal generator exceptions are no longer exposed through job status, AI
 output size is bounded, completed AI jobs have a 90-day default retention, and
 registration names are validated against the database limit. Automated checks
-pass with no high or critical dependency advisory; eleven moderate Expo/Xcode
+pass with no high or critical dependency advisory; ten moderate Expo/Xcode
 build-tool advisories remain accepted and monitored.

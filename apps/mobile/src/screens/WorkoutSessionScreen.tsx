@@ -28,6 +28,7 @@ import {
   type WorkoutSessionSupersetValueField
 } from "../domain/workoutSessionSupersets";
 import { formatRestDuration, formatWorkoutProgressPercent, getWorkoutProgress } from "../domain/workoutSessionUi";
+import { groupWorkoutBuilderSteps } from "../domain/workoutEditor";
 import { formatExerciseSetTarget, isRestTargetStep } from "../domain/workoutExerciseSummary";
 import { type WorkoutDraft, type WorkoutStep } from "../domain/workouts";
 import type { LanguageCode, TranslationKey } from "../i18n/translations";
@@ -850,19 +851,8 @@ export function WorkoutSessionScreen({
   }
 
   function renderReadOnlyWorkoutPlan(workout: WorkoutDraft, panelPrefix: string) {
-    const stageGroups = workout.steps
-      .filter((step) => step.kind === "stage" && step.stageType !== "warmup")
-      .map((stage) => ({
-        stage,
-        series: workout.steps
-          .filter((step) => step.kind === "set" && step.parentStageId === stage.id)
-          .map((set) => ({
-            set,
-            elements: workout.steps.filter(
-              (step) => step.kind === "exercise" && step.parentSetId === set.id
-            )
-          }))
-      }));
+    const stageGroups = groupWorkoutBuilderSteps(workout.steps)
+      .filter(({ stage }) => stage.stageType !== "warmup");
 
     return (
       <>
@@ -960,11 +950,6 @@ export function WorkoutSessionScreen({
                                   onPressDetails={() => openExerciseDetail(element)}
                                   onPressMuscles={() => openExerciseDetail(element)}
                                 />
-                                {element.notes ? (
-                                  <Text style={[styles.workoutDetailNotes, { color: theme.muted }]}>
-                                    {element.notes}
-                                  </Text>
-                                ) : null}
                               </View>
                             ))}
                           </View>

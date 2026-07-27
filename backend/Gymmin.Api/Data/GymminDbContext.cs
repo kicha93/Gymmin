@@ -104,6 +104,7 @@ public sealed class GymminDbContext : DbContext
             entity.Property(settings => settings.ShowRestTimer).IsRequired();
             entity.Property(settings => settings.CollapsedPanelsJson).IsRequired();
             entity.Property(settings => settings.WorkoutRemindersJson).IsRequired();
+            entity.Property(settings => settings.SelectedCreatorProfileId).HasMaxLength(128);
             entity.HasOne(settings => settings.User)
                 .WithOne()
                 .HasForeignKey<UserSettingsEntity>(settings => settings.UserId)
@@ -480,6 +481,9 @@ public sealed class UserSettingsEntity
     public bool ShowRestTimer { get; set; } = true;
     public string CollapsedPanelsJson { get; set; } = "{}";
     public string WorkoutRemindersJson { get; set; } = "";
+    public string? CreatorProfilesJson { get; set; }
+    public string? SelectedCreatorProfileId { get; set; }
+    public string? WeeklyPlanJson { get; set; }
     public bool IsAuthPanelDismissed { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public UserEntity? User { get; set; }

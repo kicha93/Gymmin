@@ -13,7 +13,13 @@ import {
   toggleSupersetRoundCompleted,
   updateSupersetRoundValue
 } from "../workoutSessionSupersets";
-import { normalizeWorkoutSessions, type WorkoutSession, type WorkoutSessionEntry } from "../workoutSessions";
+import {
+  createWorkoutSessionFromWorkout,
+  normalizeWorkoutSessions,
+  type WorkoutSession,
+  type WorkoutSessionEntry
+} from "../workoutSessions";
+import { createStep, type WorkoutDraft } from "../workouts";
 
 const timestamp = "2026-07-21T10:00:00.000Z";
 
@@ -62,7 +68,58 @@ function createSession(overrides: Partial<WorkoutSession> = {}): WorkoutSession 
   };
 }
 
+function createWorkoutWithSeries(elementCount: number, secondType: "exercise" | "rest" = "exercise"): WorkoutDraft {
+  const stage = createStep({ id: "stage-1", kind: "stage", label: "Main", stageType: "exercise" });
+  const set = createStep({ id: "set-1", kind: "set", parentStageId: stage.id, setCount: "3" });
+  const elements = Array.from({ length: elementCount }, (_, index) => createStep({
+    exerciseId: `exercise-${index + 1}`,
+    exerciseName: `Exercise ${index + 1}`,
+    id: `element-${index + 1}`,
+    kind: "exercise",
+    parentSetId: set.id,
+    stageType: index === 1 ? secondType : "exercise",
+    targetValue: "8"
+  }));
+
+  return {
+    name: "Planned superset",
+    notes: "",
+    sport: "strength",
+    steps: [stage, set, ...elements]
+  };
+}
+
 describe("workout session supersets", () => {
+  it("creates a guided session superset from two exercises in one planned series", () => {
+    const session = createWorkoutSessionFromWorkout(createWorkoutWithSeries(2), "workout-1", "guided");
+    const supersetId = session.supersets?.[0].id ?? "";
+
+    expect(session.supersets).toHaveLength(1);
+    expect(session.supersets?.[0].entryIds).toEqual([
+      "stage-1-set-1-element-1-1",
+      "stage-1-set-1-element-2-1"
+    ]);
+    expect(getWorkoutSessionGuidedSteps(session)).toHaveLength(1);
+    expect(getSupersetRoundRows(session, supersetId)).toHaveLength(3);
+
+    const split = removeWorkoutSessionSuperset(session, supersetId, timestamp);
+    expect(split.supersets).toBeUndefined();
+    expect(getWorkoutSessionGuidedSteps(split)).toHaveLength(2);
+    expect(split.planSnapshot.steps.filter((step) => step.kind === "exercise")).toHaveLength(2);
+  });
+
+  it("does not infer a planned superset outside guided mode or from invalid series", () => {
+    const inline = createWorkoutSessionFromWorkout(createWorkoutWithSeries(2), "workout-1", "inline-table");
+    const single = createWorkoutSessionFromWorkout(createWorkoutWithSeries(1), "workout-1", "guided");
+    const triple = createWorkoutSessionFromWorkout(createWorkoutWithSeries(3), "workout-1", "guided");
+    const withRest = createWorkoutSessionFromWorkout(createWorkoutWithSeries(2, "rest"), "workout-1", "guided");
+
+    expect(inline.supersets).toBeUndefined();
+    expect(single.supersets).toBeUndefined();
+    expect(triple.supersets).toBeUndefined();
+    expect(withRest.supersets).toBeUndefined();
+  });
+
   it("creates a session-only superset from the current and next exercise group", () => {
     const result = createWorkoutSessionSuperset(createSession(), "a-2", timestamp);
 

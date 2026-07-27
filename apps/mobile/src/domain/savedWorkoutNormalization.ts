@@ -1,6 +1,7 @@
 import type { SavedWorkout, WorkoutSortSettings } from "./savedWorkouts";
 import {
   normalizeWorkoutDraftExerciseIds,
+  normalizeWorkoutRestBetweenSets,
   type WorkoutDraft
 } from "./workouts";
 
@@ -52,7 +53,7 @@ export function repairTextEncoding(value: string) {
 
 export function normalizeWorkoutDraftTextFields(draft: WorkoutDraft): WorkoutDraft {
   const normalizedDraft = normalizeWorkoutDraftExerciseIds(draft);
-  return {
+  return normalizeWorkoutRestBetweenSets({
     ...normalizedDraft,
     name: repairTextEncoding(draft.name),
     notes: repairTextEncoding(draft.notes),
@@ -62,10 +63,11 @@ export function normalizeWorkoutDraftTextFields(draft: WorkoutDraft): WorkoutDra
       label: repairTextEncoding(step.label),
       loadKg: repairTextEncoding(step.loadKg),
       notes: repairTextEncoding(step.notes),
+      restSeconds: repairTextEncoding(step.restSeconds ?? ""),
       setCount: repairTextEncoding(step.setCount),
       targetValue: repairTextEncoding(step.targetValue)
     }))
-  };
+  });
 }
 
 export function normalizeSavedWorkoutTextFields(workout: SavedWorkout): SavedWorkout {

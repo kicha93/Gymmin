@@ -62,7 +62,10 @@ public sealed class EfUserSettingsStore : IUserSettingsStore
             entity.IsAuthPanelDismissed,
             DeserializeWorkoutReminders(entity.WorkoutRemindersJson),
             entity.UpdatedAt,
-            entity.ShowRestTimer);
+            entity.ShowRestTimer,
+            DeserializeCreatorProfiles(entity.CreatorProfilesJson),
+            entity.SelectedCreatorProfileId,
+            DeserializeWeeklyPlan(entity.WeeklyPlanJson));
     }
 
     private static void Apply(UserSettingsEntity entity, UserSettings settings)
@@ -79,6 +82,13 @@ public sealed class EfUserSettingsStore : IUserSettingsStore
         entity.WorkoutRemindersJson = settings.WorkoutReminders is null
             ? ""
             : JsonSerializer.Serialize(settings.WorkoutReminders, JsonOptions);
+        entity.CreatorProfilesJson = settings.CreatorProfiles is null
+            ? null
+            : JsonSerializer.Serialize(settings.CreatorProfiles, JsonOptions);
+        entity.SelectedCreatorProfileId = settings.SelectedCreatorProfileId;
+        entity.WeeklyPlanJson = settings.WeeklyPlan is null
+            ? null
+            : JsonSerializer.Serialize(settings.WeeklyPlan, JsonOptions);
         entity.IsAuthPanelDismissed = settings.IsAuthPanelDismissed;
         entity.UpdatedAt = settings.UpdatedAt;
     }
@@ -110,6 +120,40 @@ public sealed class EfUserSettingsStore : IUserSettingsStore
         try
         {
             return JsonSerializer.Deserialize<WorkoutReminderSettings>(json, JsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static IReadOnlyList<WorkoutCreatorProfile>? DeserializeCreatorProfiles(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<WorkoutCreatorProfile>>(json, JsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static WeeklyPlanSettings? DeserializeWeeklyPlan(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<WeeklyPlanSettings>(json, JsonOptions);
         }
         catch
         {

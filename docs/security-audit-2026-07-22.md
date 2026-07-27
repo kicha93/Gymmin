@@ -80,10 +80,11 @@ characters before persistence, avoiding a database exception and generic 500.
 ## Dependency status
 
 - NuGet vulnerable-package scan: no known vulnerable packages.
-- npm audit: 0 critical, 0 high, 11 moderate advisories. The remaining findings
-  are the same transitive Expo/Xcode build-tool chain (`uuid` through `xcode`);
-  `expo-sharing` adds one directly reported path through that chain. npm proposes
-  an incompatible Expo SDK downgrade, so the automated fix was not applied.
+- npm audit: 0 critical and 0 high advisories. The current online scan reports 10
+  moderate findings in the transitive Expo/Xcode build-tool chain (`uuid`
+  through `xcode`). The unused `expo-sharing` dependency was removed when workout
+  export switched from a share sheet to direct MediaStore Downloads storage. npm proposes
+  an incompatible Expo SDK downgrade for the remaining chain, so the automated fix was not applied.
   Recheck after each Expo patch and keep the high/critical audit gate enabled.
 
 ## Deployment-owned residual risks
@@ -106,13 +107,14 @@ characters before persistence, avoiding a database exception and generic 500.
 
 ## Verification
 
-- Backend tests: 108 passed.
-- Mobile tests: 266 passed across 56 files.
+- Backend tests: 110 passed.
+- Mobile tests: 284 passed across 59 files.
 - Mobile typecheck: passed.
 - Backend Release build with warnings as errors: passed (0 warnings, 0 errors).
 - Expo Doctor: 19/19 checks passed.
+- Android Hermes export: passed (2,525 modules, 6.8 MB bundle).
 - Exercise catalog validation: 964 records, 0 errors, 0 warnings.
 - `git diff --check`: passed.
 - NuGet vulnerable-package scan: no vulnerable packages.
-- npm audit: no high or critical advisories; 11 moderate build-tool advisories
+- npm audit: no high or critical advisories; 10 moderate build-tool advisories
   remain as documented above.

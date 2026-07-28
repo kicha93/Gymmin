@@ -46,6 +46,28 @@ public sealed class DiagnosticsTests : IClassFixture<GymminApiFactory>
         Assert.Contains("Google Play", body);
     }
 
+    [Theory]
+    [InlineData("/account-deletion", "Usuń konto i dane Gymmin", "Usuń moje konto Gymmin")]
+    [InlineData("/account-deletion?lang=en", "Delete your Gymmin account and data", "Delete my Gymmin account")]
+    public async Task Account_deletion_instructions_are_public_localized_and_actionable(
+        string path,
+        string expectedTitle,
+        string expectedMailSubject)
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync(path);
+        var body = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/html", response.Content.Headers.ContentType!.MediaType);
+        Assert.Contains(expectedTitle, body);
+        Assert.Contains("kontakt@gymmin.app", body);
+        Assert.Contains(Uri.EscapeDataString(expectedMailSubject), body);
+        Assert.Contains("/privacy", body);
+        Assert.Contains("Google Play", body);
+    }
+
     [Fact]
     public async Task Request_correlation_id_is_echoed()
     {

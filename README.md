@@ -12,6 +12,7 @@ Gymmin is a mobile-first workout builder for strength training.
 - Auth: backend email/password auth with bearer tokens
 - AI creator: OpenAI Responses API through the backend
 - Privacy: localized in-app policy plus a public, unauthenticated `GET /privacy?lang=pl|en`
+- Account deletion: in-app permanent deletion plus public, unauthenticated instructions at `GET /account-deletion?lang=pl|en`
 - Workout UX: compact Exercise Detail Page with hero summary, optional local media, worked-muscle anatomy toggle and collapsible technique panels; Progress uses a dashboard with summary cards, filters and compact exercise metric cards. Rest timer visibility is a per-user training preference.
 - Manual workout editor: three-step `Details -> Stages -> Save` wizard. It edits one stage, set or exercise at a time while preserving the existing `WorkoutDraft` model and account synchronization format. A set containing exactly two executable exercises is marked as a planned superset.
 - Workout library: workouts can be archived and restored without deleting their definitions or weekly-plan assignments. Archived items are hidden by default, can be included with a list filter, and the archive state synchronizes with the account.
@@ -222,6 +223,9 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - Settings contain a localized privacy screen that works offline and links to the
   public backend policy. The production URL ending in `/privacy` can be used as the
   Google Play privacy-policy URL; `?lang=en` serves the English version.
+- The same screen links to `/account-deletion`, which documents immediate in-app
+  deletion and an external email request flow with ownership verification. This
+  public URL is intended for Google Play's account-deletion web-link field.
 - AI credit consumption is protected by database transactions and an atomic conditional balance update in Database mode. File mode remains a development fallback, not the production safety boundary for paid credits.
 - AI credit concurrency, idempotency and technical-failure refund were smoke-tested on a real local PostgreSQL cluster without Docker, using the `HardenAiCreditsConcurrency` migration.
 - New users can receive an idempotent initial AI credit grant. Development/testing can use the guarded `/api/ai-credits/dev/grant` endpoint.

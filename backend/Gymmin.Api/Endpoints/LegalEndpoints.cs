@@ -17,6 +17,15 @@ internal static class LegalEndpoints
             return Results.Text(BuildPrivacyPolicy(language), "text/html; charset=utf-8", Encoding.UTF8);
         })
         .AllowAnonymous();
+
+        app.MapGet("/account-deletion", (HttpRequest request) =>
+        {
+            var language = string.Equals(request.Query["lang"], "en", StringComparison.OrdinalIgnoreCase)
+                ? "en"
+                : "pl";
+            return Results.Text(BuildAccountDeletionPage(language), "text/html; charset=utf-8", Encoding.UTF8);
+        })
+        .AllowAnonymous();
     }
 
     internal static string BuildPrivacyPolicy(string language)
@@ -42,6 +51,54 @@ internal static class LegalEndpoints
                 <h1>{WebUtility.HtmlEncode(title)}</h1>
                 <p>{(isEnglish ? "Last updated" : "Ostatnia aktualizacja")}: {UpdatedDate}</p>
                 {body}
+                <p><a href="/account-deletion?lang={(isEnglish ? "en" : "pl")}">{(isEnglish ? "Account and data deletion instructions" : "Instrukcja usunięcia konta i danych")}</a></p>
+              </main>
+            </body>
+            </html>
+            """;
+    }
+
+    internal static string BuildAccountDeletionPage(string language)
+    {
+        var isEnglish = string.Equals(language, "en", StringComparison.OrdinalIgnoreCase);
+        var title = isEnglish ? "Delete your Gymmin account and data" : "Usuń konto i dane Gymmin";
+        var inAppTitle = isEnglish ? "Immediate deletion in the app" : "Natychmiastowe usunięcie w aplikacji";
+        var inAppText = isEnglish
+            ? "Sign in and go to Profile → Account → Delete account. Confirm the operation with your current password. Deletion is permanent and signs out all active sessions."
+            : "Zaloguj się i przejdź do Profil → Konto → Usuń konto. Potwierdź operację aktualnym hasłem. Usunięcie jest trwałe i wylogowuje wszystkie aktywne sesje.";
+        var outsideTitle = isEnglish ? "Request deletion outside the app" : "Żądanie usunięcia poza aplikacją";
+        var outsideText = isEnglish
+            ? "Email kontakt@gymmin.app from the address registered to your Gymmin account with the subject “Delete my Gymmin account”. We will verify ownership using the registered email address. Never send us your password or verification code."
+            : "Napisz z adresu przypisanego do konta Gymmin na kontakt@gymmin.app, używając tematu „Usuń moje konto Gymmin”. Własność konta zweryfikujemy przez zarejestrowany adres email. Nigdy nie wysyłaj nam hasła ani kodu weryfikacyjnego.";
+        var deletedTitle = isEnglish ? "Data covered by deletion" : "Dane objęte usunięciem";
+        var deletedText = isEnglish
+            ? "Deletion covers the account, authentication sessions, profile and avatar, synchronized settings, workouts, weekly plan data, workout sessions and results, favorites, achievements, AI creator profiles and jobs, and AI credit data associated with the account. Bug reports are detached from the account and account identifiers are removed from their diagnostics."
+            : "Usunięcie obejmuje konto, sesje logowania, profil i avatar, synchronizowane ustawienia, treningi, plan tygodnia, sesje i wyniki treningowe, ulubione ćwiczenia, osiągnięcia, profile i zadania kreatora AI oraz dane kredytów AI powiązane z kontem. Zgłoszenia błędów są odłączane od konta, a identyfikatory konta usuwane z diagnostyki.";
+        var retainedTitle = isEnglish ? "Limited retention" : "Ograniczone przechowywanie";
+        var retainedText = isEnglish
+            ? "Security logs, backups and records required for fraud prevention, settlements or legal obligations may remain for a limited period and are then deleted or anonymized. Google Play keeps its own purchase history under Google's policies. Local data on other offline devices must be removed in the app or by clearing/uninstalling the app."
+            : "Logi bezpieczeństwa, kopie zapasowe i zapisy wymagane do zapobiegania nadużyciom, rozliczeń lub wykonania obowiązków prawnych mogą pozostać przez ograniczony okres, po czym są usuwane lub anonimizowane. Google Play przechowuje własną historię zakupów zgodnie ze swoimi zasadami. Dane lokalne na innych urządzeniach offline trzeba usunąć w aplikacji albo przez wyczyszczenie/odinstalowanie aplikacji.";
+        var contactLabel = isEnglish ? "Request deletion by email" : "Wyślij żądanie usunięcia";
+        var mailSubject = Uri.EscapeDataString(isEnglish ? "Delete my Gymmin account" : "Usuń moje konto Gymmin");
+
+        return $"""
+            <!doctype html>
+            <html lang="{(isEnglish ? "en" : "pl")}">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>{WebUtility.HtmlEncode(title)}</title>
+            </head>
+            <body>
+              <main>
+                <h1>{WebUtility.HtmlEncode(title)}</h1>
+                <p>{(isEnglish ? "Last updated" : "Ostatnia aktualizacja")}: {UpdatedDate}</p>
+                <section><h2>{WebUtility.HtmlEncode(inAppTitle)}</h2><p>{WebUtility.HtmlEncode(inAppText)}</p></section>
+                <section><h2>{WebUtility.HtmlEncode(outsideTitle)}</h2><p>{WebUtility.HtmlEncode(outsideText)}</p></section>
+                <p><a href="mailto:kontakt@gymmin.app?subject={mailSubject}">{WebUtility.HtmlEncode(contactLabel)}</a></p>
+                <section><h2>{WebUtility.HtmlEncode(deletedTitle)}</h2><p>{WebUtility.HtmlEncode(deletedText)}</p></section>
+                <section><h2>{WebUtility.HtmlEncode(retainedTitle)}</h2><p>{WebUtility.HtmlEncode(retainedText)}</p></section>
+                <p><a href="/privacy?lang={(isEnglish ? "en" : "pl")}">{(isEnglish ? "Privacy policy" : "Polityka prywatności")}</a></p>
               </main>
             </body>
             </html>

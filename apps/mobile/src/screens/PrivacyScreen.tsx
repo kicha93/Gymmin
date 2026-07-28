@@ -18,6 +18,7 @@ const content = {
       "Wyjaśniamy tu, jakie dane przetwarzamy, po co to robimy, komu mogą zostać przekazane i jak możesz je usunąć.",
     updated: "Ostatnia aktualizacja: 28 lipca 2026",
     publicPolicy: "Otwórz publiczną wersję polityki",
+    accountDeletion: "Instrukcja usunięcia konta i danych",
     sections: [
       {
         title: "Administrator i kontakt",
@@ -51,6 +52,7 @@ const content = {
       "This policy explains what data we process, why we use it, who may receive it, and how you can delete it.",
     updated: "Last updated: July 28, 2026",
     publicPolicy: "Open the public policy",
+    accountDeletion: "Account and data deletion instructions",
     sections: [
       {
         title: "Controller and contact",
@@ -83,6 +85,7 @@ const content = {
 export function PrivacyScreen({ apiBaseUrl, language, theme }: PrivacyScreenProps) {
   const copy = content[language];
   const publicPolicyUrl = `${apiBaseUrl.replace(/\/+$/, "")}/privacy?lang=${language}`;
+  const accountDeletionUrl = `${apiBaseUrl.replace(/\/+$/, "")}/account-deletion?lang=${language}`;
 
   return (
     <View style={styles.termsScreen}>
@@ -127,6 +130,14 @@ export function PrivacyScreen({ apiBaseUrl, language, theme }: PrivacyScreenProp
       >
         <Text style={[styles.termsInfoButtonText, { color: theme.primary }]}>{copy.publicPolicy}</Text>
         <Ionicons name="open-outline" size={18} color={theme.primary} />
+      </Pressable>
+      <Pressable
+        accessibilityRole="link"
+        style={[styles.termsInfoButton, { borderColor: theme.primary }]}
+        onPress={() => void Linking.openURL(accountDeletionUrl)}
+      >
+        <Text style={[styles.termsInfoButtonText, { color: theme.primary }]}>{copy.accountDeletion}</Text>
+        <Ionicons name="person-remove-outline" size={18} color={theme.primary} />
       </Pressable>
     </View>
   );

@@ -236,5 +236,6 @@ build:
   branch; it applies all migrations to a real PostgreSQL 16 service container.
 - Verify branch protection requires `production-gate` on the repository release
   branch (`master` at the time of the 2026-07-16 audit).
-- Finalize privacy policy and account deletion support text.
+- Deploy and verify the public `/privacy` and `/account-deletion` pages, then enter
+  their production HTTPS URLs in Google Play Console.
 - Decide documentation language policy and clean up legacy docs if needed.

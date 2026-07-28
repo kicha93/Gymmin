@@ -20,6 +20,12 @@ Gymmin to mobilna aplikacja do treningów siłowych. Aplikacja jest local-first:
   dla każdego nowego wysłania,
 - backend wymaga `sensitiveDataConsent: true` i odrzuca brak zgody przed
   pobraniem kredytu oraz przed wywołaniem OpenAI.
+- publiczny endpoint `GET /account-deletion?lang=pl|en` opisuje usunięcie
+  bezpośrednio w aplikacji oraz żądanie wysłane spoza aplikacji z adresu email
+  przypisanego do konta; zawiera zakres danych usuwanych i ograniczone wyjątki
+  retencyjne,
+- ekran polityki prywatności prowadzi także do publicznej instrukcji usunięcia,
+  a jej produkcyjny URL jest przeznaczony do pola Account deletion w Google Play.
 
 Docelowo Gymmin ma być przygotowany pod synchronizację z Garminem, dlatego ćwiczenia pochodzą z katalogu aplikacji i mają stabilne identyfikatory.
 

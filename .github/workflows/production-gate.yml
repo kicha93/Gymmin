@@ -54,6 +54,8 @@ jobs:
           BACKUP_SMOKE_ADMIN_URI: postgresql://gymmin_test:gymmin_test_password@127.0.0.1:5432/postgres
           BACKUP_SMOKE_CONNECTION: Host=127.0.0.1;Port=5432;Database=gymmin_backup_smoke;Username=gymmin_test;Password=gymmin_test_password
           BACKUP_SMOKE_URI: postgresql://gymmin_test:gymmin_test_password@127.0.0.1:5432/gymmin_backup_smoke
+          Gymmin__Storage__Provider: Database
+          Gymmin__Storage__DatabaseProvider: PostgreSQL
         run: |
           psql --dbname=$env:BACKUP_SMOKE_ADMIN_URI --set=ON_ERROR_STOP=1 --command='CREATE DATABASE gymmin_backup_smoke;'
           dotnet tool run dotnet-ef database update --project backend/Gymmin.Api/Gymmin.Api.csproj --startup-project backend/Gymmin.Api/Gymmin.Api.csproj --configuration Release --connection $env:BACKUP_SMOKE_CONNECTION

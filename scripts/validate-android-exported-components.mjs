@@ -105,6 +105,14 @@ const forbiddenPermissions = new Set([
   ...unusedBadgePermissions,
 ]);
 
+const allowedQueryIntents = new Set([
+  "android.intent.action.GET_CONTENT|category=android.intent.category.OPENABLE|mimeType=image/*",
+  "android.intent.action.OPEN_DOCUMENT_TREE",
+  "android.intent.action.VIEW|category=android.intent.category.BROWSABLE|scheme=https",
+  "com.android.vending.billing.InAppBillingService.BIND",
+  "com.google.android.apps.play.billingtestcompanion.BillingOverrideService.BIND",
+]);
+
 function readAttribute(attributes, name) {
   const match = attributes.match(
     new RegExp(`(?:^|\\s)android:${name}="([^"]*)"`, "u"),
@@ -127,6 +135,36 @@ function parseOpeningTags(xml, names) {
   }
 
   return results;
+}
+
+function getNestedTagAttributes(xml, tagName) {
+  const pattern = new RegExp(`<${tagName}\\b([^>]*)\\/?\\s*>`, "gu");
+  return Array.from(xml.matchAll(pattern), (match) => match[1]);
+}
+
+function createQueryIntentKey(intentBody) {
+  const actions = getNestedTagAttributes(intentBody, "action")
+    .map((attributes) => readAttribute(attributes, "name"))
+    .filter(Boolean)
+    .sort();
+  const categories = getNestedTagAttributes(intentBody, "category")
+    .map((attributes) => readAttribute(attributes, "name"))
+    .filter(Boolean)
+    .sort();
+  const data = getNestedTagAttributes(intentBody, "data")
+    .flatMap((attributes) => [
+      ["mimeType", readAttribute(attributes, "mimeType")],
+      ["scheme", readAttribute(attributes, "scheme")],
+    ])
+    .filter(([, value]) => Boolean(value))
+    .map(([name, value]) => `${name}=${value}`)
+    .sort();
+
+  return [
+    actions.join(","),
+    ...categories.map((category) => `category=${category}`),
+    ...data,
+  ].join("|");
 }
 
 const manifestArgument = process.argv[2];
@@ -213,6 +251,27 @@ for (const permissionTag of permissionTags) {
   const permission = readAttribute(permissionTag.attributes, "name");
   if (forbiddenPermissions.has(permission)) {
     failures.push(`Forbidden release permission detected: ${permission}.`);
+  }
+}
+
+const queriesBody = manifest.match(/<queries\b[^>]*>([\s\S]*?)<\/queries>/u)?.[1] ?? "";
+const queryIntents = Array.from(
+  queriesBody.matchAll(/<intent\b[^>]*>([\s\S]*?)<\/intent>/gu),
+  (match) => createQueryIntentKey(match[1]),
+);
+for (const queryIntent of queryIntents) {
+  if (!allowedQueryIntents.has(queryIntent)) {
+    failures.push(
+      `Unexpected Android package-visibility query detected: ${queryIntent || "(empty intent)"}.`,
+    );
+  }
+}
+for (const allowedQueryIntent of allowedQueryIntents) {
+  const count = queryIntents.filter((queryIntent) => queryIntent === allowedQueryIntent).length;
+  if (count !== 1) {
+    failures.push(
+      `Expected exactly one Android package-visibility query "${allowedQueryIntent}", received ${count}.`,
+    );
   }
 }
 

@@ -23,6 +23,22 @@
   <uses-permission android:name="me.everything.badger.permission.BADGE_COUNT_WRITE" tools:node="remove"/>
   <uses-permission android:name="com.android.vending.BILLING"/>
   <queries>
+    <intent tools:node="remove">
+      <action android:name="android.media.action.IMAGE_CAPTURE"/>
+    </intent>
+    <intent tools:node="remove">
+      <action android:name="android.media.action.ACTION_VIDEO_CAPTURE"/>
+    </intent>
+    <intent tools:node="remove">
+      <action android:name="android.intent.action.GET_CONTENT"/>
+      <category android:name="android.intent.category.OPENABLE"/>
+      <data android:mimeType="*/*"/>
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.GET_CONTENT"/>
+      <category android:name="android.intent.category.OPENABLE"/>
+      <data android:mimeType="image/*"/>
+    </intent>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
       <category android:name="android.intent.category.BROWSABLE"/>

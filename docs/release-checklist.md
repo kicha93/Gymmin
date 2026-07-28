@@ -162,6 +162,10 @@ multi-replica and device smoke checks listed below.
   the Expo badge API and explicitly disables badge changes in its foreground
   handler. The component/permission gate rejects all 16 removed launcher
   read/write permissions if a dependency adds them again.
+- Android `<queries>` package visibility matches the reviewed five-intent
+  allowlist: HTTPS browsing, `GET_CONTENT image/*`, legacy Downloads directory
+  selection and the two Google Play Billing bindings. Camera/video capture and
+  wildcard MIME queries are absent.
 - Store signing env vars are set:
   - `GYMMIN_UPLOAD_STORE_FILE`,
   - `GYMMIN_UPLOAD_STORE_PASSWORD`,

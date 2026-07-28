@@ -603,6 +603,10 @@ Aktualnie dziala:
 - aplikacja nie zarządza licznikami badge na ikonie, dlatego release usuwa 16
   legacy uprawnień launcherów OEM dostarczanych tranzytywnie przez bibliotekę
   powiadomień; CI blokuje ich przypadkowy powrót,
+- widoczność pakietów Androida (`<queries>`) ma ścisłą allowlistę: HTTPS,
+  wybór obrazu `image/*`, picker katalogu Downloads dla starszych urządzeń oraz
+  dwa bindingi Google Play Billing; nieużywane zapytania aparatu/wideo i szeroki
+  selektor `*/*` zostały usunięte,
 - build smoke wymaga Android SDK (`ANDROID_HOME` / `ANDROID_SDK_ROOT`); bez podlaczonego emulatora lub telefonu potwierdza linkowanie natywne, ale nie runtime UI,
 - widok mobile `Kredyty` z saldem, kosztami, kompaktowymi kartami pakietow, ostatnimi transakcjami, informacjami i akcja zakupu/restore pending purchases,
 - dev/test grant poza Production.

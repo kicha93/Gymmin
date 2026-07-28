@@ -449,6 +449,12 @@ Mobile build notes:
   `expo-notifications`. Android's normal notification tray and system-managed
   dots do not require these vendor read/write permissions. Adding badge counters
   later requires a permission/privacy review and a deliberate gate update.
+- Package visibility is also validated from the merged release manifest. Keep
+  only the reviewed HTTPS, image-library, legacy Downloads picker and Google
+  Play Billing intents. The avatar flow is gallery-only, so
+  `IMAGE_CAPTURE`/`ACTION_VIDEO_CAPTURE` queries are removed and the cropper
+  query is narrowed from `*/*` to `image/*`. New integrations must update the
+  allowlist intentionally after a security review.
 - Generate the upload key outside the repository:
 
 ```powershell

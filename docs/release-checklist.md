@@ -153,6 +153,11 @@ multi-replica and device smoke checks listed below.
 - Release does not request camera permission. Avatar selection currently uses
   the media library; reintroducing direct camera capture requires an explicit
   product/privacy review and an intentional manifest change.
+- Notifications are local-only. Release contains the local Expo notification
+  receiver and boot action used to restore reminders, but removes FCM messaging
+  services, the Firebase instance-ID receiver and the C2DM receive permission.
+  Introducing remote push requires an explicit architecture/privacy review and
+  an intentional allowlist update.
 - Store signing env vars are set:
   - `GYMMIN_UPLOAD_STORE_FILE`,
   - `GYMMIN_UPLOAD_STORE_PASSWORD`,

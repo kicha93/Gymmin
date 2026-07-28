@@ -592,11 +592,14 @@ Aktualnie dziala:
 - skrypt `mobile:security:android` i production gate wykrywają regresję tych
   ustawień, a CI sprawdza również scalony manifest release,
 - finalny manifest release ma automatyczną allowlistę eksportowanych komponentów:
-  launcher aplikacji oraz dwa odbiorniki bibliotek chronione uprawnieniami
-  systemowymi; niejawny `android:exported`, nowy wystawiony komponent,
+  launcher aplikacji oraz odbiornik AndroidX Profile Installer chroniony
+  uprawnieniem systemowym; niejawny `android:exported`, nowy wystawiony komponent,
   `debuggable`/`testOnly` albo uprawnienie z listy wysokiego ryzyka przerywa CI,
 - uprawnienie aparatu zostało usunięte z release, ponieważ aktualny wybór avatara
   korzysta wyłącznie z biblioteki multimediów,
+- powiadomienia są lokalne: release zachowuje nieeksportowany receiver Expo i
+  akcje boot potrzebne do odtwarzania przypomnień, ale usuwa serwisy FCM,
+  Firebase Instance ID receiver oraz uprawnienie odbioru C2DM,
 - build smoke wymaga Android SDK (`ANDROID_HOME` / `ANDROID_SDK_ROOT`); bez podlaczonego emulatora lub telefonu potwierdza linkowanie natywne, ale nie runtime UI,
 - widok mobile `Kredyty` z saldem, kosztami, kompaktowymi kartami pakietow, ostatnimi transakcjami, informacjami i akcja zakupu/restore pending purchases,
 - dev/test grant poza Production.

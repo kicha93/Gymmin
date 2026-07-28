@@ -432,13 +432,18 @@ Mobile build notes:
 - After a native dependency or Expo upgrade, run
   `npm run mobile:security:android-components` against the generated release
   manifest. The allowlist currently permits only `MainActivity` plus the
-  Firebase receiver protected by `com.google.android.c2dm.permission.SEND` and
-  the AndroidX Profile Installer receiver protected by
-  `android.permission.DUMP`. Review rather than automatically allow any new
-  exported component.
+  AndroidX Profile Installer receiver protected by `android.permission.DUMP`.
+  Review rather than automatically allow any new exported component.
 - The same validation rejects implicit component visibility, debuggable/test-only
   release manifests and a denylist of high-risk permissions. The app does not
   request camera permission while avatar input is gallery-only.
+- Workout reminders and export notifications are scheduled locally. The release
+  manifest therefore removes Expo/Firebase remote-messaging services, the
+  Firebase instance-ID receiver and `com.google.android.c2dm.permission.RECEIVE`.
+  Keep the non-exported Expo `NotificationsService` and boot receiver actions:
+  they restore local scheduled reminders after reboot. Remote push must not be
+  enabled by merely loosening the manifest; add token lifecycle, backend
+  delivery, consent/privacy documentation and abuse controls first.
 - Generate the upload key outside the repository:
 
 ```powershell

@@ -53,19 +53,18 @@ const allowedExportedComponents = new Map([
     },
   ],
   [
-    "receiver:com.google.firebase.iid.FirebaseInstanceIdReceiver",
-    {
-      permission: "com.google.android.c2dm.permission.SEND",
-      reason: "Firebase delivery receiver protected by Google's signature permission",
-    },
-  ],
-  [
     "receiver:androidx.profileinstaller.ProfileInstallReceiver",
     {
       permission: "android.permission.DUMP",
       reason: "AndroidX profile installer receiver protected by a system permission",
     },
   ],
+]);
+
+const forbiddenComponents = new Set([
+  "receiver:com.google.firebase.iid.FirebaseInstanceIdReceiver",
+  "service:com.google.firebase.messaging.FirebaseMessagingService",
+  "service:expo.modules.notifications.service.ExpoFirebaseMessagingService",
 ]);
 
 const forbiddenPermissions = new Set([
@@ -83,6 +82,7 @@ const forbiddenPermissions = new Set([
   "android.permission.WRITE_CALL_LOG",
   "android.permission.WRITE_CONTACTS",
   "android.permission.WRITE_EXTERNAL_STORAGE",
+  "com.google.android.c2dm.permission.RECEIVE",
 ]);
 
 function readAttribute(attributes, name) {
@@ -137,6 +137,12 @@ for (const component of parseOpeningTags(manifest, componentTypes)) {
   if (!name) {
     failures.push(`A ${component.type} declaration has no android:name.`);
     continue;
+  }
+
+  if (forbiddenComponents.has(key)) {
+    failures.push(
+      `${key} belongs to unused remote push delivery and must not be packaged in release.`,
+    );
   }
 
   if (!exported) {

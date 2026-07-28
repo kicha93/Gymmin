@@ -513,11 +513,37 @@ and Pub/Sub service-account email whenever Google Play purchases are enabled.
 Refund and chargeback reconciliation is implemented through the scheduled
 Voided Purchases worker; deployment must enable and monitor it.
 
+## Initial hosting decision (2026-07-28)
+
+The first public Gymmin environment will use **Railway Hobby** with the API and
+PostgreSQL in the same EU project/region. The home Windows machine and temporary
+Cloudflare tunnel remain test-only and must not serve the public Google Play
+release.
+
+Cost controls for the initial low-traffic launch:
+
+- configure a compute email alert at approximately USD 7/month,
+- configure a compute hard limit at USD 10/month, accepting that Railway stops
+  workloads when the limit is reached,
+- use Railway private networking for API-to-PostgreSQL traffic,
+- keep API and PostgreSQL resource limits conservative and review the first
+  seven days of measured usage,
+- do not enable serverless sleep for the public API because SMTP delivery,
+  workout-plan jobs, retention and Google Play reconciliation use background
+  workers,
+- enable scheduled Railway volume backups and retain the independent logical
+  backup/restore procedure described above.
+
+Prepare the deployment through a repository Dockerfile/configuration rather than
+manual commands that cannot be reproduced. Upgrade or migrate only when measured
+usage, reliability requirements or support requirements justify it.
+
 ## Deployment-owned work remaining
 
 - Apply and verify the completed hardening migrations on the target PostgreSQL.
 - Run avatar and AI-job smoke through at least two backend replicas.
-- Choose the permanent host/domain and configure its trusted proxy addresses.
+- Provision the selected Railway Hobby project in an EU region, then choose the
+  permanent domain and configure its trusted proxy addresses.
 - Schedule `backup-postgres.ps1`, copy backups off-host and record successful
   `verify-postgres-restore.ps1` runs.
 - Connect JSON logs and mobile crashes to the selected external provider.

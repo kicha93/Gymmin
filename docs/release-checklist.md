@@ -286,7 +286,10 @@ build:
 
 ## External production work before public launch
 
-- Choose real hosting and domain.
+- Provision the selected Railway Hobby environment for the API and PostgreSQL in
+  one EU region. Configure a compute alert around USD 7 and a USD 10 hard limit;
+  the home PC/Cloudflare tunnel remains test-only.
+- Choose the permanent domain.
 - Connect the JSON log stream and mobile crash reporting to the selected provider,
   then verify a synthetic backend exception and a non-release mobile crash alert.
 - Schedule and monitor `backup-postgres.ps1`; periodically run and record a real

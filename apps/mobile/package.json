@@ -8,7 +8,8 @@
     "start": "expo start",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "security:android": "node ../../scripts/validate-android-release-security.mjs"
+    "security:android": "node ../../scripts/validate-android-release-security.mjs",
+    "security:android-components": "node ../../scripts/validate-android-exported-components.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

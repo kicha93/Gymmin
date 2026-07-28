@@ -5,6 +5,7 @@
     "mobile:test": "npm --prefix apps/mobile run test",
     "mobile:typecheck": "npm --prefix apps/mobile run typecheck",
     "mobile:security:android": "npm --prefix apps/mobile run security:android",
+    "mobile:security:android-components": "npm --prefix apps/mobile run security:android-components",
     "mobile:build:android-apk": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android-apk.ps1",
     "mobile:build:android-apk:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android-apk-local.ps1",
     "mobile:build:android-aab:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android-aab-local.ps1",

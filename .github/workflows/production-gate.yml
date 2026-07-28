@@ -114,4 +114,6 @@ jobs:
           grep -q 'android:networkSecurityConfig="@xml/network_security_config"' "$manifest"
           grep -q 'android:fullBackupContent="@xml/backup_rules"' "$manifest"
           grep -q 'android:dataExtractionRules="@xml/data_extraction_rules"' "$manifest"
+      - name: Verify exported Android components
+        run: npm run security:android-components
           ! grep -q "android.permission.WRITE_EXTERNAL_STORAGE" "$manifest"

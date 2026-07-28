@@ -1,0 +1,206 @@
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const repositoryRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+);
+
+const defaultManifestCandidates = [
+  path.join(
+    repositoryRoot,
+    "apps",
+    "mobile",
+    "android",
+    "app",
+    "build",
+    "intermediates",
+    "merged_manifests",
+    "release",
+    "processReleaseManifest",
+    "AndroidManifest.xml",
+  ),
+  path.join(
+    repositoryRoot,
+    "apps",
+    "mobile",
+    "android",
+    "app",
+    "build",
+    "intermediates",
+    "merged_manifest",
+    "release",
+    "processReleaseMainManifest",
+    "AndroidManifest.xml",
+  ),
+];
+
+const componentTypes = new Set([
+  "activity",
+  "activity-alias",
+  "provider",
+  "receiver",
+  "service",
+]);
+
+const allowedExportedComponents = new Map([
+  [
+    "activity:com.gymmin.app.MainActivity",
+    {
+      permission: "",
+      reason: "Android launcher entry point",
+    },
+  ],
+  [
+    "receiver:com.google.firebase.iid.FirebaseInstanceIdReceiver",
+    {
+      permission: "com.google.android.c2dm.permission.SEND",
+      reason: "Firebase delivery receiver protected by Google's signature permission",
+    },
+  ],
+  [
+    "receiver:androidx.profileinstaller.ProfileInstallReceiver",
+    {
+      permission: "android.permission.DUMP",
+      reason: "AndroidX profile installer receiver protected by a system permission",
+    },
+  ],
+]);
+
+const forbiddenPermissions = new Set([
+  "android.permission.ACCESS_BACKGROUND_LOCATION",
+  "android.permission.ACCESS_FINE_LOCATION",
+  "android.permission.MANAGE_EXTERNAL_STORAGE",
+  "android.permission.QUERY_ALL_PACKAGES",
+  "android.permission.READ_CALL_LOG",
+  "android.permission.READ_CONTACTS",
+  "android.permission.READ_PHONE_STATE",
+  "android.permission.READ_SMS",
+  "android.permission.RECORD_AUDIO",
+  "android.permission.REQUEST_INSTALL_PACKAGES",
+  "android.permission.SYSTEM_ALERT_WINDOW",
+  "android.permission.WRITE_CALL_LOG",
+  "android.permission.WRITE_CONTACTS",
+  "android.permission.WRITE_EXTERNAL_STORAGE",
+]);
+
+function readAttribute(attributes, name) {
+  const match = attributes.match(
+    new RegExp(`(?:^|\\s)android:${name}="([^"]*)"`, "u"),
+  );
+  return match?.[1] ?? "";
+}
+
+function parseOpeningTags(xml, names) {
+  const tagPattern = /<([a-z-]+)\b([^>]*)>/gu;
+  const results = [];
+  let match;
+
+  while ((match = tagPattern.exec(xml)) !== null) {
+    if (names.has(match[1])) {
+      results.push({
+        type: match[1],
+        attributes: match[2],
+      });
+    }
+  }
+
+  return results;
+}
+
+const manifestArgument = process.argv[2];
+const manifestPath = manifestArgument
+  ? path.resolve(process.cwd(), manifestArgument)
+  : defaultManifestCandidates.find(existsSync);
+
+if (!manifestPath || !existsSync(manifestPath)) {
+  console.error(
+    "Merged Android release manifest was not found. Build/process the release manifest before running this validation.",
+  );
+  process.exit(1);
+}
+
+const manifest = readFileSync(manifestPath, "utf8").replace(
+  /<!--[\s\S]*?-->/gu,
+  "",
+);
+const failures = [];
+const exportedComponents = [];
+
+for (const component of parseOpeningTags(manifest, componentTypes)) {
+  const name = readAttribute(component.attributes, "name");
+  const exported = readAttribute(component.attributes, "exported");
+  const permission = readAttribute(component.attributes, "permission");
+  const key = `${component.type}:${name}`;
+
+  if (!name) {
+    failures.push(`A ${component.type} declaration has no android:name.`);
+    continue;
+  }
+
+  if (!exported) {
+    failures.push(
+      `${key} does not declare android:exported explicitly in the merged release manifest.`,
+    );
+    continue;
+  }
+
+  if (exported !== "true") {
+    continue;
+  }
+
+  exportedComponents.push({ key, permission });
+  const allowed = allowedExportedComponents.get(key);
+  if (!allowed) {
+    failures.push(`${key} is exported but is not present in the release allowlist.`);
+    continue;
+  }
+  if (permission !== allowed.permission) {
+    failures.push(
+      `${key} must be protected by "${allowed.permission || "(no permission)"}", received "${permission || "(no permission)"}".`,
+    );
+  }
+}
+
+for (const [key, allowed] of allowedExportedComponents) {
+  if (!exportedComponents.some((component) => component.key === key)) {
+    failures.push(
+      `Expected exported component ${key} is missing (${allowed.reason}).`,
+    );
+  }
+}
+
+const applicationTag = manifest.match(/<application\b([^>]*)>/u)?.[1] ?? "";
+if (readAttribute(applicationTag, "debuggable") === "true") {
+  failures.push("Merged release application must not be debuggable.");
+}
+if (readAttribute(applicationTag, "testOnly") === "true") {
+  failures.push("Merged release application must not be test-only.");
+}
+
+const permissionTags = parseOpeningTags(
+  manifest,
+  new Set(["uses-permission", "uses-permission-sdk-23"]),
+);
+for (const permissionTag of permissionTags) {
+  const permission = readAttribute(permissionTag.attributes, "name");
+  if (forbiddenPermissions.has(permission)) {
+    failures.push(`Forbidden release permission detected: ${permission}.`);
+  }
+}
+
+if (failures.length > 0) {
+  console.error(`Android exported-component validation failed for ${manifestPath}:`);
+  for (const failure of failures) {
+    console.error(`- ${failure}`);
+  }
+  process.exit(1);
+}
+
+console.log(`Android exported-component validation passed for ${manifestPath}.`);
+for (const component of exportedComponents) {
+  console.log(
+    `- ${component.key}${component.permission ? ` [${component.permission}]` : ""}`,
+  );
+}

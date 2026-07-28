@@ -429,6 +429,16 @@ Mobile build notes:
   storage. Cross-device restoration must use authenticated Gymmin sync.
 - Run `npm run mobile:security:android` after Expo/native configuration changes.
   The production gate also verifies the final merged release manifest.
+- After a native dependency or Expo upgrade, run
+  `npm run mobile:security:android-components` against the generated release
+  manifest. The allowlist currently permits only `MainActivity` plus the
+  Firebase receiver protected by `com.google.android.c2dm.permission.SEND` and
+  the AndroidX Profile Installer receiver protected by
+  `android.permission.DUMP`. Review rather than automatically allow any new
+  exported component.
+- The same validation rejects implicit component visibility, debuggable/test-only
+  release manifests and a denylist of high-risk permissions. The app does not
+  request camera permission while avatar input is gallery-only.
 - Generate the upload key outside the repository:
 
 ```powershell

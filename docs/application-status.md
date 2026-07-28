@@ -591,6 +591,12 @@ Aktualnie dziala:
   kontrolowaną synchronizację Gymmin,
 - skrypt `mobile:security:android` i production gate wykrywają regresję tych
   ustawień, a CI sprawdza również scalony manifest release,
+- finalny manifest release ma automatyczną allowlistę eksportowanych komponentów:
+  launcher aplikacji oraz dwa odbiorniki bibliotek chronione uprawnieniami
+  systemowymi; niejawny `android:exported`, nowy wystawiony komponent,
+  `debuggable`/`testOnly` albo uprawnienie z listy wysokiego ryzyka przerywa CI,
+- uprawnienie aparatu zostało usunięte z release, ponieważ aktualny wybór avatara
+  korzysta wyłącznie z biblioteki multimediów,
 - build smoke wymaga Android SDK (`ANDROID_HOME` / `ANDROID_SDK_ROOT`); bez podlaczonego emulatora lub telefonu potwierdza linkowanie natywne, ale nie runtime UI,
 - widok mobile `Kredyty` z saldem, kosztami, kompaktowymi kartami pakietow, ostatnimi transakcjami, informacjami i akcja zakupu/restore pending purchases,
 - dev/test grant poza Production.

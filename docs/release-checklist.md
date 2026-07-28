@@ -146,6 +146,13 @@ multi-replica and device smoke checks listed below.
 - `allowBackup=false` is reinforced with Android 11 backup rules and Android
   12+ extraction rules that exclude private storage from both cloud backup and
   device-to-device transfer.
+- The merged release manifest passes `security:android-components`: every
+  activity, service, receiver and provider declares `android:exported`
+  explicitly, and every exported component matches the reviewed allowlist and
+  required permission.
+- Release does not request camera permission. Avatar selection currently uses
+  the media library; reintroducing direct camera capture requires an explicit
+  product/privacy review and an intentional manifest change.
 - Store signing env vars are set:
   - `GYMMIN_UPLOAD_STORE_FILE`,
   - `GYMMIN_UPLOAD_STORE_PASSWORD`,
@@ -174,6 +181,7 @@ Run before publishing a package:
 npm --prefix apps/mobile run test
 npm --prefix apps/mobile run typecheck
 npm --prefix apps/mobile run security:android
+npm --prefix apps/mobile run security:android-components
 cd apps/mobile
 npx expo-doctor
 npx expo export --platform android --output-dir .expo-release-smoke
@@ -186,6 +194,8 @@ dotnet build backend/Gymmin.Api/Gymmin.Api.csproj
 and Hermes bundling, but it does not replace the signed AAB build or device smoke.
 The Android security validation is also run by the mobile test pre-hook and the
 production gate; the gate additionally inspects the merged release manifest.
+The exported-component command requires a processed release manifest, so run it
+after `processReleaseResources`, `bundleRelease` or the Store AAB build.
 
 ## Manual smoke required
 

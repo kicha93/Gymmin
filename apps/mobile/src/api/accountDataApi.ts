@@ -35,6 +35,7 @@ export type ApiWorkoutStep = {
 };
 
 export type ApiWorkout = {
+  archivedAt?: string;
   clientWorkoutId: string;
   createdAt?: string;
   name: string;
@@ -168,6 +169,7 @@ export function normalizeApiWorkouts(value: unknown): ApiWorkout[] {
       ? item.steps.flatMap(normalizeApiWorkoutStep)
       : [];
     return [{
+      archivedAt: normalizeOptionalString(item.archivedAt),
       clientWorkoutId,
       createdAt: normalizeOptionalString(item.createdAt),
       name: normalizeRequiredString(item.name) ?? "Workout",

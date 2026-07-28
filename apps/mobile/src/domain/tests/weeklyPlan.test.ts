@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   formatWeekRange,
+  getActiveWeeklyPlanWorkouts,
   getCurrentWeekRange,
   getDefaultWeeklyPlanSettings,
   getWeeklyPlanSummary,
@@ -84,6 +85,23 @@ describe("weeklyPlan", () => {
     plan = toggleWeeklyPlanItemDay(plan, "workout-a", "monday");
     expect(plan.items.map((item) => item.day)).toEqual(["friday"]);
     expect(removeWeeklyPlanItem(plan, "workout-a").items).toEqual([]);
+  });
+
+  it("returns every unique active planned workout in plan order", () => {
+    let plan = getDefaultWeeklyPlanSettings();
+    plan = upsertWeeklyPlanItem(plan, "workout-b", "monday");
+    plan = upsertWeeklyPlanItem(plan, "workout-a", "wednesday");
+    plan = upsertWeeklyPlanItem(plan, "workout-b", "friday");
+    plan = upsertWeeklyPlanItem(plan, "workout-c", "sunday");
+
+    expect(getActiveWeeklyPlanWorkouts(plan, [
+      ...workouts.slice(0, 2),
+      { ...workouts[2], archivedAt: "2026-07-27T10:00:00.000Z" }
+    ]).map((workout) => workout.id)).toEqual(["workout-b", "workout-a"]);
+  });
+
+  it("returns no homepage workouts when the weekly plan is disabled", () => {
+    expect(getActiveWeeklyPlanWorkouts(getDefaultWeeklyPlanSettings(), workouts)).toEqual([]);
   });
 
   it("merges anonymous and account plans without duplicate workout days", () => {

@@ -23,6 +23,7 @@ type WorkoutCreatorScreenProps = {
   collapsedSections: Record<string, boolean>;
   creditBalance: WorkoutCreatorCreditBalance;
   draft: Record<string, WorkoutCreatorValue>;
+  hasSensitiveDataConsent: boolean;
   importedWorkoutCount: number;
   isJobPending: boolean;
   isSubmitting: boolean;
@@ -38,6 +39,7 @@ type WorkoutCreatorScreenProps = {
   formatImportedWorkoutCount: (count: number) => string;
   onDraftFieldChange: (fieldId: string, value: WorkoutCreatorValue) => void;
   onLoadProfile: (profile: WorkoutCreatorProfile) => void;
+  onOpenPrivacy: () => void;
   onOpenCredits: () => void;
   onOpenWorkouts: () => void;
   onProfileNameChange: (value: string) => void;
@@ -46,6 +48,7 @@ type WorkoutCreatorScreenProps = {
   onSendWithoutSaving: () => void;
   onShowOnlineUnavailable: () => void;
   onSubmit: () => void;
+  onToggleSensitiveDataConsent: () => void;
   onToggleSection: (sectionId: string) => void;
   onUpdateProfileAndSubmit: () => void;
 };
@@ -55,6 +58,7 @@ export function WorkoutCreatorScreen({
   collapsedSections,
   creditBalance,
   draft,
+  hasSensitiveDataConsent,
   formatImportedWorkoutCount,
   importedWorkoutCount,
   isJobPending,
@@ -62,6 +66,7 @@ export function WorkoutCreatorScreen({
   language,
   onDraftFieldChange,
   onLoadProfile,
+  onOpenPrivacy,
   onOpenCredits,
   onOpenWorkouts,
   onProfileNameChange,
@@ -70,6 +75,7 @@ export function WorkoutCreatorScreen({
   onSendWithoutSaving,
   onShowOnlineUnavailable,
   onSubmit,
+  onToggleSensitiveDataConsent,
   onToggleSection,
   onUpdateProfileAndSubmit,
   phase,
@@ -325,8 +331,41 @@ export function WorkoutCreatorScreen({
               </AppButton>
             ) : null}
           </View>
+          <Pressable
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: hasSensitiveDataConsent }}
+            style={[styles.creatorConsentRow, { borderColor: theme.border, backgroundColor: theme.control }]}
+            onPress={onToggleSensitiveDataConsent}
+          >
+            <View
+              style={[
+                styles.creatorConsentCheckbox,
+                {
+                  backgroundColor: hasSensitiveDataConsent ? theme.primary : theme.card,
+                  borderColor: hasSensitiveDataConsent ? theme.primary : theme.border
+                }
+              ]}
+            >
+              {hasSensitiveDataConsent ? <Ionicons name="checkmark" size={17} color={theme.white} /> : null}
+            </View>
+            <View style={styles.creatorConsentCopy}>
+              <Text style={[styles.creatorConsentText, { color: theme.text }]}>
+                {t("aiCreatorSensitiveConsent")}
+              </Text>
+              <Pressable
+                accessibilityRole="link"
+                hitSlop={8}
+                onPress={(event) => {
+                  event.stopPropagation();
+                  onOpenPrivacy();
+                }}
+              >
+                <Text style={[styles.creatorConsentLink, { color: theme.primary }]}>{t("privacyPolicy")}</Text>
+              </Pressable>
+            </View>
+          </Pressable>
           <AppButton
-            disabled={isSubmitting || isJobPending || !areOnlineFeaturesAvailable || creditBalance.balance < creditBalance.planCost}
+            disabled={!hasSensitiveDataConsent || isSubmitting || isJobPending || !areOnlineFeaturesAvailable || creditBalance.balance < creditBalance.planCost}
             icon="sparkles-outline"
             theme={theme}
             onPress={onSubmit}
@@ -356,7 +395,7 @@ export function WorkoutCreatorScreen({
           </View>
           <View style={styles.creatorPromptActions}>
             <AppButton
-              disabled={isSubmitting || isJobPending || !areOnlineFeaturesAvailable}
+              disabled={!hasSensitiveDataConsent || isSubmitting || isJobPending || !areOnlineFeaturesAvailable}
               icon="save-outline"
               theme={theme}
               onPress={selectedProfile ? onUpdateProfileAndSubmit : onSaveProfileAndSubmit}
@@ -368,7 +407,7 @@ export function WorkoutCreatorScreen({
                   : t("aiCreatorSaveAndSubmit")}
             </AppButton>
             <AppButton
-              disabled={isSubmitting || isJobPending || !areOnlineFeaturesAvailable}
+              disabled={!hasSensitiveDataConsent || isSubmitting || isJobPending || !areOnlineFeaturesAvailable}
               icon="send-outline"
               theme={theme}
               variant="outline"

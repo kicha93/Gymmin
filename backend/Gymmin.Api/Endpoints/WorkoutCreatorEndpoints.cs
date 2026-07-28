@@ -34,6 +34,14 @@ internal static class WorkoutCreatorEndpoints
                 return EndpointResults.RateLimited(request);
             }
 
+            if (!body.SensitiveDataConsent)
+            {
+                return Results.BadRequest(new ApiErrorResponse(new ApiError(
+                    "sensitive_data_consent_required",
+                    "Explicit consent is required before health and lifestyle data can be sent to the AI provider.",
+                    DiagnosticsContext.GetCorrelationId(request.HttpContext))));
+            }
+
             if (body.QuestionsAndAnswers is null ||
                 body.QuestionsAndAnswers.Count is 0 or > 30 ||
                 body.QuestionsAndAnswers.Any(item =>

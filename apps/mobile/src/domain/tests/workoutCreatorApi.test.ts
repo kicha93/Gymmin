@@ -47,8 +47,26 @@ describe("workoutCreatorApi", () => {
 
   it("routes insufficient-credit responses through the shared error factory", async () => {
     const { client, createError } = createClient(new Response("{}", { status: 402 }));
-    await expect(client.startPlan({ language: "pl", profileId: null, questionsAndAnswers: [] }, {}, "failed"))
+    await expect(client.startPlan({
+      language: "pl",
+      profileId: null,
+      questionsAndAnswers: [],
+      sensitiveDataConsent: true
+    }, {}, "failed"))
       .rejects.toMatchObject({ status: 402 });
     expect(createError).toHaveBeenCalled();
+  });
+
+  it("sends explicit sensitive-data consent with the plan request", async () => {
+    const { client, request } = createClient(new Response(JSON.stringify({ jobId: "job-a" }), { status: 202 }));
+    await client.startPlan({
+      language: "en",
+      profileId: "profile-a",
+      questionsAndAnswers: [{ Answer: "Knee pain", Question: "Injuries" }],
+      sensitiveDataConsent: true
+    }, {}, "failed");
+
+    const [, init] = request.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(String(init?.body))).toMatchObject({ sensitiveDataConsent: true });
   });
 });

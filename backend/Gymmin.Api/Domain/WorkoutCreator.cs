@@ -9,7 +9,8 @@ public sealed record WorkoutCreatorQuestionAnswer(
 public sealed record CreateWorkoutPlanRequest(
     IReadOnlyList<WorkoutCreatorQuestionAnswer> QuestionsAndAnswers,
     string? Language,
-    string? ProfileId);
+    string? ProfileId,
+    bool SensitiveDataConsent = false);
 
 public sealed record CreateWorkoutRewriteRequest(
     string? Language,

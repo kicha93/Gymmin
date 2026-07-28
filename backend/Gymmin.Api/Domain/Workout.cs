@@ -12,6 +12,8 @@ public sealed record Workout(
     DateTimeOffset UpdatedAt,
     DateTimeOffset? DeletedAt)
 {
+    public DateTimeOffset? ArchivedAt { get; init; }
+
     public static Workout FromRequest(string userId, UpsertWorkoutRequest request, Workout? existing = null)
     {
         var now = DateTimeOffset.UtcNow;
@@ -26,7 +28,15 @@ public sealed record Workout(
             WorkoutStep.FromRequests(request.Steps, existing?.Steps),
             existing?.CreatedAt ?? now,
             now,
-            null);
+            null)
+        {
+            ArchivedAt = request.IsArchived switch
+            {
+                true => request.ArchivedAt ?? existing?.ArchivedAt ?? now,
+                false => null,
+                null => existing?.ArchivedAt
+            }
+        };
     }
 
     public Workout MarkDeleted()
@@ -169,7 +179,11 @@ public sealed record UpsertWorkoutRequest(
     string? Notes,
     SportType Sport,
     IReadOnlyList<UpsertWorkoutStepRequest> Steps,
-    DateTimeOffset? ClientUpdatedAt);
+    DateTimeOffset? ClientUpdatedAt)
+{
+    public DateTimeOffset? ArchivedAt { get; init; }
+    public bool? IsArchived { get; init; }
+}
 
 public sealed record UpsertWorkoutStepRequest(
     string ClientStepId,

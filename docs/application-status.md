@@ -6,6 +6,21 @@ Ten dokument opisuje aktualny zakres aplikacji Gymmin po audycie produkcyjnym i 
 
 Gymmin to mobilna aplikacja do treningów siłowych. Aplikacja jest local-first: bez konta można tworzyć treningi, wykonywać je, mieć historię i progres lokalnie na telefonie. Konto służy do synchronizacji danych z backendem oraz do funkcji wymagających identyfikacji użytkownika, takich jak kreator AI.
 
+## Prywatność i zgoda na dane wrażliwe
+
+- ustawienia zawierają ekran polityki prywatności PL/EN dostępny także offline,
+- backend udostępnia publiczną politykę bez logowania pod
+  `GET /privacy?lang=pl|en`; produkcyjny adres tego endpointu jest przeznaczony
+  również do pola Privacy Policy w Google Play Console,
+- polityka opisuje kategorie danych, cele, retencję i usuwanie konta oraz
+  odbiorców: hosting/bazę danych, OpenAI, operatora SMTP i Google Play,
+- przed przesłaniem profilu kreatora AI użytkownik musi osobno zaznaczyć
+  świadomą zgodę obejmującą dane zdrowotne, urazy, leki i styl życia,
+- zgoda nie jest domyślnie zaznaczona ani trwale zapamiętywana; jest wymagana
+  dla każdego nowego wysłania,
+- backend wymaga `sensitiveDataConsent: true` i odrzuca brak zgody przed
+  pobraniem kredytu oraz przed wywołaniem OpenAI.
+
 Docelowo Gymmin ma być przygotowany pod synchronizację z Garminem, dlatego ćwiczenia pochodzą z katalogu aplikacji i mają stabilne identyfikatory.
 
 ## Stack
@@ -79,7 +94,7 @@ Formularz Kreatora AI jest wydzielony do `WorkoutCreatorScreen`, a definicja ank
 
 Formularz modyfikowania treningu przez AI i ekran propozycji mają osobne moduły `WorkoutAiRewriteScreen` oraz `WorkoutAiProposalScreen`. Podgląd zachowuje hierarchię etapów, serii i ćwiczeń oraz informację o dopasowaniu do katalogu. Endpoint rewrite, polling, rozliczenie kredytu, zapis jako nowy trening i zastąpienie istniejącego planu pozostają w kompozycji aplikacji.
 
-Warstwa prezentacyjna Ustawień jest wydzielona do `SettingsScreen` i `SettingsSheetContent`. Ekran zachowuje sekcje preferencji, treningu, przypomnień, integracji i informacji, a arkusze zachowują edycję języka, wartości domyślnych oraz godzin per dzień. Normalizacja znajduje się w `src/domain/appSettings.ts`, account-scoped persystencja w `useAccountScopedSettings`, transport w `src/api/accountDataApi.ts`, natomiast `App.tsx` koordynuje uprawnienia powiadomień i decyzje synchronizacji ustawień.
+Warstwa prezentacyjna Ustawień jest wydzielona do `SettingsScreen` i `SettingsSheetContent`. Ekran zachowuje sekcje preferencji, treningu, przypomnień i informacji; pusty panel przyszłych integracji jest obecnie ukryty. Arkusze zachowują edycję języka, wartości domyślnych oraz godzin per dzień. Normalizacja znajduje się w `src/domain/appSettings.ts`, account-scoped persystencja w `useAccountScopedSettings`, transport w `src/api/accountDataApi.ts`, natomiast `App.tsx` koordynuje uprawnienia powiadomień i decyzje synchronizacji ustawień.
 
 Wszystkie widoki nawigacyjne mobile mają obecnie własne moduły w `src/screens`. Dotyczy to również homepage, listy treningów, planu tygodnia, buildera treningu, aktywnej sesji, szczegółów ćwiczenia, ulubionych ćwiczeń i artykułu. Elementy używane przez kilka ekranów zostały przeniesione do `src/components`, a typy i czyste helpery do `src/domain`. `App.tsx` pozostaje kompozytorem stanu, storage, API, synchronizacji i nawigacji; nie zawiera już pełnych implementacji ekranów.
 
@@ -264,7 +279,10 @@ Na stronie głównej są:
 - panel treningów,
 - panel artykułów.
 
-Panel treningów na stronie głównej pokazuje maksymalnie 5 treningów i prowadzi do pełnej listy, jeśli treningów jest więcej.
+Panel treningów na stronie głównej pokazuje bez limitu wyłącznie unikalne,
+niezarchiwizowane treningi przypisane do aktywnego planu tygodnia. Nie ma już
+osobnej akcji `Zobacz wszystkie`; pełna biblioteka pozostaje na ekranie
+`Treningi`.
 
 Panel logowania można zamknąć. Decyzja jest zapamiętywana. Jeżeli panel jest widoczny dla niezalogowanego użytkownika, ikona profilu w headerze jest ukryta.
 
@@ -279,6 +297,14 @@ Użytkownik może:
 - przeglądać trening read-only,
 - wyszukiwać treningi,
 - sortować listę treningów.
+- archiwizować i odarchiwizowywać treningi bez usuwania ich danych.
+
+Treningi archiwalne są domyślnie ukryte na liście. Filtr `Pokaż archiwalne`
+dołącza je do aktualnych wyników wyszukiwania i oznacza badge'em. Archiwizacja
+zachowuje definicję, historię oraz przypisania planu tygodnia, ale wyklucza
+trening z homepage, podsumowania tygodnia i selektora planu. Po
+odarchiwizowaniu zachowane przypisania ponownie zaczynają obowiązywać. Pole
+`archivedAt` jest local-first i synchronizuje się razem z definicją treningu.
 
 Eksport jest dostępny na ekranie szczegółów między akcjami `Edytuj` i `Usuń`.
 CSV używa UTF-8 BOM oraz separatora `;`, dzięki czemu zachowuje polskie znaki i
@@ -302,7 +328,7 @@ Sortowanie treningów:
 - opcje sortowania: data stworzenia albo alfabetycznie,
 - kierunek: rosnąco albo malejąco,
 - stan sortowania jest zapisywany lokalnie razem z listą treningów,
-- sortowanie działa na stronie głównej i na ekranie `Treningi`.
+- sortowanie działa na ekranie `Treningi` i dla aktywnych treningów na homepage.
 
 ### Model treningu
 
@@ -361,6 +387,12 @@ kliencie od jawnego `"0"` wysyłanego przez aktualną aplikację, więc starszy
 payload nie usuwa odzyskanego czasu, a świadome wyzerowanie nadal działa.
 
 ### Katalog ćwiczeń
+
+Font Ionicons jest ładowany lokalnie podczas istniejącego splash screena.
+Aplikacja odsłania interfejs dopiero po zakończeniu preloadu, dzięki czemu małe
+ikony akcji (np. plus, chevron lub kosz) nie pojawiają się z opóźnieniem po
+wyrenderowaniu panelu. Ładowanie odbywa się równolegle z minimalnym czasem
+ekranu startowego i nie wymaga sieci.
 
 Ćwiczenia pochodzą z lokalnego katalogu Garmin-compatible. Katalog zawiera:
 
@@ -551,7 +583,7 @@ Dogrywka 12A.1: AiCredits concurrency, idempotency i refund zostaly sprawdzone n
 ### Artykuły
 
 Artykuły są lokalne. Widok artykułu ma datę publikacji, czas czytania, nagłówki, akapity i czytelne karty planu tygodniowego zamiast szerokiej tabeli.
-Model artykulu obsluguje `translations` per jezyk oraz `defaultLanguage`. Lista i szczegoly artykulu wybieraja wersje zgodna z jezykiem aplikacji, a jesli jej brakuje, wracaja do jezyka domyslnego albo pierwszej dostepnej wersji. Aktualny artykul o tworzeniu planu treningowego ma wariant PL i EN.
+Model artykulu obsluguje `translations` per jezyk oraz `defaultLanguage`. Lista i szczegoly artykulu wybieraja wersje zgodna z jezykiem aplikacji, a jesli jej brakuje, wracaja do jezyka domyslnego albo pierwszej dostepnej wersji. Artykuly o tworzeniu planu, skutecznej progresji, doborze serii i powtorzen oraz doborze ciezaru i intensywnosci maja warianty PL i EN. Renderer obsluguje naglowki, listy i responsywne tabele wielokolumnowe.
 
 ### Ustawienia
 

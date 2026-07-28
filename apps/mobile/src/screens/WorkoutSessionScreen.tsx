@@ -551,7 +551,8 @@ export function WorkoutSessionScreen({
     session: WorkoutSession,
     group: { entries: WorkoutSessionEntry[]; restEntry?: WorkoutSessionEntry },
     exerciseNumber: number,
-    embedded = false
+    embedded = false,
+    supersetSide?: WorkoutSessionSupersetSide
   ) {
     const entry = group.entries[0];
     const setCount = String(group.entries.length || 1);
@@ -575,6 +576,11 @@ export function WorkoutSessionScreen({
             </View>
           ) : null}
           <Text style={[styles.guidedExerciseTitle, { color: theme.text }]} numberOfLines={3}>
+            {supersetSide ? (
+              <Text style={[styles.guidedSupersetExercisePrefix, { color: theme.primary }]}>
+                {t(supersetSide === "A" ? "supersetExerciseA" : "supersetExerciseB")}:{" "}
+              </Text>
+            ) : null}
             {title}
           </Text>
           {!isUntimedWarmup ? (
@@ -836,13 +842,13 @@ export function WorkoutSessionScreen({
           </Pressable>
         </View>
         <View style={[styles.guidedSupersetCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {renderGuidedPlanPreview(session, groups[0], firstExerciseNumber, true)}
+          {renderGuidedPlanPreview(session, groups[0], firstExerciseNumber, true, "A")}
           <View style={styles.guidedSupersetSeparator}>
             <View style={[styles.guidedSupersetSeparatorLine, { backgroundColor: theme.border }]} />
             <Text style={[styles.guidedSupersetSeparatorText, { color: theme.primary }]}>{t("supersetAlternate")}</Text>
             <View style={[styles.guidedSupersetSeparatorLine, { backgroundColor: theme.border }]} />
           </View>
-          {renderGuidedPlanPreview(session, groups[1], firstExerciseNumber + 1, true)}
+          {renderGuidedPlanPreview(session, groups[1], firstExerciseNumber + 1, true, "B")}
         </View>
         {renderSupersetRoundTable(session, supersetId)}
         {renderSupersetRestTimer(supersetId, groups)}

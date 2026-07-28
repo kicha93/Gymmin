@@ -69,7 +69,8 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var plan = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
             "en",
-            null));
+            null,
+            true));
         Assert.Equal(HttpStatusCode.Accepted, plan.StatusCode);
 
         var rewrite = await client.PostAsJsonAsync("/api/workout-creator/rewrite", new
@@ -83,13 +84,15 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var secondPlan = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Hypertrophy")],
             "en",
-            null));
+            null,
+            true));
         Assert.Equal(HttpStatusCode.Accepted, secondPlan.StatusCode);
 
         var insufficient = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Endurance")],
             "en",
-            null));
+            null,
+            true));
         Assert.Equal(HttpStatusCode.PaymentRequired, insufficient.StatusCode);
         var error = await insufficient.Content.ReadFromJsonAsync<ApiErrorResponse>();
         Assert.Equal("insufficient_ai_credits", error!.Error.Code);
@@ -109,7 +112,8 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var request = new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
             "en",
-            null);
+            null,
+            true);
         var first = await client.PostAsJsonAsync("/api/workout-creator/plan", request);
         var second = await client.PostAsJsonAsync("/api/workout-creator/plan", request);
 
@@ -134,7 +138,8 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var request = new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
             "en",
-            null);
+            null,
+            true);
 
         Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/workout-creator/plan", request)).StatusCode);
         Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/workout-creator/plan", request)).StatusCode);
@@ -168,7 +173,8 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var request = new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
             "en",
-            null);
+            null,
+            true);
 
         var first = await firstClient.PostAsJsonAsync("/api/workout-creator/plan", request);
         var second = await secondClient.PostAsJsonAsync("/api/workout-creator/plan", request);
@@ -192,7 +198,8 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
         var response = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
             "en",
-            null));
+            null,
+            true));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
@@ -214,7 +221,8 @@ public sealed class AiCreditsApiTests : IClassFixture<GymminApiFactory>
             var start = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
                 [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
                 "en",
-                null));
+                null,
+                true));
             Assert.Equal(HttpStatusCode.Accepted, start.StatusCode);
             var job = await start.Content.ReadFromJsonAsync<CreateWorkoutPlanJobResponse>();
             var status = await WaitForJobAsync(client, $"/api/workout-creator/plan/{job!.JobId}");

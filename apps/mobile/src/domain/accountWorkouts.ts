@@ -15,6 +15,8 @@ export function mapSavedWorkoutToApiRequest(workout: SavedWorkout) {
   const normalizedWorkout = normalizeSavedWorkoutTextFields(workout);
 
   return {
+    archivedAt: normalizedWorkout.archivedAt ?? null,
+    isArchived: Boolean(normalizedWorkout.archivedAt),
     clientUpdatedAt: new Date().toISOString(),
     clientWorkoutId: normalizedWorkout.id,
     createdAt: normalizedWorkout.createdAt ?? getFallbackWorkoutCreatedAt(normalizedWorkout),
@@ -74,6 +76,7 @@ export function mapApiWorkoutToSavedWorkout(apiWorkout: ApiWorkout): SavedWorkou
   const name = repairTextEncoding(apiWorkout.name || "Workout");
 
   return normalizeSavedWorkoutTextFields({
+    archivedAt: normalizeDateString(apiWorkout.archivedAt),
     draft: {
       name,
       notes: repairTextEncoding(apiWorkout.notes ?? ""),

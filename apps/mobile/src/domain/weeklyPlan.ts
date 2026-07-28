@@ -21,7 +21,7 @@ export type LoadedWeeklyPlan = {
   plan: WeeklyPlanSettings;
 };
 
-export type WeeklyPlanWorkout = { id: string; name: string };
+export type WeeklyPlanWorkout = { archivedAt?: string | null; id: string; name: string };
 export type WeeklyPlanWeekRange = { start: Date; end: Date };
 export type WeeklyPlanSummary = {
   completed: number;
@@ -228,6 +228,35 @@ export function getWeeklyPlanSummary(
     todayItems: items.filter((item) => item.day === currentDay),
     total
   };
+}
+
+export function getActiveWeeklyPlanWorkouts<T extends WeeklyPlanWorkout>(
+  plan: WeeklyPlanSettings,
+  workouts: T[],
+  now = new Date()
+): T[] {
+  if (!plan.enabled) {
+    return [];
+  }
+
+  const workoutsById = new Map(
+    workouts
+      .filter((workout) => !workout.archivedAt)
+      .map((workout) => [workout.id, workout])
+  );
+  const seen = new Set<string>();
+
+  return normalizeWeeklyPlanSettings(plan, now).items.flatMap((item) => {
+    if (seen.has(item.workoutId)) {
+      return [];
+    }
+    const workout = workoutsById.get(item.workoutId);
+    if (!workout) {
+      return [];
+    }
+    seen.add(item.workoutId);
+    return [workout];
+  });
 }
 
 export function upsertWeeklyPlanItem(plan: WeeklyPlanSettings, workoutId: string, day: WeeklyPlanDay, now = new Date()): WeeklyPlanSettings {

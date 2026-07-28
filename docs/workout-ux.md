@@ -44,7 +44,10 @@ This note tracks the current workout-view UX decisions.
 
 ## Workout definition export
 
-- Read-only workout details show `Edit | Export | Delete`; on narrow screens the three equal actions move below the workout name instead of overflowing.
+- Read-only workout details show `Edit | Export`, followed by one equal-width
+  `Archive | Delete` row and the existing `Start | Modify with AI` row.
+  An archived workout becomes read-only: only `Unarchive | Delete` remain
+  actionable, while edit, export, start and AI modification are hidden.
 - Export opens a local format sheet for CSV or Excel XLSX and shows a disabled/loading state while the file is generated.
 - CSV uses UTF-8 with BOM, `;` separators, RFC-style quote escaping and neutralizes formula-like user text before it reaches a spreadsheet application.
 - CSV and XLSX contain the same compact columns: stage, type, exercise, sets,
@@ -120,6 +123,8 @@ This note tracks the current workout-view UX decisions.
   Inline-table and readonly-post-workout modes do not create this grouping.
 - The MVP accepts exactly two adjacent, non-rest exercise groups. An exercise cannot belong to two supersets at the same time.
 - A combined step renders `Exercises X–Y/Total`, a `Superset A` badge, both exercise cards, the `Alternate exercises` separator and one round table.
+- The two exercise titles are prefixed with `Exercise A` and `Exercise B`
+  (`Ćwiczenie A/B`) so they map directly to the A/B result columns below.
 - The round count is the larger set count of exercise A and B. If one exercise has fewer sets, its missing cells are rendered disabled rather than creating synthetic result entries.
 - Weight and reps inputs update the original entries of exercise A or B. The existing previous-weight and previous-reps prefill actions remain visible separately for both sides.
 - The round checkbox completes the entries which actually exist in that round. Splitting the superset removes only the grouping and preserves all entered values.
@@ -138,3 +143,9 @@ W `Ustawienia -> Trening` użytkownik może włączyć albo wyłączyć widoczno
 ## Plan tygodnia
 
 Plan tygodnia jest lokalny i przypisany do aktualnego ownera storage. Każdy zapisany trening można dodać do wielu dni tygodnia, a homepage pokazuje zakres bieżącego tygodnia, wykonane/do wykonania oraz najbliższy trening na dziś. Każdy zaplanowany dzień jest osobnym wykonaniem; ukończona sesja zalicza jedno z nich nawet wtedy, gdy została wykonana w innym dniu niż zaplanowany.
+
+Panel `Treningi` na homepage pokazuje wszystkie unikalne treningi przypisane do
+aktywnego planu tygodnia, bez limitu i bez przycisku `Zobacz wszystkie`.
+Zarchiwizowane treningi są pomijane. Biblioteka treningów ukrywa je domyślnie,
+ale filtr pozwala dołączyć je do listy i otworzyć w celu odarchiwizowania.
+Archiwizacja nie usuwa historii ani przypisań tygodnia.

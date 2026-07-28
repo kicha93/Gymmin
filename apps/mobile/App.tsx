@@ -1,5 +1,6 @@
 ﻿import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFonts } from "expo-font";
 import { config as gluestackConfig } from "@gluestack-ui/config";
 import {
   GluestackUIProvider,
@@ -165,6 +166,7 @@ import {
   WEEKLY_PLAN_STORAGE_BASE_KEY,
   formatWeekRange,
   getCurrentWeekRange,
+  getActiveWeeklyPlanWorkouts,
   getWeeklyPlanDay,
   getWeeklyPlanSummary,
   loadWeeklyPlan,
@@ -237,6 +239,7 @@ import { AiCreditsScreen } from "./src/screens/AiCreditsScreen";
 import { ExerciseProgressScreen } from "./src/screens/ExerciseProgressScreen";
 import { ProgressScreen } from "./src/screens/ProgressScreen";
 import { TermsScreen } from "./src/screens/TermsScreen";
+import { PrivacyScreen } from "./src/screens/PrivacyScreen";
 import {
   WorkoutHistoryScreen,
   type WorkoutHistoryStatusFilter
@@ -268,7 +271,14 @@ import { WorkoutSortActions, WorkoutSortSheet } from "./src/components/WorkoutSo
 import { AppDialog, type AppDialogAction, type AppDialogState } from "./src/components/AppDialog";
 import { GlobalErrorFallback } from "./src/components/GlobalErrorFallback";
 import type { SettingsSheetKey } from "./src/domain/settings";
-import type { SavedWorkout, SortDirection, WorkoutSortField, WorkoutSortSettings } from "./src/domain/savedWorkouts";
+import {
+  isWorkoutArchived,
+  setWorkoutArchived,
+  type SavedWorkout,
+  type SortDirection,
+  type WorkoutSortField,
+  type WorkoutSortSettings
+} from "./src/domain/savedWorkouts";
 import {
   compareWorkouts,
   defaultWorkoutSort,
@@ -846,10 +856,13 @@ function GymminApp() {
   const insets = useSafeAreaInsets();
   const windowSize = useWindowDimensions();
   const isLandscape = windowSize.width > windowSize.height;
+  const splashStartedAt = useRef(Date.now()).current;
   const splashOpacity = useRef(new Animated.Value(1)).current;
+  const [areIconFontsLoaded, iconFontError] = useFonts(Ionicons.font);
   const languageSheetTranslateY = useRef(new Animated.Value(360)).current;
   const [isAppLoading, setIsAppLoading] = useState(true);
   const [activeScreen, setActiveScreen] = useState<ScreenKey>("home");
+  const [privacyReturnScreen, setPrivacyReturnScreen] = useState<ScreenKey>("settings");
   const {
     isSystemStatusRefreshing,
     refreshSystemStatus,
@@ -859,6 +872,7 @@ function GymminApp() {
   const [selectedArticleId, setSelectedArticleId] = useState<string>(articles[0]?.id ?? "");
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [includeArchivedWorkouts, setIncludeArchivedWorkouts] = useState(false);
   const [workout, setWorkout] = useState<WorkoutDraft>(() => createDefaultWorkout());
   const [pendingLanguage, setPendingLanguage] = useState<LanguageCode>("en");
   const [pendingDefaultSetCount, setPendingDefaultSetCount] = useState("");
@@ -912,6 +926,7 @@ function GymminApp() {
   const [bugSubmittedId, setBugSubmittedId] = useState("");
   const [isBugSubmitting, setIsBugSubmitting] = useState(false);
   const [creatorDraft, setCreatorDraft] = useState<WorkoutCreatorDraft>({});
+  const [creatorSensitiveDataConsent, setCreatorSensitiveDataConsent] = useState(false);
   const [creatorPhase, setCreatorPhase] = useState<WorkoutCreatorPhase>("form");
   const [isCreatorSubmitting, setIsCreatorSubmitting] = useState(false);
   const [creatorSubmitError, setCreatorSubmitError] = useState("");
@@ -922,7 +937,6 @@ function GymminApp() {
   const [isRewriteSubmitting, setIsRewriteSubmitting] = useState(false);
   const [rewriteSourceWorkoutId, setRewriteSourceWorkoutId] = useState<string | null>(null);
   const [rewriteProposedWorkout, setRewriteProposedWorkout] = useState<SavedWorkout | null>(null);
-  const [showAiRewriteCreditTooltip, setShowAiRewriteCreditTooltip] = useState(false);
   const [creatorCollapsedSections, setCreatorCollapsedSections] = useState<Record<string, boolean>>({});
   const [creatorProfileName, setCreatorProfileName] = useState("");
   const [showCreatorLoginTooltip, setShowCreatorLoginTooltip] = useState(false);
@@ -1657,16 +1671,25 @@ function GymminApp() {
   }
 
   useEffect(() => {
+    if (!areIconFontsLoaded && !iconFontError) {
+      return;
+    }
+
+    if (iconFontError) {
+      console.error("Failed to preload Ionicons font", iconFontError);
+    }
+
+    const remainingSplashMs = Math.max(0, 850 - (Date.now() - splashStartedAt));
     const timeoutId = setTimeout(() => {
       Animated.timing(splashOpacity, {
         duration: 320,
         toValue: 0,
         useNativeDriver: true
       }).start(() => setIsAppLoading(false));
-    }, 850);
+    }, remainingSplashMs);
 
     return () => clearTimeout(timeoutId);
-  }, [splashOpacity]);
+  }, [areIconFontsLoaded, iconFontError, splashOpacity, splashStartedAt]);
 
   useEffect(() => {
     if (isAppLoading || activeScreen !== "home") {
@@ -1851,12 +1874,22 @@ function GymminApp() {
 
   const filteredWorkouts = useMemo(() => {
     const phrase = search.trim().toLowerCase();
-    const visibleWorkouts = !phrase
-      ? savedWorkouts
-      : savedWorkouts.filter((item) => item.name.toLowerCase().includes(phrase));
+    const visibleWorkouts = savedWorkouts.filter((item) =>
+      (includeArchivedWorkouts || !isWorkoutArchived(item))
+      && (!phrase || item.name.toLowerCase().includes(phrase))
+    );
 
     return [...visibleWorkouts].sort((left, right) => compareWorkouts(left, right, workoutSort));
-  }, [savedWorkouts, search, workoutSort]);
+  }, [includeArchivedWorkouts, savedWorkouts, search, workoutSort]);
+  const activeWorkouts = useMemo(
+    () => savedWorkouts.filter((workout) => !isWorkoutArchived(workout)),
+    [savedWorkouts]
+  );
+  const activeWeeklyWorkouts = useMemo(
+    () => [...getActiveWeeklyPlanWorkouts(weeklyPlan, savedWorkouts)]
+      .sort((left, right) => compareWorkouts(left, right, workoutSort)),
+    [savedWorkouts, weeklyPlan, workoutSort]
+  );
 
   const visibleWorkoutSessions = useMemo(
     () => getActiveWorkoutSessionsForUi(workoutSessions),
@@ -1868,8 +1901,8 @@ function GymminApp() {
     [activeWorkoutSessionId, visibleWorkoutSessions]
   );
   const weeklyPlanSummary = useMemo(
-    () => getWeeklyPlanSummary(weeklyPlan, savedWorkouts, visibleWorkoutSessions, new Date()),
-    [savedWorkouts, visibleWorkoutSessions, weeklyPlan]
+    () => getWeeklyPlanSummary(weeklyPlan, activeWorkouts, visibleWorkoutSessions, new Date()),
+    [activeWorkouts, visibleWorkoutSessions, weeklyPlan]
   );
   const shouldShowWorkoutHeaderTime = activeScreen === "workoutSession" && Boolean(activeWorkoutSession);
   const activeWorkoutController = useActiveWorkoutController({
@@ -1915,8 +1948,8 @@ function GymminApp() {
   });
 
   const selectedWorkout = useMemo(
-    () => savedWorkouts.find((item) => item.id === selectedWorkoutId) ?? savedWorkouts[0] ?? null,
-    [savedWorkouts, selectedWorkoutId]
+    () => savedWorkouts.find((item) => item.id === selectedWorkoutId) ?? activeWorkouts[0] ?? savedWorkouts[0] ?? null,
+    [activeWorkouts, savedWorkouts, selectedWorkoutId]
   );
 
   const rewriteSourceWorkout = useMemo(
@@ -2412,6 +2445,7 @@ function GymminApp() {
     }
 
     setCreatorDraft({});
+    setCreatorSensitiveDataConsent(false);
     setCreatorProfileName("");
     setSelectedCreatorProfileId(null);
     setCreatorCollapsedSections({});
@@ -2425,40 +2459,6 @@ function GymminApp() {
   function openWorkoutDetail(workoutId: string) {
     setSelectedWorkoutId(workoutId);
     setActiveScreen("workoutDetail");
-  }
-
-  function openWorkoutAiRewrite(workoutId = selectedWorkoutId) {
-    if (!areOnlineFeaturesAvailable) {
-      showOnlineFeatureUnavailableDialog();
-      return;
-    }
-
-    if (!user) {
-      setActiveScreen("profile");
-      return;
-    }
-
-    setRewriteSourceWorkoutId(workoutId);
-    setRewriteInstruction("");
-    setRewriteError("");
-    setRewriteProposedWorkout(null);
-    setActiveScreen("workoutAiRewrite");
-  }
-
-  function handleWorkoutDetailAiRewrite(workoutId: string) {
-    if (!areOnlineFeaturesAvailable) {
-      showOnlineFeatureUnavailableDialog();
-      return;
-    }
-
-    if (user && aiCreditBalance.balance < aiCreditBalance.rewriteCost) {
-      setShowAiRewriteCreditTooltip(true);
-      setTimeout(() => setShowAiRewriteCreditTooltip(false), 3000);
-      return;
-    }
-
-    setShowAiRewriteCreditTooltip(false);
-    openWorkoutAiRewrite(workoutId);
   }
 
   function startSelectedWorkoutSession(executionMode = resolveWorkoutStartExecutionMode(defaultWorkoutExecutionMode)) {
@@ -2589,6 +2589,11 @@ function GymminApp() {
   }
 
   function submitWorkoutCreatorForm() {
+    if (!creatorSensitiveDataConsent) {
+      setCreatorSubmitError(t("aiCreatorSensitiveConsentRequired"));
+      return;
+    }
+
     if (selectedCreatorProfileId) {
       const selectedProfile = creatorProfiles.find((profile) => profile.id === selectedCreatorProfileId);
       setCreatorProfileName(selectedProfile?.name ?? "");
@@ -2753,6 +2758,12 @@ function GymminApp() {
     const questionsAndAnswers = buildWorkoutCreatorQuestionsAndAnswers();
     const hasAnyAnswer = questionsAndAnswers.some((item) => item.Answer.trim());
 
+    if (!creatorSensitiveDataConsent) {
+      setCreatorSubmitError(t("aiCreatorSensitiveConsentRequired"));
+      setCreatorPhase("form");
+      return;
+    }
+
     if (!hasAnyAnswer) {
       setCreatorSubmitError(t("aiCreatorSubmitError"));
       return;
@@ -2784,7 +2795,8 @@ function GymminApp() {
       const responseBody = await workoutCreatorApi.startPlan({
           language,
           profileId,
-          questionsAndAnswers
+          questionsAndAnswers,
+          sensitiveDataConsent: true
         }, {
           ...getAuthHeaders(user),
           "Content-Type": "application/json",
@@ -2795,6 +2807,7 @@ function GymminApp() {
       void fetchAiCredits(user);
 
       if (isWorkoutCreatorJobResponse(responseBody)) {
+        setCreatorSensitiveDataConsent(false);
         setPendingCreatorJob({
           createdAt: new Date().toISOString(),
           jobId: getWorkoutCreatorJobId(responseBody),
@@ -2806,6 +2819,7 @@ function GymminApp() {
       }
 
       handleWorkoutCreatorCompletedResponse(responseBody);
+      setCreatorSensitiveDataConsent(false);
     } catch (error) {
       console.error("Workout creator request failed", error);
       setCreatorSubmitError(isInsufficientAiCreditsError(error)
@@ -2999,6 +3013,7 @@ function GymminApp() {
   function returnToHomeFromCreator() {
     setActiveScreen("home");
     setCreatorPhase("form");
+    setCreatorSensitiveDataConsent(false);
   }
 
   function updateCreatorProfileAndSubmit() {
@@ -3068,6 +3083,22 @@ function GymminApp() {
     }
 
     performDeleteWorkout(workoutId);
+  }
+
+  function updateWorkoutArchiveState(workoutId: string, archived: boolean) {
+    const currentWorkout = savedWorkouts.find((item) => item.id === workoutId);
+    if (!currentWorkout) {
+      return;
+    }
+
+    const nextWorkout = setWorkoutArchived(currentWorkout, archived);
+    setSavedWorkouts((current) =>
+      current.map((item) => item.id === workoutId ? nextWorkout : item)
+    );
+
+    upsertAccountWorkout(nextWorkout).catch((error) => {
+      console.error("Failed to update workout archive state", error);
+    });
   }
 
   function deleteWorkoutHistoryEntry(sessionId: string) {
@@ -3501,6 +3532,7 @@ function GymminApp() {
     accountDataPolicy.reset();
     setFavoriteExercisesSyncStatus("local");
     setPendingCreatorJob(null);
+    setCreatorSensitiveDataConsent(false);
     setCreatorPhase("form");
     setRewriteSourceWorkoutId(null);
     setRewriteProposedWorkout(null);
@@ -3762,6 +3794,11 @@ function GymminApp() {
       return true;
     }
 
+    if (activeScreen === "privacy") {
+      setActiveScreen(privacyReturnScreen);
+      return true;
+    }
+
     if (activeScreen === "terms" || activeScreen === "contact" || activeScreen === "bugReport") {
       setActiveScreen("settings");
       return true;
@@ -3797,9 +3834,10 @@ function GymminApp() {
     return `${normalizedNotes.slice(0, maxLength).trim()}...`;
   }
 
-  function renderWorkoutSortActions() {
+  function renderWorkoutSortActions(showAdd = true) {
     return (
       <WorkoutSortActions
+        showAdd={showAdd}
         theme={theme}
         onAdd={openWorkoutBuilder}
         onOpenSort={() => setIsWorkoutSortSheetOpen(true)}
@@ -4005,7 +4043,7 @@ function GymminApp() {
     return (
       <WeeklyPlanHomeCard
         language={language}
-        savedWorkoutCount={savedWorkouts.length}
+        savedWorkoutCount={activeWorkouts.length}
         summary={weeklyPlanSummary}
         t={t}
         theme={theme}
@@ -4019,7 +4057,7 @@ function GymminApp() {
     return (
       <WeeklyPlanScreen
         language={language}
-        savedWorkouts={savedWorkouts}
+        savedWorkouts={activeWorkouts}
         summary={weeklyPlanSummary}
         t={t}
         theme={theme}
@@ -4067,10 +4105,10 @@ function GymminApp() {
 
     return (
       <HomeScreen
+        activeWeeklyWorkouts={activeWeeklyWorkouts}
         activeSessionCard={renderActiveWorkoutSessionCard()}
         authPanel={authPanel}
         collapsedPanels={collapsedPanels}
-        filteredWorkouts={filteredWorkouts}
         language={language}
         savedWorkouts={savedWorkouts}
         systemStatusCallout={renderSystemStatusCallout()}
@@ -4079,8 +4117,7 @@ function GymminApp() {
         trainingFactPill={renderTrainingFactPill()}
         weeklyPlanCard={renderWeeklyPlanHomeCard()}
         workoutCreatorButton={renderWorkoutCreatorButton()}
-        workoutSortActions={renderWorkoutSortActions()}
-        onOpenAllWorkouts={() => setActiveScreen("workouts")}
+        workoutSortActions={renderWorkoutSortActions(false)}
         onOpenArticle={(articleId) => {
           setSelectedArticleId(articleId);
           setActiveScreen("articleDetail");
@@ -4143,6 +4180,7 @@ function GymminApp() {
         collapsed={isPanelCollapsed("workouts-list")}
         creatorButton={renderWorkoutCreatorButton()}
         filteredWorkouts={filteredWorkouts}
+        includeArchived={includeArchivedWorkouts}
         search={search}
         sortActions={renderWorkoutSortActions()}
         t={t}
@@ -4151,6 +4189,7 @@ function GymminApp() {
         onOpenHistory={() => openWorkoutHistory()}
         onOpenProgress={() => setActiveScreen("progress")}
         onOpenWorkout={openWorkoutDetail}
+        onToggleArchived={() => setIncludeArchivedWorkouts((current) => !current)}
         onToggleList={() => togglePanel("workouts-list")}
       />
     );
@@ -4222,6 +4261,16 @@ function GymminApp() {
           setActiveScreen("settings");
           setTimeout(() => mainScrollRef.current?.scrollToEnd({ animated: true }), 150);
         }}
+      />
+    );
+  }
+
+  function renderPrivacy() {
+    return (
+      <PrivacyScreen
+        apiBaseUrl={apiBaseUrl}
+        language={language}
+        theme={theme}
       />
     );
   }
@@ -4713,6 +4762,10 @@ function GymminApp() {
                 onOpenFavoriteExercises={() => setActiveScreen("favoriteExercises")}
                 onOpenReminderDay={openWorkoutReminderDayEditor}
                 onOpenReportBug={() => setActiveScreen("bugReport")}
+                onOpenPrivacy={() => {
+                  setPrivacyReturnScreen("settings");
+                  setActiveScreen("privacy");
+                }}
                 onOpenSettingsSheet={(sheet) => {
                   if (sheet === "language") {
                     setPendingLanguage(language);
@@ -4754,6 +4807,7 @@ function GymminApp() {
                   collapsedSections={creatorCollapsedSections}
                   creditBalance={aiCreditBalance}
                   draft={creatorDraft}
+                  hasSensitiveDataConsent={creatorSensitiveDataConsent}
                   formatImportedWorkoutCount={formatCreatorImportedWorkoutCount}
                   importedWorkoutCount={creatorImportedWorkoutCount}
                   isJobPending={isCreatorJobPending}
@@ -4771,6 +4825,10 @@ function GymminApp() {
                     setCreatorDraft((current) => ({ ...current, [fieldId]: value }));
                   }}
                   onLoadProfile={loadCreatorProfile}
+                  onOpenPrivacy={() => {
+                    setPrivacyReturnScreen("workoutCreator");
+                    setActiveScreen("privacy");
+                  }}
                   onOpenCredits={() => setActiveScreen("aiCredits")}
                   onOpenWorkouts={() => setActiveScreen("workouts")}
                   onProfileNameChange={setCreatorProfileName}
@@ -4779,6 +4837,10 @@ function GymminApp() {
                   onSendWithoutSaving={() => void finishWorkoutCreatorRequest()}
                   onShowOnlineUnavailable={showOnlineFeatureUnavailableDialog}
                   onSubmit={submitWorkoutCreatorForm}
+                  onToggleSensitiveDataConsent={() => {
+                    setCreatorSensitiveDataConsent((current) => !current);
+                    setCreatorSubmitError("");
+                  }}
                   onToggleSection={toggleCreatorSection}
                   onUpdateProfileAndSubmit={updateCreatorProfileAndSubmit}
                 />
@@ -4829,21 +4891,18 @@ function GymminApp() {
               <WorkoutDetailScreen
                 getExecutionModeLabel={getExecutionModeLabel}
                 getSessionStatusLabel={getSessionStatusLabel}
-                isAiRewriteCreditBlocked={Boolean(user && aiCreditBalance.balance < aiCreditBalance.rewriteCost)}
-                isAiRewriteOnlineBlocked={!areOnlineFeaturesAvailable}
                 isPanelCollapsed={isReadOnlyWorkoutPanelCollapsed}
                 language={language}
                 sessions={selectedWorkoutSessions}
-                showAiRewriteCreditTooltip={showAiRewriteCreditTooltip}
                 t={t}
                 theme={theme}
                 workout={selectedWorkout}
-                onAiRewrite={handleWorkoutDetailAiRewrite}
                 onDeleteWorkout={deleteWorkout}
                 onEditWorkout={openWorkoutEditor}
                 onOpenExercise={openExerciseDetail}
                 onOpenHistory={openWorkoutHistory}
                 onOpenSession={openWorkoutSessionDetail}
+                onSetArchived={updateWorkoutArchiveState}
                 onStartWorkout={() => startSelectedWorkoutSession()}
                 onTogglePanel={toggleReadOnlyWorkoutPanel}
               />
@@ -4933,6 +4992,7 @@ function GymminApp() {
               />
             )}
             {activeScreen === "terms" && renderTerms()}
+            {activeScreen === "privacy" && renderPrivacy()}
             {activeScreen === "contact" && renderContact()}
             {activeScreen === "bugReport" && renderBugReport()}
             {activeScreen === "bugReportSuccess" && renderBugReportSuccess()}
@@ -4975,6 +5035,7 @@ function GymminApp() {
                   activeScreen === "exerciseProgress")) ||
               (item.key === "settings" &&
                 (activeScreen === "terms" ||
+                  activeScreen === "privacy" ||
                   activeScreen === "contact" ||
                   activeScreen === "bugReport" ||
                   activeScreen === "favoriteExercises"));

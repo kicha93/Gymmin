@@ -1,3 +1,7 @@
+import { progressionArticle } from "./progressionArticle";
+import { setsAndRepsArticle } from "./setsAndRepsArticle";
+import { trainingIntensityArticle } from "./trainingIntensityArticle";
+
 export type ArticleLanguage = "pl" | "en";
 
 export type ArticleTranslation = {
@@ -117,6 +121,9 @@ export function getArticleTranslation(article: Article | LegacyArticle, language
 }
 
 export const articles = [
+  trainingIntensityArticle,
+  setsAndRepsArticle,
+  progressionArticle,
   {
     category: "training",
     createdAt: "2026-06-06",

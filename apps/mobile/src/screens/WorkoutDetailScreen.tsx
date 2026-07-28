@@ -23,6 +23,7 @@ import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
 
 type WorkoutDetailItem = {
+  archivedAt?: string | null;
   draft: WorkoutDraft;
   id: string;
   name: string;
@@ -31,20 +32,17 @@ type WorkoutDetailItem = {
 type WorkoutDetailScreenProps = {
   getExecutionModeLabel: (mode: WorkoutSession["executionMode"]) => string;
   getSessionStatusLabel: (status: WorkoutSession["status"]) => string;
-  isAiRewriteCreditBlocked: boolean;
-  isAiRewriteOnlineBlocked: boolean;
   isPanelCollapsed: (panelId: string) => boolean;
   language: LanguageCode;
-  onAiRewrite: (workoutId: string) => void;
   onDeleteWorkout: (workoutId: string) => void;
   onEditWorkout: (workoutId: string) => void;
   onOpenExercise: (step: WorkoutStep) => void;
   onOpenHistory: (workoutId: string) => void;
   onOpenSession: (sessionId: string) => void;
+  onSetArchived: (workoutId: string, archived: boolean) => void;
   onStartWorkout: () => void;
   onTogglePanel: (panelId: string) => void;
   sessions: WorkoutSession[];
-  showAiRewriteCreditTooltip: boolean;
   t: (key: TranslationKey) => string;
   theme: Theme;
   workout: WorkoutDetailItem | null;
@@ -53,20 +51,17 @@ type WorkoutDetailScreenProps = {
 export function WorkoutDetailScreen({
   getExecutionModeLabel,
   getSessionStatusLabel,
-  isAiRewriteCreditBlocked,
-  isAiRewriteOnlineBlocked,
   isPanelCollapsed,
   language,
-  onAiRewrite,
   onDeleteWorkout,
   onEditWorkout,
   onOpenExercise,
   onOpenHistory,
   onOpenSession,
+  onSetArchived,
   onStartWorkout,
   onTogglePanel,
   sessions,
-  showAiRewriteCreditTooltip,
   t,
   theme,
   workout
@@ -153,7 +148,6 @@ export function WorkoutDetailScreen({
     }
   }
 
-  const isAiRewriteDisabled = isAiRewriteCreditBlocked || isAiRewriteOnlineBlocked;
 
   return (
     <>
@@ -161,42 +155,56 @@ export function WorkoutDetailScreen({
         <View style={[styles.sectionHeaderCopy, useCompactHeaderActions ? styles.workoutDetailHeaderCopyCompact : null]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>{workout.name}</Text>
         </View>
-        <View style={[styles.workoutDetailActions, useCompactHeaderActions ? styles.workoutDetailActionsCompact : null]}>
-          <AppButton
-            icon="create-outline"
-            style={[styles.builderBackButton, styles.workoutDetailActionButton, useCompactHeaderActions ? styles.workoutDetailActionButtonCompact : null]}
-            textStyle={styles.builderBackButtonText}
-            theme={theme}
-            variant="outline"
-            onPress={() => onEditWorkout(workout.id)}
-          >
-            {t("edit")}
-          </AppButton>
-          <AppButton
-            disabled={Boolean(exportingFormat)}
-            icon="download-outline"
-            style={[styles.builderBackButton, styles.workoutDetailActionButton, useCompactHeaderActions ? styles.workoutDetailActionButtonCompact : null]}
-            textStyle={styles.builderBackButtonText}
-            theme={theme}
-            variant="outline"
-            onPress={() => setIsExportSheetOpen(true)}
-          >
-            {t("workoutExportAction")}
-          </AppButton>
-          <AppButton
-            icon="trash-outline"
-            style={[styles.builderBackButton, styles.workoutDetailActionButton, useCompactHeaderActions ? styles.workoutDetailActionButtonCompact : null, { borderColor: theme.danger }]}
-            textStyle={[styles.builderBackButtonText, { color: theme.danger }]}
-            theme={theme}
-            variant="outline"
-            onPress={() => onDeleteWorkout(workout.id)}
-          >
-            {t("delete")}
-          </AppButton>
-        </View>
+        {!workout.archivedAt ? (
+          <View style={[styles.workoutDetailActions, useCompactHeaderActions ? styles.workoutDetailActionsCompact : null]}>
+            <AppButton
+              icon="create-outline"
+              style={[styles.builderBackButton, styles.workoutDetailActionButton, useCompactHeaderActions ? styles.workoutDetailActionButtonCompact : null]}
+              textStyle={styles.builderBackButtonText}
+              theme={theme}
+              variant="outline"
+              onPress={() => onEditWorkout(workout.id)}
+            >
+              {t("edit")}
+            </AppButton>
+            <AppButton
+              disabled={Boolean(exportingFormat)}
+              icon="download-outline"
+              style={[styles.builderBackButton, styles.workoutDetailActionButton, useCompactHeaderActions ? styles.workoutDetailActionButtonCompact : null]}
+              textStyle={styles.builderBackButtonText}
+              theme={theme}
+              variant="outline"
+              onPress={() => setIsExportSheetOpen(true)}
+            >
+              {t("workoutExportAction")}
+            </AppButton>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.workoutDetailPrimaryActions}>
+        <AppButton
+          icon={workout.archivedAt ? "arrow-undo-outline" : "archive-outline"}
+          style={styles.workoutDetailPrimaryAction}
+          theme={theme}
+          variant="outline"
+          onPress={() => onSetArchived(workout.id, !workout.archivedAt)}
+        >
+          {t(workout.archivedAt ? "unarchiveWorkout" : "archiveWorkout")}
+        </AppButton>
+        <AppButton
+          icon="trash-outline"
+          style={[styles.workoutDetailPrimaryAction, { borderColor: theme.danger }]}
+          textStyle={{ color: theme.danger }}
+          theme={theme}
+          variant="outline"
+          onPress={() => onDeleteWorkout(workout.id)}
+        >
+          {t("delete")}
+        </AppButton>
+      </View>
+
+      {!workout.archivedAt ? <View style={styles.workoutDetailPrimaryActions}>
         <AppButton
           icon="play-outline"
           style={styles.workoutDetailPrimaryAction}
@@ -206,29 +214,7 @@ export function WorkoutDetailScreen({
         >
           {t("startWorkout")}
         </AppButton>
-        <AppButton
-          icon="sparkles-outline"
-          style={[
-            styles.workoutDetailPrimaryAction,
-            isAiRewriteDisabled ? styles.disabledActionButton : null
-          ]}
-          textStyle={[
-            styles.workoutDetailPrimaryActionText,
-            isAiRewriteDisabled ? { color: theme.muted } : null
-          ]}
-          theme={theme}
-          variant="outline"
-          onPress={() => onAiRewrite(workout.id)}
-        >
-          {t("aiRewriteAction")}
-        </AppButton>
-      </View>
-
-      {isAiRewriteCreditBlocked && showAiRewriteCreditTooltip ? (
-        <View style={[styles.inlineTooltip, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
-          <Text style={[styles.inlineTooltipText, { color: theme.text }]}>{t("aiCreditsInsufficient")}</Text>
-        </View>
-      ) : null}
+      </View> : null}
 
       {workout.draft.notes ? (
         <CollapsiblePanel

@@ -70,6 +70,25 @@ describe("accountWorkouts", () => {
     });
   });
 
+  it("round-trips the synchronized archive state", () => {
+    const archivedAt = "2026-07-27T10:00:00.000Z";
+    const request = mapSavedWorkoutToApiRequest({
+      ...workout("plan-archived", "Archived"),
+      archivedAt
+    });
+
+    expect(request).toMatchObject({ archivedAt, isArchived: true });
+    expect(mapApiWorkoutToSavedWorkout({
+      archivedAt,
+      clientWorkoutId: "plan-archived",
+      name: "Archived",
+      sport: "strength",
+      steps: []
+    }).archivedAt).toBe(archivedAt);
+    expect(mapSavedWorkoutToApiRequest(workout("plan-active", "Active")))
+      .toMatchObject({ archivedAt: null, isArchived: false });
+  });
+
   it("sends an explicit zero when an exercise has no rest", () => {
     const value = mapSavedWorkoutToApiRequest({
       ...workout("plan-no-rest", "No rest"),

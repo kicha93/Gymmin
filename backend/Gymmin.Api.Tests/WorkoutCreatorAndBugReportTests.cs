@@ -27,7 +27,8 @@ public sealed class WorkoutCreatorAndBugReportTests : IClassFixture<GymminApiFac
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Q", "A")],
             "en",
-            null))).StatusCode);
+            null,
+            true))).StatusCode);
 
         client.Authorize(userA.Token);
         Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/ai-credits/dev/grant", new DevGrantAiCreditsRequest(1, "test top-up"))).StatusCode);
@@ -35,7 +36,8 @@ public sealed class WorkoutCreatorAndBugReportTests : IClassFixture<GymminApiFac
         var planStart = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
             [new WorkoutCreatorQuestionAnswer("Goal", "Strength")],
             "en",
-            "profile-1"));
+            "profile-1",
+            true));
         Assert.Equal(HttpStatusCode.Accepted, planStart.StatusCode);
         var planJob = await planStart.Content.ReadFromJsonAsync<CreateWorkoutPlanJobResponse>();
         Assert.NotNull(planJob);
@@ -62,6 +64,27 @@ public sealed class WorkoutCreatorAndBugReportTests : IClassFixture<GymminApiFac
 
         var rewriteStatus = await WaitForJobAsync(client, $"/api/workout-creator/jobs/{rewriteJob!.JobId}");
         Assert.Equal(HttpStatusCode.OK, rewriteStatus.StatusCode);
+    }
+
+    [Fact]
+    public async Task Workout_creator_rejects_health_data_without_explicit_consent()
+    {
+        using var client = _factory.CreateClient();
+        var auth = await TestPayloads.RegisterAsync(client, "creator-consent");
+        client.Authorize(auth.Token);
+
+        var response = await client.PostAsJsonAsync("/api/workout-creator/plan", new CreateWorkoutPlanRequest(
+            [new WorkoutCreatorQuestionAnswer("Injuries", "Knee pain")],
+            "en",
+            null,
+            false));
+        var body = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("sensitive_data_consent_required", body!.Error.Code);
+
+        var balance = await client.GetFromJsonAsync<AiCreditBalanceResponse>("/api/ai-credits/balance");
+        Assert.Equal(1, balance!.Balance);
     }
 
     [Fact]

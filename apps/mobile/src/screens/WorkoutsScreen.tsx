@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Input, InputField } from "@gluestack-ui/themed";
 import type { ReactNode } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { AppButton } from "../components/AppControls";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
@@ -16,10 +16,12 @@ type WorkoutsScreenProps = {
   collapsed: boolean;
   creatorButton: ReactNode;
   filteredWorkouts: SavedWorkout[];
+  includeArchived: boolean;
   onChangeSearch: (value: string) => void;
   onOpenHistory: () => void;
   onOpenProgress: () => void;
   onOpenWorkout: (workoutId: string) => void;
+  onToggleArchived: () => void;
   onToggleList: () => void;
   search: string;
   sortActions: ReactNode;
@@ -32,10 +34,12 @@ export function WorkoutsScreen({
   collapsed,
   creatorButton,
   filteredWorkouts,
+  includeArchived,
   onChangeSearch,
   onOpenHistory,
   onOpenProgress,
   onOpenWorkout,
+  onToggleArchived,
   onToggleList,
   search,
   sortActions,
@@ -69,7 +73,23 @@ export function WorkoutsScreen({
       </View>
 
       <View style={styles.fieldGroup}>
-        <Text style={[styles.label, { color: theme.muted }]}>{t("searchWorkout")}</Text>
+        <View style={styles.workoutSearchLabelRow}>
+          <Text style={[styles.label, { color: theme.muted }]}>{t("searchWorkout")}</Text>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.workoutArchiveFilterChip, { borderColor: theme.primary }]}
+            onPress={onToggleArchived}
+          >
+            <Ionicons
+              name={includeArchived ? "eye-off-outline" : "archive-outline"}
+              size={15}
+              color={theme.primary}
+            />
+            <Text style={[styles.workoutArchiveFilterChipText, { color: theme.primary }]}>
+              {t(includeArchived ? "hideArchivedWorkouts" : "showArchivedWorkouts")}
+            </Text>
+          </Pressable>
+        </View>
         <Input style={[styles.searchBox, { backgroundColor: theme.control, borderColor: theme.border }]}>
           <Ionicons name="search" size={20} color={theme.muted} />
           <InputField
@@ -89,7 +109,12 @@ export function WorkoutsScreen({
         title={t("workouts")}
         onToggle={onToggleList}
       >
-        <WorkoutList workouts={filteredWorkouts} theme={theme} onOpenWorkout={onOpenWorkout} />
+        <WorkoutList
+          archivedLabel={t("archivedWorkout")}
+          workouts={filteredWorkouts}
+          theme={theme}
+          onOpenWorkout={onOpenWorkout}
+        />
       </CollapsiblePanel>
     </>
   );

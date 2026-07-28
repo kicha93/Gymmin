@@ -41,6 +41,7 @@ type SettingsScreenProps = {
   onOpenReminderDay: (day: ReminderWeekday) => void;
   onOpenReportBug: () => void;
   onOpenSettingsSheet: (sheet: SettingsSheetKey) => void;
+  onOpenPrivacy: () => void;
   onOpenTerms: () => void;
   onReminderDescriptionChange: (description: string) => void;
   onReminderMessageChange: (message: string) => void;
@@ -66,6 +67,7 @@ export function SettingsScreen({
   onOpenReminderDay,
   onOpenReportBug,
   onOpenSettingsSheet,
+  onOpenPrivacy,
   onOpenTerms,
   onReminderDescriptionChange,
   onReminderMessageChange,
@@ -270,21 +272,6 @@ export function SettingsScreen({
       </SettingsSection>
 
       <SettingsSection
-        isCollapsed={isPanelCollapsed("settings-integrations")}
-        title={t("integrations")}
-        theme={theme}
-        onToggle={() => onTogglePanel("settings-integrations")}
-      >
-        <SettingsPlaceholder
-          disabled
-          icon="sync-outline"
-          label="Garmin Connect"
-          meta={t("integrationPlaceholder")}
-          theme={theme}
-        />
-      </SettingsSection>
-
-      <SettingsSection
         isCollapsed={isPanelCollapsed("settings-info")}
         title={t("information")}
         theme={theme}
@@ -296,6 +283,13 @@ export function SettingsScreen({
           meta={t("termsMeta")}
           theme={theme}
           onPress={onOpenTerms}
+        />
+        <InfoLinkRow
+          icon="shield-checkmark-outline"
+          label={t("privacyPolicy")}
+          meta={t("privacyPolicyMeta")}
+          theme={theme}
+          onPress={onOpenPrivacy}
         />
         <InfoLinkRow
           icon="mail-outline"
@@ -357,28 +351,6 @@ function SettingsOption({ disabled = false, icon, label, onPress, theme, value }
       <Text style={[styles.settingsOptionLabel, { color: disabled ? theme.muted : theme.text }]}>{label}</Text>
       <Text style={[styles.settingsOptionValue, { color: theme.muted }]}>{value}</Text>
     </Container>
-  );
-}
-
-type SettingsPlaceholderProps = {
-  disabled?: boolean;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  meta: string;
-  theme: Theme;
-};
-
-function SettingsPlaceholder({ disabled = false, icon, label, meta, theme }: SettingsPlaceholderProps) {
-  return (
-    <View style={[styles.settingsPlaceholder, { opacity: disabled ? 0.48 : 1 }]}>
-      <View style={[styles.infoLinkIcon, { backgroundColor: disabled ? theme.segment : theme.secondaryBand }]}>
-        <Ionicons name={icon} size={22} color={disabled ? theme.muted : theme.primary} />
-      </View>
-      <View style={styles.workoutInfo}>
-        <Text style={[styles.workoutName, { color: disabled ? theme.muted : theme.text }]}>{label}</Text>
-        <Text style={[styles.workoutMeta, { color: theme.muted }]}>{meta}</Text>
-      </View>
-    </View>
   );
 }
 

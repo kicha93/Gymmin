@@ -107,6 +107,39 @@ public sealed class WorkoutApiTests : IClassFixture<GymminApiFactory>
     }
 
     [Fact]
+    public async Task Workout_archive_state_roundtrips_and_old_clients_do_not_clear_it()
+    {
+        using var client = _factory.CreateClient();
+        var user = await TestPayloads.RegisterAsync(client, "workout-archive");
+        client.Authorize(user.Token);
+        var archivedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+        var archivedRequest = TestPayloads.Workout("workout-archived") with
+        {
+            ArchivedAt = archivedAt,
+            IsArchived = true
+        };
+
+        var create = await client.PostAsJsonAsync("/api/workouts", archivedRequest);
+        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+        var stored = await client.GetFromJsonAsync<Workout>("/api/workouts/workout-archived", TestJson.Options);
+        Assert.Equal(archivedAt, stored!.ArchivedAt);
+
+        var legacyUpdate = await client.PutAsJsonAsync(
+            "/api/workouts/workout-archived",
+            TestPayloads.Workout("ignored", "Legacy update"));
+        Assert.Equal(HttpStatusCode.OK, legacyUpdate.StatusCode);
+        stored = await client.GetFromJsonAsync<Workout>("/api/workouts/workout-archived", TestJson.Options);
+        Assert.NotNull(stored!.ArchivedAt);
+
+        var restore = await client.PutAsJsonAsync(
+            "/api/workouts/workout-archived",
+            TestPayloads.Workout("ignored", "Restored") with { IsArchived = false });
+        Assert.Equal(HttpStatusCode.OK, restore.StatusCode);
+        stored = await client.GetFromJsonAsync<Workout>("/api/workouts/workout-archived", TestJson.Options);
+        Assert.Null(stored!.ArchivedAt);
+    }
+
+    [Fact]
     public async Task Stale_workout_sync_does_not_erase_newer_server_rest_values()
     {
         using var client = _factory.CreateClient();

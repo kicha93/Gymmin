@@ -12,6 +12,7 @@ export type ScreenKey =
   | "articleDetail"
   | "builder"
   | "terms"
+  | "privacy"
   | "contact"
   | "bugReport"
   | "bugReportSuccess"
@@ -61,6 +62,7 @@ export function getScreenTitle(
     home: t("home"),
     profile: t("profile"),
     progress: t("progress"),
+    privacy: t("privacyPolicy"),
     resetPassword: t("resetPassword"),
     settings: t("settings"),
     terms: t("terms"),

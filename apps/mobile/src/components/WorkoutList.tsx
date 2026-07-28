@@ -14,13 +14,14 @@ function getWorkoutNotesPreview(notes: string, maxLength = 86) {
 }
 
 type WorkoutListProps = {
+  archivedLabel?: string;
   emptyContent?: ReactNode;
   onOpenWorkout: (workoutId: string) => void;
   theme: Theme;
   workouts: SavedWorkout[];
 };
 
-export function WorkoutList({ emptyContent = null, onOpenWorkout, theme, workouts }: WorkoutListProps) {
+export function WorkoutList({ archivedLabel, emptyContent = null, onOpenWorkout, theme, workouts }: WorkoutListProps) {
   if (!workouts.length) {
     return <>{emptyContent}</>;
   }
@@ -44,7 +45,16 @@ export function WorkoutList({ emptyContent = null, onOpenWorkout, theme, workout
             <Ionicons name="barbell-outline" size={20} color={theme.primary} />
           </View>
           <View style={styles.workoutInfo}>
-            <Text style={[styles.workoutName, { color: theme.text }]}>{item.name}</Text>
+            <View style={styles.workoutNameRow}>
+              <Text style={[styles.workoutName, { color: theme.text }]}>{item.name}</Text>
+              {item.archivedAt && archivedLabel ? (
+                <View style={[styles.workoutArchivedBadge, { backgroundColor: theme.secondaryBand }]}>
+                  <Text style={[styles.workoutArchivedBadgeText, { color: theme.primary }]}>
+                    {archivedLabel}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
             {item.draft.notes ? (
               <Text numberOfLines={2} style={[styles.workoutMeta, { color: theme.muted }]}>
                 {getWorkoutNotesPreview(item.draft.notes)}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  articles,
   getArticleTranslation,
   type Article,
   type LegacyArticle
@@ -28,6 +29,50 @@ const translatedArticle: Article = {
 };
 
 describe("articles", () => {
+  it("includes the progression article in both supported languages", () => {
+    const article = articles.find((item) => item.slug === "jak-skutecznie-progresowac-na-treningu");
+
+    expect(article).toBeDefined();
+    expect(getArticleTranslation(article!, "pl")).toMatchObject({
+      isFallback: false,
+      title: "Jak skutecznie progresować na treningu?"
+    });
+    expect(getArticleTranslation(article!, "en")).toMatchObject({
+      isFallback: false,
+      title: "How to Progress Effectively in Your Workouts"
+    });
+  });
+
+  it("includes the sets and repetitions article in both supported languages", () => {
+    const article = articles.find((item) => item.slug === "ile-serii-i-powtorzen-wykonywac");
+
+    expect(article).toBeDefined();
+    expect(article?.publishedAt).toBe("2026-07-28");
+    expect(getArticleTranslation(article!, "pl")).toMatchObject({
+      isFallback: false,
+      title: "Ile serii i powtórzeń wykonywać?"
+    });
+    expect(getArticleTranslation(article!, "en")).toMatchObject({
+      isFallback: false,
+      title: "How Many Sets and Repetitions Should You Do?"
+    });
+  });
+
+  it("includes the load and training intensity article in both supported languages", () => {
+    const article = articles.find((item) => item.slug === "jak-dobrac-ciezar-i-ocenic-intensywnosc");
+
+    expect(article).toBeDefined();
+    expect(article?.publishedAt).toBe("2026-07-28");
+    expect(getArticleTranslation(article!, "pl")).toMatchObject({
+      isFallback: false,
+      title: "Jak dobrać ciężar i ocenić intensywność treningu?"
+    });
+    expect(getArticleTranslation(article!, "en")).toMatchObject({
+      isFallback: false,
+      title: "How to Choose the Right Load and Assess Training Intensity"
+    });
+  });
+
   it("returns the requested language when translation exists", () => {
     expect(getArticleTranslation(translatedArticle, "pl")).toMatchObject({
       content: "Polska treść",

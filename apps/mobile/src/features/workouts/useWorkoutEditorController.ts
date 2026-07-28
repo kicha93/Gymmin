@@ -59,6 +59,7 @@ export function useWorkoutEditorController(options: Options) {
       ? options.savedWorkouts.find((item) => item.id === options.editingWorkoutId)
       : null;
     const nextWorkout: SavedWorkout = {
+      archivedAt: existing?.archivedAt ?? null,
       createdAt: existing?.createdAt ?? new Date().toISOString(),
       draft: { ...options.workout, name: normalizedName, steps: options.workout.steps.map((step) => ({ ...step })) },
       id: options.editingWorkoutId ?? `workout-${Date.now()}`,

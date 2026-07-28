@@ -11,8 +11,11 @@ Gymmin is a mobile-first workout builder for strength training.
 - Backend: ASP.NET Core Web API
 - Auth: backend email/password auth with bearer tokens
 - AI creator: OpenAI Responses API through the backend
+- Privacy: localized in-app policy plus a public, unauthenticated `GET /privacy?lang=pl|en`
 - Workout UX: compact Exercise Detail Page with hero summary, optional local media, worked-muscle anatomy toggle and collapsible technique panels; Progress uses a dashboard with summary cards, filters and compact exercise metric cards. Rest timer visibility is a per-user training preference.
 - Manual workout editor: three-step `Details -> Stages -> Save` wizard. It edits one stage, set or exercise at a time while preserving the existing `WorkoutDraft` model and account synchronization format. A set containing exactly two executable exercises is marked as a planned superset.
+- Workout library: workouts can be archived and restored without deleting their definitions or weekly-plan assignments. Archived items are hidden by default, can be included with a list filter, and the archive state synchronizes with the account.
+- Home workout panel: shows every unique, non-archived workout assigned to the active weekly plan without an arbitrary item limit. Sorting remains available there, while adding workouts stays on the full workout-library screen.
 - Workout export: a selected local workout can be saved offline as a simple Excel-compatible UTF-8 CSV or a one-sheet XLSX workbook. Both formats contain the same compact exercise table, and the file uses the workout name. Android writes exact bytes directly to the public `Downloads/Gymmin` collection through MediaStore, then shows a notification that can open the saved file; execution history and account data are intentionally excluded.
 - Exercise catalog: 964 validated records with stable IDs, canonical ID aliases for reviewed merges, dedicated front-raise/step-up/good-morning/rope-climb categories, explicit `libraryTier` classification and a fail-fast validator available through `npm run exercise:catalog:validate`. Historical IDs are normalized when plans, sessions, favorites, technique content and image assets are read. The detailed migration report is in `docs/exercise-catalog-refactor.md`.
 - Exercise picker: shows `main` exercises by default and provides compact opt-in filters for variations, advanced, sport-specific and rehabilitation movements. Search can find all active tiers and marks non-main results with a tier badge; deprecated and progression records remain history-only.
@@ -212,6 +215,13 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - Login and registration are connected to the backend.
 - The mobile app exposes the AI workout creator only to logged-in users, and backend creator endpoints require bearer tokens.
 - AI creator and AI rewrite use account-bound AI credits. The user-facing name is `Credits`; technically the backend/mobile model remains `AiCredits`. `1 credit = 1 plan generation or 1 workout modification`; the backend is the source of truth for balance and blocks AI jobs when the account has no credits.
+- The AI workout creator requires an explicit consent immediately before submitting
+  answers that may include health, injury, medication and lifestyle information.
+  Mobile sends `sensitiveDataConsent: true`, and the backend rejects plan requests
+  without it before charging a credit or contacting OpenAI.
+- Settings contain a localized privacy screen that works offline and links to the
+  public backend policy. The production URL ending in `/privacy` can be used as the
+  Google Play privacy-policy URL; `?lang=en` serves the English version.
 - AI credit consumption is protected by database transactions and an atomic conditional balance update in Database mode. File mode remains a development fallback, not the production safety boundary for paid credits.
 - AI credit concurrency, idempotency and technical-failure refund were smoke-tested on a real local PostgreSQL cluster without Docker, using the `HardenAiCreditsConcurrency` migration.
 - New users can receive an idempotent initial AI credit grant. Development/testing can use the guarded `/api/ai-credits/dev/grant` endpoint.

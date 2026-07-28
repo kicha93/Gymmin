@@ -11,16 +11,18 @@ import type { Theme } from "../theme/theme";
 export function WorkoutSortActions({
   onAdd,
   onOpenSort,
+  showAdd = true,
   theme
 }: {
   onAdd: () => void;
   onOpenSort: () => void;
+  showAdd?: boolean;
   theme: Theme;
 }) {
   return (
     <View style={styles.panelActions}>
       <AppIconButton icon="swap-vertical-outline" theme={theme} onPress={onOpenSort} />
-      <AppIconButton icon="add" theme={theme} onPress={onAdd} />
+      {showAdd ? <AppIconButton icon="add" theme={theme} onPress={onAdd} /> : null}
     </View>
   );
 }

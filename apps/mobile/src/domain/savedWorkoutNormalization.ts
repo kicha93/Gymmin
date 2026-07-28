@@ -75,6 +75,7 @@ export function normalizeSavedWorkoutTextFields(workout: SavedWorkout): SavedWor
 
   return {
     ...workout,
+    archivedAt: normalizeDateString(workout.archivedAt),
     createdAt: normalizeDateString(workout.createdAt) ?? getFallbackWorkoutCreatedAt(workout),
     draft,
     name: repairTextEncoding(workout.name || draft.name)

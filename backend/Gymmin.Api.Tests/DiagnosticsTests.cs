@@ -27,6 +27,25 @@ public sealed class DiagnosticsTests : IClassFixture<GymminApiFactory>
         Assert.False(string.IsNullOrWhiteSpace(values.Single()));
     }
 
+    [Theory]
+    [InlineData("/privacy", "Polityka prywatności Gymmin")]
+    [InlineData("/privacy?lang=en", "Gymmin Privacy Policy")]
+    public async Task Privacy_policy_is_public_and_localized(string path, string expectedTitle)
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync(path);
+        var body = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/html", response.Content.Headers.ContentType!.MediaType);
+        Assert.Equal("utf-8", response.Content.Headers.ContentType.CharSet);
+        Assert.Contains(expectedTitle, body);
+        Assert.Contains("kontakt@gymmin.app", body);
+        Assert.Contains("OpenAI", body);
+        Assert.Contains("Google Play", body);
+    }
+
     [Fact]
     public async Task Request_correlation_id_is_echoed()
     {

@@ -172,14 +172,23 @@ export function ArticleDetailScreen({ article, language, theme }: ArticleDetailP
                 <Text style={[styles.articleBlockHeading, { color: theme.text }]}>
                   {block.title}
                 </Text>
-                {block.paragraphs.map((paragraph, paragraphIndex) => (
-                  <Text
-                    key={`${block.title}-${paragraphIndex}`}
-                    style={[styles.articleParagraph, { color: theme.muted }]}
-                  >
-                    {paragraph}
-                  </Text>
-                ))}
+                {block.paragraphs.map((paragraph, paragraphIndex) =>
+                  paragraph.startsWith("- ") ? (
+                    <View key={`${block.title}-${paragraphIndex}`} style={styles.articleBulletRow}>
+                      <View style={[styles.articlePlanBullet, { backgroundColor: theme.primary }]} />
+                      <Text style={[styles.articleParagraph, styles.articleBulletText, { color: theme.muted }]}>
+                        {paragraph.slice(2)}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text
+                      key={`${block.title}-${paragraphIndex}`}
+                      style={[styles.articleParagraph, { color: theme.muted }]}
+                    >
+                      {paragraph}
+                    </Text>
+                  )
+                )}
               </View>
             );
           }
@@ -201,14 +210,25 @@ export function ArticleDetailScreen({ article, language, theme }: ArticleDetailP
                       </Text>
                     </View>
                     <View style={styles.articlePlanItems}>
-                      {splitTrainingPlanItems(row[1]).map((item, itemIndex) => (
-                        <View key={`${item}-${itemIndex}`} style={styles.articlePlanItemRow}>
-                          <View style={[styles.articlePlanBullet, { backgroundColor: theme.primary }]} />
-                          <Text style={[styles.articlePlanDescription, { color: theme.text }]}>
-                            {item}
-                          </Text>
-                        </View>
-                      ))}
+                      {block.headers.length === 2
+                        ? splitTrainingPlanItems(row[1] ?? "").map((item, itemIndex) => (
+                          <View key={`${item}-${itemIndex}`} style={styles.articlePlanItemRow}>
+                            <View style={[styles.articlePlanBullet, { backgroundColor: theme.primary }]} />
+                            <Text style={[styles.articlePlanDescription, { color: theme.text }]}>
+                              {item}
+                            </Text>
+                          </View>
+                        ))
+                        : row.slice(1).map((value, cellIndex) => (
+                          <View key={`${block.headers[cellIndex + 1]}-${cellIndex}`} style={styles.articleTableValueRow}>
+                            <Text style={[styles.articleTableValueLabel, { color: theme.muted }]}>
+                              {block.headers[cellIndex + 1]}
+                            </Text>
+                            <Text style={[styles.articlePlanDescription, { color: theme.text }]}>
+                              {value}
+                            </Text>
+                          </View>
+                        ))}
                     </View>
                   </View>
                 ))}
@@ -222,4 +242,3 @@ export function ArticleDetailScreen({ article, language, theme }: ArticleDetailP
     </View>
   );
 }
-

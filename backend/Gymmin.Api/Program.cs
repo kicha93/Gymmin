@@ -266,6 +266,7 @@ app.Use(async (context, next) =>
 });
 
 app.MapSystemEndpoints(useDatabaseStorage, storageProvider, databaseProvider);
+app.MapLegalEndpoints();
 app.MapAuthEndpoints();
 app.MapSettingsEndpoints();
 app.MapWorkoutEndpoints();

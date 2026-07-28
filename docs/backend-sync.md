@@ -406,6 +406,14 @@ Mobile przechowuje treningi lokalnie per-user. Lokalny storage treningów zawier
 
 Sortowanie jest tylko preferencją UI mobile i nie jest osobnym polem backendowym.
 
+Definicja treningu ma opcjonalne `archivedAt`. Aktualny mobile wysyła także
+jawne `isArchived`, aby odarchiwizowanie było odróżnialne od payloadu starego
+klienta, który nie zna archiwizacji. Backend zachowuje istniejący stan, gdy
+`isArchived` nie występuje, dzięki czemu starsza wersja aplikacji nie
+odarchiwizuje treningu przypadkowo. Pole jest przechowywane w `WorkoutJson`, nie
+wymaga osobnej migracji kolumny i synchronizuje się przez CRUD oraz
+`POST /api/sync/workouts`.
+
 Każdy krok ćwiczenia może zawierać `restSeconds` jako tekstową, nieujemną liczbę
 sekund (maksymalnie `359999`). Pole jest częścią kontraktu workout CRUD/sync i
 przenosi przerwę między seriami pomiędzy urządzeniami. Mobile nie zapisuje już

@@ -1361,6 +1361,32 @@ export const styles = StyleSheet.create({
   workoutList: {
     gap: 10
   },
+  workoutEmptyText: {
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 19
+  },
+  workoutSearchLabelRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "space-between",
+    minHeight: 30
+  },
+  workoutArchiveFilterChip: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 5,
+    minHeight: 28,
+    paddingHorizontal: 9,
+    paddingVertical: 3
+  },
+  workoutArchiveFilterChipText: {
+    fontSize: 11,
+    fontWeight: "800"
+  },
   addWorkoutPanel: {
     alignItems: "center",
     flexDirection: "row",
@@ -1400,6 +1426,21 @@ export const styles = StyleSheet.create({
     flex: 1,
     gap: 3,
     minWidth: 0
+  },
+  workoutNameRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6
+  },
+  workoutArchivedBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2
+  },
+  workoutArchivedBadgeText: {
+    fontSize: 10,
+    fontWeight: "800"
   },
   workoutName: {
     fontSize: 15,
@@ -2381,6 +2422,9 @@ export const styles = StyleSheet.create({
   },
   guidedSupersetExercise: {
     gap: 16
+  },
+  guidedSupersetExercisePrefix: {
+    fontWeight: "900"
   },
   guidedSupersetSeparator: {
     alignItems: "center",
@@ -3460,6 +3504,14 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
     lineHeight: 24
   },
+  articleBulletRow: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 9
+  },
+  articleBulletText: {
+    flex: 1
+  },
   articlePlanList: {
     gap: 10
   },
@@ -3504,6 +3556,14 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     lineHeight: 21
+  },
+  articleTableValueRow: {
+    gap: 2
+  },
+  articleTableValueLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    textTransform: "uppercase"
   },
   infoLinkRow: {
     alignItems: "center",
@@ -3633,12 +3693,6 @@ export const styles = StyleSheet.create({
   reminderDescriptionInput: {
     minHeight: 58,
     paddingBottom: 10
-  },
-  settingsPlaceholder: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 12,
-    minHeight: 68
   },
   panelHeroHeader: {
     alignItems: "center",
@@ -4271,6 +4325,35 @@ export const styles = StyleSheet.create({
   creatorChoiceText: {
     fontSize: 13,
     fontWeight: "800"
+  },
+  creatorConsentRow: {
+    alignItems: "flex-start",
+    borderRadius: 10,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    padding: 14
+  },
+  creatorConsentCheckbox: {
+    alignItems: "center",
+    borderRadius: 5,
+    borderWidth: 1,
+    height: 24,
+    justifyContent: "center",
+    width: 24
+  },
+  creatorConsentCopy: {
+    flex: 1,
+    gap: 6
+  },
+  creatorConsentText: {
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 19
+  },
+  creatorConsentLink: {
+    fontSize: 13,
+    fontWeight: "900"
   },
   creatorTextarea: {
     height: 132,

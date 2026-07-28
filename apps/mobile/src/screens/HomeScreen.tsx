@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
-import { AppButton } from "../components/AppControls";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { WorkoutList } from "../components/WorkoutList";
 import { articles, getArticleTranslation, type Article } from "../domain/articles";
@@ -17,9 +16,8 @@ type HomeScreenProps = {
   activeSessionCard: ReactNode;
   authPanel: ReactNode;
   collapsedPanels: Record<string, boolean>;
-  filteredWorkouts: SavedWorkout[];
+  activeWeeklyWorkouts: SavedWorkout[];
   language: LanguageCode;
-  onOpenAllWorkouts: () => void;
   onOpenArticle: (articleId: Article["id"]) => void;
   onOpenWorkout: (workoutId: string) => void;
   onTogglePanel: (panelId: string) => void;
@@ -37,9 +35,8 @@ export function HomeScreen({
   activeSessionCard,
   authPanel,
   collapsedPanels,
-  filteredWorkouts,
+  activeWeeklyWorkouts,
   language,
-  onOpenAllWorkouts,
   onOpenArticle,
   onOpenWorkout,
   onTogglePanel,
@@ -52,7 +49,6 @@ export function HomeScreen({
   workoutCreatorButton,
   workoutSortActions
 }: HomeScreenProps) {
-  const homeWorkouts = filteredWorkouts.slice(0, 5);
   const shouldShowWorkoutCreator = !hasUserDefinedWorkouts(savedWorkouts);
 
   return (
@@ -68,22 +64,19 @@ export function HomeScreen({
         actions={workoutSortActions}
         isCollapsed={collapsedPanels["home-workouts"] ?? false}
         theme={theme}
-        title={t("workouts")}
+        title={t("activeWorkouts")}
         onToggle={() => onTogglePanel("home-workouts")}
       >
-        <WorkoutList workouts={homeWorkouts} theme={theme} onOpenWorkout={onOpenWorkout} />
-        {filteredWorkouts.length > homeWorkouts.length ? (
-          <AppButton
-            icon="list-outline"
-            style={styles.secondaryButton}
-            textStyle={styles.secondaryButtonText}
-            theme={theme}
-            variant="outline"
-            onPress={onOpenAllWorkouts}
-          >
-            {t("viewAllWorkouts")}
-          </AppButton>
-        ) : null}
+        <WorkoutList
+          emptyContent={(
+            <Text style={[styles.workoutEmptyText, { color: theme.muted }]}>
+              {t("noActiveWeeklyWorkouts")}
+            </Text>
+          )}
+          workouts={activeWeeklyWorkouts}
+          theme={theme}
+          onOpenWorkout={onOpenWorkout}
+        />
       </CollapsiblePanel>
 
       <CollapsiblePanel

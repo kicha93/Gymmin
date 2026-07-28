@@ -44,6 +44,7 @@ export function createWorkoutCreatorApiClient(dependencies: {
         language: string;
         profileId: string | null;
         questionsAndAnswers: WorkoutCreatorQuestionAnswer[];
+        sensitiveDataConsent: boolean;
       },
       headers: Record<string, string>,
       fallbackMessage: string

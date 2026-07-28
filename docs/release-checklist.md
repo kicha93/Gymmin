@@ -158,6 +158,10 @@ multi-replica and device smoke checks listed below.
   services, the Firebase instance-ID receiver and the C2DM receive permission.
   Introducing remote push requires an explicit architecture/privacy review and
   an intentional allowlist update.
+- Release contains no legacy OEM badge-counter permissions. Gymmin never calls
+  the Expo badge API and explicitly disables badge changes in its foreground
+  handler. The component/permission gate rejects all 16 removed launcher
+  read/write permissions if a dependency adds them again.
 - Store signing env vars are set:
   - `GYMMIN_UPLOAD_STORE_FILE`,
   - `GYMMIN_UPLOAD_STORE_PASSWORD`,

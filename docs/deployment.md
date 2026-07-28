@@ -444,6 +444,11 @@ Mobile build notes:
   they restore local scheduled reminders after reboot. Remote push must not be
   enabled by merely loosening the manifest; add token lifecycle, backend
   delivery, consent/privacy documentation and abuse controls first.
+- Gymmin does not manage launcher badge counters. Release strips the legacy
+  Samsung/HTC/Sony/Huawei/OPPO and ShortcutBadger permissions pulled in by
+  `expo-notifications`. Android's normal notification tray and system-managed
+  dots do not require these vendor read/write permissions. Adding badge counters
+  later requires a permission/privacy review and a deliberate gate update.
 - Generate the upload key outside the repository:
 
 ```powershell

@@ -156,6 +156,7 @@ the material from Git and rotate the credential before continuing.
 
 ```powershell
 npm run security:secrets
+npm run production:smoke:self-test
 ```
 
 ```powershell
@@ -165,6 +166,17 @@ dotnet test backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj
 ```powershell
 npm --prefix apps/mobile run test
 ```
+
+After deploying to the permanent HTTPS domain, run the synthetic production
+probe (or set `GYMMIN_PRODUCTION_BASE_URL` instead of passing the URL):
+
+```powershell
+npm run production:smoke -- https://api.example.com
+```
+
+It verifies liveness/readiness, the sanitized production health response, HSTS,
+security/cache headers and the PL/EN privacy and account-deletion pages. Local
+and temporary Cloudflare/ngrok hosts are intentionally rejected.
 
 ```powershell
 cd apps/mobile

@@ -38,6 +38,11 @@ and covered by automated tests:
   gate. It scans every tracked text file, rejects release signing/service-account
   files and known token/key formats, and runs before mobile tests and in
   `production-gate`.
+- The same follow-up hardened PostgreSQL backup scripts so URI passwords are not
+  passed on process command lines, validates complete backup manifests and archive
+  readability, and runs a real migrate → backup → restore cycle on PostgreSQL 16
+  in `production-gate`. It also added a provider-independent HTTPS production
+  smoke probe for health, headers and public legal pages.
 
 Public release still requires the deployment-owned backup/restore,
 multi-replica and device smoke checks listed below.
@@ -199,6 +204,7 @@ Run before publishing a package:
 
 ```powershell
 npm run security:secrets
+npm run production:smoke:self-test
 npm --prefix apps/mobile run test
 npm --prefix apps/mobile run typecheck
 npm --prefix apps/mobile run security:android
@@ -211,11 +217,18 @@ dotnet test backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj
 dotnet build backend/Gymmin.Api/Gymmin.Api.csproj
 ```
 
+After deploying the permanent host:
+
+```powershell
+npm run production:smoke -- https://API_DOMAIN
+```
+
 `expo-doctor` must report all checks passing. The Android export verifies Metro
 and Hermes bundling, but it does not replace the signed AAB build or device smoke.
 The tracked-secret and Android security validations are also run by the mobile
-test pre-hook and the production gate; the gate additionally inspects the merged
-release manifest.
+test pre-hook and the production gate. The gate additionally inspects the merged
+release manifest and performs a real PostgreSQL 16 migration, backup and restore
+cycle.
 The exported-component command requires a processed release manifest, so run it
 after `processReleaseResources`, `bundleRelease` or the Store AAB build.
 

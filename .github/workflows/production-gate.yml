@@ -48,6 +48,18 @@ jobs:
         env:
           Gymmin__Storage__Provider: Database
           Gymmin__Storage__DatabaseProvider: SQLite
+      - name: Verify PostgreSQL backup and restore workflow
+        shell: pwsh
+        env:
+          BACKUP_SMOKE_ADMIN_URI: postgresql://gymmin_test:gymmin_test_password@127.0.0.1:5432/postgres
+          BACKUP_SMOKE_CONNECTION: Host=127.0.0.1;Port=5432;Database=gymmin_backup_smoke;Username=gymmin_test;Password=gymmin_test_password
+          BACKUP_SMOKE_URI: postgresql://gymmin_test:gymmin_test_password@127.0.0.1:5432/gymmin_backup_smoke
+        run: |
+          psql --dbname=$env:BACKUP_SMOKE_ADMIN_URI --set=ON_ERROR_STOP=1 --command='CREATE DATABASE gymmin_backup_smoke;'
+          dotnet tool run dotnet-ef database update --project backend/Gymmin.Api/Gymmin.Api.csproj --startup-project backend/Gymmin.Api/Gymmin.Api.csproj --configuration Release --connection $env:BACKUP_SMOKE_CONNECTION
+          $backup = & ./scripts/backup-postgres.ps1 -ConnectionUri $env:BACKUP_SMOKE_URI -OutputDirectory (Join-Path $env:RUNNER_TEMP 'gymmin-backup-smoke') | Select-Object -Last 1
+          if ([string]::IsNullOrWhiteSpace($backup)) { throw 'Backup script did not return an artifact path.' }
+          & ./scripts/verify-postgres-restore.ps1 -AdminConnectionUri $env:BACKUP_SMOKE_ADMIN_URI -BackupPath $backup
       - run: dotnet list backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj package --vulnerable --include-transitive
 
   mobile:
@@ -66,6 +78,7 @@ jobs:
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
       - run: npm run security:secrets
+      - run: node ../../scripts/smoke-production.mjs --self-test
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with:
           distribution: temurin
@@ -115,6 +128,6 @@ jobs:
           grep -q 'android:networkSecurityConfig="@xml/network_security_config"' "$manifest"
           grep -q 'android:fullBackupContent="@xml/backup_rules"' "$manifest"
           grep -q 'android:dataExtractionRules="@xml/data_extraction_rules"' "$manifest"
+          ! grep -q "android.permission.WRITE_EXTERNAL_STORAGE" "$manifest"
       - name: Verify exported Android components
         run: npm run security:android-components
-          ! grep -q "android.permission.WRITE_EXTERNAL_STORAGE" "$manifest"

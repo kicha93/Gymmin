@@ -158,7 +158,7 @@ probes inexpensive.
 { "status": "ok" }
 ```
 
-`GET /api/health` includes safe storage information:
+Outside Production, `GET /api/health` includes safe storage information:
 
 ```json
 {
@@ -178,6 +178,18 @@ probes inexpensive.
 
 Diagnostics is available only in development/testing. Production startup fails
 if it is enabled.
+
+After deployment, run the provider-independent synthetic probe:
+
+```powershell
+npm run production:smoke -- https://API_DOMAIN
+```
+
+The probe rejects HTTP, credentials in URLs, localhost and temporary tunnel
+domains. It verifies `/health/live`, `/health/ready`, the sanitized one-field
+production `/api/health` response, HSTS/security/cache headers and both language
+versions of the privacy and account-deletion pages. Schedule the same command in
+the selected uptime monitor after the permanent domain is available.
 
 Production writes one-line JSON console logs with UTC timestamps, scopes and the
 sanitized correlation id. Forward stdout/stderr to the hosting log collector; do
@@ -259,7 +271,9 @@ Outside Production, missing SMTP or OpenAI configuration does not block startup.
 
 The scripts require PostgreSQL client tools (`pg_dump`, `pg_restore`, `psql`) and
 a `postgresql://` connection URI supplied at runtime. They never store the URI in
-the backup manifest.
+the backup manifest. Passwords embedded in the URI are removed before invoking
+PostgreSQL tools and supplied through the child-process environment, so they are
+not exposed in command-line process listings.
 
 ```powershell
 .\scripts\backup-postgres.ps1 `
@@ -267,10 +281,11 @@ the backup manifest.
   -OutputDirectory 'D:\GymminBackups'
 ```
 
-Every custom-format dump receives a SHA256 manifest. Copy both files to durable,
-encrypted storage outside the application host. Verify a representative backup
-regularly against a PostgreSQL server using an admin URI whose database can be
-used to create a short-lived `gymmin_restore_verify_*` database:
+Every custom-format dump receives a SHA256 manifest with file name, size,
+creation time and `pg_dump` version. Copy both files to durable, encrypted
+storage outside the application host. Verify a representative backup regularly
+against a PostgreSQL server using an admin URI whose database can be used to
+create a short-lived `gymmin_restore_verify_*` database:
 
 ```powershell
 .\scripts\verify-postgres-restore.ps1 `
@@ -278,10 +293,13 @@ used to create a short-lived `gymmin_restore_verify_*` database:
   -BackupPath 'D:\GymminBackups\gymmin-20260715T220000Z.dump'
 ```
 
-The verifier checks the checksum, restores with `--exit-on-error`, requires a
-non-empty EF migration history and then removes only its randomly named temporary
-database. A backup is not considered operational until this restore check has
-passed in the target PostgreSQL major version.
+The verifier checks all manifest metadata, checksum and archive readability,
+restores with `--exit-on-error`, requires a non-empty EF migration history and
+then removes only its randomly named temporary database. The production gate
+executes a real migration, backup and restore cycle against PostgreSQL 16 on
+every change. This protects the scripts from regression, but a production backup
+is not considered operational until the same restore check has passed on a real
+off-host artifact using the target PostgreSQL major version.
 
 ## Administrative bug-report API
 

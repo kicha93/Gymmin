@@ -727,6 +727,16 @@ Etap 9A dodaje lekki fundament diagnostyki bez zewnętrznego SaaS:
 
 `GET /api/diagnostics` jest dostępny tylko w development/testing; produkcja odmawia startu z włączoną diagnostyką. `/health/live` sprawdza proces, `/health/ready` dostępność bazy, a produkcja emituje strukturalne logi JSON.
 
+Repozytorium zawiera syntetyczny test `production:smoke`, który po wskazaniu
+stałej domeny HTTPS sprawdza liveness, readiness, zanonimizowany production
+health, HSTS i pozostałe nagłówki bezpieczeństwa oraz strony privacy/account
+deletion w PL i EN. Domeny lokalne i tymczasowe tunele są odrzucane.
+
+Production gate wykonuje także prawdziwy cykl migracja → backup → restore na
+PostgreSQL 16. Skrypty backupu nie przekazują hasła z URI w argumentach procesów,
+a verifier kontroluje metadane manifestu, SHA256, czytelność archiwum, historię
+migracji i sprząta losową bazę weryfikacyjną.
+
 ## Local-first i per-user storage
 
 Mobile używa account-scoped AsyncStorage:

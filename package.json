@@ -2,6 +2,8 @@
   "name": "gymmin",
   "private": true,
   "scripts": {
+    "production:smoke": "node scripts/smoke-production.mjs",
+    "production:smoke:self-test": "node scripts/smoke-production.mjs --self-test",
     "security:secrets": "node scripts/validate-tracked-secrets.mjs",
     "mobile:test": "npm --prefix apps/mobile run test",
     "mobile:typecheck": "npm --prefix apps/mobile run typecheck",

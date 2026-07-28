@@ -583,6 +583,14 @@ Aktualnie dziala:
 - Android debug APK build smoke przechodzi z natywnym Google Play Billing stackiem,
 - release AAB build smoke przechodzi przez skrypt `mobile:store:aab`, ktory buduje z krotkiej sciezki roboczej dla Windows/CMake,
 - po aktualizacji Expo 57 potwierdzono `expo-doctor` 19/19, eksport Hermes dla Androida, debug APK oraz czysty `bundleRelease` dla `arm64-v8a`,
+- release Android blokuje nieszyfrowany ruch HTTP także na poziomie natywnego
+  Network Security Config; osobny wyjątek istnieje wyłącznie w wariantach
+  debug dla lokalnego backendu,
+- prywatne pliki, bazy i preferencje aplikacji są wyłączone z Android Auto
+  Backup oraz transferu urządzenie-urządzenie; dane konta są odtwarzane przez
+  kontrolowaną synchronizację Gymmin,
+- skrypt `mobile:security:android` i production gate wykrywają regresję tych
+  ustawień, a CI sprawdza również scalony manifest release,
 - build smoke wymaga Android SDK (`ANDROID_HOME` / `ANDROID_SDK_ROOT`); bez podlaczonego emulatora lub telefonu potwierdza linkowanie natywne, ale nie runtime UI,
 - widok mobile `Kredyty` z saldem, kosztami, kompaktowymi kartami pakietow, ostatnimi transakcjami, informacjami i akcja zakupu/restore pending purchases,
 - dev/test grant poza Production.

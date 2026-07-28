@@ -4,10 +4,11 @@
   "private": true,
   "main": "expo/AppEntry.js",
   "scripts": {
-    "pretest": "node ../../scripts/validate-exercise-catalog.mjs",
+    "pretest": "node ../../scripts/validate-exercise-catalog.mjs && node ../../scripts/validate-android-release-security.mjs",
     "start": "expo start",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "security:android": "node ../../scripts/validate-android-release-security.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

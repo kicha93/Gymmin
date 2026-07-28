@@ -419,6 +419,16 @@ Mobile build notes:
 - Release AAB builds require Google Play upload-key signing. Configure the key through `GYMMIN_UPLOAD_STORE_FILE`, `GYMMIN_UPLOAD_STORE_PASSWORD`, `GYMMIN_UPLOAD_KEY_ALIAS` and `GYMMIN_UPLOAD_KEY_PASSWORD`, or through the ignored local file `apps/mobile/android/upload-keystore.properties`. Missing signing config fails the release build instead of using the debug keystore.
 - GitHub Release phone-test packages should be built with `npm run mobile:apk:share -- -ApiBaseUrl "https://..."`. That command produces `.artifacts/Gymmin-arm64-v8a-release-latest.apk` by default; it is not the Store AAB artifact.
 - Temporary Cloudflare/ngrok URLs remain supported for phone-test APKs. Store AAB and EAS `production` builds fail before compilation when the API URL is not HTTPS or points to a known tunnel/local host. The checked-in `buildConfig.ts` stays empty, and `EXPO_PUBLIC_API_BASE_URL` has precedence.
+- Native Android release configuration independently rejects cleartext HTTP
+  through `network_security_config.xml`. Debug variants use a separate
+  cleartext-enabled resource for local development; never copy that resource
+  into the main source set.
+- OS backup is intentionally disabled. `backup_rules.xml` and
+  `data_extraction_rules.xml` exclude app files, databases and preferences from
+  cloud backup and device-to-device transfer, including device-protected
+  storage. Cross-device restoration must use authenticated Gymmin sync.
+- Run `npm run mobile:security:android` after Expo/native configuration changes.
+  The production gate also verifies the final merged release manifest.
 - Generate the upload key outside the repository:
 
 ```powershell

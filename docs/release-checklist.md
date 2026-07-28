@@ -140,6 +140,12 @@ multi-replica and device smoke checks listed below.
 
 - Store AAB uses release upload-key signing, not debug signing.
 - Store/EAS production build rejects Cloudflare/ngrok/local API URLs and embeds the permanent HTTPS backend URL through `EXPO_PUBLIC_API_BASE_URL`.
+- Release manifest sets `usesCleartextTraffic=false` and references the
+  production network-security config. Only debug source sets use the explicit
+  cleartext exception required for a local HTTP backend.
+- `allowBackup=false` is reinforced with Android 11 backup rules and Android
+  12+ extraction rules that exclude private storage from both cloud backup and
+  device-to-device transfer.
 - Store signing env vars are set:
   - `GYMMIN_UPLOAD_STORE_FILE`,
   - `GYMMIN_UPLOAD_STORE_PASSWORD`,
@@ -167,6 +173,7 @@ Run before publishing a package:
 ```powershell
 npm --prefix apps/mobile run test
 npm --prefix apps/mobile run typecheck
+npm --prefix apps/mobile run security:android
 cd apps/mobile
 npx expo-doctor
 npx expo export --platform android --output-dir .expo-release-smoke
@@ -177,6 +184,8 @@ dotnet build backend/Gymmin.Api/Gymmin.Api.csproj
 
 `expo-doctor` must report all checks passing. The Android export verifies Metro
 and Hermes bundling, but it does not replace the signed AAB build or device smoke.
+The Android security validation is also run by the mobile test pre-hook and the
+production gate; the gate additionally inspects the merged release manifest.
 
 ## Manual smoke required
 

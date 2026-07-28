@@ -70,6 +70,7 @@ jobs:
           distribution: temurin
           java-version: "17"
       - run: npm ci
+      - run: npm run security:android
       - run: npm test
       - run: npm run typecheck
       - run: npx expo-doctor
@@ -108,4 +109,9 @@ jobs:
           manifest="android/app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml"
           test -f "$manifest"
           ! grep -q "android.permission.SYSTEM_ALERT_WINDOW" "$manifest"
+          grep -q 'android:allowBackup="false"' "$manifest"
+          grep -q 'android:usesCleartextTraffic="false"' "$manifest"
+          grep -q 'android:networkSecurityConfig="@xml/network_security_config"' "$manifest"
+          grep -q 'android:fullBackupContent="@xml/backup_rules"' "$manifest"
+          grep -q 'android:dataExtractionRules="@xml/data_extraction_rules"' "$manifest"
           ! grep -q "android.permission.WRITE_EXTERNAL_STORAGE" "$manifest"

@@ -210,7 +210,9 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
 - Mobile account-scoped data uses per-user AsyncStorage keys: `gymmin.account.anonymous.*` for signed-out data and `gymmin.account.{userId}.*` for signed-in cache/sync metadata. Account switching does not silently merge data from the previous account.
 - If signed-out local data exists after login, the app asks whether to merge it into the current account, keep it for later, or delete only the anonymous local data.
 - Workout reminders are local system notifications. They have a per-weekday schedule (`weeklySchedule`) where each day has its own enabled state and `HH:mm` time, while `message` and `description` remain shared. Old `daysOfWeek + time` settings are normalized into the new shape. Reminders were manually verified in the standalone Android APK / development build and sync through `/api/settings`, while scheduled notification IDs stay per-user on the device under `gymmin.account.{owner}.workoutReminderNotificationIds`.
-- The home screen shows at most five workouts in the Workouts section and links to the full workout list when more exist.
+- The home screen shows only workouts assigned to the active weekly plan, without
+  an artificial item limit. Adding, searching, sorting and archived-workout
+  filtering remain on the full Workouts screen.
 - Local articles are multilingual. Each article stores per-language `translations`, uses `defaultLanguage` fallback, and the current training-plan article has both PL and EN content.
 - Workout list sorting is stored locally with workouts. Default sorting is by creation date descending; the user can switch between creation date/alphabetical and ascending/descending.
 - Login and registration are connected to the backend.
@@ -220,6 +222,9 @@ Mobile unit tests use Vitest and cover pure helper logic for account-scoped loca
   answers that may include health, injury, medication and lifestyle information.
   Mobile sends `sensitiveDataConsent: true`, and the backend rejects plan requests
   without it before charging a credit or contacting OpenAI.
+- The workout-definition AI rewrite remains implemented in mobile/backend but its
+  `Modify with AI` entry point is intentionally hidden for the current production
+  release. The standard AI workout creator remains available.
 - Settings contain a localized privacy screen that works offline and links to the
   public backend policy. The production URL ending in `/privacy` can be used as the
   Google Play privacy-policy URL; `?lang=en` serves the English version.

@@ -45,9 +45,11 @@ This note tracks the current workout-view UX decisions.
 ## Workout definition export
 
 - Read-only workout details show `Edit | Export`, followed by one equal-width
-  `Archive | Delete` row and the existing `Start | Modify with AI` row.
+  `Archive | Delete` row and a full-width `Start workout` action.
   An archived workout becomes read-only: only `Unarchive | Delete` remain
-  actionable, while edit, export, start and AI modification are hidden.
+  actionable, while edit, export and start are hidden.
+- `Modify with AI` is intentionally hidden for the current production release;
+  its transport and recovery code remain in place for a later controlled rollout.
 - Export opens a local format sheet for CSV or Excel XLSX and shows a disabled/loading state while the file is generated.
 - CSV uses UTF-8 with BOM, `;` separators, RFC-style quote escaping and neutralizes formula-like user text before it reaches a spreadsheet application.
 - CSV and XLSX contain the same compact columns: stage, type, exercise, sets,

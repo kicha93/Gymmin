@@ -534,11 +534,16 @@ Flow:
 4. Mobile odpytuje status joba.
 5. Po wyniku importuje jeden lub wiele treningów.
 
-Kreator dodaje rozgrzewkę zależnie od odpowiedzi użytkownika. Odpoczynki z API są mapowane na osobne elementy typu `Odpoczynek`.
+Kreator dodaje rozgrzewkę zależnie od odpowiedzi użytkownika. Przerwa między
+seriami jest normalizowana do `restSeconds` konkretnego ćwiczenia; starsze osobne
+elementy odpoczynku są migrowane do tego pola i nie pozostają ćwiczeniami na liście.
 
 ### Modyfikowanie treningu z AI
 
-Zalogowany użytkownik może wybrać `Modyfikuj z AI` w podglądzie treningu. Mobile wysyła aktualny trening i instrukcję do backendu przez endpoint rewrite. Wynik jest pokazywany jako propozycja AI.
+Transport, joby i ekrany modyfikowania treningu przez endpoint rewrite pozostają
+zaimplementowane, ale wejście `Modyfikuj z AI` jest celowo ukryte w aktualnym
+wydaniu produkcyjnym. Użytkownik nie może rozpocząć nowej modyfikacji z podglądu
+treningu; wznowienie już zapisanego joba nadal pozostaje bezpieczne.
 
 Użytkownik może:
 

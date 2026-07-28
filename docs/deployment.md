@@ -459,4 +459,19 @@ Voided Purchases worker; deployment must enable and monitor it.
 - Configure Pub/Sub OIDC, enable the Voided Purchases worker and alert on
   `manual_review`, `partial_clawback`, `unmatched` or repeated polling failures.
 - Complete Google Play Internal Testing with real test products and license testers.
-- Publish the reviewed privacy policy and account-deletion support page.
+- Deploy the backend on its permanent HTTPS domain and verify:
+
+  ```text
+  https://API_DOMAIN/privacy
+  https://API_DOMAIN/privacy?lang=en
+  https://API_DOMAIN/account-deletion
+  https://API_DOMAIN/account-deletion?lang=en
+  ```
+
+- Enter `/privacy` as the Google Play Privacy Policy URL and
+  `/account-deletion` as the Account deletion URL. Both URLs must be reachable
+  without authentication, redirects to private tunnels or development warning
+  pages.
+- Perform a real deletion request from the registered account email and document
+  the support ownership-verification procedure. Support must never request a
+  password or email verification code.

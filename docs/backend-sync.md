@@ -397,6 +397,12 @@ POST /api/sync/workouts
 
 Wszystkie wymagają bearer tokena.
 
+`POST /api/workout-creator/plan` dodatkowo wymaga
+`sensitiveDataConsent: true`. Mobile pokazuje osobną, domyślnie odznaczoną zgodę
+bezpośrednio przed wysłaniem odpowiedzi mogących zawierać dane zdrowotne i
+stylu życia. Backend odrzuca brak zgody kodem
+`sensitive_data_consent_required` przed pobraniem kredytu i wywołaniem OpenAI.
+
 Treningi są scoped po `UserId`. Usunięcie jest soft delete.
 
 Mobile przechowuje treningi lokalnie per-user. Lokalny storage treningów zawiera także:
@@ -788,6 +794,28 @@ Joby:
 `plan` generuje nowy plan. `rewrite` modyfikuje istniejący trening na podstawie instrukcji użytkownika.
 
 AI import i AI rewrite mapują ćwiczenia best-effort do katalogowego `exerciseId`. Aplikacja nie tworzy własnych ćwiczeń. Jeśli dopasowanie się nie uda, nazwa ćwiczenia zostaje fallbackiem. Przed releasem warto rozważyć ostrzejszą politykę: niedopasowane ćwiczenia powinny wymagać review/replacement przed zapisem albo fallback powinien być jednoznacznie pokazany w UI.
+
+Endpoint rewrite pozostaje obsługiwany przez backend ze względu na bezpieczne
+wznowienie istniejących jobów, ale jego akcja startowa jest ukryta w aktualnym UI.
+
+## Publiczne endpointy prawne
+
+```http
+GET /privacy?lang=pl|en
+GET /account-deletion?lang=pl|en
+```
+
+Oba endpointy zwracają `text/html; charset=utf-8`, są dostępne bez logowania i
+nie ujawniają danych użytkownika. `/account-deletion` zawiera:
+
+- ścieżkę natychmiastowego usunięcia w aplikacji,
+- zewnętrzne żądanie przez `kontakt@gymmin.app`,
+- zakaz wysyłania hasła lub kodu weryfikacyjnego,
+- zakres usuwanych danych i ograniczone wyjątki retencyjne,
+- link zwrotny do polityki prywatności.
+
+Publiczna strona jest wyłącznie instrukcją/uruchomieniem kontaktu. Nie omija
+step-up authentication endpointu `DELETE /api/account`.
 
 ## Bug reports
 

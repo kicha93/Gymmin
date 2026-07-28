@@ -189,6 +189,14 @@ build:
   camera image is reduced before upload, survives an app restart and renders
   from the authenticated account-scoped cache in both the header and Profile.
 - Account details and account deletion with strong confirmation.
+- Public `/privacy` and `/account-deletion` pages in PL and EN without login.
+- External deletion mail link opens with the expected recipient and subject;
+  complete one request using the registered account email and verify the support
+  procedure never asks for a password or verification code.
+- AI creator submit remains disabled until explicit sensitive-data consent is
+  selected; a direct API request without consent returns
+  `sensitive_data_consent_required` without consuming a credit.
+- Workout details do not expose the intentionally hidden `Modify with AI` action.
 - Anonymous local workouts, login and anonymous-to-account merge.
 - Workout list, workout details and Exercise Detail Page.
 - Active workout execution:

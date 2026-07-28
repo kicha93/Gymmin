@@ -61,6 +61,9 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/features/profile/useCachedAvatar.ts` zarządza natywnym cache avatara, odświeżeniem po zmianie metadanych, czyszczeniem po usunięciu oraz stanem fallbacku po błędzie obrazu; composition root otrzymuje gotowe URI i akcje,
 - `src/api/aiCreditsApi.ts` obsługuje saldo, historię, pakiety, weryfikację Google Play i deweloperskie zasilenie kredytów; natywne billing UI i lokalizacja pozostają w kompozycji,
 - `src/api/workoutCreatorApi.ts` definiuje transport startu planu/rewrite i statusu joba oraz normalizuje `queued/processing/completed/failed`; polling i zastosowanie wyniku pozostają w warstwie kompozycji,
+- `src/screens/PrivacyScreen.tsx` udostępnia lokalną wersję polityki PL/EN i linki
+  do publicznej polityki oraz instrukcji usunięcia konta; publiczne dokumenty HTML
+  są generowane przez backendowy `LegalEndpoints`,
 - `src/domain/workoutCreatorJob.ts` waliduje i normalizuje lokalny kontrakt oczekującego joba, a `src/features/workoutCreator/useAccountScopedCreatorJob.ts` izoluje jego odczyt, zapis i zmianę właściciela storage,
 - `src/domain/workoutCreatorImport.ts` parsuje bezpośrednie i opakowane odpowiedzi AI, odzyskuje JSON z tekstu Markdown oraz buduje lokalne treningi z opcjonalną rozgrzewką i mapowaniem do katalogu,
 - `src/domain/accountWorkouts.ts` mapuje lokalne treningi na kontrakt konta, odbudowuje zwalidowane odpowiedzi API i scala rekordy po stabilnym ID z pierwszeństwem danych konta,
@@ -102,7 +105,7 @@ Kod mobile jest dzielony według odpowiedzialności:
 - `src/screens/ExerciseProgressScreen.tsx` odpowiada za metryki pojedynczego ćwiczenia, lokalny filtr zakresu historii, stronicowanie oraz rozwijanie grup sesji; grupowanie wyników pozostaje w `src/domain/exerciseProgressHistory.ts`, a wybór ćwiczenia i nawigacja w kompozycji aplikacji,
 - `src/screens/WorkoutHistoryScreen.tsx` odpowiada za podsumowanie historii, kontrolowane filtry statusu, wyszukiwanie i listę sesji; źródło danych, filtrowanie po treningu, usuwanie oraz nawigacja pozostają w kompozycji aplikacji,
 - `src/screens/WorkoutSessionDetailScreen.tsx` odpowiada za kartę wykonanej sesji oraz poziomo przewijaną tabelę pogrupowanych ćwiczeń i serii; wybrana sesja, potwierdzenie usunięcia i wyliczenie szerokości dla orientacji poziomej pozostają w `App.tsx`,
-- `src/screens/WorkoutDetailScreen.tsx` odpowiada za prezentację definicji treningu, etapy, serie, podsumowanie mięśni i skróconą historię; wybór treningu, start sesji, potwierdzenie usunięcia, dostępność AI i nawigacja pozostają w kompozycji aplikacji,
+- `src/screens/WorkoutDetailScreen.tsx` odpowiada za prezentację definicji treningu, etapy, serie, podsumowanie mięśni i skróconą historię; wybór treningu, start sesji, potwierdzenie usunięcia i nawigacja pozostają w kompozycji aplikacji; akcja rewrite AI jest obecnie ukryta,
 - `src/screens/WorkoutCreatorScreen.tsx` odpowiada za kontrolowany formularz Kreatora AI, wybór lokalnego profilu, stany wysyłania i prezentację wyniku; wywołania API, polling joba, kredyty oraz zapis profili pozostają w `App.tsx`,
 - transport wywołań Kreatora jest w `src/api/workoutCreatorApi.ts`, a cykl lokalnego pending joba w `useAccountScopedCreatorJob`; `App.tsx` koordynuje polling, saldo kredytów, reakcję UI po odtworzeniu i import wyniku,
 - `src/screens/WorkoutAiRewriteScreen.tsx` i `src/screens/WorkoutAiProposalScreen.tsx` rozdzielają formularz instrukcji modyfikacji od podglądu propozycji AI; zapis, zastąpienie treningu, kredyty, endpoint rewrite i polling pozostają w `App.tsx`,
@@ -195,6 +198,16 @@ Auth hardening obejmuje wygasanie tokenów, `RevokedAt`, listę aktywnych sesji,
 Transport tych operacji przechodzi przez `src/api/authApi.ts`. Klient odrzuca niepełne odpowiedzi logowania i sesji oraz wymaga udanego statusu backendu przed lokalnym wykonaniem `logout-all`; nieudany request nie usuwa lokalnej sesji.
 
 Operacje destrukcyjne stosują step-up authentication: usunięcie konta wymaga ponownej weryfikacji aktualnego hasła po stronie API oraz limitu prób per użytkownik/IP. Warstwa HTTP ogranicza rozmiary requestów i kolekcji synchronizacji, a Production rozdziela allowlistę CORS od szerokiej polityki Development/Testing.
+
+Publiczne dokumenty prawne nie wymagają bearer tokena:
+
+- `GET /privacy?lang=pl|en`,
+- `GET /account-deletion?lang=pl|en`.
+
+Drugi endpoint nie usuwa konta bez uwierzytelnienia. Opisuje bezpieczny proces
+usunięcia w aplikacji oraz zewnętrzne żądanie mailowe weryfikowane przez adres
+przypisany do konta. Faktyczne API `DELETE /api/account` nadal wymaga aktywnej
+sesji, aktualnego hasła i limitów per użytkownik/IP.
 
 ### Profile avatar
 

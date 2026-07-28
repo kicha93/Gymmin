@@ -607,6 +607,10 @@ Aktualnie dziala:
   wybór obrazu `image/*`, picker katalogu Downloads dla starszych urządzeń oraz
   dwa bindingi Google Play Billing; nieużywane zapytania aparatu/wideo i szeroki
   selektor `*/*` zostały usunięte,
+- repozytorium ma automatyczną bramę `security:secrets`, która skanuje wszystkie
+  śledzone pliki tekstowe i blokuje sekrety dostawców, klucze prywatne,
+  service-account JSON oraz materiał release signing; uruchamia się przed
+  testami mobile i w `production-gate`,
 - build smoke wymaga Android SDK (`ANDROID_HOME` / `ANDROID_SDK_ROOT`); bez podlaczonego emulatora lub telefonu potwierdza linkowanie natywne, ale nie runtime UI,
 - widok mobile `Kredyty` z saldem, kosztami, kompaktowymi kartami pakietow, ostatnimi transakcjami, informacjami i akcja zakupu/restore pending purchases,
 - dev/test grant poza Production.

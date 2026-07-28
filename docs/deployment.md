@@ -24,6 +24,16 @@ Rules:
 
 Production should be configured through environment variables or a secret manager.
 Do not commit real secrets or production connection strings.
+Run `npm run security:secrets` before a release. The production gate runs the
+same repository-wide check and rejects tracked environment files, release
+keystores, provisioning/service-account files, private keys, common provider
+tokens and literal values assigned to production credential variables. The
+checked-in Android `debug.keystore` is an explicit development-only exception;
+release signing is independently required and validated.
+
+If the check finds a real credential, remove it from Git, rotate/revoke it in
+the provider, and inspect repository history and CI logs. Deleting only the
+current working-tree copy does not invalidate an exposed secret.
 
 PowerShell example:
 
@@ -429,6 +439,9 @@ Mobile build notes:
   storage. Cross-device restoration must use authenticated Gymmin sync.
 - Run `npm run mobile:security:android` after Expo/native configuration changes.
   The production gate also verifies the final merged release manifest.
+- Run `npm run security:secrets` after changing deployment, CI or signing
+  configuration. Mobile tests execute it automatically, but it should also be
+  run directly while diagnosing a failure.
 - After a native dependency or Expo upgrade, run
   `npm run mobile:security:android-components` against the generated release
   manifest. The allowlist currently permits only `MainActivity` plus the

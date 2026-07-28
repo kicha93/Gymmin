@@ -2,6 +2,7 @@
   "name": "gymmin",
   "private": true,
   "scripts": {
+    "security:secrets": "node scripts/validate-tracked-secrets.mjs",
     "mobile:test": "npm --prefix apps/mobile run test",
     "mobile:typecheck": "npm --prefix apps/mobile run typecheck",
     "mobile:security:android": "npm --prefix apps/mobile run security:android",

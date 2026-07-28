@@ -65,6 +65,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
+      - run: npm run security:secrets
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with:
           distribution: temurin

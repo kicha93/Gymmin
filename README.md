@@ -146,8 +146,17 @@ $env:ConnectionStrings__DefaultConnection = "Host=localhost;Port=5432;Database=g
 ```
 
 Production secrets must be supplied through environment variables or a secret manager. See `docs/deployment.md`.
+Tracked files are checked by `npm run security:secrets`; the same check runs
+before mobile tests and in the production gate. It rejects private keys, common
+provider tokens, release signing material, service-account files and literal
+production credentials. A failure must be treated as possible exposure: remove
+the material from Git and rotate the credential before continuing.
 
 ## Useful Checks
+
+```powershell
+npm run security:secrets
+```
 
 ```powershell
 dotnet test backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj

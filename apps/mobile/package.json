@@ -4,12 +4,13 @@
   "private": true,
   "main": "expo/AppEntry.js",
   "scripts": {
-    "pretest": "node ../../scripts/validate-exercise-catalog.mjs && node ../../scripts/validate-android-release-security.mjs",
+    "pretest": "node ../../scripts/validate-tracked-secrets.mjs && node ../../scripts/validate-exercise-catalog.mjs && node ../../scripts/validate-android-release-security.mjs",
     "start": "expo start",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "security:android": "node ../../scripts/validate-android-release-security.mjs",
-    "security:android-components": "node ../../scripts/validate-android-exported-components.mjs"
+    "security:android-components": "node ../../scripts/validate-android-exported-components.mjs",
+    "security:secrets": "node ../../scripts/validate-tracked-secrets.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

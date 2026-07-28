@@ -34,6 +34,10 @@ and covered by automated tests:
   `docs/security-audit-2026-07-22.md`; avatar bearer headers are same-origin,
   auth and purchase verification have independent IP/account limits, public AI
   job failures are sanitized and completed AI jobs have bounded retention.
+- The 2026-07-28 production follow-up added a repository-wide tracked-secret
+  gate. It scans every tracked text file, rejects release signing/service-account
+  files and known token/key formats, and runs before mobile tests and in
+  `production-gate`.
 
 Public release still requires the deployment-owned backup/restore,
 multi-replica and device smoke checks listed below.
@@ -91,6 +95,9 @@ multi-replica and device smoke checks listed below.
 - SMTP is configured for bug reports and password reset.
 - Google Play service account credentials are supplied through secrets only.
 - Service account JSON, upload keystore and passwords are not committed.
+- `npm run security:secrets` passes. If it ever reports a real credential,
+  removing the file is not sufficient: revoke/rotate the credential and review
+  repository history before releasing.
 - System status config is set intentionally:
   - `SystemStatus:Kind=ok` for normal operation,
   - `maintenance`, `update` or `degraded` only during controlled events.
@@ -191,6 +198,7 @@ multi-replica and device smoke checks listed below.
 Run before publishing a package:
 
 ```powershell
+npm run security:secrets
 npm --prefix apps/mobile run test
 npm --prefix apps/mobile run typecheck
 npm --prefix apps/mobile run security:android
@@ -205,8 +213,9 @@ dotnet build backend/Gymmin.Api/Gymmin.Api.csproj
 
 `expo-doctor` must report all checks passing. The Android export verifies Metro
 and Hermes bundling, but it does not replace the signed AAB build or device smoke.
-The Android security validation is also run by the mobile test pre-hook and the
-production gate; the gate additionally inspects the merged release manifest.
+The tracked-secret and Android security validations are also run by the mobile
+test pre-hook and the production gate; the gate additionally inspects the merged
+release manifest.
 The exported-component command requires a processed release manifest, so run it
 after `processReleaseResources`, `bundleRelease` or the Store AAB build.
 

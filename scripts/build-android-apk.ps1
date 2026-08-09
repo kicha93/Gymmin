@@ -1,113 +1,66 @@
 param(
-  [Parameter(Mandatory = $true)]
-  [string]$ApiBaseUrl,
-  [string]$Profile = "preview-apk",
-  [switch]$SkipTypecheck,
-  [switch]$NonInteractive,
-  [switch]$ValidateOnly
+  [ValidateSet("debug", "release")]
+  [string]$Variant = "release",
+  [string]$Architectures = "arm64-v8a",
+  [string]$SigningEnvFile = "C:\secure\gymmin-upload-key-codex-20260701.env.ps1",
+  [switch]$SkipGates
 )
 
 $ErrorActionPreference = "Stop"
-
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $mobileRoot = Join-Path $repoRoot "apps\mobile"
-$easJsonPath = Join-Path $mobileRoot "eas.json"
+$androidRoot = Join-Path $mobileRoot "android"
+$artifactRoot = Join-Path $repoRoot ".artifacts"
 
-function Write-Step {
-  param([string]$Message)
-  Write-Host "[apk] $Message"
+function Write-Step([string]$Message) { Write-Host "[android-apk] $Message" }
+function Assert-LastExitCode([string]$Step) {
+  if ($LASTEXITCODE -ne 0) { throw "$Step failed with exit code $LASTEXITCODE." }
 }
 
-function Assert-ProductionApiBaseUrl {
-  param([Parameter(Mandatory = $true)][string]$Url)
-
-  $uri = $null
-  if (-not [System.Uri]::TryCreate($Url, [System.UriKind]::Absolute, [ref]$uri) -or $uri.Scheme -ne "https") {
-    throw "Production ApiBaseUrl must be an absolute HTTPS URL. Received: $Url"
-  }
-
-  $hostName = $uri.DnsSafeHost.ToLowerInvariant()
-  $forbiddenHosts = @("localhost", "127.0.0.1", "10.0.2.2")
-  $forbiddenSuffixes = @(".trycloudflare.com", ".ngrok-free.app", ".ngrok.app", ".ngrok.io", ".loca.lt")
-  if ($hostName -in $forbiddenHosts -or ($forbiddenSuffixes | Where-Object { $hostName.EndsWith($_) })) {
-    throw "Production builds cannot use a temporary tunnel or local backend URL: $Url"
-  }
+if ($Variant -eq "release" -and (Test-Path -LiteralPath $SigningEnvFile)) {
+  Write-Step "Loading release signing environment."
+  . $SigningEnvFile
 }
 
-if (-not (Test-Path $easJsonPath)) {
-  throw "Missing EAS config: $easJsonPath"
+if (-not (Get-Command java -ErrorAction SilentlyContinue)) {
+  throw "JDK 17 is required."
+}
+if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) {
+  throw "ANDROID_HOME or ANDROID_SDK_ROOT is required."
 }
 
-$normalizedApiBaseUrl = $ApiBaseUrl.Trim().TrimEnd("/")
-if (-not ($normalizedApiBaseUrl -match "^https?://")) {
-  throw "ApiBaseUrl must start with http:// or https://. Received: $ApiBaseUrl"
-}
-if ($Profile -eq "production") {
-  Assert-ProductionApiBaseUrl -Url $normalizedApiBaseUrl
-}
-
-$easJsonBackupBytes = [System.IO.File]::ReadAllBytes($easJsonPath)
-$easJsonBackup = Get-Content $easJsonPath -Raw
-
-try {
-  $easConfig = $easJsonBackup | ConvertFrom-Json
-  $profileConfig = $easConfig.build.$Profile
-
-  if (-not $profileConfig) {
-    throw "EAS build profile '$Profile' was not found in $easJsonPath"
-  }
-
-  if (-not $profileConfig.env) {
-    $profileConfig | Add-Member -MemberType NoteProperty -Name env -Value ([pscustomobject]@{})
-  }
-
-  $profileConfig.env | Add-Member `
-    -MemberType NoteProperty `
-    -Name EXPO_PUBLIC_API_BASE_URL `
-    -Value $normalizedApiBaseUrl `
-    -Force
-
-  $easConfig | ConvertTo-Json -Depth 20 | Set-Content -Path $easJsonPath -Encoding UTF8
-
-  Write-Step "Mobile root: $mobileRoot"
-  Write-Step "EAS profile: $Profile"
-  Write-Step "Backend URL embedded in APK: $normalizedApiBaseUrl"
-
-  if (-not $SkipTypecheck) {
-    Write-Step "Running TypeScript check..."
-    Push-Location $mobileRoot
-    try {
-      npm run typecheck
-    } finally {
-      Pop-Location
-    }
-  }
-
-  $easArgs = @("eas-cli@latest", "build", "--platform", "android", "--profile", $Profile)
-
-  if ($NonInteractive) {
-    $easArgs += "--non-interactive"
-  }
-
-  Write-Step "Build command: npx $($easArgs -join ' ')"
-
-  if ($ValidateOnly) {
-    Write-Step "ValidateOnly enabled. EAS build was not started."
-    return
-  }
-
+if (-not $SkipGates) {
   Push-Location $mobileRoot
   try {
-    $buildArgs = @("eas-cli@latest", "build", "--platform", "android", "--profile", $Profile)
-    if ($NonInteractive) {
-      $buildArgs += "--non-interactive"
-    }
-
-    npx @buildArgs
-  } finally {
-    Pop-Location
-  }
-} finally {
-  [System.IO.File]::WriteAllBytes($easJsonPath, $easJsonBackupBytes)
-  Write-Step "Restored eas.json."
+    Write-Step "Running mobile tests and architecture gates..."
+    npm test
+    Assert-LastExitCode "Mobile tests"
+    Write-Step "Running TypeScript check..."
+    npm run typecheck
+    Assert-LastExitCode "TypeScript check"
+  } finally { Pop-Location }
 }
+
+if (-not (Test-Path -LiteralPath $androidRoot)) {
+  Push-Location $mobileRoot
+  try { npx expo prebuild --platform android --no-install } finally { Pop-Location }
+}
+
+$task = if ($Variant -eq "release") { "assembleRelease" } else { "assembleDebug" }
+$env:NODE_ENV = if ($Variant -eq "release") { "production" } else { "development" }
+Write-Step "Building $Variant APK from the normal repository path ($Architectures)..."
+Push-Location $androidRoot
+try {
+  .\gradlew.bat $task "-PreactNativeArchitectures=$Architectures" --no-daemon
+  Assert-LastExitCode "Gradle $task"
+} finally { Pop-Location }
+
+$source = Join-Path $androidRoot "app\build\outputs\apk\$Variant\app-$Variant.apk"
+if (-not (Test-Path -LiteralPath $source)) { throw "APK was not created: $source" }
+
+New-Item -ItemType Directory -Path $artifactRoot -Force | Out-Null
+$architectureName = ($Architectures -replace '[^a-zA-Z0-9_-]+', '-').Trim('-')
+if (-not $architectureName) { $architectureName = "android" }
+$destination = Join-Path $artifactRoot "Gymmin-$architectureName-$Variant-latest.apk"
+Copy-Item -LiteralPath $source -Destination $destination -Force
+Write-Output "APK_PATH=$destination"

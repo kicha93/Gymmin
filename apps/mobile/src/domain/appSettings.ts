@@ -17,7 +17,6 @@ export type AppSettings = {
   defaultWorkoutExecutionMode: WorkoutExecutionMode;
   defaultWorkoutTableOrientation: WorkoutTableOrientation;
   defaultWeight: string;
-  isAuthPanelDismissed: boolean;
   language: LanguageCode;
   showRestTimer: boolean;
   themeName: ThemeName;
@@ -81,7 +80,6 @@ export function createDefaultAppSettings(
     defaultWorkoutExecutionMode: "guided",
     defaultWorkoutTableOrientation: "vertical",
     defaultWeight: "",
-    isAuthPanelDismissed: false,
     language: "en",
     showRestTimer: true,
     themeName: "light",
@@ -111,38 +109,12 @@ export function normalizeAppSettings(
       ? record.defaultWorkoutTableOrientation
       : "vertical",
     defaultWeight: typeof record.defaultWeight === "string" ? record.defaultWeight : "",
-    isAuthPanelDismissed: record.isAuthPanelDismissed === true,
     language,
     showRestTimer: record.showRestTimer !== false,
     themeName: isThemeName(record.themeName) ? record.themeName : "light",
     updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : now,
     workoutReminders: normalizeWorkoutReminderSettings(record.workoutReminders, language)
   };
-}
-
-export function getSettingsTimestamp(value: string) {
-  const timestamp = Date.parse(value);
-  return Number.isFinite(timestamp) ? timestamp : 0;
-}
-
-export type InitialSettingsSyncAction = "apply-remote" | "push-local";
-
-export function resolveInitialSettingsSyncAction(params: {
-  hasPersistedLocalSettings: boolean;
-  localUpdatedAt: string;
-  remoteUpdatedAt: string | null;
-}): InitialSettingsSyncAction {
-  if (!params.remoteUpdatedAt) {
-    return "push-local";
-  }
-
-  if (!params.hasPersistedLocalSettings) {
-    return "apply-remote";
-  }
-
-  return getSettingsTimestamp(params.remoteUpdatedAt) > getSettingsTimestamp(params.localUpdatedAt)
-    ? "apply-remote"
-    : "push-local";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -1,5 +1,18 @@
 # Workout UX notes
 
+> Current architecture: every workflow below is local-only. Gymmin has no account, backend, sync, credits, billing, or remote AI request. Legacy account-shaped records are read only by the backward-compatible upgrade importer.
+
+Profile/avatar, creator profiles, weekly plan and settings persist in the neutral `gymmin.local.v1.*` namespace (with avatar bytes in private files). They do not synchronize between devices; device transfer is performed explicitly with `.gymmin.json` backup/import.
+
+## Local AI creator and rewrite
+
+- Both flows use four local steps: prepare prompt, copy it to an external AI chosen by the user, paste JSON, review and apply.
+- The source workout is unchanged until Apply. Unknown exercises block Apply and offer canonical catalog replacements.
+- Prompts use the current validated exercise catalog, canonical IDs and `restSeconds` on exercises; no standalone rest elements are generated.
+- Plain JSON, fenced JSON and a recoverable text wrapper are supported. Malformed, oversized and schema-invalid responses are rejected.
+- Auth, credits, billing, consent-to-upload, job status and polling are absent from the product flow.
+- Gymmin does not send creator-profile or workout data to an AI service.
+
 This note tracks the current workout-view UX decisions.
 
 ## Manual workout builder
@@ -17,15 +30,14 @@ This note tracks the current workout-view UX decisions.
 - The Save step shows workout/stage/set/exercise counts, stage summaries and validation errors. Critical errors disable the final save action.
 - Context actions replace the old global `+ Stage / + Set / Save workout` bar. The app bottom navigation remains unchanged and does not overlap editor controls.
 - Rest between sets is edited directly on an exercise with hour/minute/second
-  controls. The value is persisted as `restSeconds`, synchronized with the
-  workout and populated directly by the AI creator.
+  controls. The value is persisted locally as `restSeconds` and populated by
+  the local AI JSON importer.
 - Standalone rest elements are no longer offered for new series elements.
   Legacy rest elements are migrated to the preceding exercise when safe;
   orphaned values remain untouched rather than being discarded.
-- Account synchronization keeps a temporary compatibility rest step for older
-  API deployments. If a previous mixed-version sync already removed the value,
-  the app recovers it from the workout-session snapshot or technical rest entry
-  and persists the repaired workout.
+- Legacy compatibility readers still understand older standalone rest steps.
+  If an older dataset lost the value, the app can recover it from a session
+  snapshot or technical rest entry and persist the repaired local workout.
 - A set containing exactly two valid, non-rest exercises is shown as a planned
   superset. This reuses the existing stage/set/exercise model: there is no
   second superset field in the workout definition.
@@ -48,8 +60,8 @@ This note tracks the current workout-view UX decisions.
   `Archive | Delete` row and a full-width `Start workout` action.
   An archived workout becomes read-only: only `Unarchive | Delete` remain
   actionable, while edit, export and start are hidden.
-- `Modify with AI` is intentionally hidden for the current production release;
-  its transport and recovery code remain in place for a later controlled rollout.
+- `Modify with AI` opens the local copy/paste flow. It never calls the legacy AI
+  transport and does not alter the source workout before the user selects Apply.
 - Export opens a local format sheet for CSV or Excel XLSX and shows a disabled/loading state while the file is generated.
 - CSV uses UTF-8 with BOM, `;` separators, RFC-style quote escaping and neutralizes formula-like user text before it reaches a spreadsheet application.
 - CSV and XLSX contain the same compact columns: stage, type, exercise, sets,
@@ -132,7 +144,7 @@ This note tracks the current workout-view UX decisions.
 - The round checkbox completes the entries which actually exist in that round. Splitting the superset removes only the grouping and preserves all entered values.
 - Back/Next navigates between logical groups: a superset covering exercises 2–3 moves back to 1 and forward to 4. After splitting, standard 2 → 3 → 4 navigation returns.
 - The superset uses one rest timer with the larger planned rest value from A/B. Each exercise still shows its own planned rest pill.
-- Supersets persist in the account-scoped active `WorkoutSession`, survive app restart/resume and are safely ignored by inline-table and readonly-post-workout modes.
+- Supersets persist in the local active `WorkoutSession`, survive app restart/resume and are safely ignored by inline-table and readonly-post-workout modes.
 - Splitting a planned superset affects only that active session. The saved
   two-exercise set remains unchanged, so a later workout starts with the
   planned superset again.
@@ -140,7 +152,7 @@ This note tracks the current workout-view UX decisions.
 
 ## Timer odpoczynku
 
-W `Ustawienia -> Trening` użytkownik może włączyć albo wyłączyć widoczność timera odpoczynku podczas aktywnego treningu. Ustawienie jest domyślnie włączone, zapisuje się per konto lokalnie oraz synchronizuje przez ustawienia konta. Wyłączenie ukrywa wyłącznie kontrolkę timera; planowany odpoczynek pozostaje widoczny w karcie ćwiczenia.
+W `Ustawienia -> Trening` użytkownik może włączyć albo wyłączyć widoczność timera odpoczynku podczas aktywnego treningu. Ustawienie jest domyślnie włączone i zapisuje się w neutralnym lokalnym storage. Wyłączenie ukrywa wyłącznie kontrolkę timera; planowany odpoczynek pozostaje widoczny w karcie ćwiczenia.
 
 ## Plan tygodnia
 

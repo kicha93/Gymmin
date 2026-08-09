@@ -14,7 +14,6 @@ import type { Theme } from "../theme/theme";
 
 type HomeScreenProps = {
   activeSessionCard: ReactNode;
-  authPanel: ReactNode;
   collapsedPanels: Record<string, boolean>;
   activeWeeklyWorkouts: SavedWorkout[];
   language: LanguageCode;
@@ -22,7 +21,6 @@ type HomeScreenProps = {
   onOpenWorkout: (workoutId: string) => void;
   onTogglePanel: (panelId: string) => void;
   savedWorkouts: SavedWorkout[];
-  systemStatusCallout: ReactNode;
   t: (key: TranslationKey) => string;
   theme: Theme;
   trainingFactPill: ReactNode;
@@ -33,7 +31,6 @@ type HomeScreenProps = {
 
 export function HomeScreen({
   activeSessionCard,
-  authPanel,
   collapsedPanels,
   activeWeeklyWorkouts,
   language,
@@ -41,7 +38,6 @@ export function HomeScreen({
   onOpenWorkout,
   onTogglePanel,
   savedWorkouts,
-  systemStatusCallout,
   t,
   theme,
   trainingFactPill,
@@ -53,8 +49,6 @@ export function HomeScreen({
 
   return (
     <>
-      {authPanel}
-      {systemStatusCallout}
       {activeSessionCard}
       {weeklyPlanCard}
       {trainingFactPill}

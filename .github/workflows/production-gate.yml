@@ -14,59 +14,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  backend:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: gymmin_test
-          POSTGRES_PASSWORD: gymmin_test_password
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U gymmin_test -d postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    env:
-      GYMMIN_TEST_POSTGRES: Host=127.0.0.1;Port=5432;Database=postgres;Username=gymmin_test;Password=gymmin_test_password
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          persist-credentials: false
-      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
-        with:
-          dotnet-version: 8.0.x
-      - run: dotnet restore backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj
-      - run: dotnet build backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj --configuration Release --no-restore --warnaserror
-      - run: dotnet test backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj --configuration Release --no-restore
-      - run: dotnet tool restore
-      - run: dotnet tool run dotnet-ef migrations has-pending-model-changes --project backend/Gymmin.Api/Gymmin.Api.csproj --startup-project backend/Gymmin.Api/Gymmin.Api.csproj --configuration Release
-        env:
-          Gymmin__Storage__Provider: Database
-          Gymmin__Storage__DatabaseProvider: SQLite
-      - name: Verify PostgreSQL backup and restore workflow
-        shell: pwsh
-        env:
-          BACKUP_SMOKE_ADMIN_URI: postgresql://gymmin_test:gymmin_test_password@127.0.0.1:5432/postgres
-          BACKUP_SMOKE_CONNECTION: Host=127.0.0.1;Port=5432;Database=gymmin_backup_smoke;Username=gymmin_test;Password=gymmin_test_password
-          BACKUP_SMOKE_URI: postgresql://gymmin_test:gymmin_test_password@127.0.0.1:5432/gymmin_backup_smoke
-          Gymmin__Storage__Provider: Database
-          Gymmin__Storage__DatabaseProvider: PostgreSQL
-        run: |
-          psql --dbname=$env:BACKUP_SMOKE_ADMIN_URI --set=ON_ERROR_STOP=1 --command='CREATE DATABASE gymmin_backup_smoke;'
-          dotnet tool run dotnet-ef database update --project backend/Gymmin.Api/Gymmin.Api.csproj --startup-project backend/Gymmin.Api/Gymmin.Api.csproj --configuration Release --connection $env:BACKUP_SMOKE_CONNECTION
-          $backup = & ./scripts/backup-postgres.ps1 -ConnectionUri $env:BACKUP_SMOKE_URI -OutputDirectory (Join-Path $env:RUNNER_TEMP 'gymmin-backup-smoke') | Select-Object -Last 1
-          if ([string]::IsNullOrWhiteSpace($backup)) { throw 'Backup script did not return an artifact path.' }
-          & ./scripts/verify-postgres-restore.ps1 -AdminConnectionUri $env:BACKUP_SMOKE_ADMIN_URI -BackupPath $backup
-      - run: dotnet list backend/Gymmin.Api.Tests/Gymmin.Api.Tests.csproj package --vulnerable --include-transitive
-
   mobile:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     defaults:
       run:
         working-directory: apps/mobile
@@ -79,21 +29,39 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
-      - run: npm run security:secrets
-      - run: node ../../scripts/smoke-production.mjs --self-test
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with:
           distribution: temurin
           java-version: "17"
       - run: npm ci
-      - run: npm run security:android
-      - run: npm test
-      - run: npm run typecheck
-      - run: npx expo-doctor
-      - run: npx expo export --platform android --output-dir .expo-ci-export
+      - name: Tracked secrets
+        run: npm run security:secrets
+      - name: Dependency advisory policy
+        run: npm run security:dependencies
+      - name: Local-only architecture guard
+        run: node ../../scripts/validate-local-only-runtime.mjs
+      - name: Local product guard
+        run: node ../../scripts/validate-local-product-runtime.mjs
+      - name: Exercise catalog
+        run: node ../../scripts/validate-exercise-catalog.mjs
+      - name: Android source security
+        run: npm run security:android
+      - name: Tests
+        run: npm test -- --reporter=default
+      - name: TypeScript
+        run: npm run typecheck
+      - name: Expo Doctor
+        run: npx expo-doctor
+      - name: Production Expo export
+        run: npx expo export --platform android --output-dir .expo-ci-export
+      - name: Repository diff check
+        working-directory: .
+        run: git diff --check
+      - name: Native debug APK smoke
+        shell: bash
         env:
-          EXPO_PUBLIC_USE_RN_FETCH: "1"
-      - run: npm audit --audit-level=high
+          NODE_ENV: development
+        run: cd android && ./gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a --no-daemon
       - name: Generate ephemeral CI release key
         shell: bash
         run: >-
@@ -106,11 +74,10 @@ jobs:
           -keysize 2048
           -validity 2
           -dname "CN=Gymmin CI, OU=CI, O=Gymmin, L=Warsaw, C=PL"
-      - name: Native Android release bundle smoke
+      - name: Native release AAB smoke
         shell: bash
         env:
-          EXPO_PUBLIC_API_BASE_URL: https://api.example.invalid
-          EXPO_PUBLIC_USE_RN_FETCH: "1"
+          NODE_ENV: production
           GYMMIN_UPLOAD_STORE_FILE: ${{ runner.temp }}/gymmin-ci-upload.jks
           GYMMIN_UPLOAD_STORE_PASSWORD: gymmin-ci-password
           GYMMIN_UPLOAD_KEY_ALIAS: gymmin-ci
@@ -119,17 +86,16 @@ jobs:
       - name: Verify native bundle signature
         shell: bash
         run: jarsigner -verify android/app/build/outputs/bundle/release/app-release.aab
-      - name: Verify release manifest permissions
+      - name: Verify merged release manifest
         shell: bash
         run: |
           manifest="android/app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml"
           test -f "$manifest"
+          ! grep -q "android.permission.INTERNET" "$manifest"
+          ! grep -q "com.android.vending.BILLING" "$manifest"
           ! grep -q "android.permission.SYSTEM_ALERT_WINDOW" "$manifest"
+          ! grep -q "android.permission.WRITE_EXTERNAL_STORAGE" "$manifest"
           grep -q 'android:allowBackup="false"' "$manifest"
           grep -q 'android:usesCleartextTraffic="false"' "$manifest"
-          grep -q 'android:networkSecurityConfig="@xml/network_security_config"' "$manifest"
-          grep -q 'android:fullBackupContent="@xml/backup_rules"' "$manifest"
-          grep -q 'android:dataExtractionRules="@xml/data_extraction_rules"' "$manifest"
-          ! grep -q "android.permission.WRITE_EXTERNAL_STORAGE" "$manifest"
       - name: Verify exported Android components
         run: npm run security:android-components

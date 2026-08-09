@@ -27,6 +27,7 @@ type SettingsScreenProps = {
   defaultWorkoutExecutionModeLabel: string;
   favoriteExerciseCount: number;
   isDarkMode: boolean;
+  isLocalDataOperationRunning: boolean;
   language: LanguageCode;
   reminderDescriptionPlaceholder: string;
   reminderMessagePlaceholder: string;
@@ -37,11 +38,15 @@ type SettingsScreenProps = {
   workoutReminders: WorkoutReminderSettings;
   isPanelCollapsed: (panelId: string) => boolean;
   onOpenContact: () => void;
+  onOpenSupport: () => void;
+  onCreateBackup: () => void;
+  onDeleteAllData: () => void;
   onOpenFavoriteExercises: () => void;
   onOpenReminderDay: (day: ReminderWeekday) => void;
   onOpenReportBug: () => void;
   onOpenSettingsSheet: (sheet: SettingsSheetKey) => void;
   onOpenPrivacy: () => void;
+  onRestoreBackup: () => void;
   onOpenTerms: () => void;
   onReminderDescriptionChange: (description: string) => void;
   onReminderMessageChange: (message: string) => void;
@@ -60,14 +65,19 @@ export function SettingsScreen({
   defaultWorkoutExecutionModeLabel,
   favoriteExerciseCount,
   isDarkMode,
+  isLocalDataOperationRunning,
   isPanelCollapsed,
   language,
   onOpenContact,
+  onOpenSupport,
+  onCreateBackup,
+  onDeleteAllData,
   onOpenFavoriteExercises,
   onOpenReminderDay,
   onOpenReportBug,
   onOpenSettingsSheet,
   onOpenPrivacy,
+  onRestoreBackup,
   onOpenTerms,
   onReminderDescriptionChange,
   onReminderMessageChange,
@@ -110,6 +120,36 @@ export function SettingsScreen({
           theme={theme}
           onPress={onToggleTheme}
         />
+      </SettingsSection>
+
+      <SettingsSection
+        isCollapsed={isPanelCollapsed("settings-data")}
+        title={t("localData")}
+        theme={theme}
+        onToggle={() => onTogglePanel("settings-data")}
+      >
+        <SettingsOption
+          icon="download-outline"
+          label={isLocalDataOperationRunning ? t("backupInProgress") : t("createBackup")}
+          value=".gymmin.json"
+          theme={theme}
+          onPress={isLocalDataOperationRunning ? undefined : onCreateBackup}
+        />
+        <SettingsOption
+          icon="cloud-upload-outline"
+          label={t("restoreBackup")}
+          value={t("fullReplacement")}
+          theme={theme}
+          onPress={isLocalDataOperationRunning ? undefined : onRestoreBackup}
+        />
+        <SettingsOption
+          icon="trash-outline"
+          label={t("deleteAllLocalData")}
+          value={t("irreversible")}
+          theme={theme}
+          onPress={isLocalDataOperationRunning ? undefined : onDeleteAllData}
+        />
+        <Text style={[styles.settingsHint, { color: theme.muted }]}>{t("backupPrivacyWarning")}</Text>
       </SettingsSection>
 
       <SettingsSection
@@ -277,6 +317,7 @@ export function SettingsScreen({
         theme={theme}
         onToggle={() => onTogglePanel("settings-info")}
       >
+        <AuthorSupportCard onPress={onOpenSupport} t={t} theme={theme} />
         <InfoLinkRow
           icon="document-text-outline"
           label={t("terms")}
@@ -307,6 +348,46 @@ export function SettingsScreen({
         />
       </SettingsSection>
     </>
+  );
+}
+
+type AuthorSupportCardProps = {
+  onPress: () => void;
+  t: (key: TranslationKey) => string;
+  theme: Theme;
+};
+
+function AuthorSupportCard({ onPress, t, theme }: AuthorSupportCardProps) {
+  return (
+    <View
+      style={[
+        styles.authorSupportCard,
+        { backgroundColor: theme.secondaryBand, borderColor: theme.border }
+      ]}
+    >
+      <View style={styles.authorSupportHeader}>
+        <View style={[styles.authorSupportIcon, { backgroundColor: theme.card }]}>
+          <Ionicons name="heart-outline" size={22} color={theme.primary} />
+        </View>
+        <View style={styles.authorSupportHeading}>
+          <Text style={[styles.authorSupportEyebrow, { color: theme.primary }]}>
+            {t("supportGymminDevelopment")}
+          </Text>
+          <Text style={[styles.authorSupportTitle, { color: theme.text }]}>Gymmin</Text>
+        </View>
+      </View>
+      <Text style={[styles.authorSupportAuthor, { color: theme.text }]}>{t("createdByAuthor")}</Text>
+      <Text style={[styles.authorSupportCopy, { color: theme.muted }]}>{t("supportGymminCopy")}</Text>
+      <Pressable
+        accessibilityRole="link"
+        style={[styles.authorSupportButton, { backgroundColor: theme.primary, borderColor: theme.primary }]}
+        onPress={onPress}
+      >
+        <Ionicons name="cafe-outline" size={20} color={theme.white} />
+        <Text style={[styles.authorSupportButtonText, { color: theme.white }]}>{t("buyMeCoffee")}</Text>
+        <Ionicons name="open-outline" size={18} color={theme.white} />
+      </Pressable>
+    </View>
   );
 }
 

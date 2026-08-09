@@ -16,7 +16,6 @@ type FavoriteExercisesScreenProps = {
   onChangeSearch: (value: string) => void;
   onSetFavorite: (exerciseId: string, shouldBeFavorite: boolean) => void;
   search: string;
-  syncStatus: "local" | "synced" | "failed";
   t: (key: TranslationKey) => string;
   theme: Theme;
 };
@@ -28,7 +27,6 @@ export function FavoriteExercisesScreen({
   onChangeSearch,
   onSetFavorite,
   search,
-  syncStatus,
   t,
   theme
 }: FavoriteExercisesScreenProps) {
@@ -58,11 +56,7 @@ export function FavoriteExercisesScreen({
       >
         <View style={styles.fieldGroup}>
           <Text style={[styles.workoutMeta, { color: theme.muted }]}>
-            {syncStatus === "synced"
-              ? t("favoriteExercisesSynced")
-              : syncStatus === "failed"
-                ? t("favoriteExercisesSyncFailed")
-                : t("favoriteExercisesSavedLocally")}
+            {t("favoriteExercisesSavedLocally")}
           </Text>
           <Input
             style={[

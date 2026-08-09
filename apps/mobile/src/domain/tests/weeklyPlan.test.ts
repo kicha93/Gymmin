@@ -135,14 +135,17 @@ describe("weeklyPlan", () => {
     expect(twoCompletions.remaining).toBe(0);
   });
 
-  it("keeps persisted plans isolated per account owner", async () => {
+  it("keeps one persisted plan across auth owner changes", async () => {
     const plan = upsertWeeklyPlanItem(getDefaultWeeklyPlanSettings(), "workout-a", "monday");
-    await saveWeeklyPlan(plan, "user-a");
+    await saveWeeklyPlan(plan);
 
-    await expect(loadWeeklyPlan("user-a")).resolves.toMatchObject({
+    await expect(loadWeeklyPlan()).resolves.toMatchObject({
       enabled: true,
       items: [{ day: "monday", workoutId: "workout-a" }]
     });
-    await expect(loadWeeklyPlan("user-b")).resolves.toMatchObject({ enabled: false, items: [] });
+    await expect(loadWeeklyPlan()).resolves.toMatchObject({
+      enabled: true,
+      items: [{ day: "monday", workoutId: "workout-a" }]
+    });
   });
 });

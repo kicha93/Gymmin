@@ -15,17 +15,9 @@ export type ScreenKey =
   | "privacy"
   | "contact"
   | "bugReport"
-  | "bugReportSuccess"
   | "favoriteExercises"
-  | "forgotPassword"
-  | "resetPassword"
-  | "changePassword"
-  | "activeSessions"
   | "achievements"
-  | "aiCredits"
   | "profile"
-  | "accountDetails"
-  | "deleteAccount"
   | "progress"
   | "exerciseDetail"
   | "exerciseProgress"
@@ -33,7 +25,6 @@ export type ScreenKey =
   | "workoutSessionDetail"
   | "workoutCreator"
   | "workoutAiRewrite"
-  | "workoutAiProposal"
   | "workoutDetail"
   | "workoutSession"
   | "weeklyPlan";
@@ -44,30 +35,21 @@ export function getScreenTitle(
   t: (key: TranslationKey) => string
 ) {
   const titles: Record<ScreenKey, string> = {
-    accountDetails: t("accountDetails"),
-    activeSessions: t("activeSessions"),
     achievements: t("achievements"),
-    aiCredits: t("aiCredits"),
     articleDetail: t("articles"),
     bugReport: t("bugReport"),
-    bugReportSuccess: t("bugReport"),
     builder: editingWorkoutId ? t("editWorkout") : t("addNewWorkout"),
-    changePassword: t("changePassword"),
     contact: t("contact"),
-    deleteAccount: t("deleteAccount"),
     exerciseDetail: t("exerciseDetails"),
     exerciseProgress: t("exerciseProgress"),
     favoriteExercises: t("favoriteExercises"),
-    forgotPassword: t("resetPassword"),
     home: t("home"),
     profile: t("profile"),
     progress: t("progress"),
     privacy: t("privacyPolicy"),
-    resetPassword: t("resetPassword"),
     settings: t("settings"),
     terms: t("terms"),
     weeklyPlan: t("weeklyPlan"),
-    workoutAiProposal: t("aiRewriteProposal"),
     workoutAiRewrite: t("aiRewriteTitle"),
     workoutCreator: t("aiCreator"),
     workoutDetail: t("workout"),

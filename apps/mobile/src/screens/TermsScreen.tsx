@@ -31,7 +31,7 @@ const detailedSections: Array<{
   title: TranslationKey;
 }> = [
   { icon: "document-text-outline", id: "general", text: "termsGeneralText", title: "termsGeneralTitle" },
-  { icon: "person-outline", id: "account", text: "termsAccountText", title: "termsAccountTitle" },
+  { icon: "phone-portrait-outline", id: "local-data", text: "termsLocalDataText", title: "termsLocalDataTitle" },
   { icon: "barbell-outline", id: "usage", text: "termsUsageText", title: "termsUsageTitle" },
   { icon: "save-outline", id: "workout-data", text: "termsWorkoutDataText", title: "termsWorkoutDataTitle" },
   { icon: "shield-checkmark-outline", id: "safety", text: "termsResponsibilitySafetyText", title: "termsResponsibilitySafetyTitle" },

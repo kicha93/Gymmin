@@ -13,73 +13,40 @@ import type { LanguageCode, TranslationKey } from "../i18n/translations";
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
 
-type WorkoutCreatorCreditBalance = {
-  balance: number;
-  planCost: number;
-};
-
 type WorkoutCreatorScreenProps = {
-  areOnlineFeaturesAvailable: boolean;
   collapsedSections: Record<string, boolean>;
-  creditBalance: WorkoutCreatorCreditBalance;
   draft: Record<string, WorkoutCreatorValue>;
-  hasSensitiveDataConsent: boolean;
-  importedWorkoutCount: number;
-  isJobPending: boolean;
-  isSubmitting: boolean;
   language: LanguageCode;
   phase: WorkoutCreatorPhase;
-  planText: string;
   profileName: string;
   profiles: WorkoutCreatorProfile[];
   selectedProfileId: string | null;
   submitError: string;
   t: (key: TranslationKey) => string;
   theme: Theme;
-  formatImportedWorkoutCount: (count: number) => string;
   onDraftFieldChange: (fieldId: string, value: WorkoutCreatorValue) => void;
   onLoadProfile: (profile: WorkoutCreatorProfile) => void;
-  onOpenPrivacy: () => void;
-  onOpenCredits: () => void;
-  onOpenWorkouts: () => void;
   onProfileNameChange: (value: string) => void;
-  onReturnHome: () => void;
   onSaveProfileAndSubmit: () => void;
   onSendWithoutSaving: () => void;
-  onShowOnlineUnavailable: () => void;
   onSubmit: () => void;
-  onToggleSensitiveDataConsent: () => void;
   onToggleSection: (sectionId: string) => void;
   onUpdateProfileAndSubmit: () => void;
 };
 
 export function WorkoutCreatorScreen({
-  areOnlineFeaturesAvailable,
   collapsedSections,
-  creditBalance,
   draft,
-  hasSensitiveDataConsent,
-  formatImportedWorkoutCount,
-  importedWorkoutCount,
-  isJobPending,
-  isSubmitting,
   language,
   onDraftFieldChange,
   onLoadProfile,
-  onOpenPrivacy,
-  onOpenCredits,
-  onOpenWorkouts,
   onProfileNameChange,
-  onReturnHome,
   onSaveProfileAndSubmit,
   onSendWithoutSaving,
-  onShowOnlineUnavailable,
   onSubmit,
-  onToggleSensitiveDataConsent,
   onToggleSection,
   onUpdateProfileAndSubmit,
   phase,
-  planText,
   profileName,
   profiles,
   selectedProfileId,
@@ -87,8 +54,6 @@ export function WorkoutCreatorScreen({
   t,
   theme
 }: WorkoutCreatorScreenProps) {
-  const isWaiting = phase === "waiting";
-  const isSubmitted = phase === "submitted";
   const isProfilePrompt = phase === "profilePrompt";
   const selectedProfile = selectedProfileId
     ? profiles.find((profile) => profile.id === selectedProfileId)
@@ -228,9 +193,9 @@ export function WorkoutCreatorScreen({
 
   return (
     <View style={[styles.creatorPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      {!isProfilePrompt && !isSubmitted ? (
+      {!isProfilePrompt ? (
         <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-          {isWaiting ? t("aiCreatorDoneCopy") : t("aiCreatorIntro")}
+          {t("aiCreatorIntro")}
         </Text>
       ) : null}
 
@@ -307,70 +272,14 @@ export function WorkoutCreatorScreen({
           })}
 
           <View style={[styles.creatorPlanBox, { backgroundColor: theme.control, borderColor: theme.border }]}>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("aiCreditsGenerateNeed")}</Text>
-            <Text style={[styles.workoutName, { color: theme.text }]}>
-              {t("aiCreditsAvailable")}: {creditBalance.balance}
-            </Text>
-            <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("aiCreditsCharged")}</Text>
-            {creditBalance.balance < creditBalance.planCost ? (
-              <AppButton
-                icon="sparkles-outline"
-                style={styles.secondaryButton}
-                textStyle={styles.secondaryButtonText}
-                theme={theme}
-                variant="outline"
-                onPress={() => {
-                  if (!areOnlineFeaturesAvailable) {
-                    onShowOnlineUnavailable();
-                    return;
-                  }
-                  onOpenCredits();
-                }}
-              >
-                {t("aiCreditsGoTo")}
-              </AppButton>
-            ) : null}
+            <Text style={[styles.creatorDescription, { color: theme.muted }]}>{t("aiLocalNoUpload")}</Text>
           </View>
-          <Pressable
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: hasSensitiveDataConsent }}
-            style={[styles.creatorConsentRow, { borderColor: theme.border, backgroundColor: theme.control }]}
-            onPress={onToggleSensitiveDataConsent}
-          >
-            <View
-              style={[
-                styles.creatorConsentCheckbox,
-                {
-                  backgroundColor: hasSensitiveDataConsent ? theme.primary : theme.card,
-                  borderColor: hasSensitiveDataConsent ? theme.primary : theme.border
-                }
-              ]}
-            >
-              {hasSensitiveDataConsent ? <Ionicons name="checkmark" size={17} color={theme.white} /> : null}
-            </View>
-            <View style={styles.creatorConsentCopy}>
-              <Text style={[styles.creatorConsentText, { color: theme.text }]}>
-                {t("aiCreatorSensitiveConsent")}
-              </Text>
-              <Pressable
-                accessibilityRole="link"
-                hitSlop={8}
-                onPress={(event) => {
-                  event.stopPropagation();
-                  onOpenPrivacy();
-                }}
-              >
-                <Text style={[styles.creatorConsentLink, { color: theme.primary }]}>{t("privacyPolicy")}</Text>
-              </Pressable>
-            </View>
-          </Pressable>
           <AppButton
-            disabled={!hasSensitiveDataConsent || isSubmitting || isJobPending || !areOnlineFeaturesAvailable || creditBalance.balance < creditBalance.planCost}
-            icon="sparkles-outline"
+            icon="document-text-outline"
             theme={theme}
             onPress={onSubmit}
           >
-            {t("aiCreatorSubmit")}
+            {t("aiLocalPreparePrompt")}
           </AppButton>
         </View>
       ) : null}
@@ -395,76 +304,27 @@ export function WorkoutCreatorScreen({
           </View>
           <View style={styles.creatorPromptActions}>
             <AppButton
-              disabled={!hasSensitiveDataConsent || isSubmitting || isJobPending || !areOnlineFeaturesAvailable}
               icon="save-outline"
               theme={theme}
               onPress={selectedProfile ? onUpdateProfileAndSubmit : onSaveProfileAndSubmit}
             >
-              {isSubmitting
-                ? t("aiCreatorSubmitting")
-                : selectedProfile
-                  ? t("aiCreatorUpdateAndSubmit")
-                  : t("aiCreatorSaveAndSubmit")}
+              {selectedProfile ? t("aiCreatorUpdateAndSubmit") : t("aiCreatorSaveAndSubmit")}
             </AppButton>
             <AppButton
-              disabled={!hasSensitiveDataConsent || isSubmitting || isJobPending || !areOnlineFeaturesAvailable}
               icon="send-outline"
               theme={theme}
               variant="outline"
               onPress={onSendWithoutSaving}
             >
-              {isSubmitting ? t("aiCreatorSubmitting") : t("aiCreatorSendWithoutSaving")}
+              {t("aiCreatorSendWithoutSaving")}
             </AppButton>
           </View>
           {submitError ? (
-            <Text style={[styles.authError, { color: theme.danger }]}>{submitError}</Text>
+            <Text style={[styles.inlineError, { color: theme.danger }]}>{submitError}</Text>
           ) : null}
         </View>
       ) : null}
 
-      {isSubmitted ? (
-        <View style={styles.creatorWaitingActions}>
-          <View style={[styles.bugSuccessBox, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="checkmark-circle-outline" size={22} color={theme.primary} />
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>{t("aiCreatorSentTitle")}</Text>
-              <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-                {isJobPending ? t("aiCreatorPendingCopy") : t("aiCreatorSentCopy")}
-              </Text>
-            </View>
-          </View>
-          <AppButton icon="checkmark-outline" theme={theme} onPress={onReturnHome}>
-            {t("aiCreatorSentOk")}
-          </AppButton>
-        </View>
-      ) : null}
-
-      {isWaiting ? (
-        <View style={styles.creatorWaitingActions}>
-          <View style={[styles.bugSuccessBox, { backgroundColor: theme.secondaryBand }]}>
-            <Ionicons name="checkmark-circle-outline" size={22} color={theme.primary} />
-            <View style={styles.workoutInfo}>
-              <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>
-                {importedWorkoutCount ? t("aiCreatorImportedTitle") : t("aiCreatorDoneTitle")}
-              </Text>
-              <Text style={[styles.creatorDescription, { color: theme.muted }]}>
-                {importedWorkoutCount
-                  ? `${formatImportedWorkoutCount(importedWorkoutCount)} ${t("aiCreatorImportedCopy")}`
-                  : t("aiCreatorDoneCopy")}
-              </Text>
-            </View>
-          </View>
-          {planText && !importedWorkoutCount ? (
-            <View style={[styles.creatorPlanBox, { backgroundColor: theme.control, borderColor: theme.border }]}>
-              <Text style={[styles.creatorPromptTitle, { color: theme.text }]}>{t("aiCreatorResultTitle")}</Text>
-              <Text style={[styles.creatorPlanText, { color: theme.text }]}>{planText}</Text>
-            </View>
-          ) : null}
-          <AppButton icon="list-outline" theme={theme} onPress={onOpenWorkouts}>
-            {t("aiCreatorWaitingAction")}
-          </AppButton>
-        </View>
-      ) : null}
     </View>
   );
 }

@@ -55,3 +55,23 @@ export function bytesToBase64(bytes: Uint8Array): string {
   if (chunk) chunks.push(chunk);
   return chunks.join("");
 }
+
+export function base64ToBytes(value: string): Uint8Array {
+  const normalized = value.replace(/\s/g, "");
+  if (!normalized || normalized.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(normalized)) {
+    return new Uint8Array();
+  }
+  const output: number[] = [];
+  for (let index = 0; index < normalized.length; index += 4) {
+    const first = base64Alphabet.indexOf(normalized[index]);
+    const second = base64Alphabet.indexOf(normalized[index + 1]);
+    const third = normalized[index + 2] === "=" ? 0 : base64Alphabet.indexOf(normalized[index + 2]);
+    const fourth = normalized[index + 3] === "=" ? 0 : base64Alphabet.indexOf(normalized[index + 3]);
+    if (first < 0 || second < 0 || third < 0 || fourth < 0) return new Uint8Array();
+    const triplet = (first << 18) | (second << 12) | (third << 6) | fourth;
+    output.push((triplet >> 16) & 0xff);
+    if (normalized[index + 2] !== "=") output.push((triplet >> 8) & 0xff);
+    if (normalized[index + 3] !== "=") output.push(triplet & 0xff);
+  }
+  return Uint8Array.from(output);
+}

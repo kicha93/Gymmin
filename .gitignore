@@ -47,3 +47,4 @@ backend/Gymmin.Api/App_Data/
 apps/mobile/android/.gradle/
 apps/mobile/android/app/.cxx/
 apps/mobile/android/app/build/
+apps/mobile/.expo-ci-export/

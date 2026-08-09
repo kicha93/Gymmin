@@ -9,7 +9,6 @@ import {
   type WeeklyPlanSummary
 } from "../domain/weeklyPlan";
 import type { WorkoutSession } from "../domain/workoutSessions";
-import { getSystemStatusCopy, type SystemStatusState } from "../domain/systemStatus";
 import type { LanguageCode, TranslationKey } from "../i18n/translations";
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
@@ -20,55 +19,23 @@ type CommonProps = {
 };
 
 type WorkoutCreatorButtonProps = CommonProps & {
-  isPending: boolean;
-  isUserAuthenticated: boolean;
   onOpen: () => void;
-  showLoginTooltip: boolean;
 };
 
 export function WorkoutCreatorButton({
-  isPending,
-  isUserAuthenticated,
   onOpen,
-  showLoginTooltip,
   t,
   theme
 }: WorkoutCreatorButtonProps) {
-  const needsLogin = !isUserAuthenticated;
-  const label = isPending
-    ? t("workoutCreatorPendingCta")
-    : needsLogin
-      ? t("workoutCreatorLoginCta")
-      : t("workoutCreatorCta");
-  const button = (
+  return (
     <AppButton
-      disabled={isPending || needsLogin}
-      icon={isPending ? "hourglass-outline" : needsLogin ? "lock-closed-outline" : "sparkles-outline"}
+      icon="sparkles-outline"
       style={styles.workoutCreatorButton}
       theme={theme}
       onPress={onOpen}
     >
-      {label}
+      {t("workoutCreatorCta")}
     </AppButton>
-  );
-
-  return (
-    <View style={styles.workoutCreatorButtonWrap}>
-      {needsLogin && !isPending ? (
-        <Pressable accessibilityRole="button" onPress={onOpen}>
-          {button}
-        </Pressable>
-      ) : button}
-      {needsLogin && showLoginTooltip ? (
-        <View pointerEvents="none" style={styles.creatorLoginTooltip}>
-          <View style={[styles.creatorLoginTooltipBubble, { backgroundColor: theme.primaryStrong }]}>
-            <Text style={[styles.creatorLoginTooltipText, { color: theme.white }]}>
-              {t("workoutCreatorLoginTooltip")}
-            </Text>
-          </View>
-        </View>
-      ) : null}
-    </View>
   );
 }
 
@@ -82,63 +49,6 @@ export function TrainingFactPill({ fact, theme }: { fact: string; theme: Theme }
         <Ionicons name="bulb-outline" size={16} color={theme.white} />
       </View>
       <Text style={[styles.trainingFactText, { color: theme.text }]}>{fact}</Text>
-    </View>
-  );
-}
-
-type SystemStatusCalloutProps = {
-  isRefreshing: boolean;
-  language: LanguageCode;
-  onRefresh: () => void;
-  status: SystemStatusState;
-  theme: Theme;
-};
-
-export function SystemStatusCallout({
-  isRefreshing,
-  language,
-  onRefresh,
-  status,
-  theme
-}: SystemStatusCalloutProps) {
-  const copy = getSystemStatusCopy(status, language);
-  if (!copy) {
-    return null;
-  }
-  const statusKind = status.kind === "ok" ? "degraded" : status.kind;
-  const statusIcons: Record<Exclude<SystemStatusState["kind"], "ok">, keyof typeof Ionicons.glyphMap> = {
-    degraded: "information-circle-outline",
-    maintenance: "construct-outline",
-    offline: "cloud-offline-outline",
-    update: "refresh-circle-outline"
-  };
-
-  return (
-    <View
-      accessibilityLiveRegion="polite"
-      style={[
-        styles.systemStatusCallout,
-        { backgroundColor: theme.card, borderColor: statusKind === "offline" ? theme.primary : theme.border }
-      ]}
-    >
-      <View style={[styles.systemStatusIcon, { backgroundColor: theme.secondaryBand }]}>
-        <Ionicons name={statusIcons[statusKind]} size={22} color={theme.primary} />
-      </View>
-      <View style={styles.systemStatusCopy}>
-        <Text style={[styles.systemStatusTitle, { color: theme.text }]}>{copy.title}</Text>
-        <Text style={[styles.systemStatusDescription, { color: theme.muted }]}>{copy.description}</Text>
-        <Pressable
-          accessibilityRole="button"
-          disabled={isRefreshing}
-          style={styles.systemStatusAction}
-          onPress={onRefresh}
-        >
-          <Ionicons name="refresh-outline" size={16} color={theme.primary} />
-          <Text style={[styles.systemStatusActionText, { color: theme.primary }]}>
-            {isRefreshing ? `${copy.cta}...` : copy.cta}
-          </Text>
-        </Pressable>
-      </View>
     </View>
   );
 }

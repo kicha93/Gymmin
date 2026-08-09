@@ -2,21 +2,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
-  hasAnonymousAccountData,
-  hasAnonymousMergeHandled,
   LOCAL_WORKOUTS_STORAGE_BASE_KEY,
-  loadActiveWorkoutSessionForOwner,
-  loadCreatorJobForOwner,
-  loadSettingsForOwner,
-  loadWorkoutsForOwner,
-  markAnonymousMergeHandled,
-  mergeCreatorProfilesById,
-  saveActiveWorkoutSessionForOwner,
-  saveCreatorJobForOwner,
-  saveSettingsForOwner,
-  saveWorkoutsForOwner
+  loadLocalActiveWorkoutSession,
+  loadLocalSettings,
+  loadLocalWorkouts,
+  saveLocalActiveWorkoutSession,
+  saveLocalSettings,
+  saveLocalWorkouts
 } from "../../storage/localDataRepositories";
-import { getAccountStorageKey } from "../accountStorage";
+import { getLocalOnlyStorageKey } from "../localOnlyStorageMigration";
 import type { AppSettings } from "../appSettings";
 import { createStep } from "../workouts";
 
@@ -25,14 +19,14 @@ describe("localDataRepositories", () => {
     await AsyncStorage.clear();
   });
 
-  it("round-trips normalized workouts per owner", async () => {
-    await saveWorkoutsForOwner("user-a", [{
+  it("round-trips normalized workouts in one local-only repository", async () => {
+    await saveLocalWorkouts([{
       draft: { name: "Plan", notes: "", sport: "strength", steps: [] },
       id: "plan-1",
       name: "Plan"
     }], "plan-1", { direction: "asc", field: "name" });
 
-    const stored = await loadWorkoutsForOwner("user-a");
+    const stored = await loadLocalWorkouts();
     expect(stored.selectedWorkoutId).toBe("plan-1");
     expect(stored.sort).toEqual({ direction: "asc", field: "name" });
     expect(stored.workouts).toHaveLength(1);
@@ -56,7 +50,7 @@ describe("localDataRepositories", () => {
       stageType: "rest",
       targetValue: "00:02:00"
     });
-    const storageKey = getAccountStorageKey(LOCAL_WORKOUTS_STORAGE_BASE_KEY, "user-legacy");
+    const storageKey = getLocalOnlyStorageKey(LOCAL_WORKOUTS_STORAGE_BASE_KEY);
 
     await AsyncStorage.setItem(storageKey, JSON.stringify({
       selectedWorkoutId: "legacy-plan",
@@ -69,12 +63,11 @@ describe("localDataRepositories", () => {
       }]
     }));
 
-    const loaded = await loadWorkoutsForOwner("user-legacy");
+    const loaded = await loadLocalWorkouts();
     expect(loaded.workouts[0].draft.steps).toHaveLength(3);
     expect(loaded.workouts[0].draft.steps.find((step) => step.id === "exercise")?.restSeconds).toBe("120");
 
-    await saveWorkoutsForOwner(
-      "user-legacy",
+    await saveLocalWorkouts(
       loaded.workouts,
       loaded.selectedWorkoutId,
       loaded.sort
@@ -86,14 +79,14 @@ describe("localDataRepositories", () => {
     expect(persisted.workouts[0].draft.steps.find((step) => step.id === "exercise")?.restSeconds).toBe("120");
   });
 
-  it("distinguishes missing settings from an existing account-scoped record", async () => {
+  it("distinguishes missing settings from an existing local-only record", async () => {
     const panels = { "settings-training": true };
-    const missing = await loadSettingsForOwner("user-a", panels);
+    const missing = await loadLocalSettings(panels);
     expect(missing.exists).toBe(false);
 
-    await saveSettingsForOwner("user-a", missing.settings);
+    await saveLocalSettings(missing.settings);
 
-    const stored = await loadSettingsForOwner("user-a", panels);
+    const stored = await loadLocalSettings(panels);
     expect(stored.exists).toBe(true);
     expect(stored.settings.showRestTimer).toBe(true);
   });
@@ -111,7 +104,6 @@ describe("localDataRepositories", () => {
       defaultWorkoutExecutionMode: "inline-table",
       defaultWorkoutTableOrientation: "horizontal",
       defaultWeight: "82.5",
-      isAuthPanelDismissed: true,
       language: "pl",
       showRestTimer: false,
       themeName: "dark",
@@ -134,64 +126,34 @@ describe("localDataRepositories", () => {
       }
     };
 
-    await saveSettingsForOwner("user-all-settings", settings);
+    await saveLocalSettings(settings);
 
-    await expect(loadSettingsForOwner("user-all-settings", panels)).resolves.toEqual({
+    await expect(loadLocalSettings(panels)).resolves.toEqual({
       exists: true,
       settings
     });
   });
 
-  it("detects invalid or populated anonymous data", async () => {
-    await AsyncStorage.setItem(getAccountStorageKey("broken", null), "{invalid");
-    await expect(hasAnonymousAccountData(["broken"])).resolves.toBe(true);
-    await expect(hasAnonymousAccountData(["missing"])).resolves.toBe(false);
-  });
-
-  it("stores the anonymous merge decision per account", async () => {
-    await expect(hasAnonymousMergeHandled("user-a")).resolves.toBe(false);
-    await markAnonymousMergeHandled("user-a", "merged");
-    await expect(hasAnonymousMergeHandled("user-a")).resolves.toBe(true);
-  });
-
-  it("merges creator profiles without duplicate ids", () => {
-    const draft = {};
-    expect(mergeCreatorProfilesById(
-      [{ id: "a", name: "Account", draft }],
-      [{ id: "a", name: "Anonymous duplicate", draft }, { id: "b", name: "Anonymous", draft }]
-    ).map((profile) => profile.name)).toEqual(["Account", "Anonymous"]);
-  });
-
-  it("round-trips and clears active workout progress per owner", async () => {
-    await saveActiveWorkoutSessionForOwner("user-a", "session-1", 3);
-    await expect(loadActiveWorkoutSessionForOwner("user-a")).resolves.toEqual({
+  it("keeps active workout progress in the local-only namespace", async () => {
+    await saveLocalActiveWorkoutSession("session-1", 3);
+    await expect(loadLocalActiveWorkoutSession()).resolves.toEqual({
       entryIndex: 3,
       sessionId: "session-1"
     });
-    await expect(loadActiveWorkoutSessionForOwner("user-b")).resolves.toEqual({
-      entryIndex: undefined,
-      sessionId: null
-    });
-
-    await saveActiveWorkoutSessionForOwner("user-a", null, 0);
-    await expect(loadActiveWorkoutSessionForOwner("user-a")).resolves.toEqual({
+    await saveLocalActiveWorkoutSession(null, 0);
+    await expect(loadLocalActiveWorkoutSession()).resolves.toEqual({
       entryIndex: undefined,
       sessionId: null
     });
   });
 
-  it("round-trips and clears a pending creator job per owner", async () => {
-    await saveCreatorJobForOwner("user-a", {
-      createdAt: "2026-07-17T08:00:00.000Z",
-      jobId: "job-1",
-      profileId: null,
-      type: "plan",
-      version: 1
-    });
+  it("never writes domain data to a gymmin.account namespace after cutover", async () => {
+    await saveLocalWorkouts([], "");
+    await saveLocalSettings((await loadLocalSettings({})).settings);
+    await saveLocalActiveWorkoutSession("session-1", 0);
 
-    await expect(loadCreatorJobForOwner("user-a")).resolves.toMatchObject({ jobId: "job-1" });
-    await expect(loadCreatorJobForOwner("user-b")).resolves.toBeNull();
-    await saveCreatorJobForOwner("user-a", null);
-    await expect(loadCreatorJobForOwner("user-a")).resolves.toBeNull();
+    const keys = await AsyncStorage.getAllKeys();
+    expect(keys.filter((key) => key.startsWith("gymmin.account."))).toEqual([]);
+    expect(keys.some((key) => key.startsWith("gymmin.local.v1."))).toBe(true);
   });
 });

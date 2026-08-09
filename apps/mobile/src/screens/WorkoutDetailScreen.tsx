@@ -38,6 +38,7 @@ type WorkoutDetailScreenProps = {
   onEditWorkout: (workoutId: string) => void;
   onOpenExercise: (step: WorkoutStep) => void;
   onOpenHistory: (workoutId: string) => void;
+  onModifyWithAi: (workoutId: string) => void;
   onOpenSession: (sessionId: string) => void;
   onSetArchived: (workoutId: string, archived: boolean) => void;
   onStartWorkout: () => void;
@@ -57,6 +58,7 @@ export function WorkoutDetailScreen({
   onEditWorkout,
   onOpenExercise,
   onOpenHistory,
+  onModifyWithAi,
   onOpenSession,
   onSetArchived,
   onStartWorkout,
@@ -213,6 +215,15 @@ export function WorkoutDetailScreen({
           onPress={onStartWorkout}
         >
           {t("startWorkout")}
+        </AppButton>
+        <AppButton
+          icon="sparkles-outline"
+          style={styles.workoutDetailPrimaryAction}
+          theme={theme}
+          variant="outline"
+          onPress={() => onModifyWithAi(workout.id)}
+        >
+          {t("aiRewriteTitle")}
         </AppButton>
       </View> : null}
 

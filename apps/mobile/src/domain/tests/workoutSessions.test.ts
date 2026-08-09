@@ -4,12 +4,9 @@ import {
   calculateEntryVolume,
   getActiveWorkoutSessionsForUi,
   getCompletedWorkoutSessions,
-  getDeletedWorkoutSessionIds,
   getExerciseProgressItems,
   getWorkoutSessionStatusLabel,
   getWorkoutSessionUpdatedAt,
-  markWorkoutSessionDeleted,
-  mergeWorkoutSessions,
   normalizeWorkoutSessions,
   workoutHasHistory,
   type WorkoutSession
@@ -51,31 +48,6 @@ describe("workoutSessions", () => {
 
     expect(normalized).toHaveLength(1);
     expect(normalized[0].status).toBe("completed");
-  });
-
-  it("keeps local active over remote active with the same id", () => {
-    const merged = mergeWorkoutSessions(
-      [session({ id: "session-1", updatedAt: "2026-01-02T10:00:00.000Z" })],
-      [session({ id: "session-1", updatedAt: "2026-01-03T10:00:00.000Z" })]
-    );
-
-    expect(merged[0].updatedAt).toBe("2026-01-02T10:00:00.000Z");
-  });
-
-  it("lets newer completed and newer tombstone versions win", () => {
-    const completed = mergeWorkoutSessions(
-      [session({ id: "session-1", status: "active", updatedAt: "2026-01-01T10:00:00.000Z" })],
-      [session({ id: "session-1", status: "completed", finishedAt: "2026-01-01T11:00:00.000Z", updatedAt: "2026-01-02T10:00:00.000Z" })]
-    );
-
-    expect(completed[0].status).toBe("completed");
-
-    const deleted = mergeWorkoutSessions(
-      completed,
-      [session({ id: "session-1", deletedAt: "2026-01-03T10:00:00.000Z", updatedAt: "2026-01-03T10:00:00.000Z" })]
-    );
-
-    expect(getActiveWorkoutSessionsForUi(deleted)).toHaveLength(0);
   });
 
   it("ignores deleted, active and abandoned sessions in progress", () => {
@@ -147,14 +119,17 @@ describe("workoutSessions", () => {
         isCompleted: true
       }]
     });
-    const deletedSession = markWorkoutSessionDeleted(completedSession, "2026-01-02T12:00:00.000Z");
+    const [deletedSession] = normalizeWorkoutSessions([{
+      ...completedSession,
+      deletedAt: "2026-01-02T12:00:00.000Z",
+      updatedAt: "2026-01-02T12:00:00.000Z"
+    }]);
 
     expect(deletedSession.deletedAt).toBe("2026-01-02T12:00:00.000Z");
     expect(deletedSession.updatedAt).toBe("2026-01-02T12:00:00.000Z");
     expect(getActiveWorkoutSessionsForUi([deletedSession])).toHaveLength(0);
     expect(getCompletedWorkoutSessions([deletedSession])).toHaveLength(0);
     expect(getExerciseProgressItems([deletedSession])).toHaveLength(0);
-    expect(getDeletedWorkoutSessionIds([deletedSession])).toEqual(["completed"]);
   });
 
   it("detects whether a workout has non-deleted history entries", () => {

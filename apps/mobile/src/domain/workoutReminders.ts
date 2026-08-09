@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeModules, Platform } from "react-native";
 
-import { getAccountStorageKey } from "./accountStorage";
+import { getLocalOnlyStorageKey } from "./localOnlyStorageMigration";
 import type { WorkoutSession } from "./workoutSessions";
 
 export type ReminderWeekday =
@@ -29,6 +29,7 @@ export type WorkoutReminderSettings = {
 };
 
 export const WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY = "workoutReminderNotificationIds";
+export const WORKOUT_REMINDER_NOTIFICATION_IDS_STORAGE_KEY = getLocalOnlyStorageKey("device.workoutReminderNotificationIds");
 
 export const reminderWeekdays: Array<{ day: ReminderWeekday; number: number }> = [
   { day: "monday", number: 1 },
@@ -260,9 +261,9 @@ function createWorkoutReminderDateTrigger(notifications: NotificationsModule, re
   } as Parameters<typeof notifications.scheduleNotificationAsync>[0]["trigger"];
 }
 
-async function loadScheduledNotificationIds(userId?: string | null): Promise<string[]> {
+async function loadScheduledNotificationIds(): Promise<string[]> {
   try {
-    const rawData = await AsyncStorage.getItem(getAccountStorageKey(WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY, userId));
+    const rawData = await AsyncStorage.getItem(WORKOUT_REMINDER_NOTIFICATION_IDS_STORAGE_KEY);
     const parsed = rawData ? JSON.parse(rawData) : [];
     return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
   } catch (error) {
@@ -271,8 +272,8 @@ async function loadScheduledNotificationIds(userId?: string | null): Promise<str
   }
 }
 
-async function saveScheduledNotificationIds(userId: string | null | undefined, ids: string[]) {
-  await AsyncStorage.setItem(getAccountStorageKey(WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY, userId), JSON.stringify(ids));
+async function saveScheduledNotificationIds(ids: string[]) {
+  await AsyncStorage.setItem(WORKOUT_REMINDER_NOTIFICATION_IDS_STORAGE_KEY, JSON.stringify(ids));
 }
 
 function toReminderDay(date: Date) {
@@ -386,9 +387,9 @@ async function cancelOrphanedWorkoutReminderNotifications(notifications: Notific
     .map((notification) => notifications.cancelScheduledNotificationAsync(notification.identifier!).catch(() => undefined)));
 }
 
-export async function cancelWorkoutReminders(userId?: string | null) {
+export async function cancelWorkoutReminders() {
   const notifications = await getNotificationsModule();
-  const ids = await loadScheduledNotificationIds(userId);
+  const ids = await loadScheduledNotificationIds();
   const knownIds = new Set(ids);
 
   if (notifications) {
@@ -396,27 +397,26 @@ export async function cancelWorkoutReminders(userId?: string | null) {
     await cancelOrphanedWorkoutReminderNotifications(notifications, knownIds);
   }
 
-  await saveScheduledNotificationIds(userId, []);
+  await saveScheduledNotificationIds([]);
 }
 
 export async function scheduleWorkoutReminders(
   settings: WorkoutReminderSettings,
-  sessions: WorkoutSession[],
-  userId?: string | null
+  sessions: WorkoutSession[]
 ) {
   const notifications = await getNotificationsModule();
   if (!notifications || !settings.enabled || getEnabledReminderDayNumbers(settings).length === 0) {
-    await cancelWorkoutReminders(userId);
+    await cancelWorkoutReminders();
     return { scheduledCount: 0 };
   }
 
   if (!await hasWorkoutReminderPermissions(notifications)) {
-    await cancelWorkoutReminders(userId);
+    await cancelWorkoutReminders();
     return { permissionDenied: true, scheduledCount: 0 };
   }
 
   await ensureWorkoutReminderNotificationChannel(notifications);
-  await cancelWorkoutReminders(userId);
+  await cancelWorkoutReminders();
 
   const ids: string[] = [];
   for (const reminderDate of getUpcomingReminderDates(settings, sessions)) {
@@ -427,19 +427,18 @@ export async function scheduleWorkoutReminders(
     ids.push(id);
   }
 
-  await saveScheduledNotificationIds(userId, ids);
+  await saveScheduledNotificationIds(ids);
   return { scheduledCount: ids.length };
 }
 
 export async function rescheduleWorkoutReminders(
   settings: WorkoutReminderSettings,
-  sessions: WorkoutSession[],
-  userId?: string | null
+  sessions: WorkoutSession[]
 ) {
   if (!settings.enabled) {
-    await cancelWorkoutReminders(userId);
+    await cancelWorkoutReminders();
     return { scheduledCount: 0 };
   }
 
-  return scheduleWorkoutReminders(settings, sessions, userId);
+  return scheduleWorkoutReminders(settings, sessions);
 }

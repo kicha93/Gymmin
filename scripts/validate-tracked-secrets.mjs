@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -179,6 +179,9 @@ for (const trackedFile of trackedFiles) {
   }
 
   const absolutePath = path.join(repositoryRoot, trackedFile);
+  if (!existsSync(absolutePath)) {
+    continue;
+  }
   const fileSize = statSync(absolutePath).size;
   if (fileSize === 0 || fileSize > maxTextScanBytes) {
     continue;

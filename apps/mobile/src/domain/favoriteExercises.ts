@@ -1,13 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { getAccountStorageKey } from "./accountStorage";
+import { getLocalOnlyStorageKey } from "./localOnlyStorageMigration";
 import { exercises } from "./exerciseCatalog";
 import { resolveExerciseId, type Exercise } from "./exercises";
 
 export const FAVORITE_EXERCISES_LEGACY_STORAGE_KEY = "gymmin.favoriteExercises";
-export const FAVORITE_EXERCISES_LEGACY_SYNC_STORAGE_KEY = "gymmin.favoriteExercisesSync";
 export const FAVORITE_EXERCISES_STORAGE_BASE_KEY = "favoriteExercises";
-export const FAVORITE_EXERCISES_SYNC_STORAGE_BASE_KEY = "favoriteExercisesSync";
 
 export type FavoriteExercise = {
   exerciseId: string;
@@ -16,11 +14,6 @@ export type FavoriteExercise = {
   deletedAt?: string | null;
 };
 
-export type FavoriteExercisesSyncMetadata = {
-  lastPulledAt?: string | null;
-  lastPushedAt?: string | null;
-  userId?: string | null;
-};
 
 type FavoriteExercisesStorage = {
   favorites: FavoriteExercise[];
@@ -106,9 +99,9 @@ export function normalizeFavoriteExercises(value: unknown): FavoriteExercise[] {
   }, []);
 }
 
-export async function loadFavoriteExercises(userId?: string | null): Promise<FavoriteExercise[]> {
+export async function loadFavoriteExercises(): Promise<FavoriteExercise[]> {
   try {
-    const rawData = await AsyncStorage.getItem(getAccountStorageKey(FAVORITE_EXERCISES_STORAGE_BASE_KEY, userId));
+    const rawData = await AsyncStorage.getItem(getLocalOnlyStorageKey(FAVORITE_EXERCISES_STORAGE_BASE_KEY));
     if (!rawData) {
       return [];
     }
@@ -120,37 +113,14 @@ export async function loadFavoriteExercises(userId?: string | null): Promise<Fav
   }
 }
 
-export async function saveFavoriteExercises(favorites: FavoriteExercise[], userId?: string | null) {
+export async function saveFavoriteExercises(favorites: FavoriteExercise[]) {
   const payload: FavoriteExercisesStorage = {
     favorites: normalizeFavoriteExercises(favorites),
     updatedAt: new Date().toISOString(),
     version: 1
   };
 
-  await AsyncStorage.setItem(getAccountStorageKey(FAVORITE_EXERCISES_STORAGE_BASE_KEY, userId), JSON.stringify(payload));
-}
-
-export async function loadFavoriteExercisesSyncMetadata(userId?: string | null): Promise<FavoriteExercisesSyncMetadata> {
-  try {
-    const rawData = await AsyncStorage.getItem(getAccountStorageKey(FAVORITE_EXERCISES_SYNC_STORAGE_BASE_KEY, userId));
-    if (!rawData) {
-      return {};
-    }
-
-    const parsed = JSON.parse(rawData) as Partial<FavoriteExercisesSyncMetadata>;
-    return {
-      lastPulledAt: typeof parsed.lastPulledAt === "string" ? parsed.lastPulledAt : null,
-      lastPushedAt: typeof parsed.lastPushedAt === "string" ? parsed.lastPushedAt : null,
-      userId: typeof parsed.userId === "string" ? parsed.userId : null
-    };
-  } catch (error) {
-    console.error("Failed to load favorite exercises sync metadata", error);
-    return {};
-  }
-}
-
-export async function saveFavoriteExercisesSyncMetadata(metadata: FavoriteExercisesSyncMetadata, userId?: string | null) {
-  await AsyncStorage.setItem(getAccountStorageKey(FAVORITE_EXERCISES_SYNC_STORAGE_BASE_KEY, userId), JSON.stringify(metadata));
+  await AsyncStorage.setItem(getLocalOnlyStorageKey(FAVORITE_EXERCISES_STORAGE_BASE_KEY), JSON.stringify(payload));
 }
 
 export function getActiveFavoriteExercises(favorites: FavoriteExercise[]) {
@@ -170,7 +140,7 @@ export function addFavoriteExercise(favorites: FavoriteExercise[], exerciseId: s
 
   const now = new Date().toISOString();
   return normalizeFavoriteExercises([
-    ...favorites,
+    ...getActiveFavoriteExercises(favorites),
     {
       exerciseId: canonicalId,
       createdAt: now,
@@ -182,22 +152,8 @@ export function addFavoriteExercise(favorites: FavoriteExercise[], exerciseId: s
 
 export function removeFavoriteExercise(favorites: FavoriteExercise[], exerciseId: string): FavoriteExercise[] {
   const canonicalId = resolveExerciseId(exerciseId);
-  const now = new Date().toISOString();
-  const normalized = normalizeFavoriteExercises(favorites);
-  const existing = normalized.find((favorite) => favorite.exerciseId === canonicalId);
-
-  if (!existing) {
-    return normalized;
-  }
-
-  return normalizeFavoriteExercises([
-    ...normalized.filter((favorite) => favorite.exerciseId !== canonicalId),
-    {
-      ...existing,
-      updatedAt: now,
-      deletedAt: now
-    }
-  ]);
+  return getActiveFavoriteExercises(favorites)
+    .filter((favorite) => favorite.exerciseId !== canonicalId);
 }
 
 export function toggleFavoriteExercise(favorites: FavoriteExercise[], exerciseId: string): FavoriteExercise[] {
@@ -219,16 +175,3 @@ export function getValidFavoriteExerciseIds(favorites: FavoriteExercise[]): Set<
       .filter((exerciseId) => catalogExerciseIds.has(exerciseId))
   );
 }
-
-export function mergeFavoriteExercises(localFavorites: FavoriteExercise[], remoteFavorites: FavoriteExercise[]) {
-  return normalizeFavoriteExercises([...localFavorites, ...remoteFavorites])
-    .filter((favorite) => catalogExerciseIds.has(favorite.exerciseId));
-}
-
-export function getDeletedFavoriteExerciseIds(favorites: FavoriteExercise[]) {
-  return normalizeFavoriteExercises(favorites)
-    .filter((favorite) => Boolean(favorite.deletedAt))
-    .map((favorite) => favorite.exerciseId);
-}
-
-// TODO: sync favorite exercises conflict resolution across multiple signed-in accounts on one device.

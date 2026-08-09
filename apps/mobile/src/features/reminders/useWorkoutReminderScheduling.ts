@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import type { LanguageCode } from "../../i18n/translations";
 import type { ReminderSchedulingStatus } from "../../domain/settings";
 import {
-  cancelWorkoutReminders,
   getDefaultWorkoutReminderSettings,
   rescheduleWorkoutReminders,
   type WorkoutReminderSettings
@@ -13,7 +12,6 @@ import type { WorkoutSession } from "../../domain/workoutSessions";
 type UseWorkoutReminderSchedulingOptions = {
   enabled: boolean;
   language: LanguageCode;
-  ownerId: string;
   sessions: WorkoutSession[];
   settings: WorkoutReminderSettings;
   updateSettings: (settings: WorkoutReminderSettings) => void;
@@ -22,7 +20,6 @@ type UseWorkoutReminderSchedulingOptions = {
 export function useWorkoutReminderScheduling(options: UseWorkoutReminderSchedulingOptions) {
   const [status, setStatus] = useState<ReminderSchedulingStatus>("idle");
   const previousLanguageRef = useRef(options.language);
-  const previousOwnerIdRef = useRef(options.ownerId);
 
   useEffect(() => {
     const previousLanguage = previousLanguageRef.current;
@@ -45,21 +42,12 @@ export function useWorkoutReminderScheduling(options: UseWorkoutReminderScheduli
   }, [options.language, options.settings]);
 
   useEffect(() => {
-    const previousOwnerId = previousOwnerIdRef.current;
-    if (previousOwnerId === options.ownerId) {
-      return;
-    }
-    previousOwnerIdRef.current = options.ownerId;
-    void cancelWorkoutReminders(previousOwnerId);
-  }, [options.ownerId]);
-
-  useEffect(() => {
     if (!options.enabled) {
       return;
     }
 
     let isActive = true;
-    rescheduleWorkoutReminders(options.settings, options.sessions, options.ownerId)
+    rescheduleWorkoutReminders(options.settings, options.sessions)
       .then((result) => {
         if (!isActive) {
           return;
@@ -78,7 +66,7 @@ export function useWorkoutReminderScheduling(options: UseWorkoutReminderScheduli
     return () => {
       isActive = false;
     };
-  }, [options.enabled, options.ownerId, options.sessions, options.settings]);
+  }, [options.enabled, options.sessions, options.settings]);
 
   return { setStatus, status };
 }

@@ -73,15 +73,7 @@ export type WorkoutSession = {
   notes?: string;
 };
 
-export type WorkoutSessionsSyncMetadata = {
-  lastPulledAt?: string | null;
-  lastPushedAt?: string | null;
-  userId?: string | null;
-};
-
-export const WORKOUT_SESSIONS_LEGACY_SYNC_STORAGE_KEY = "gymmin.workoutSessionsSync";
 export const WORKOUT_SESSIONS_STORAGE_BASE_KEY = "workoutSessions";
-export const WORKOUT_SESSIONS_SYNC_STORAGE_BASE_KEY = "workoutSessionsSync";
 const unknownSessionTimestamp = "1970-01-01T00:00:00.000Z";
 
 function parseSetCount(value: string) {
@@ -130,14 +122,6 @@ export function getActiveWorkoutSessionsForUi(sessions: WorkoutSession[]): Worko
   return sessions.filter((session) => !session.deletedAt);
 }
 
-export function markWorkoutSessionDeleted(session: WorkoutSession, deletedAt = new Date().toISOString()): WorkoutSession {
-  return {
-    ...session,
-    deletedAt,
-    updatedAt: deletedAt
-  };
-}
-
 export function workoutHasHistory(workoutId: string, sessions: WorkoutSession[]): boolean {
   const normalizedWorkoutId = workoutId.trim();
   if (!normalizedWorkoutId) {
@@ -168,10 +152,7 @@ export function getWorkoutSessionStatusLabel(
   return labels.unknown ?? status;
 }
 
-export function getClientSessionId(session: WorkoutSession): string {
-  return session.id;
-}
-
+// Kept for tolerant parsing of session records written by older releases.
 export function getWorkoutSessionUpdatedAt(session: Partial<WorkoutSession>): string {
   const candidates = [
     session.updatedAt,
@@ -180,77 +161,16 @@ export function getWorkoutSessionUpdatedAt(session: Partial<WorkoutSession>): st
     session.abandonedAt,
     session.startedAt
   ];
-
   for (const candidate of candidates) {
-    if (typeof candidate !== "string") {
-      continue;
-    }
-
-    const time = Date.parse(candidate);
-    if (Number.isFinite(time)) {
-      return new Date(time).toISOString();
+    if (typeof candidate === "string" && Number.isFinite(Date.parse(candidate))) {
+      return new Date(Date.parse(candidate)).toISOString();
     }
   }
-
   return unknownSessionTimestamp;
 }
 
 function compareSessionVersions(left: WorkoutSession, right: WorkoutSession) {
-  const leftUpdatedAt = Date.parse(getWorkoutSessionUpdatedAt(left));
-  const rightUpdatedAt = Date.parse(getWorkoutSessionUpdatedAt(right));
-
-  if (leftUpdatedAt !== rightUpdatedAt) {
-    return leftUpdatedAt - rightUpdatedAt;
-  }
-
-  if (left.deletedAt && !right.deletedAt) {
-    return 1;
-  }
-
-  if (!left.deletedAt && right.deletedAt) {
-    return -1;
-  }
-
-  return 0;
-}
-
-export function mergeWorkoutSessions(localSessions: WorkoutSession[], remoteSessions: WorkoutSession[]): WorkoutSession[] {
-  const merged = new Map<string, WorkoutSession>();
-
-  normalizeWorkoutSessions(localSessions).forEach((session) => {
-    const id = getClientSessionId(session);
-    merged.set(id, session);
-  });
-
-  normalizeWorkoutSessions(remoteSessions).forEach((session) => {
-    const id = getClientSessionId(session);
-    const existing = merged.get(id);
-    if (!existing) {
-      merged.set(id, session);
-      return;
-    }
-
-    if (
-      existing.status === "active" &&
-      session.status === "active" &&
-      !existing.deletedAt &&
-      !session.deletedAt
-    ) {
-      return;
-    }
-
-    if (compareSessionVersions(existing, session) <= 0) {
-      merged.set(id, session);
-    }
-  });
-
-  return Array.from(merged.values()).sort((left, right) => getSessionStartedAtTime(right) - getSessionStartedAtTime(left));
-}
-
-export function getDeletedWorkoutSessionIds(sessions: WorkoutSession[]): string[] {
-  return normalizeWorkoutSessions(sessions)
-    .filter((session) => Boolean(session.deletedAt))
-    .map(getClientSessionId);
+  return Date.parse(getWorkoutSessionUpdatedAt(left)) - Date.parse(getWorkoutSessionUpdatedAt(right));
 }
 
 function isExecutionMode(value: unknown): value is WorkoutExecutionMode {

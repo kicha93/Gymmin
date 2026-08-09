@@ -12,9 +12,12 @@ type BugReportScreenProps = {
   description: string;
   error: string;
   isSubmitting: boolean;
+  fallbackReport: string;
   onBack: () => void;
   onChangeDescription: (value: string) => void;
   onChangeTitle: (value: string) => void;
+  onCopyEmail: () => void;
+  onCopyReport: () => void;
   onSubmit: () => void;
   t: Translate;
   theme: Theme;
@@ -25,9 +28,12 @@ export function BugReportScreen({
   description,
   error,
   isSubmitting,
+  fallbackReport,
   onBack,
   onChangeDescription,
   onChangeTitle,
+  onCopyEmail,
+  onCopyReport,
   onSubmit,
   t,
   theme,
@@ -62,7 +68,18 @@ export function BugReportScreen({
             onChangeText={onChangeDescription}
           />
         </View>
-        {error ? <Text style={[styles.authError, { color: theme.danger }]}>{error}</Text> : null}
+        {error ? <Text style={[styles.inlineError, { color: theme.danger }]}>{error}</Text> : null}
+        {fallbackReport ? (
+          <View style={[styles.termsHeroCard, { borderColor: theme.border, backgroundColor: theme.card }]}>
+            <Text style={[styles.legalText, { color: theme.text }]}>{t("bugEmailFallback")}</Text>
+            <AppButton variant="outline" icon="copy-outline" theme={theme} onPress={onCopyEmail}>
+              {t("copyEmailAddress")}
+            </AppButton>
+            <AppButton variant="outline" icon="copy-outline" theme={theme} onPress={onCopyReport}>
+              {t("copyBugReport")}
+            </AppButton>
+          </View>
+        ) : null}
         <AppButton disabled={isSubmitting} icon="send-outline" theme={theme} onPress={onSubmit}>
           {isSubmitting ? t("bugSubmitting") : t("submitBug")}
         </AppButton>

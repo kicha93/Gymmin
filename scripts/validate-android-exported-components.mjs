@@ -89,6 +89,7 @@ const unusedBadgePermissions = [
 const forbiddenPermissions = new Set([
   "android.permission.ACCESS_BACKGROUND_LOCATION",
   "android.permission.ACCESS_FINE_LOCATION",
+  "android.permission.INTERNET",
   "android.permission.MANAGE_EXTERNAL_STORAGE",
   "android.permission.QUERY_ALL_PACKAGES",
   "android.permission.READ_CALL_LOG",
@@ -101,16 +102,17 @@ const forbiddenPermissions = new Set([
   "android.permission.WRITE_CALL_LOG",
   "android.permission.WRITE_CONTACTS",
   "android.permission.WRITE_EXTERNAL_STORAGE",
+  "com.android.vending.BILLING",
   "com.google.android.c2dm.permission.RECEIVE",
   ...unusedBadgePermissions,
 ]);
 
 const allowedQueryIntents = new Set([
   "android.intent.action.GET_CONTENT|category=android.intent.category.OPENABLE|mimeType=image/*",
+  "android.intent.action.OPEN_DOCUMENT|category=android.intent.category.DEFAULT|category=android.intent.category.OPENABLE|mimeType=*/*",
   "android.intent.action.OPEN_DOCUMENT_TREE",
+  "android.intent.action.SENDTO|scheme=mailto",
   "android.intent.action.VIEW|category=android.intent.category.BROWSABLE|scheme=https",
-  "com.android.vending.billing.InAppBillingService.BIND",
-  "com.google.android.apps.play.billingtestcompanion.BillingOverrideService.BIND",
 ]);
 
 function readAttribute(attributes, name) {

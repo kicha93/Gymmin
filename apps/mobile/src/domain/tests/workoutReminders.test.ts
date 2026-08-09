@@ -1,10 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getAccountStorageKey } from "../accountStorage";
 import {
-  WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY,
+  WORKOUT_REMINDER_NOTIFICATION_IDS_STORAGE_KEY,
   cancelWorkoutReminders,
   createDefaultWeeklySchedule,
   ensureWorkoutReminderNotificationChannel,
@@ -23,6 +22,11 @@ import {
 import type { WorkoutSession } from "../workoutSessions";
 
 const monday = new Date("2026-06-29T09:00:00.000Z");
+
+beforeEach(async () => {
+  await AsyncStorage.clear();
+  vi.clearAllMocks();
+});
 
 const baseSettings: WorkoutReminderSettings = {
   description: "Open Gymmin",
@@ -149,7 +153,7 @@ describe("workoutReminders", () => {
   });
 
   it("cancels saved and orphaned workout reminder notifications", async () => {
-    await AsyncStorage.setItem(getAccountStorageKey(WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY, "user-a"), JSON.stringify(["saved-id"]));
+    await AsyncStorage.setItem(WORKOUT_REMINDER_NOTIFICATION_IDS_STORAGE_KEY, JSON.stringify(["saved-id"]));
     vi.mocked(Notifications.getAllScheduledNotificationsAsync).mockResolvedValueOnce([
       {
         content: { data: { gymminType: "workout-reminder" } },
@@ -168,12 +172,12 @@ describe("workoutReminders", () => {
       } as never
     ]);
 
-    await cancelWorkoutReminders("user-a");
+    await cancelWorkoutReminders();
 
     expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith("saved-id");
     expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith("orphan-marker");
     expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith("orphan-channel");
     expect(Notifications.cancelScheduledNotificationAsync).not.toHaveBeenCalledWith("creator-notification");
-    await expect(AsyncStorage.getItem(getAccountStorageKey(WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY, "user-a"))).resolves.toBe("[]");
+    await expect(AsyncStorage.getItem(WORKOUT_REMINDER_NOTIFICATION_IDS_STORAGE_KEY)).resolves.toBe("[]");
   });
 });

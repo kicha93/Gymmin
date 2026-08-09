@@ -1,6 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { accountStorageLegacyMappings } from "../../features/storage/useAccountStorageMigration";
+vi.mock("expo-file-system", () => ({
+  Directory: class {},
+  File: class {},
+  Paths: { document: "file:///documents" }
+}));
+
+vi.mock("expo-image-manipulator", () => ({
+  ImageManipulator: { manipulate: vi.fn() },
+  SaveFormat: { JPEG: "jpeg" }
+}));
+
+import {
+  accountStorageLegacyMappings,
+  localOnlyStorageBaseKeys
+} from "../../features/storage/useAccountStorageMigration";
 
 describe("account storage migration configuration", () => {
   it("keeps every supported legacy source mapped exactly once", () => {
@@ -10,16 +24,28 @@ describe("account storage migration configuration", () => {
       { baseKey: "localSettings.v1", legacyKey: "gymmin.localSettings.v1" },
       { baseKey: "localSettings.v1", legacyKey: "gymmin.settings" },
       { baseKey: "localCreatorProfiles.v1", legacyKey: "gymmin.localCreatorProfiles.v1" },
-      { baseKey: "localCreatorJob.v1", legacyKey: "gymmin.localCreatorJob.v1" },
       { baseKey: "workoutSessions", legacyKey: "gymmin.workoutSessions" },
-      { baseKey: "workoutSessionsSync", legacyKey: "gymmin.workoutSessionsSync" },
-      { baseKey: "favoriteExercises", legacyKey: "gymmin.favoriteExercises" },
-      { baseKey: "favoriteExercisesSync", legacyKey: "gymmin.favoriteExercisesSync" }
+      { baseKey: "favoriteExercises", legacyKey: "gymmin.favoriteExercises" }
     ]);
 
     const uniquePairs = new Set(
       accountStorageLegacyMappings.map(({ baseKey, legacyKey }) => `${baseKey}:${legacyKey}`)
     );
     expect(uniquePairs.size).toBe(accountStorageLegacyMappings.length);
+  });
+
+  it("registers domain data but excludes sync metadata and device-only notification ids", () => {
+    expect(localOnlyStorageBaseKeys).toEqual([
+      "localWorkouts.v1",
+      "localSettings.v1",
+      "localCreatorProfiles.v1",
+      "activeWorkoutSession.v1",
+      "workoutSessions",
+      "favoriteExercises",
+      "achievements",
+      "appUsageStats",
+      "weeklyPlan.v1"
+    ]);
+    expect(new Set(localOnlyStorageBaseKeys).size).toBe(localOnlyStorageBaseKeys.length);
   });
 });

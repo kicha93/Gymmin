@@ -15,7 +15,6 @@ type Options = {
   defaultStageType: StageType;
   editingWorkoutId: string | null;
   onNavigate: (screen: "builder" | "workoutDetail") => void;
-  onSave: (workout: SavedWorkout) => void;
   savedWorkouts: SavedWorkout[];
   setEditingWorkoutId: Dispatch<SetStateAction<string | null>>;
   setSavedWorkouts: Dispatch<SetStateAction<SavedWorkout[]>>;
@@ -71,7 +70,6 @@ export function useWorkoutEditorController(options: Options) {
     options.setSelectedWorkoutId(nextWorkout.id);
     options.setEditingWorkoutId(null);
     options.onNavigate("workoutDetail");
-    options.onSave(nextWorkout);
   }
 
   return { addStep, moveStep, openExisting, openNew, removeStep, save, updateStep };

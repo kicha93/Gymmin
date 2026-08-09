@@ -31,6 +31,12 @@ assertContains(
   /android:allowBackup="false"/,
   'Release manifest must set android:allowBackup="false".',
 );
+for (const permission of ["android.permission.INTERNET", "com.android.vending.BILLING"]) {
+  const escaped = permission.replaceAll(".", "\\.");
+  if (!new RegExp(`<uses-permission\\s+android:name="${escaped}"\\s+tools:node="remove"\\s*/>`).test(releaseManifest)) {
+    failures.push(`${permission} must be removed explicitly from the merged local-only app.`);
+  }
+}
 assertContains(
   releaseManifest,
   /android:usesCleartextTraffic="false"/,
@@ -101,31 +107,6 @@ for (const domain of backupDomains) {
   }
 }
 
-for (const variant of ["debug", "debugOptimized"]) {
-  const manifest = readSource(variant, "AndroidManifest.xml");
-  assertContains(
-    manifest,
-    /android:usesCleartextTraffic="true"/,
-    `${variant} manifest must explicitly allow local HTTP development traffic.`,
-  );
-  assertContains(
-    manifest,
-    /android:networkSecurityConfig="@xml\/network_security_config_debug"/,
-    `${variant} manifest must use the debug-only network security config.`,
-  );
-  const debugNetworkConfig = readSource(
-    variant,
-    "res",
-    "xml",
-    "network_security_config_debug.xml",
-  );
-  assertContains(
-    debugNetworkConfig,
-    /<base-config\s+cleartextTrafficPermitted="true"\s*\/>/,
-    `${variant} network security config must allow local HTTP development traffic.`,
-  );
-}
-
 if (failures.length > 0) {
   console.error("Android release security validation failed:");
   for (const failure of failures) {
@@ -135,5 +116,5 @@ if (failures.length > 0) {
 }
 
 console.log(
-  "Android release security validation passed: HTTPS-only release traffic and backup exclusions are configured.",
+  "Android release security validation passed: no source INTERNET/BILLING permission, cleartext disabled, and backups excluded.",
 );

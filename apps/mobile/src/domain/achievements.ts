@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { getAccountStorageKey } from "./accountStorage";
+import { getLocalOnlyStorageKey } from "./localOnlyStorageMigration";
 import {
   calculateSessionVolume,
   getCompletedWorkoutSessions,
@@ -78,20 +78,8 @@ export type AppUsageStats = {
   updatedAt: string;
 };
 
-export type AchievementsSyncState = {
-  lastPulledAt?: string | null;
-  lastSyncedAt?: string | null;
-};
-
-export type AchievementsSyncResponse = {
-  unlocked: UserAchievement[];
-  appUsageStats: AppUsageStats;
-  serverTime: string;
-};
-
 export const ACHIEVEMENTS_STORAGE_BASE_KEY = "achievements";
 export const APP_USAGE_STATS_STORAGE_BASE_KEY = "appUsageStats";
-export const ACHIEVEMENTS_SYNC_STORAGE_BASE_KEY = "achievementsSync";
 export const maxForegroundSessionSeconds = 8 * 60 * 60;
 
 export const achievementDefinitions: AchievementDefinition[] = [
@@ -521,18 +509,6 @@ export function normalizeUserAchievements(value: unknown): UserAchievement[] {
   return Array.from(byId.values()).sort((left, right) => Date.parse(right.unlockedAt) - Date.parse(left.unlockedAt));
 }
 
-export function normalizeAchievementsSyncState(value: unknown): AchievementsSyncState {
-  if (typeof value !== "object" || value === null) {
-    return {};
-  }
-
-  const raw = value as Partial<AchievementsSyncState>;
-  return {
-    lastPulledAt: normalizeDate(raw.lastPulledAt ?? undefined),
-    lastSyncedAt: normalizeDate(raw.lastSyncedAt ?? undefined)
-  };
-}
-
 export function normalizeAppUsageStats(value: unknown, now = new Date().toISOString()): AppUsageStats {
   if (typeof value !== "object" || value === null) {
     return getDefaultAppUsageStats(now);
@@ -550,93 +526,36 @@ export function normalizeAppUsageStats(value: unknown, now = new Date().toISOStr
   };
 }
 
-export async function loadUserAchievements(ownerId?: string | null): Promise<UserAchievement[]> {
+export async function loadUserAchievements(): Promise<UserAchievement[]> {
   try {
-    const rawData = await AsyncStorage.getItem(getAccountStorageKey(ACHIEVEMENTS_STORAGE_BASE_KEY, ownerId));
+    const rawData = await AsyncStorage.getItem(getLocalOnlyStorageKey(ACHIEVEMENTS_STORAGE_BASE_KEY));
     return rawData ? normalizeUserAchievements(JSON.parse(rawData)) : [];
   } catch {
     return [];
   }
 }
 
-export async function saveUserAchievements(ownerId: string | null | undefined, achievements: UserAchievement[]) {
+export async function saveUserAchievements(achievements: UserAchievement[]) {
   await AsyncStorage.setItem(
-    getAccountStorageKey(ACHIEVEMENTS_STORAGE_BASE_KEY, ownerId),
+    getLocalOnlyStorageKey(ACHIEVEMENTS_STORAGE_BASE_KEY),
     JSON.stringify({ achievements: normalizeUserAchievements(achievements), version: 1 })
   );
 }
 
-export async function loadAppUsageStats(ownerId?: string | null): Promise<AppUsageStats> {
+export async function loadAppUsageStats(): Promise<AppUsageStats> {
   try {
-    const rawData = await AsyncStorage.getItem(getAccountStorageKey(APP_USAGE_STATS_STORAGE_BASE_KEY, ownerId));
+    const rawData = await AsyncStorage.getItem(getLocalOnlyStorageKey(APP_USAGE_STATS_STORAGE_BASE_KEY));
     return rawData ? normalizeAppUsageStats(JSON.parse(rawData)) : getDefaultAppUsageStats();
   } catch {
     return getDefaultAppUsageStats();
   }
 }
 
-export async function saveAppUsageStats(ownerId: string | null | undefined, stats: AppUsageStats) {
+export async function saveAppUsageStats(stats: AppUsageStats) {
   await AsyncStorage.setItem(
-    getAccountStorageKey(APP_USAGE_STATS_STORAGE_BASE_KEY, ownerId),
+    getLocalOnlyStorageKey(APP_USAGE_STATS_STORAGE_BASE_KEY),
     JSON.stringify({ ...normalizeAppUsageStats(stats), version: 1 })
   );
-}
-
-export async function loadAchievementsSyncState(ownerId?: string | null): Promise<AchievementsSyncState> {
-  try {
-    const rawData = await AsyncStorage.getItem(getAccountStorageKey(ACHIEVEMENTS_SYNC_STORAGE_BASE_KEY, ownerId));
-    return rawData ? normalizeAchievementsSyncState(JSON.parse(rawData)) : {};
-  } catch {
-    return {};
-  }
-}
-
-export async function saveAchievementsSyncState(ownerId: string | null | undefined, state: AchievementsSyncState) {
-  await AsyncStorage.setItem(
-    getAccountStorageKey(ACHIEVEMENTS_SYNC_STORAGE_BASE_KEY, ownerId),
-    JSON.stringify({ ...normalizeAchievementsSyncState(state), version: 1 })
-  );
-}
-
-export function mergeUserAchievements(localAchievements: UserAchievement[], remoteAchievements: UserAchievement[]): UserAchievement[] {
-  const byId = new Map<string, UserAchievement>();
-
-  [...normalizeUserAchievements(localAchievements), ...normalizeUserAchievements(remoteAchievements)].forEach((achievement) => {
-    const existing = byId.get(achievement.achievementId);
-    if (!existing) {
-      byId.set(achievement.achievementId, achievement);
-      return;
-    }
-
-    const unlockedAt = Date.parse(achievement.unlockedAt) < Date.parse(existing.unlockedAt)
-      ? achievement.unlockedAt
-      : existing.unlockedAt;
-    const progressAtUnlock = Math.max(existing.progressAtUnlock ?? 0, achievement.progressAtUnlock ?? 0);
-    const existingUpdatedAt = normalizeDate(existing.updatedAt) ?? existing.unlockedAt;
-    const nextUpdatedAt = normalizeDate(achievement.updatedAt) ?? achievement.unlockedAt;
-    const updatedAt = Date.parse(nextUpdatedAt) > Date.parse(existingUpdatedAt) ? nextUpdatedAt : existingUpdatedAt;
-
-    byId.set(achievement.achievementId, {
-      achievementId: achievement.achievementId,
-      progressAtUnlock: progressAtUnlock > 0 ? progressAtUnlock : undefined,
-      unlockedAt,
-      updatedAt
-    });
-  });
-
-  return Array.from(byId.values()).sort((left, right) => Date.parse(right.unlockedAt) - Date.parse(left.unlockedAt));
-}
-
-export function mergeAppUsageStats(localStats: AppUsageStats, remoteStats: AppUsageStats): AppUsageStats {
-  const local = normalizeAppUsageStats(localStats);
-  const remote = normalizeAppUsageStats(remoteStats);
-  const localUpdatedAt = normalizeDate(local.updatedAt) ?? new Date(0).toISOString();
-  const remoteUpdatedAt = normalizeDate(remote.updatedAt) ?? new Date(0).toISOString();
-
-  return {
-    totalForegroundSeconds: Math.max(local.totalForegroundSeconds, remote.totalForegroundSeconds),
-    updatedAt: Date.parse(remoteUpdatedAt) > Date.parse(localUpdatedAt) ? remoteUpdatedAt : localUpdatedAt
-  };
 }
 
 export function getNewUserAchievementUnlocks(previous: UserAchievement[], next: UserAchievement[]): UserAchievement[] {

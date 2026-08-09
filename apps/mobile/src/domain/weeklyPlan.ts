@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { getAccountStorageKey } from "./accountStorage";
+import { getLocalOnlyStorageKey } from "./localOnlyStorageMigration";
 import type { WorkoutSession } from "./workoutSessions";
 
 export type WeeklyPlanDay = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
@@ -112,9 +112,9 @@ export function mergeWeeklyPlans(
   };
 }
 
-export async function loadWeeklyPlanState(ownerId?: string | null): Promise<LoadedWeeklyPlan> {
+export async function loadWeeklyPlanState(): Promise<LoadedWeeklyPlan> {
   try {
-    const raw = await AsyncStorage.getItem(getAccountStorageKey(WEEKLY_PLAN_STORAGE_BASE_KEY, ownerId));
+    const raw = await AsyncStorage.getItem(getLocalOnlyStorageKey(WEEKLY_PLAN_STORAGE_BASE_KEY));
     return {
       hadPersistedPlan: raw !== null,
       plan: raw ? normalizeWeeklyPlanSettings(JSON.parse(raw)) : getDefaultWeeklyPlanSettings()
@@ -124,13 +124,13 @@ export async function loadWeeklyPlanState(ownerId?: string | null): Promise<Load
   }
 }
 
-export async function loadWeeklyPlan(ownerId?: string | null): Promise<WeeklyPlanSettings> {
-  return (await loadWeeklyPlanState(ownerId)).plan;
+export async function loadWeeklyPlan(): Promise<WeeklyPlanSettings> {
+  return (await loadWeeklyPlanState()).plan;
 }
 
-export async function saveWeeklyPlan(plan: WeeklyPlanSettings, ownerId?: string | null) {
+export async function saveWeeklyPlan(plan: WeeklyPlanSettings) {
   await AsyncStorage.setItem(
-    getAccountStorageKey(WEEKLY_PLAN_STORAGE_BASE_KEY, ownerId),
+    getLocalOnlyStorageKey(WEEKLY_PLAN_STORAGE_BASE_KEY),
     JSON.stringify(normalizeWeeklyPlanSettings(plan))
   );
 }

@@ -12,7 +12,6 @@ import {
 import {
   completeWorkoutSession,
   createWorkoutSessionFromWorkout,
-  markWorkoutSessionDeleted,
   type WorkoutExecutionMode,
   type WorkoutSession,
   type WorkoutSessionEntry
@@ -131,8 +130,7 @@ export function useActiveWorkoutController(options: UseActiveWorkoutControllerOp
 
   function abandon() {
     if (!options.activeSession) return;
-    const deleted = markWorkoutSessionDeleted(options.activeSession);
-    options.setSessions((current) => current.map((session) => session.id === deleted.id ? deleted : session));
+    options.setSessions((current) => current.filter((session) => session.id !== options.activeSession?.id));
     resetActiveSession(options.activeSession.id);
     options.onNavigate("home");
   }

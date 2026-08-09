@@ -3,10 +3,9 @@ import { describe, expect, it } from "vitest";
 import { exercises } from "../exerciseCatalog";
 import {
   getActiveFavoriteExercises,
-  getDeletedFavoriteExerciseIds,
   getValidFavoriteExerciseIds,
-  mergeFavoriteExercises,
-  normalizeFavoriteExercises
+  normalizeFavoriteExercises,
+  removeFavoriteExercise
 } from "../favoriteExercises";
 
 const [firstExercise, secondExercise] = exercises;
@@ -30,35 +29,14 @@ describe("favoriteExercises", () => {
     });
   });
 
-  it("merges by newest update and lets newer tombstones win", () => {
-    const merged = mergeFavoriteExercises(
-      [{ exerciseId: firstExercise.id, createdAt: oldDate, updatedAt: oldDate, deletedAt: null }],
-      [{ exerciseId: firstExercise.id, createdAt: oldDate, updatedAt: newDate, deletedAt: newDate }]
-    );
-
-    expect(getActiveFavoriteExercises(merged)).toHaveLength(0);
-    expect(getDeletedFavoriteExerciseIds(merged)).toEqual([firstExercise.id]);
-  });
-
-  it("does not let older tombstones delete newer active records", () => {
-    const merged = mergeFavoriteExercises(
-      [{ exerciseId: firstExercise.id, createdAt: oldDate, updatedAt: newDate, deletedAt: null }],
-      [{ exerciseId: firstExercise.id, createdAt: oldDate, updatedAt: oldDate, deletedAt: oldDate }]
-    );
-
-    expect(getActiveFavoriteExercises(merged).map((favorite) => favorite.exerciseId)).toEqual([firstExercise.id]);
-  });
-
-  it("filters unknown catalog ids from sync merges", () => {
-    const merged = mergeFavoriteExercises(
-      [
-        { exerciseId: firstExercise.id, createdAt: oldDate, updatedAt: oldDate, deletedAt: null },
-        { exerciseId: "missing-catalog-id", createdAt: oldDate, updatedAt: oldDate, deletedAt: null }
-      ],
-      [{ exerciseId: secondExercise.id, createdAt: oldDate, updatedAt: oldDate, deletedAt: null }]
-    );
-
-    expect(getValidFavoriteExerciseIds(merged)).toEqual(new Set([firstExercise.id, secondExercise.id]));
+  it("removes favorites physically and still ignores legacy tombstones", () => {
+    const favorites = [
+      { exerciseId: firstExercise.id, createdAt: oldDate, updatedAt: oldDate, deletedAt: null },
+      { exerciseId: secondExercise.id, createdAt: oldDate, updatedAt: newDate, deletedAt: newDate }
+    ];
+    expect(removeFavoriteExercise(favorites, firstExercise.id)).toEqual([]);
+    expect(getActiveFavoriteExercises(favorites).map((favorite) => favorite.exerciseId)).toEqual([firstExercise.id]);
+    expect(getValidFavoriteExerciseIds(favorites)).toEqual(new Set([firstExercise.id]));
   });
 
   it("migrates favorite entries that use a merged exercise id", () => {

@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { getAccountStorageKey } from "../accountStorage";
+import { getLocalOnlyStorageKey } from "../localOnlyStorageMigration";
 import {
   ACHIEVEMENTS_STORAGE_BASE_KEY,
   APP_USAGE_STATS_STORAGE_BASE_KEY,
@@ -12,13 +12,9 @@ import {
   getAchievementProgress,
   getDefaultAppUsageStats,
   loadAppUsageStats,
-  loadAchievementsSyncState,
   loadUserAchievements,
   maxForegroundSessionSeconds,
-  mergeAppUsageStats,
-  mergeUserAchievements,
   saveAppUsageStats,
-  saveAchievementsSyncState,
   saveUserAchievements,
   type AppUsageStats
 } from "../achievements";
@@ -51,6 +47,10 @@ const baseSession: WorkoutSession = {
     }
   ]
 };
+
+beforeEach(async () => {
+  await AsyncStorage.clear();
+});
 
 function session(overrides: Partial<WorkoutSession>): WorkoutSession {
   return {
@@ -200,75 +200,22 @@ describe("achievements", () => {
     expect(negative.totalForegroundSeconds).toBe(0);
   });
 
-  it("stores achievements and usage per account owner", async () => {
-    await saveUserAchievements("user-a", [{ achievementId: "first_workout", unlockedAt: "2026-01-01T10:00:00.000Z" }]);
-    await saveAppUsageStats("user-a", { totalForegroundSeconds: 3600, updatedAt: "2026-01-01T10:00:00.000Z" });
+  it("stores achievements and usage in one local-only namespace", async () => {
+    await saveUserAchievements([{ achievementId: "first_workout", unlockedAt: "2026-01-01T10:00:00.000Z" }]);
+    await saveAppUsageStats({ totalForegroundSeconds: 3600, updatedAt: "2026-01-01T10:00:00.000Z" });
 
-    expect(await loadUserAchievements("user-a")).toHaveLength(1);
-    expect(await loadUserAchievements("user-b")).toHaveLength(0);
-    expect((await loadAppUsageStats("user-a")).totalForegroundSeconds).toBe(3600);
-    expect((await loadAppUsageStats("user-b")).totalForegroundSeconds).toBe(0);
-    expect(getAccountStorageKey(ACHIEVEMENTS_STORAGE_BASE_KEY, "user-a")).not.toBe(getAccountStorageKey(ACHIEVEMENTS_STORAGE_BASE_KEY, "user-b"));
-    expect(getAccountStorageKey(APP_USAGE_STATS_STORAGE_BASE_KEY, null)).not.toBe(getAccountStorageKey(APP_USAGE_STATS_STORAGE_BASE_KEY, "user-a"));
+    expect(await loadUserAchievements()).toHaveLength(1);
+    expect((await loadAppUsageStats()).totalForegroundSeconds).toBe(3600);
+    expect(await AsyncStorage.getItem(getLocalOnlyStorageKey(ACHIEVEMENTS_STORAGE_BASE_KEY))).not.toBeNull();
+    expect(await AsyncStorage.getItem(getLocalOnlyStorageKey(APP_USAGE_STATS_STORAGE_BASE_KEY))).not.toBeNull();
   });
 
   it("does not crash on damaged storage", async () => {
-    await AsyncStorage.setItem(getAccountStorageKey(ACHIEVEMENTS_STORAGE_BASE_KEY, "broken"), "{bad");
-    await AsyncStorage.setItem(getAccountStorageKey(APP_USAGE_STATS_STORAGE_BASE_KEY, "broken"), "{bad");
+    await AsyncStorage.setItem(getLocalOnlyStorageKey(ACHIEVEMENTS_STORAGE_BASE_KEY), "{bad");
+    await AsyncStorage.setItem(getLocalOnlyStorageKey(APP_USAGE_STATS_STORAGE_BASE_KEY), "{bad");
 
-    expect(await loadUserAchievements("broken")).toEqual([]);
-    expect((await loadAppUsageStats("broken")).totalForegroundSeconds).toBe(0);
+    expect(await loadUserAchievements()).toEqual([]);
+    expect((await loadAppUsageStats()).totalForegroundSeconds).toBe(0);
   });
 
-  it("merges local and remote unlocked achievements as a stable union", () => {
-    const merged = mergeUserAchievements(
-      [
-        {
-          achievementId: "first_workout",
-          progressAtUnlock: 1,
-          unlockedAt: "2026-01-03T10:00:00.000Z",
-          updatedAt: "2026-01-03T10:00:00.000Z"
-        }
-      ],
-      [
-        {
-          achievementId: "first_workout",
-          progressAtUnlock: 2,
-          unlockedAt: "2026-01-01T10:00:00.000Z",
-          updatedAt: "2026-01-04T10:00:00.000Z"
-        },
-        {
-          achievementId: "five_workouts",
-          progressAtUnlock: 5,
-          unlockedAt: "2026-01-05T10:00:00.000Z",
-          updatedAt: "2026-01-05T10:00:00.000Z"
-        }
-      ]
-    );
-
-    expect(merged).toHaveLength(2);
-    expect(merged.find((item) => item.achievementId === "first_workout")?.unlockedAt).toBe("2026-01-01T10:00:00.000Z");
-    expect(merged.find((item) => item.achievementId === "first_workout")?.progressAtUnlock).toBe(2);
-    expect(merged.find((item) => item.achievementId === "first_workout")?.updatedAt).toBe("2026-01-04T10:00:00.000Z");
-  });
-
-  it("merges app usage stats with max foreground seconds", () => {
-    const merged = mergeAppUsageStats(
-      { totalForegroundSeconds: 7200, updatedAt: "2026-01-02T10:00:00.000Z" },
-      { totalForegroundSeconds: 3600, updatedAt: "2026-01-03T10:00:00.000Z" }
-    );
-
-    expect(merged.totalForegroundSeconds).toBe(7200);
-    expect(merged.updatedAt).toBe("2026-01-03T10:00:00.000Z");
-  });
-
-  it("stores achievement sync metadata per account owner", async () => {
-    await saveAchievementsSyncState("user-a", {
-      lastPulledAt: "2026-01-01T10:00:00.000Z",
-      lastSyncedAt: "2026-01-01T10:01:00.000Z"
-    });
-
-    expect((await loadAchievementsSyncState("user-a")).lastPulledAt).toBe("2026-01-01T10:00:00.000Z");
-    expect((await loadAchievementsSyncState("user-b")).lastPulledAt).toBeUndefined();
-  });
 });

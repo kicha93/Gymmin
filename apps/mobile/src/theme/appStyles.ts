@@ -85,157 +85,11 @@ export const styles = StyleSheet.create({
   keyboardAvoidingContent: {
     flex: 1
   },
-  loginPanel: {
-    alignItems: "stretch",
-    borderRadius: 8,
-    gap: 16,
-    padding: 18
-  },
-  loginScreenContent: {
-    gap: 16
-  },
-  loginPanelHeader: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: 12
-  },
-  loginCopy: {
-    flex: 1,
-    gap: 4
-  },
-  loginDismissButton: {
-    alignItems: "center",
-    borderRadius: 18,
-    height: 36,
-    justifyContent: "center",
-    marginRight: -6,
-    marginTop: -6,
-    width: 36
-  },
-  loginEyebrow: {
-    color: "#b7d4cf",
-    fontSize: 12,
-    fontWeight: "800",
-    textTransform: "uppercase"
-  },
-  loginTitle: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "800"
-  },
-  loginMeta: {
-    color: "#b7d4cf",
-    fontSize: 13,
-    fontWeight: "700"
-  },
-  loginButton: {
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    flexDirection: "row",
-    flex: 1,
-    gap: 6,
-    justifyContent: "center",
-    minHeight: 42,
-    paddingHorizontal: 10
-  },
-  loginButtonText: {
-    fontSize: 13,
-    fontWeight: "800"
-  },
-  loginActions: {
-    flexDirection: "row",
-    gap: 10
-  },
-  authPanel: {
-    borderRadius: 8,
-    borderWidth: 1,
-    overflow: "hidden",
-    paddingBottom: 24,
-    paddingHorizontal: 16,
-    paddingTop: 16
-  },
-  authHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "space-between",
-    marginBottom: 10
-  },
   closeButton: {
     alignItems: "center",
     height: 36,
     justifyContent: "center",
     width: 36
-  },
-  authEyebrow: {
-    fontSize: 12,
-    fontWeight: "800",
-    textTransform: "uppercase"
-  },
-  authTitle: {
-    fontSize: 19,
-    fontWeight: "800"
-  },
-  authFields: {
-    gap: 0
-  },
-  authInputStack: {
-    gap: 12,
-    marginTop: 12
-  },
-  authModeSwitch: {
-    borderRadius: 8,
-    flexDirection: "row",
-    gap: 4,
-    padding: 4
-  },
-  authModeButton: {
-    alignItems: "center",
-    borderRadius: 6,
-    flex: 1,
-    justifyContent: "center",
-    minHeight: 38,
-    paddingHorizontal: 8
-  },
-  authModeButtonText: {
-    fontSize: 13,
-    fontWeight: "800"
-  },
-  authError: {
-    fontSize: 13,
-    fontWeight: "800",
-    lineHeight: 18,
-    marginTop: 18
-  },
-  authForgotPassword: {
-    fontSize: 14,
-    fontWeight: "800",
-    marginTop: 10,
-    textAlign: "right"
-  },
-  authButtonSpacer: {
-    height: 22
-  },
-  authRegisterButtonSpacer: {
-    height: 30
-  },
-  authButtonWrap: {
-    alignSelf: "stretch",
-    minHeight: 48
-  },
-  authButton: {
-    alignItems: "center",
-    borderRadius: 8,
-    flexDirection: "row",
-    gap: 8,
-    justifyContent: "center",
-    minHeight: 48
-  },
-  authButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "800"
   },
   fieldGroup: {
     gap: 8
@@ -584,49 +438,6 @@ export const styles = StyleSheet.create({
   workoutCreatorButtonWrap: {
     position: "relative",
     zIndex: 5
-  },
-  systemStatusCallout: {
-    alignItems: "flex-start",
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    padding: 14
-  },
-  systemStatusIcon: {
-    alignItems: "center",
-    borderRadius: 8,
-    flexShrink: 0,
-    height: 42,
-    justifyContent: "center",
-    width: 42
-  },
-  systemStatusCopy: {
-    flex: 1,
-    gap: 6,
-    minWidth: 0
-  },
-  systemStatusTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-    lineHeight: 21
-  },
-  systemStatusDescription: {
-    fontSize: 13,
-    fontWeight: "700",
-    lineHeight: 19
-  },
-  systemStatusAction: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    gap: 5,
-    minHeight: 28,
-    paddingTop: 2
-  },
-  systemStatusActionText: {
-    fontSize: 13,
-    fontWeight: "900"
   },
   trainingFactPill: {
     alignItems: "center",
@@ -992,26 +803,6 @@ export const styles = StyleSheet.create({
   },
   compactButtonText: {
     fontSize: 13
-  },
-  creatorLoginTooltip: {
-    alignItems: "center",
-    bottom: "100%",
-    left: 0,
-    marginBottom: 8,
-    position: "absolute",
-    right: 0,
-    zIndex: 10
-  },
-  creatorLoginTooltipBubble: {
-    borderRadius: 8,
-    maxWidth: "92%",
-    paddingHorizontal: 12,
-    paddingVertical: 8
-  },
-  creatorLoginTooltipText: {
-    fontSize: 13,
-    fontWeight: "800",
-    textAlign: "center"
   },
   gluestackButtonText: {
     fontSize: 15,
@@ -3030,83 +2821,6 @@ export const styles = StyleSheet.create({
     fontWeight: "900",
     minWidth: 0
   },
-  profileAccountCard: {
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 8,
-    padding: 14
-  },
-  profileAccountRow: {
-    alignItems: "center",
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    minHeight: 48,
-    paddingVertical: 8
-  },
-  profileAccountRowText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "800",
-    minWidth: 0
-  },
-  profileLogoutRow: {
-    backgroundColor: "#fff0ee",
-    borderBottomWidth: 0,
-    borderRadius: 8,
-    marginTop: 2,
-    paddingHorizontal: 8
-  },
-  deleteAccountCopy: {
-    lineHeight: 21,
-    marginTop: 6
-  },
-  deleteAccountActions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 8
-  },
-  deleteAccountActionButton: {
-    flex: 1,
-    minWidth: 180
-  },
-  accountDetailsHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 12
-  },
-  accountDetailsList: {
-    gap: 0
-  },
-  accountDetailsRow: {
-    alignItems: "center",
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    paddingVertical: 12
-  },
-  accountDetailsRowLast: {
-    borderBottomWidth: 0
-  },
-  accountDetailsIcon: {
-    alignItems: "center",
-    borderRadius: 8,
-    flexShrink: 0,
-    height: 38,
-    justifyContent: "center",
-    width: 38
-  },
-  accountDetailsLabel: {
-    fontSize: 11,
-    fontWeight: "900",
-    textTransform: "uppercase"
-  },
-  accountDetailsValue: {
-    fontSize: 15,
-    fontWeight: "800",
-    lineHeight: 21
-  },
   achievementSummaryCard: {
     borderRadius: 8,
     borderWidth: 1,
@@ -3616,6 +3330,65 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
     lineHeight: 19
   },
+  authorSupportCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 8,
+    marginBottom: 8,
+    padding: 16
+  },
+  authorSupportHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12
+  },
+  authorSupportIcon: {
+    alignItems: "center",
+    borderRadius: 10,
+    height: 44,
+    justifyContent: "center",
+    width: 44
+  },
+  authorSupportHeading: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0
+  },
+  authorSupportEyebrow: {
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0.2
+  },
+  authorSupportTitle: {
+    fontSize: 20,
+    fontWeight: "900"
+  },
+  authorSupportAuthor: {
+    fontSize: 15,
+    fontWeight: "900",
+    lineHeight: 21
+  },
+  authorSupportCopy: {
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 21
+  },
+  authorSupportButton: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    borderRadius: 10,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+    marginTop: 4,
+    minHeight: 46,
+    paddingHorizontal: 16
+  },
+  authorSupportButtonText: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
   reminderWeeklyBlock: {
     gap: 12,
     paddingVertical: 10
@@ -4102,164 +3875,6 @@ export const styles = StyleSheet.create({
   creatorForm: {
     gap: 16
   },
-  aiCreditsScreen: {
-    gap: 16
-  },
-  aiCreditsBalanceCard: {
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 12,
-    padding: 18
-  },
-  aiCreditsRefreshFooterButton: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    gap: 6,
-    minHeight: 32
-  },
-  aiCreditsRefreshText: {
-    fontSize: 13,
-    fontWeight: "900"
-  },
-  aiCreditsHeroIcon: {
-    alignItems: "center",
-    borderRadius: 8,
-    height: 58,
-    justifyContent: "center",
-    width: 58
-  },
-  aiCreditsBalanceValue: {
-    fontSize: 54,
-    fontWeight: "900",
-    lineHeight: 58
-  },
-  aiCreditsDivider: {
-    height: 1,
-    width: "100%"
-  },
-  aiCreditsPackageList: {
-    gap: 12
-  },
-  aiCreditsPackageCard: {
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    minHeight: 76,
-    padding: 12
-  },
-  aiCreditsPackageBadge: {
-    alignItems: "center",
-    borderRadius: 8,
-    flexShrink: 0,
-    height: 50,
-    justifyContent: "center",
-    width: 50
-  },
-  aiCreditsPackageBadgeText: {
-    fontSize: 18,
-    fontWeight: "900"
-  },
-  aiCreditsPackageTitle: {
-    fontSize: 15,
-    fontWeight: "900",
-    textAlign: "left"
-  },
-  aiCreditsPackageDescription: {
-    fontSize: 12,
-    fontWeight: "700",
-    lineHeight: 16,
-    textAlign: "left"
-  },
-  aiCreditsPackageAction: {
-    alignItems: "flex-end",
-    flexShrink: 0,
-    gap: 8,
-    minWidth: 96
-  },
-  aiCreditsPackagePrice: {
-    fontSize: 14,
-    fontWeight: "900",
-    textAlign: "right"
-  },
-  aiCreditsPackageButton: {
-    alignItems: "center",
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 38,
-    paddingHorizontal: 10,
-    width: 96
-  },
-  aiCreditsPackageButtonText: {
-    fontSize: 14,
-    fontWeight: "900",
-    textAlign: "center"
-  },
-  aiCreditsSectionHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "space-between"
-  },
-  aiCreditsViewAllText: {
-    fontSize: 13,
-    fontWeight: "900"
-  },
-  aiCreditsTransactionsCard: {
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 4
-  },
-  aiCreditsTransactionRow: {
-    alignItems: "center",
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    gap: 10,
-    minHeight: 58,
-    paddingVertical: 10
-  },
-  aiCreditsTransactionRowLast: {
-    borderBottomWidth: 0
-  },
-  aiCreditsTransactionIcon: {
-    alignItems: "center",
-    borderRadius: 18,
-    flexShrink: 0,
-    height: 36,
-    justifyContent: "center",
-    width: 36
-  },
-  aiCreditsInfoCard: {
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 10,
-    padding: 16
-  },
-  aiCreditsInfoRow: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: 8
-  },
-  aiCreditsInfoBullet: {
-    borderRadius: 4,
-    height: 7,
-    marginTop: 6,
-    width: 7
-  },
-  aiCreditsInfoText: {
-    flex: 1
-  },
-  aiCreditsRestoreLink: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    gap: 6,
-    minHeight: 32,
-    paddingTop: 2
-  },
   creatorDescription: {
     fontSize: 14,
     fontWeight: "700",
@@ -4589,6 +4204,12 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     lineHeight: 22
+  },
+  inlineError: {
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 18,
+    marginTop: 8
   },
   errorDetails: {
     borderRadius: 8,

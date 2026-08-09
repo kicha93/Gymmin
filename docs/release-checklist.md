@@ -27,6 +27,26 @@ Do not run `npm audit fix --force`. Review every documented upstream audit excep
 
 ## Functional smoke — physical Android device
 
+Record exactly one status for every scenario: `PASS`, `FAIL`, or `NOT TESTED`. A `FAIL` must include reproduction notes before any code change is considered. Do not treat automated gates as a substitute for this matrix.
+
+| Scenario | Priority | Result (`PASS` / `FAIL` / `NOT TESTED`) | Device / Android / build | Notes |
+| --- | --- | --- | --- | --- |
+| A. Fresh install | P1 | NOT TESTED |  |  |
+| B. Upgrade from an old installation | P0 | NOT TESTED |  |  |
+| C. Upgrade with an active workout | P0 | NOT TESTED |  |  |
+| D. Multiple legacy account namespaces | P1 | NOT TESTED |  |  |
+| E. Backup and restore | P0 | NOT TESTED |  |  |
+| F. Avatar | P1 | NOT TESTED |  |  |
+| G. AI create | P0 | NOT TESTED |  |  |
+| H. Invalid AI response | P1 | NOT TESTED |  |  |
+| I. AI rewrite | P0 | NOT TESTED |  |  |
+| J. Reminders | P1 | NOT TESTED |  |  |
+| K. Report Bug | P1 | NOT TESTED |  |  |
+| L. Buy Me a Coffee | P1 | NOT TESTED |  |  |
+| M. Delete all local data | P0 | NOT TESTED |  |  |
+
+P0 execution order: B → C → E → G → I → M. P1 follows after P0 or in parallel on a separate prepared device. If a smoke test fails, preserve RC commit `2947f7d`, document the exact failure and root cause, and make any approved fix in a separate commit.
+
 ### A. Fresh install
 
 - [ ] install without restoring app data and launch successfully

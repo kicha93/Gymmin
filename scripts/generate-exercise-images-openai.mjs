@@ -7,7 +7,7 @@ const repoRoot = path.resolve(__dirname, "..");
 
 const defaultSummaryPath = path.join(repoRoot, "docs", "exercise-summary.json");
 const defaultPromptPath = path.join(repoRoot, "docs", "exercise-image-prompt-template.md");
-const defaultOutputRoot = path.join(repoRoot, "apps", "mobile", "assets", "exercises");
+const defaultOutputRoot = path.join(repoRoot, "media-source", "exercises");
 const catalogDir = path.join(repoRoot, "apps", "mobile", "src", "domain", "exerciseCatalog");
 const backendProjectPath = path.join(repoRoot, "backend", "Gymmin.Api", "Gymmin.Api.csproj");
 const backendAppSettingsPaths = [
@@ -105,7 +105,7 @@ Examples:
 Options:
   --summary <path>       Input summary JSON. Default: docs/exercise-summary.json
   --prompt-file <path>   Prompt template with {{placeholders}}.
-  --output-root <path>   Output root. Default: apps/mobile/assets/exercises
+  --output-root <path>   PNG source root. Default: media-source/exercises
   --reference-file <p>   Reference image for OpenAI image edit. Can be repeated.
   --model <name>         OpenAI image model. Default: gpt-image-1 or OPENAI_IMAGE_MODEL
   --size <size>          Image size. Default: 1024x1536 or OPENAI_IMAGE_SIZE
@@ -117,6 +117,8 @@ Options:
   --overwrite            Regenerate even if start.png and end.png exist.
   --dry-run              Print planned work without calling OpenAI.
   --check-key            Resolve OPENAI_API_KEY source and exit without generation.
+
+After generation run: npm run exercise:media:optimize
 `);
 }
 

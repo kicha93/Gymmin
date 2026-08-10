@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const catalogDir = path.join(repoRoot, "apps", "mobile", "src", "domain", "exerciseCatalog");
-const defaultOutputRoot = path.join(repoRoot, "apps", "mobile", "assets", "exercises");
+const defaultOutputRoot = path.join(repoRoot, "media-source", "exercises");
 
 function parseArgs(argv) {
   const args = {
@@ -53,6 +53,8 @@ Expected source structure:
 
 Example:
   node scripts/import-exercise-images-from-folder.mjs --source-root "C:\\Users\\Administrator\\Downloads\\cwiczenia" --dry-run
+
+Imported PNG files are editable sources. Run npm run exercise:media:optimize to create production WebP assets.
 `);
 }
 

@@ -1,6 +1,6 @@
 # Application status
 
-Status date: 2026-08-09.
+Status date: 2026-08-10.
 
 Gymmin is now a local-only mobile product. Backend source, auth, synchronization, remote creator jobs, AI credits, billing, remote profile/avatar transport, system status, HTTP clients, and API URL build configuration have been removed.
 
@@ -15,6 +15,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 - full local data deletion;
 - safe bug report email with clipboard fallback;
 - PL/EN About, author attribution, privacy and voluntary Buy Me a Coffee link.
+- optimized offline exercise media: 64 static START/END pairs use WebP Q90 runtime assets generated reproducibly from non-bundled PNG sources; the supplied MP4 remains unchanged.
 
 ## Compatibility retained intentionally
 
@@ -31,4 +32,4 @@ Accounts, login, cloud sync, server storage, remote OpenAI calls, credits/premiu
 
 ## Release state
 
-APK/AAB commands are backend-free and release signing fails closed. On 2026-08-09 the normal repository path produced a debug APK, signed arm64 release APK and signed arm64 AAB; the merged release manifest contained neither INTERNET nor Billing. Expo Doctor passed 19/19. Static GitHub Pages privacy documents are ready; Pages must be enabled and the resulting public URL entered in Google Play Console. Physical-device upgrade and data-deletion smoke tests remain mandatory before rollout.
+APK/AAB commands are backend-free and release signing fails closed. The legacy vc1 to local-only RC vc2 upgrade and the Balanced WebP sample both passed on a physical Android device. Static GitHub Pages privacy documents are ready; Pages must be enabled and the resulting public URL entered in Google Play Console. The remaining manual scenarios retain their explicit status in the release checklist.

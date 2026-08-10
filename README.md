@@ -25,6 +25,7 @@ The one compatibility exception is the upgrade importer for legacy `gymmin.accou
 
 ```text
 apps/mobile/       Gymmin product runtime
+media-source/      non-bundled editable exercise image sources
 docs/              current product/build/privacy documentation
 docs/archive/      historical documentation for removed backend systems
 scripts/           mobile validation, build and catalog tooling
@@ -50,7 +51,10 @@ npm run security:secrets
 npm run security:dependencies
 node scripts/validate-local-only-runtime.mjs
 node scripts/validate-local-product-runtime.mjs
+npm run exercise:media:validate
 ```
+
+Exercise images use a reproducible source-to-runtime pipeline: paired PNG sources live outside the mobile bundle under `media-source/exercises`, while the app statically requires optimized WebP Q90 files constrained to 900 x 1140 without cropping. After importing or generating PNG sources, run `npm run exercise:media:optimize`; see [exercise media](docs/exercise-media.md).
 
 ## Android artifacts
 

@@ -8,6 +8,7 @@ Gymmin is a mobile-only, local-only application. This checklist contains no back
 - [ ] `npm --prefix apps/mobile run test`
 - [ ] `npm --prefix apps/mobile run typecheck`
 - [ ] `npm run mobile:catalog:check`
+- [ ] `npm run exercise:media:validate`
 - [ ] `npm run mobile:guard:local-only`
 - [ ] `npm run mobile:guard:local-product`
 - [ ] `npm run security:secrets`
@@ -32,7 +33,7 @@ Record exactly one status for every scenario: `PASS`, `FAIL`, or `NOT TESTED`. A
 | Scenario | Priority | Result (`PASS` / `FAIL` / `NOT TESTED`) | Device / Android / build | Notes |
 | --- | --- | --- | --- | --- |
 | A. Fresh install | P1 | NOT TESTED |  |  |
-| B. Upgrade from an old installation | P0 | NOT TESTED |  |  |
+| B. Upgrade from an old installation | P0 | PASS | Physical Android / legacy vc1 -> local-only RC vc2 | Migration and migrated data confirmed by the user on 2026-08-10. |
 | C. Upgrade with an active workout | P0 | NOT TESTED |  |  |
 | D. Multiple legacy account namespaces | P1 | NOT TESTED |  |  |
 | E. Backup and restore | P0 | NOT TESTED |  |  |
@@ -44,6 +45,8 @@ Record exactly one status for every scenario: `PASS`, `FAIL`, or `NOT TESTED`. A
 | K. Report Bug | P1 | NOT TESTED |  |  |
 | L. Buy Me a Coffee | P1 | NOT TESTED |  |  |
 | M. Delete all local data | P0 | NOT TESTED |  |  |
+
+Exercise media visual smoke: **PASS** on a physical Android device (2026-08-10). The approved sample compared original PNG against Balanced WebP Q90, max 900 x 1140, without crop. This result does not change the status of unrelated A-M scenarios.
 
 P0 execution order: B → C → E → G → I → M. P1 follows after P0 or in parallel on a separate prepared device. If a smoke test fails, preserve RC commit `2947f7d`, document the exact failure and root cause, and make any approved fix in a separate commit.
 

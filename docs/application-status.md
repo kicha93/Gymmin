@@ -1,6 +1,6 @@
 # Application status
 
-Status date: 2026-08-10.
+Status date: 2026-08-11.
 
 Gymmin is now a local-only mobile product. Backend source, auth, synchronization, remote creator jobs, AI credits, billing, remote profile/avatar transport, system status, HTTP clients, and API URL build configuration have been removed.
 
@@ -8,12 +8,14 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 
 - workout library/editor, archive, guided execution, active-session recovery and session-only/planned two-exercise supersets;
 - history, progress, weekly plan, favorites, achievements and local reminders;
-- local settings, creator profiles, display name and private avatar;
+- local settings, creator profiles, display name and private avatar; every setting persists in local storage and participates in `.gymmin.json` backup/import rather than sync;
+- an always-visible header action for the local profile, with no login/account panel;
+- an always-available local workout creator that is never gated by connectivity, account state, or the number of saved workouts;
 - AI create/rewrite through copy/paste only;
 - offline workout CSV/XLSX export;
 - `.gymmin.json` backup/import, including avatar and backward-compatible profile handling;
 - full local data deletion;
-- safe bug report email with clipboard fallback;
+- local Contact and safe bug-report email flows: both open the system email app, never submit HTTP forms, and provide clipboard fallback;
 - PL/EN About, author attribution, privacy and voluntary Buy Me a Coffee link.
 - optimized offline exercise media: 64 static START/END pairs use WebP Q90 runtime assets generated reproducibly from non-bundled PNG sources; the supplied MP4 remains unchanged.
 
@@ -32,4 +34,4 @@ Accounts, login, cloud sync, server storage, remote OpenAI calls, credits/premiu
 
 ## Release state
 
-APK/AAB commands are backend-free and release signing fails closed. The legacy vc1 to local-only RC vc2 upgrade and the Balanced WebP sample both passed on a physical Android device. Static GitHub Pages privacy documents are ready; Pages must be enabled and the resulting public URL entered in Google Play Console. The remaining manual scenarios retain their explicit status in the release checklist.
+APK/AAB commands are backend-free and release signing fails closed. The APK one-click path derives release metadata from `app.json`, validates dependencies, Expo, the local-only product, optimized exercise media, the merged Android manifest, package/version metadata, and the signing certificate before publishing. The legacy vc1 to local-only RC vc2 upgrade and the Balanced WebP sample both passed on a physical Android device. Static GitHub Pages privacy documents are ready; Pages must be enabled and the resulting public URL entered in Google Play Console. The remaining manual scenarios retain their explicit status in the release checklist.

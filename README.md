@@ -6,9 +6,10 @@ Gymmin is a local-only Expo/React Native workout app created and maintained by *
 
 - one mobile application; there is no Gymmin backend, account, authentication, synchronization, credit system, billing, or remote AI job;
 - workouts, sessions, history, weekly plan, favorites, achievements, settings, reminders, creator profiles, and the optional local profile/avatar stay in private device storage;
+- the local profile action is always visible in the top-right header and never opens login; the workout creator is always available regardless of saved workouts, account state, or connectivity;
 - AI create/rewrite works by local prompt generation, clipboard hand-off to an external AI chosen by the user, and strict local JSON validation/import;
 - backup/import uses `.gymmin.json`; v1 backups without `profile` preserve the current local profile;
-- bug reports are prepared locally and opened in the system email client for `kontakt@gymmin.app`;
+- Contact and bug reports prepare `mailto:` messages locally for `kontakt@gymmin.app`; only the user can send them from the system email client, with clipboard fallback when no client is available;
 - workout CSV/XLSX export and backup work offline;
 - voluntary support only opens [Buy Me a Coffee](https://buymeacoffee.com/atomicjumpr) and grants no product benefits.
 
@@ -58,7 +59,7 @@ Exercise images use a reproducible source-to-runtime pipeline: paired PNG source
 
 ## Android artifacts
 
-Phone APK, gates + signed release build + private GitHub Release upload:
+Phone APK, dependency/Expo/mobile gates + signed release build + merged-manifest, package and signature verification + private GitHub Release upload:
 
 ```powershell
 npm run mobile:github:apk:oneclick
@@ -71,6 +72,8 @@ npm run mobile:store:aab
 ```
 
 Release builds require all four `GYMMIN_UPLOAD_*` values (directly or via the local ignored signing properties/environment file). Gradle fails closed when they are missing and never falls back to the debug keystore. Neither command accepts or embeds a backend URL.
+
+The one-click command reads the version, `versionCode`, and package directly from `apps/mobile/app.json`. It publishes a versioned APK such as `Gymmin-1.1-vc2-arm64-v8a-release.apk` to the matching `v1.1` private release unless tag/title overrides are supplied.
 
 See [Android builds](docs/build-android-apk.md) and the [release checklist](docs/release-checklist.md).
 

@@ -6,7 +6,6 @@ import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { WorkoutList } from "../components/WorkoutList";
 import { articles, getArticleTranslation, type Article } from "../domain/articles";
 import type { SavedWorkout } from "../domain/savedWorkouts";
-import { hasUserDefinedWorkouts } from "../domain/workouts";
 import type { LanguageCode, TranslationKey } from "../i18n/translations";
 import { formatArticleDate } from "./ArticleDetailScreen";
 import { styles } from "../theme/appStyles";
@@ -20,7 +19,6 @@ type HomeScreenProps = {
   onOpenArticle: (articleId: Article["id"]) => void;
   onOpenWorkout: (workoutId: string) => void;
   onTogglePanel: (panelId: string) => void;
-  savedWorkouts: SavedWorkout[];
   t: (key: TranslationKey) => string;
   theme: Theme;
   trainingFactPill: ReactNode;
@@ -37,7 +35,6 @@ export function HomeScreen({
   onOpenArticle,
   onOpenWorkout,
   onTogglePanel,
-  savedWorkouts,
   t,
   theme,
   trainingFactPill,
@@ -45,14 +42,12 @@ export function HomeScreen({
   workoutCreatorButton,
   workoutSortActions
 }: HomeScreenProps) {
-  const shouldShowWorkoutCreator = !hasUserDefinedWorkouts(savedWorkouts);
-
   return (
     <>
       {activeSessionCard}
       {weeklyPlanCard}
       {trainingFactPill}
-      {shouldShowWorkoutCreator ? workoutCreatorButton : null}
+      {workoutCreatorButton}
 
       <CollapsiblePanel
         actions={workoutSortActions}

@@ -1,8 +1,8 @@
 param(
   [string]$ApkPath = "",
   [string]$GitHubRepo = "kicha93/gymmin-apk",
-  [string]$ReleaseTag = "v1.0",
-  [string]$ReleaseTitle = "Gymmin 1.0"
+  [string]$ReleaseTag = "",
+  [string]$ReleaseTitle = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -10,6 +10,10 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $artifactsRoot = Join-Path $repoRoot ".artifacts"
 $downloadUrlFile = Join-Path $artifactsRoot "latest-apk-download-url.txt"
+$appConfig = Get-Content -LiteralPath (Join-Path $repoRoot "apps\mobile\app.json") -Raw | ConvertFrom-Json
+$appVersion = [string]$appConfig.expo.version
+if (-not $ReleaseTag) { $ReleaseTag = "v$appVersion" }
+if (-not $ReleaseTitle) { $ReleaseTitle = "Gymmin $appVersion" }
 
 if (-not $ApkPath) {
   $ApkPath = Join-Path $artifactsRoot "Gymmin-arm64-v8a-release-latest.apk"

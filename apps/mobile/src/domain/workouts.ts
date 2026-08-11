@@ -30,15 +30,6 @@ export type WorkoutDraft = {
   steps: WorkoutStep[];
 };
 
-type SavedWorkoutIdentity = {
-  id: string;
-};
-
-/** Seeded example workouts are kept available without hiding the home creator CTA. */
-export function hasUserDefinedWorkouts(workouts: ReadonlyArray<SavedWorkoutIdentity>): boolean {
-  return workouts.some((workout) => !workout.id.startsWith("sample-"));
-}
-
 export function createStep(overrides: Partial<WorkoutStep> = {}): WorkoutStep {
   const kind = overrides.kind ?? "stage";
 

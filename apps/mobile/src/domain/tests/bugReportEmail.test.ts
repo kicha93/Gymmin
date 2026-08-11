@@ -29,5 +29,28 @@ describe("bug report email", () => {
     expect(result.body).toContain("event 11");
     expect(result.body).not.toContain("event 0");
     expect(result.body).not.toContain("bearer");
+    expect(result.copyText).toContain(`To: ${BUG_REPORT_EMAIL}`);
+    expect(result.copyText).toContain("Subject: Gymmin - zgłoszenie błędu - Problem");
+  });
+
+  it("localizes the prepared email without sending anything", () => {
+    const result = prepareBugReportEmail({
+      currentScreen: "settings",
+      description: "The save button does not work",
+      device: {
+        appVersion: "1.1",
+        buildVersion: "2",
+        model: "Pixel",
+        osVersion: "16",
+        platform: "android"
+      },
+      language: "en",
+      recentEvents: [],
+      title: "Save issue"
+    });
+
+    expect(result.subject).toBe("Gymmin - bug report - Save issue");
+    expect(result.body).toContain("User description:");
+    expect(result.body).toContain("No events.");
   });
 });

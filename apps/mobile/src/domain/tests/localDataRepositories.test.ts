@@ -91,7 +91,7 @@ describe("localDataRepositories", () => {
     expect(stored.settings.showRestTimer).toBe(true);
   });
 
-  it("round-trips every account setting without dropping fields", async () => {
+  it("round-trips every local setting without dropping fields", async () => {
     const panels = {
       "settings-notifications": false,
       "settings-preferences": true,

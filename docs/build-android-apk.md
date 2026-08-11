@@ -22,7 +22,16 @@ npm run mobile:build:android-apk -- -Variant debug
 npm run mobile:github:apk:oneclick
 ```
 
-The command runs mobile gates, builds `arm64-v8a` by default, writes `.artifacts/Gymmin-arm64-v8a-release-latest.apk`, and uploads it to the configured private GitHub Release. It takes no URL and performs no health/tunnel check.
+The command:
+
+1. reads version, Android `versionCode`, and package from `apps/mobile/app.json`;
+2. runs the dependency audit, the locally pinned Expo Doctor, `git diff --check`, mobile tests, typecheck, catalog/media/security and local-only guards;
+3. builds a signed `arm64-v8a` release APK by default;
+4. validates the final merged manifest, package/version metadata, and APK signature;
+5. writes both the `latest` build output and a versioned artifact such as `.artifacts/Gymmin-1.1-vc2-arm64-v8a-release.apk`;
+6. uploads the verified versioned artifact to the matching private GitHub Release (`v1.1` for app version `1.1`).
+
+It takes no URL, performs no health/tunnel check, and does not inspect account or internet availability. `-ReleaseTag` and `-ReleaseTitle` remain optional explicit overrides. Use `-SkipPublish` to perform the complete preparation and verification without GitHub upload.
 
 ## Google Play AAB
 

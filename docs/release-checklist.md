@@ -2,6 +2,8 @@
 
 Gymmin is a mobile-only, local-only application. This checklist contains no backend deployment, account, synchronization, billing, credits, or remote AI steps.
 
+Product availability invariants: the top-right local profile action is always visible, no login panel exists, and the workout creator is always available without an account or internet connection.
+
 ## Code gates
 
 - [ ] `npm ci --prefix apps/mobile`
@@ -131,6 +133,10 @@ P0 execution order: B → C → E → G → I → M. P1 follows after P0 or in p
 ### K. Report Bug
 
 - [ ] confirm the mail client opens with `kontakt@gymmin.app`
+- [ ] confirm the CTA says it opens an email rather than claiming the report was already sent
+- [ ] confirm sending still requires explicit confirmation in the system email app
+- [ ] confirm the no-mail-client fallback copies both the address and prepared report
+- [ ] confirm neither Bug Report nor Contact performs an HTTP request
 - [ ] confirm subject/body are readable and bounded
 - [ ] confirm no workout/history/weight/profile/prompt/AI response is included
 - [ ] on a device without a mail handler, verify copying the address and prepared report

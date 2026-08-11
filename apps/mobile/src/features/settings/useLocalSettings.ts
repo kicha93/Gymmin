@@ -40,14 +40,9 @@ export function useLocalSettings(
     useState(() => new Date().toISOString());
   const [hasLoadedLocalSettings, setHasLoadedLocalSettings] = useState(false);
   const [hadPersistedLocalSettingsOnLoad, setHadPersistedLocalSettingsOnLoad] = useState(false);
-  const isApplyingSettingsRef = useRef(false);
   const hasPersistedLocalSettingsRef = useRef(false);
 
-  function applySettings(settings: AppSettings, isRemote = false) {
-    if (isRemote) {
-      isApplyingSettingsRef.current = true;
-    }
-
+  function applySettings(settings: AppSettings) {
     setLanguage(settings.language);
     setThemeName(settings.themeName);
     setDefaultSetCount(settings.defaultSetCount);
@@ -60,11 +55,6 @@ export function useLocalSettings(
     setCollapsedPanels(settings.collapsedPanels);
     setLocalSettingsUpdatedAt(settings.updatedAt);
 
-    if (isRemote) {
-      setTimeout(() => {
-        isApplyingSettingsRef.current = false;
-      }, 0);
-    }
   }
 
   function buildSettings(updatedAt = localSettingsUpdatedAt): AppSettings {
@@ -94,7 +84,6 @@ export function useLocalSettings(
       setHasLoadedLocalSettings(false);
       setHadPersistedLocalSettingsOnLoad(false);
       hasPersistedLocalSettingsRef.current = false;
-      isApplyingSettingsRef.current = false;
       const loadedSettings = await loadLocalSettings(collapsedPanelDefaults);
       if (!isMounted) {
         return;
@@ -117,7 +106,7 @@ export function useLocalSettings(
     }
 
     const shouldRefreshUpdatedAt =
-      hasPersistedLocalSettingsRef.current && !isApplyingSettingsRef.current;
+      hasPersistedLocalSettingsRef.current;
     const updatedAt = shouldRefreshUpdatedAt
       ? new Date().toISOString()
       : localSettingsUpdatedAt;
@@ -156,7 +145,6 @@ export function useLocalSettings(
     defaultWorkoutTableOrientation,
     hadPersistedLocalSettingsOnLoad,
     hasLoadedLocalSettings,
-    isApplyingSettingsRef,
     language,
     localSettingsUpdatedAt,
     setCollapsedPanels,

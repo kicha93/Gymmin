@@ -5,21 +5,24 @@ import { AppButton } from "../components/AppControls";
 import { FaqItem, LegalPage } from "../components/LegalContent";
 import { buildContactMailUrl, GYMMIN_CONTACT_EMAIL } from "../domain/contact";
 import type { TranslationKey } from "../i18n/translations";
+import type { LanguageCode } from "../i18n/translations";
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
 
 type ContactScreenProps = {
+  language: LanguageCode;
   onBack: () => void;
+  onCopyEmail: () => void;
   onOpenBugReport: () => void;
   onShowInfo: (title: string, message: string) => void;
   t: (key: TranslationKey) => string;
   theme: Theme;
 };
 
-export function ContactScreen({ onBack, onOpenBugReport, onShowInfo, t, theme }: ContactScreenProps) {
+export function ContactScreen({ language, onBack, onCopyEmail, onOpenBugReport, onShowInfo, t, theme }: ContactScreenProps) {
   const openContactEmail = async () => {
     try {
-      const url = buildContactMailUrl();
+      const url = buildContactMailUrl(language);
       const canOpenMail = await Linking.canOpenURL(url);
       if (!canOpenMail) {
         throw new Error("No mail client is available");
@@ -48,10 +51,13 @@ export function ContactScreen({ onBack, onOpenBugReport, onShowInfo, t, theme }:
         <AppButton icon="mail-outline" theme={theme} onPress={() => { void openContactEmail(); }}>
           {t("contactEmailCta")}
         </AppButton>
+        <AppButton icon="copy-outline" theme={theme} variant="outline" onPress={onCopyEmail}>
+          {t("copyEmailAddress")}
+        </AppButton>
       </View>
       <View style={[styles.contactInfoPill, { backgroundColor: theme.control, borderColor: theme.border }]}>
         <View style={[styles.contactCalloutIcon, { backgroundColor: theme.secondaryBand }]}>
-          <Ionicons name="time-outline" size={20} color={theme.primary} />
+          <Ionicons name="phone-portrait-outline" size={20} color={theme.primary} />
         </View>
         <Text style={[styles.contactInfoPillText, { color: theme.muted }]}>{t("contactResponseTime")}</Text>
       </View>

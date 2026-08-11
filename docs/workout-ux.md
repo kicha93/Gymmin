@@ -4,6 +4,8 @@
 
 Profile/avatar, creator profiles, weekly plan and settings persist in the neutral `gymmin.local.v1.*` namespace (with avatar bytes in private files). They do not synchronize between devices; device transfer is performed explicitly with `.gymmin.json` backup/import.
 
+The profile/avatar action is permanently visible in the top-right application header and opens the local profile directly. There is no login panel. The workout creator is permanently available from the product UI; it is not hidden after saving a workout and has no account or network availability gate.
+
 ## Local AI creator and rewrite
 
 - Both flows use four local steps: prepare prompt, copy it to an external AI chosen by the user, paste JSON, review and apply.

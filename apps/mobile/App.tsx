@@ -60,8 +60,7 @@ import {
   TargetComparator,
   WorkoutDraft,
   WorkoutStep,
-  createDefaultWorkout,
-  hasUserDefinedWorkouts
+  createDefaultWorkout
 } from "./src/domain/workouts";
 import {
   areCreatorDraftsEqual,
@@ -810,7 +809,7 @@ function GymminApp() {
     setWeeklyPlan
   } = useLocalWeeklyPlan(hasLoadedAccountStorageMigration);
   const {
-    applySettings: applyAccountSettingsState,
+    applySettings: applyLocalSettingsState,
     buildSettings: buildCurrentSettingsPayload,
     collapsedPanels,
     defaultSetCount,
@@ -820,7 +819,6 @@ function GymminApp() {
     defaultWorkoutTableOrientation,
     hadPersistedLocalSettingsOnLoad,
     hasLoadedLocalSettings,
-    isApplyingSettingsRef,
     language,
     localSettingsUpdatedAt,
     setCollapsedPanels,
@@ -926,7 +924,6 @@ function GymminApp() {
   });
   const screenTitle = getScreenTitle(activeScreen, editingWorkoutId, t);
   const shouldShowHeaderBackButton = activeScreen !== "home";
-  const shouldShowProfileHeaderButton = true;
 
   useEffect(() => {
     void cleanupLegacyAuthCredentials().catch((error) => {
@@ -1805,7 +1802,7 @@ function GymminApp() {
     try {
       const canOpenEmail = await Linking.canOpenURL(prepared.mailtoUrl);
       if (!canOpenEmail) {
-        setBugFallbackReport(prepared.body);
+        setBugFallbackReport(prepared.copyText);
         setBugFormError(t("bugSubmitError"));
         return;
       }
@@ -1818,7 +1815,7 @@ function GymminApp() {
         message: "Could not open the system email client",
         screen: activeScreen
       });
-      setBugFallbackReport(prepared.body);
+      setBugFallbackReport(prepared.copyText);
       setBugFormError(t("bugSubmitError"));
     } finally {
       setIsBugSubmitting(false);
@@ -1968,7 +1965,7 @@ function GymminApp() {
       setWorkoutSessions(data.workoutSessions.items);
       setActiveWorkoutSessionId(data.workoutSessions.active?.sessionId ?? null);
       setSessionEntryIndex(data.workoutSessions.active?.entryIndex ?? 0);
-      applyAccountSettingsState({ ...data.settings, updatedAt: backup.createdAt });
+      applyLocalSettingsState({ ...data.settings, updatedAt: backup.createdAt });
       setWeeklyPlan({ ...data.weeklyPlan, updatedAt: backup.createdAt });
       setCreatorProfiles(data.creatorProfiles.items);
       setSelectedCreatorProfileId(data.creatorProfiles.selectedProfileId);
@@ -2016,7 +2013,7 @@ function GymminApp() {
       setWorkoutSessions([]);
       setActiveWorkoutSessionId(null);
       setSessionEntryIndex(0);
-      applyAccountSettingsState(createDefaultAppSettings(defaultCollapsedPanels));
+      applyLocalSettingsState(createDefaultAppSettings(defaultCollapsedPanels));
       setWeeklyPlan(getDefaultWeeklyPlanSettings());
       setCreatorProfiles([]);
       setSelectedCreatorProfileId(null);
@@ -2392,7 +2389,6 @@ function GymminApp() {
         activeSessionCard={renderActiveWorkoutSessionCard()}
         collapsedPanels={collapsedPanels}
         language={language}
-        savedWorkouts={savedWorkouts}
         t={t}
         theme={theme}
         trainingFactPill={renderTrainingFactPill()}
@@ -2557,9 +2553,11 @@ function GymminApp() {
   function renderContact() {
     return (
       <ContactScreen
+        language={language}
         t={t}
         theme={theme}
         onBack={() => setActiveScreen("settings")}
+        onCopyEmail={() => { void Clipboard.setStringAsync(BUG_REPORT_EMAIL); }}
         onOpenBugReport={() => setActiveScreen("bugReport")}
         onShowInfo={showInfoDialog}
       />
@@ -2771,25 +2769,23 @@ function GymminApp() {
               </Text>
             )}
           </View>
-          {shouldShowProfileHeaderButton ? (
-            <Pressable
-              accessibilityLabel="Przejdź do profilu"
-              accessibilityRole="button"
-              style={[styles.profileHeaderButton, { backgroundColor: theme.secondaryBand }]}
-              onPress={openProfile}
-            >
-              {userAvatarSource ? (
-                <Image
-                  resizeMode="cover"
-                  source={userAvatarSource}
-                  style={styles.profileHeaderAvatarImage}
-                  onError={() => setHasLocalAvatarLoadFailed(true)}
-                />
-              ) : (
-                <Ionicons name="person-outline" size={24} color={theme.primary} />
-              )}
-            </Pressable>
-          ) : null}
+          <Pressable
+            accessibilityLabel={t("profile")}
+            accessibilityRole="button"
+            style={[styles.profileHeaderButton, { backgroundColor: theme.secondaryBand }]}
+            onPress={openProfile}
+          >
+            {userAvatarSource ? (
+              <Image
+                resizeMode="cover"
+                source={userAvatarSource}
+                style={styles.profileHeaderAvatarImage}
+                onError={() => setHasLocalAvatarLoadFailed(true)}
+              />
+            ) : (
+              <Ionicons name="person-outline" size={24} color={theme.primary} />
+            )}
+          </Pressable>
         </View>
 
         {achievementToast ? (

@@ -270,9 +270,9 @@ function buildCatalogLookup(catalogExercises) {
 
   for (const exercise of catalogExercises) {
     const keys = [
-      `${normalizeKey(exercise.polishName)}|${normalizeKey(exercise.name)}|${normalizeKey(exercise.garminCategory)}`,
-      `${normalizeKey(exercise.name)}|${normalizeKey(exercise.garminCategory)}`,
-      `${normalizeKey(exercise.polishName)}|${normalizeKey(exercise.garminCategory)}`
+      `${normalizeKey(exercise.polishName)}|${normalizeKey(exercise.name)}|${normalizeKey(exercise.category)}`,
+      `${normalizeKey(exercise.name)}|${normalizeKey(exercise.category)}`,
+      `${normalizeKey(exercise.polishName)}|${normalizeKey(exercise.category)}`
     ];
 
     for (const key of keys) {

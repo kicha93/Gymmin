@@ -875,18 +875,6 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center"
   },
-  heartRateTargetRow: {
-    flexDirection: "row",
-    gap: 10
-  },
-  heartRateComparatorField: {
-    flex: 2,
-    minWidth: 0
-  },
-  heartRateValueField: {
-    flex: 1,
-    minWidth: 0
-  },
   sectionHeader: {
     alignItems: "center",
     flexDirection: "row",
@@ -1703,6 +1691,9 @@ export const styles = StyleSheet.create({
     maxHeight: "92%",
     padding: 16,
     width: "100%"
+  },
+  exerciseMuscleModalContent: {
+    gap: 16
   },
   exerciseMuscleLists: {
     flex: 1,

@@ -75,7 +75,7 @@ export function normalizeFavoriteExercises(value: unknown): FavoriteExercise[] {
     const updatedAt = typeof item.updatedAt === "string" && item.updatedAt.trim() ? item.updatedAt : createdAt;
     const deletedAt = typeof item.deletedAt === "string" && item.deletedAt.trim() ? item.deletedAt : null;
     const normalized = {
-      // Favorite exercises intentionally store catalog ids only to keep future Garmin mapping possible.
+      // Favorites store only stable catalog ids; exercise metadata comes from the local catalog.
       exerciseId,
       createdAt,
       updatedAt,

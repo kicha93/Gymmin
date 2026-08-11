@@ -42,8 +42,6 @@ export type WorkoutSessionEntry = {
   actualReps?: string;
   actualWeight?: string;
   actualDuration?: string;
-  actualCalories?: string;
-  actualHeartRate?: string;
   isCompleted: boolean;
   completedAt?: string;
   notes?: string;

@@ -1,13 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import { Modal, Text, View } from "react-native";
+import { Modal, ScrollView, Text, View } from "react-native";
 
 import { AppButton } from "./AppControls";
-import { HumanMuscleFigure, type MuscleUsage } from "./WorkoutPresentation";
+import { getMuscleImpactColor, MuscleImpactTextGroups } from "./MuscleImpactPresentation";
+import { HumanMuscleFigure } from "./WorkoutPresentation";
 import {
   getExerciseDisplayName,
   muscleKeys,
-  muscleLabels,
   type MuscleKey
 } from "../domain/exercises";
 import { getWorkoutStepMuscleGroups } from "../domain/workoutExerciseSummary";
@@ -27,40 +27,13 @@ type ExerciseMuscleModalProps = {
 
 export function ExerciseMuscleModal({ language, onClose, onShowDetails, step, t, theme }: ExerciseMuscleModalProps) {
   const muscleGroups = useMemo(() => step ? getWorkoutStepMuscleGroups(step) : { primary: [], secondary: [] }, [step]);
-  const usage = useMemo(() => {
-    const nextUsage = Object.fromEntries(muscleKeys.map((muscle) => [muscle, 0])) as MuscleUsage;
-    muscleGroups.primary.forEach((muscle) => {
-      nextUsage[muscle] = 2;
-    });
-    muscleGroups.secondary.forEach((muscle) => {
-      nextUsage[muscle] = Math.max(nextUsage[muscle], 1) as 0 | 1 | 2;
-    });
-    return nextUsage;
-  }, [muscleGroups.primary, muscleGroups.secondary]);
-  const hasMuscleData = muscleGroups.primary.length > 0 || muscleGroups.secondary.length > 0;
+  const muscleImpact = muscleGroups.exercise?.muscleImpact;
+  const hasMuscleData = Boolean(muscleImpact && muscleKeys.some((muscle) => muscleImpact[muscle] > 0));
   const exerciseName = step?.exerciseName
     ? getExerciseDisplayName(step.exerciseName, language)
     : t("exercise");
-  const colors = {
-    inactive: "#4a4d4c",
-    primary: "#ff3347",
-    secondary: "#ffc43d"
-  };
-
   function fill(muscle: MuscleKey) {
-    if (usage[muscle] === 2) {
-      return colors.primary;
-    }
-
-    if (usage[muscle] === 1) {
-      return colors.secondary;
-    }
-
-    return colors.inactive;
-  }
-
-  function formatMuscleList(muscles: MuscleKey[]) {
-    return muscles.length ? muscles.map((muscle) => muscleLabels[language][muscle]).join(", ") : t("noData");
+    return getMuscleImpactColor(muscleImpact?.[muscle]);
   }
 
   return (
@@ -78,22 +51,16 @@ export function ExerciseMuscleModal({ language, onClose, onShowDetails, step, t,
           </View>
 
           {hasMuscleData ? (
-            <>
-              <View style={styles.exerciseMuscleLists}>
-                <View style={styles.fieldGroup}>
-                  <Text style={[styles.label, { color: theme.muted }]}>{t("primaryMuscles")}</Text>
-                  <Text style={[styles.workoutName, { color: theme.text }]}>{formatMuscleList(muscleGroups.primary)}</Text>
-                </View>
-                <View style={styles.fieldGroup}>
-                  <Text style={[styles.label, { color: theme.muted }]}>{t("secondaryMuscles")}</Text>
-                  <Text style={[styles.workoutName, { color: theme.text }]}>{formatMuscleList(muscleGroups.secondary)}</Text>
-                </View>
-              </View>
+            <ScrollView
+              contentContainerStyle={styles.exerciseMuscleModalContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {muscleImpact ? <MuscleImpactTextGroups impact={muscleImpact} language={language} t={t} theme={theme} /> : null}
               <View style={styles.muscleOverviewFigures}>
                 <HumanMuscleFigure fill={fill} side="front" />
                 <HumanMuscleFigure fill={fill} side="back" />
               </View>
-            </>
+            </ScrollView>
           ) : (
             <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>
               {t("noExerciseMuscleData")}
@@ -113,4 +80,3 @@ export function ExerciseMuscleModal({ language, onClose, onShowDetails, step, t,
     </Modal>
   );
 }
-

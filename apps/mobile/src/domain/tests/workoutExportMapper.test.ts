@@ -45,14 +45,13 @@ function workoutFixture(): WorkoutDraft {
   const setThree = createStep({ id: "set-3", kind: "set", parentStageId: stageTwo.id, setCount: "1" });
   const exerciseThree = createStep({
     exerciseName: "Nieznany ruch",
-    goalType: "heartRate",
+    goalType: "repetitions",
     id: "exercise-3",
     kind: "exercise",
     parentSetId: setThree.id,
     parentStageId: stageTwo.id,
     stageType: "cooldown",
-    targetComparator: "below",
-    targetValue: "120"
+    targetValue: "12"
   });
 
   return {
@@ -91,7 +90,7 @@ describe("buildWorkoutExportData", () => {
       exerciseId: "custom-missing-id",
       exerciseName: "Ćwiczenie własne"
     });
-    expect(data.rows[2]).toMatchObject({ goalValue: "120", targetComparator: "Poniżej" });
+    expect(data.rows[2]).toMatchObject({ goalValue: "12", repetitions: 12 });
   });
 
   it("returns headers-ready empty data for a workout without elements", () => {

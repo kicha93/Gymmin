@@ -11,11 +11,14 @@ import {
   frontBodySvg
 } from "../domain/bodyMaps";
 import {
+  findExerciseById,
   findExerciseByName,
   getExerciseDisplayName,
   muscleKeys,
+  type InfluenceScore,
   type MuscleKey
 } from "../domain/exercises";
+import { getMuscleImpactColor, muscleImpactColors } from "./MuscleImpactPresentation";
 import { getExerciseTargetDisplay, isRestTargetStep } from "../domain/workoutExerciseSummary";
 import {
   formatWorkoutDuration,
@@ -28,7 +31,7 @@ import { translate, type LanguageCode, type TranslationKey } from "../i18n/trans
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
 
-export type MuscleUsage = Record<MuscleKey, 0 | 1 | 2>;
+export type MuscleUsage = Record<MuscleKey, InfluenceScore>;
 
 const stageTypeTranslationKeys: Record<StageType, TranslationKey> = {
   cooldown: "stageCooldown",
@@ -43,18 +46,22 @@ function getWorkoutMuscleUsage(workout: WorkoutDraft): MuscleUsage {
   const usage = Object.fromEntries(muscleKeys.map((muscle) => [muscle, 0])) as MuscleUsage;
 
   workout.steps.forEach((step) => {
-    if (step.kind !== "exercise" || !step.exerciseName) {
+    if (step.kind !== "exercise") {
       return;
     }
 
-    const exercise = findExerciseByName(step.exerciseName);
+    const exercise = step.exerciseId
+      ? findExerciseById(step.exerciseId) ?? (step.exerciseName ? findExerciseByName(step.exerciseName) : undefined)
+      : step.exerciseName
+        ? findExerciseByName(step.exerciseName)
+        : undefined;
 
     if (!exercise) {
       return;
     }
 
     muscleKeys.forEach((muscle) => {
-      usage[muscle] = Math.max(usage[muscle], exercise.muscleImpact[muscle]) as 0 | 1 | 2;
+      usage[muscle] = Math.max(usage[muscle], exercise.muscleImpact[muscle]) as InfluenceScore;
     });
   });
 
@@ -69,24 +76,10 @@ type WorkoutMuscleOverviewProps = {
 
 export function WorkoutMuscleOverviewContent({ language, theme, workout }: WorkoutMuscleOverviewProps) {
   const usage = useMemo(() => getWorkoutMuscleUsage(workout), [workout]);
-  const primaryCount = muscleKeys.filter((muscle) => usage[muscle] === 2).length;
-  const secondaryCount = muscleKeys.filter((muscle) => usage[muscle] === 1).length;
-  const colors = {
-    inactive: "#4a4d4c",
-    primary: "#ff3347",
-    secondary: "#ffc43d"
-  };
+  const count = (impact: InfluenceScore) => muscleKeys.filter((muscle) => usage[muscle] === impact).length;
 
   function fill(muscle: MuscleKey) {
-    if (usage[muscle] === 2) {
-      return colors.primary;
-    }
-
-    if (usage[muscle] === 1) {
-      return colors.secondary;
-    }
-
-    return colors.inactive;
+    return getMuscleImpactColor(usage[muscle]);
   }
 
   return (
@@ -96,9 +89,12 @@ export function WorkoutMuscleOverviewContent({ language, theme, workout }: Worko
         <HumanMuscleFigure fill={fill} side="back" />
       </View>
       <View style={styles.muscleOverviewLegend}>
-        <LegendItem color={colors.primary} label={`${translate(language, "primaryMuscles")} (${primaryCount})`} theme={theme} />
-        <LegendItem color={colors.secondary} label={`${translate(language, "secondaryMuscles")} (${secondaryCount})`} theme={theme} />
-        <LegendItem color={colors.inactive} label={translate(language, "inactiveMuscleGroups")} theme={theme} />
+        <LegendItem color={muscleImpactColors[5]} label={`${translate(language, "primaryMuscles")} (${count(5)})`} theme={theme} />
+        <LegendItem color={muscleImpactColors[4]} label={`${translate(language, "majorContributorMuscles")} (${count(4)})`} theme={theme} />
+        <LegendItem color={muscleImpactColors[3]} label={`${translate(language, "significantSynergistMuscles")} (${count(3)})`} theme={theme} />
+        <LegendItem color={muscleImpactColors[2]} label={`${translate(language, "secondaryImpactMuscles")} (${count(2)})`} theme={theme} />
+        <LegendItem color={muscleImpactColors[1]} label={`${translate(language, "stabilizingMuscles")} (${count(1)})`} theme={theme} />
+        <LegendItem color={muscleImpactColors[0]} label={`${translate(language, "inactiveMuscleGroups")} (${count(0)})`} theme={theme} />
       </View>
     </>
   );

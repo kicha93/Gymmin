@@ -11,9 +11,12 @@ const aliasPath = path.join(root, "apps", "mobile", "src", "domain", "exerciseAl
 
 const categories = new Set(["BANDED_EXERCISES","BATTLE_ROPE","BENCH_PRESS","BIKE_OUTDOOR","CALF_RAISE","CARDIO","CARRY","CHOP","CORE","CRUNCH","CURL","DEADLIFT","DORSIFLEXION","ELLIPTICAL","FLOOR_CLIMB","FLYE","FRONT_RAISE","GOOD_MORNING","HIP_RAISE","HIP_STABILITY","HIP_SWING","HYPEREXTENSION","INDOOR_BIKE","LADDER","LATERAL_RAISE","LEG_CURL","LEG_EXTENSION","LEG_RAISE","LUNGE","OLYMPIC_LIFT","PLANK","PLYO","PULL_UP","PULLOVER","PUSH_UP","ROPE_CLIMB","ROW","RUN","RUN_INDOOR","SANDBAG","SHOULDER_PRESS","SHOULDER_STABILITY","SHRUG","SIT_UP","SLED","SLEDGE_HAMMER","SQUAT","STAIR_STEPPER","STEP_UP","SUSPENSION","TIRE","TOTAL_BODY","TRICEPS_EXTENSION","WARM_UP"]);
 const equipment = new Set(["ankleWeight","band","barbell","battleRope","bench","bike","bosuBall","box","cableMachine","dumbbell","ezBar","foamRoller","jumpRope","kettlebell","machine","medicineBall","other","plate","pullupBar","rings","rope","sandbag","sled","slidingDisc","smithMachine","squatRack","swissBall","trx","weightVest"]);
-const tiers = new Set(["main","advanced","sportSpecific","rehab","variation","progression","deprecated"]);
+const tiers = new Set(["main","advanced","sportSpecific","rehab","variation","progression"]);
 const equipmentHints = [[/\bdumbbell\b/i,"dumbbell"],[/\bbarbell\b/i,"barbell"],[/\bcable\b/i,"cableMachine"],[/\bswiss ball\b/i,"swissBall"],[/\brings?\b/i,"rings"],[/\bkettlebell\b/i,"kettlebell"],[/\bsmith machine\b/i,"smithMachine"],[/\b(resistance band|banded)\b/i,"band"],[/\bbench\b/i,"bench"]];
 const equipmentHintExceptions = new Set(["bench-press-dumbbell-floor-press-83","bench-press-one-arm-floor-press-91"]);
+const removedCatalogFields = ["garminCategory", "garminName", "foundInGarmin", "url", "image", "difficulty", "description"];
+const muscles = new Set(["abductors","abs","adductors","biceps","calves","chest","forearm","glutes","hamstrings","hips","lats","lowerBack","obliques","quads","shoulders","traps","triceps"]);
+const catalogFields = new Set(["id","name","polishName","category","muscleImpact","equipment","libraryTier"]);
 
 function parseObject(source, marker) { return JSON.parse(source.slice(source.indexOf("{"), source.lastIndexOf(marker) + 1)); }
 function normalize(value) { return String(value ?? "").trim().toLocaleLowerCase("en").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,"'").replace(/[-_]+/g," ").replace(/\s+/g," "); }
@@ -27,11 +30,20 @@ for(const file of (await readdir(namesDir)).filter((f)=>f.endsWith(".json"))){tr
 
 const byId=new Map(); const english=new Map(); const polish=new Map();
 for(const exercise of exercises){
+  for(const field of Object.keys(exercise)){if(!catalogFields.has(field))errors.push({code:"unknown_catalog_field",id:exercise.id,field});}
+  for(const field of removedCatalogFields){if(Object.hasOwn(exercise,field))errors.push({code:"removed_catalog_field",id:exercise.id,field});}
   if(!exercise.id?.trim())errors.push({code:"empty_id",exercise}); else if(byId.has(exercise.id))errors.push({code:"duplicate_id",id:exercise.id}); else byId.set(exercise.id,exercise);
   for(const [field,index,code] of [["name",english,"duplicate_english_name"],["polishName",polish,"duplicate_polish_name"]]){const value=exercise[field];if(!value?.trim())errors.push({code:`empty_${field}`,id:exercise.id});else{const key=normalize(value);if(index.has(key))errors.push({code,ids:[index.get(key).id,exercise.id],value});else index.set(key,exercise);}}
-  if(!categories.has(exercise.garminCategory))errors.push({code:"invalid_category",id:exercise.id,value:exercise.garminCategory});
+  if(!categories.has(exercise.category))errors.push({code:"invalid_category",id:exercise.id,value:exercise.category});
   if(!tiers.has(exercise.libraryTier))errors.push({code:"invalid_library_tier",id:exercise.id,value:exercise.libraryTier});
-  const actual=new Set(); for(const [key,value] of Object.entries(exercise.equipment??{})){if(!equipment.has(key))errors.push({code:"invalid_equipment_key",id:exercise.id,key});if(![0,1].includes(value))errors.push({code:"invalid_equipment_value",id:exercise.id,key,value});if(value===1)actual.add(key);}
+  const impactEntries=Object.entries(exercise.muscleImpact??{});
+  if(impactEntries.length!==muscles.size)errors.push({code:"invalid_muscle_impact_shape",id:exercise.id,count:impactEntries.length});
+  for(const key of muscles){if(!Object.hasOwn(exercise.muscleImpact??{},key))errors.push({code:"missing_muscle_key",id:exercise.id,key});}
+  for(const [key,value] of impactEntries){if(!muscles.has(key))errors.push({code:"invalid_muscle_key",id:exercise.id,key});if(!Number.isInteger(value)||value<0||value>5)errors.push({code:"invalid_muscle_impact",id:exercise.id,key,value});}
+  const equipmentEntries=Object.entries(exercise.equipment??{});
+  if(equipmentEntries.length!==equipment.size)errors.push({code:"invalid_equipment_shape",id:exercise.id,count:equipmentEntries.length});
+  for(const key of equipment){if(!Object.hasOwn(exercise.equipment??{},key))errors.push({code:"missing_equipment_key",id:exercise.id,key});}
+  const actual=new Set(); for(const [key,value] of equipmentEntries){if(!equipment.has(key))errors.push({code:"invalid_equipment_key",id:exercise.id,key});if(![0,1].includes(value))errors.push({code:"invalid_equipment_value",id:exercise.id,key,value});if(value===1)actual.add(key);}
   if(!equipmentHintExceptions.has(exercise.id)){for(const [pattern,expected] of equipmentHints){if(pattern.test(exercise.name)&&!actual.has(expected))warnings.push({code:"equipment_name_mismatch",id:exercise.id,name:exercise.name,expected,actual:[...actual]});}}
   if(exercise.polishName===exercise.name)warnings.push({code:"untranslated_polish_name",id:exercise.id,name:exercise.name});
 }
@@ -48,6 +60,7 @@ for(const [source,target] of Object.entries(aliases)){
 }
 
 const reportData={exerciseCount:exercises.length,idMappingCount:Object.keys(idAliases).length,errors,warnings};
+if(exercises.length!==963)errors.push({code:"unexpected_exercise_count",expected:963,actual:exercises.length});
 let previousReport;
 try { previousReport=JSON.parse(await readFile(reportPath,"utf8")); } catch { previousReport=undefined; }
 const previousData=previousReport?{exerciseCount:previousReport.exerciseCount,idMappingCount:previousReport.idMappingCount,errors:previousReport.errors,warnings:previousReport.warnings}:undefined;

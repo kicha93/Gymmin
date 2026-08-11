@@ -5,13 +5,7 @@ export const legExtension = [
     "id": "crunch-leg-extensions-260",
     "name": "Leg Extensions",
     "polishName": "Prostowanie nóg na maszynie",
-    "garminCategory": "LEG_EXTENSION",
-    "garminName": "LEG_EXTENSIONS",
-    "foundInGarmin": false,
-    "image": "",
-    "url": "",
-    "difficulty": "",
-    "description": "",
+    "category": "LEG_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
       "abs": 0,
@@ -26,7 +20,7 @@ export const legExtension = [
       "lats": 0,
       "lowerBack": 0,
       "obliques": 0,
-      "quads": 1,
+      "quads": 5,
       "shoulders": 0,
       "traps": 0,
       "triceps": 0

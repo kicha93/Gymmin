@@ -4,10 +4,11 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
+import { getMuscleImpactColor, MuscleImpactTextGroups } from "../components/MuscleImpactPresentation";
 import { HumanMuscleFigure } from "../components/WorkoutPresentation";
 import { exerciseImageSources } from "../exerciseImageSources";
 import { exerciseVideoSources } from "../exerciseVideoSources";
-import { getExerciseDisplayName, muscleLabels, type MuscleKey } from "../domain/exercises";
+import { getExerciseDisplayName, muscleKeys, type MuscleKey } from "../domain/exercises";
 import { getExerciseProgressSummary, type WorkoutSession, type WorkoutSessionEntry } from "../domain/workoutSessions";
 import { getExerciseDetails, getExerciseProgressKeyForDetails } from "../domain/workoutExerciseSummary";
 import type { WorkoutStep } from "../domain/workouts";
@@ -89,31 +90,15 @@ export function ExerciseDetailScreen({
     const progressSummary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
     const fallbackName = step?.exerciseName ? getExerciseDisplayName(step.exerciseName, language) : t("exerciseDetails");
     const displayName = details?.displayName ?? fallbackName;
-    const hasMuscleData = Boolean(details && (details.primary.length || details.secondary.length));
-    const colors = {
-      inactive: "#4a4d4c",
-      primary: "#ff3347",
-      secondary: "#ffc43d"
-    };
+    const muscleImpact = details?.exercise?.muscleImpact;
+    const hasMuscleData = Boolean(muscleImpact && muscleKeys.some((muscle) => muscleImpact[muscle] > 0));
 
     useEffect(() => {
       setHasVideoPlaybackFailed(false);
     }, [details?.videoAssetKey]);
 
     function fill(muscle: MuscleKey) {
-      if (details?.primary.includes(muscle)) {
-        return colors.primary;
-      }
-
-      if (details?.secondary.includes(muscle)) {
-        return colors.secondary;
-      }
-
-      return colors.inactive;
-    }
-
-    function formatMuscleList(muscles: MuscleKey[]) {
-      return muscles.length ? muscles.map((muscle) => muscleLabels[language][muscle]).join(", ") : t("noData");
+      return getMuscleImpactColor(muscleImpact?.[muscle]);
     }
 
     function isExerciseDetailPanelCollapsed(panelId: string, defaultValue: boolean) {
@@ -204,16 +189,9 @@ export function ExerciseDetailScreen({
           ) : null}
           {hasMuscleData ? (
             <View style={styles.exerciseDetailMuscleContent}>
-              <View style={styles.exerciseMuscleLists}>
-                <View style={styles.fieldGroup}>
-                  <Text style={[styles.label, { color: theme.muted }]}>{t("primaryMuscles")}</Text>
-                  <Text style={[styles.workoutMeta, { color: theme.text }]}>{formatMuscleList(details?.primary ?? [])}</Text>
-                </View>
-                <View style={styles.fieldGroup}>
-                  <Text style={[styles.label, { color: theme.muted }]}>{t("secondaryMuscles")}</Text>
-                  <Text style={[styles.workoutMeta, { color: theme.text }]}>{formatMuscleList(details?.secondary ?? [])}</Text>
-                </View>
-              </View>
+              {muscleImpact ? (
+                <MuscleImpactTextGroups impact={muscleImpact} language={language} t={t} theme={theme} />
+              ) : null}
               <View style={styles.exerciseDetailSingleFigure}>
                 <HumanMuscleFigure fill={fill} side={muscleSide} style={styles.exerciseDetailHumanFigure} />
               </View>
@@ -268,7 +246,7 @@ export function ExerciseDetailScreen({
         >
           {renderExerciseDetailSteps(
             details?.instructions ?? [],
-            details?.exercise?.description || t("techniquePlaceholder")
+            t("techniquePlaceholder")
           )}
         </CollapsiblePanel>
 

@@ -24,7 +24,6 @@ const baseStep: WorkoutStep = {
   parentSetId: "set-1",
   setCount: "3",
   stageType: "exercise",
-  targetComparator: "",
   targetValue: "8"
 };
 

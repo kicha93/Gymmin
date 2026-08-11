@@ -6,7 +6,6 @@ import {
   type GoalType,
   type IntensityTarget,
   type StageType,
-  type TargetComparator,
   type WorkoutDraft
 } from "../workouts";
 import type { WorkoutExportData, WorkoutExportLocale, WorkoutExportRow } from "./workoutExportTypes";
@@ -22,13 +21,8 @@ const stageTypeLabels: Record<WorkoutExportLocale, Record<StageType, string>> = 
 };
 
 const goalTypeLabels: Record<WorkoutExportLocale, Record<GoalType, string>> = {
-  en: { buttonPress: "Button press", calories: "Calories", heartRate: "Heart rate", repetitions: "Repetitions", time: "Time" },
-  pl: { buttonPress: "Naciśnięcie przycisku", calories: "Kalorie", heartRate: "Tętno", repetitions: "Powtórzenia", time: "Czas" }
-};
-
-const comparatorLabels: Record<WorkoutExportLocale, Record<TargetComparator, string>> = {
-  en: { above: "Above", below: "Below" },
-  pl: { above: "Powyżej", below: "Poniżej" }
+  en: { buttonPress: "Button press", repetitions: "Repetitions", time: "Time" },
+  pl: { buttonPress: "Naciśnięcie przycisku", repetitions: "Powtórzenia", time: "Czas" }
 };
 
 const intensityLabels: Record<WorkoutExportLocale, Record<IntensityTarget, string>> = {
@@ -102,7 +96,6 @@ export function buildWorkoutExportData(workout: WorkoutDraft, locale: WorkoutExp
           stageNotes: stage.notes,
           stageOrder: stageIndex + 1,
           stageType: localizeStageType(stage.stageType, locale),
-          targetComparator: element.targetComparator ? comparatorLabels[locale][element.targetComparator] : "",
           weightKg: optionalNumber(element.loadKg),
           workoutName: normalizedWorkout.name
         });

@@ -493,7 +493,6 @@ export const exerciseAliasMap = {
   "Single-leg Hip Raise with Foot on Foam Roller": "Single-leg Hip Raise",
   "Single-leg Hip Raise with Foot on Medicine Ball": "Single-leg Hip Raise",
   "Single-leg Hip Raise with Head on Bosu® Balance Trainer": "Single-leg Hip Raise",
-  "Single-leg Romanian Deadlift Circuit": "Single-leg RDL Circuit",
   "Single-leg Squat on Swiss Ball": "Bodyweight Squat",
   "Single-leg Swiss Ball Hip Raise and Leg Curl": "Single-leg Hip Raise",
   "Skakanie na skakance (z obciążeniem)": "Skakanie na skakance",

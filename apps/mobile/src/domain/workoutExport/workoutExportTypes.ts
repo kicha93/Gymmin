@@ -26,7 +26,6 @@ export type WorkoutExportRow = {
   exerciseName: string;
   goalType: string;
   goalValue: string;
-  targetComparator: string;
   intensity: string;
   repetitions: number | null;
   weightKg: number | null;

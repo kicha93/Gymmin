@@ -32,7 +32,7 @@ type ExercisePickerProps = {
   favoriteFilterOnlyLabel: string;
   hideAdditionalExercisesLabel: string;
   showMoreExercisesLabel: string;
-  tierLabels: Readonly<Record<Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">, string>>;
+  tierLabels: Readonly<Record<Exclude<ExerciseLibraryTier, "main" | "progression">, string>>;
   language: LanguageCode;
   loadingText: string;
   muscleFilterAllLabel: string;
@@ -75,7 +75,7 @@ export function ExercisePicker({
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleKey | "all">("all");
   const [favoriteFilter, setFavoriteFilter] = useState<"all" | "favorites">("all");
   const [showAdditionalExercises, setShowAdditionalExercises] = useState(false);
-  const [enabledAdditionalTiers, setEnabledAdditionalTiers] = useState<Set<Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">>>(new Set());
+  const [enabledAdditionalTiers, setEnabledAdditionalTiers] = useState<Set<Exclude<ExerciseLibraryTier, "main" | "progression">>>(new Set());
   const [isCatalogReady, setIsCatalogReady] = useState(false);
   const pickerInsets = useSafeAreaInsets();
   const pickerHeaderTopPadding = Math.max(pickerInsets.top, 20) + 6;
@@ -153,7 +153,7 @@ export function ExercisePicker({
     setEnabledAdditionalTiers(new Set());
   }, [onChange]);
 
-  const toggleAdditionalTier = useCallback((tier: Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">) => {
+  const toggleAdditionalTier = useCallback((tier: Exclude<ExerciseLibraryTier, "main" | "progression">) => {
     setEnabledAdditionalTiers((current) => {
       const next = new Set(current);
       if (next.has(tier)) next.delete(tier);

@@ -59,7 +59,7 @@ async function main() {
 
   const progressionOrModifier = exercises.filter((exercise) =>
     /(progression|circuit|triple.stop|partial lockout|static hold|isometric|paused|tempo|kipping|jumping pull)/i.test(exercise.name)
-  ).map(({ id, name, polishName, garminCategory }) => ({ id, name, polishName, garminCategory }));
+  ).map(({ id, name, polishName, category }) => ({ id, name, polishName, category }));
 
   const report = {
     generatedAt: new Date().toISOString(),

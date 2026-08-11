@@ -1,4 +1,5 @@
-import { exercises, findCatalogExerciseBestEffort, findExerciseById, resolveExerciseId } from "./exercises";
+import { exerciseCatalogDataSource, type ExerciseCatalogDataSource } from "./exerciseCatalogDataSource";
+import { findCatalogExerciseBestEffort, findExerciseById, resolveExerciseId } from "./exercises";
 import type { SavedWorkout } from "./savedWorkouts";
 import { createStep, type GoalType, type WorkoutDraft, type WorkoutStep } from "./workouts";
 import type { WorkoutCreatorDraft } from "./workoutCreator";
@@ -21,6 +22,7 @@ export type AiWorkoutImportResult = {
 };
 
 type PromptOptions = {
+  catalogDataSource?: ExerciseCatalogDataSource;
   creatorDraft?: WorkoutCreatorDraft;
   instruction?: string;
   language: "pl" | "en";
@@ -52,7 +54,7 @@ export function buildAiWorkoutPrompt(options: PromptOptions) {
           series: [{
             exercises: [{
               exerciseId: "canonical catalog id",
-              goalType: "repetitions|time|buttonPress|calories|heartRate",
+              goalType: "repetitions|time|buttonPress",
               loadKg: "number optional",
               notes: "string optional",
               restSeconds: "integer >= 0",
@@ -67,16 +69,21 @@ export function buildAiWorkoutPrompt(options: PromptOptions) {
     options.mode === "create" ? "TASK: Create a new workout plan from this local form:" : "TASK: Rewrite the workout according to the instruction. Preserve useful details unless asked to change them:",
     userInput,
     "CATALOG (id|English name|Polish name):",
-    getCompactExerciseCatalog()
+    getCompactExerciseCatalog(options.catalogDataSource)
   ].join("\n");
 }
 
-let compactCatalogCache = "";
-export function getCompactExerciseCatalog() {
-  if (!compactCatalogCache) {
-    compactCatalogCache = exercises.map((exercise) => `${exercise.id}|${exercise.name}|${exercise.polishName}`).join("\n");
-  }
-  return compactCatalogCache;
+const compactCatalogCache = new WeakMap<ExerciseCatalogDataSource, string>();
+export function getCompactExerciseCatalog(dataSource = exerciseCatalogDataSource) {
+  const cachedCatalog = compactCatalogCache.get(dataSource);
+  if (cachedCatalog !== undefined) return cachedCatalog;
+
+  const compactCatalog = dataSource
+    .getAvailableExercises()
+    .map((exercise) => `${exercise.id}|${exercise.name}|${exercise.polishName}`)
+    .join("\n");
+  compactCatalogCache.set(dataSource, compactCatalog);
+  return compactCatalog;
 }
 
 export function parseAiWorkoutResponse(text: string, now = Date.now()): AiWorkoutImportResult {
@@ -226,7 +233,7 @@ function parseLooseJson(text: string): unknown | null {
 
 function suggestCatalogExercises(value: string) {
   const query = normalizeText(value);
-  return exercises
+  return exerciseCatalogDataSource.getAvailableExercises()
     .map((exercise) => ({ exercise, score: similarityScore(query, normalizeText(`${exercise.name} ${exercise.polishName}`)) }))
     .sort((left, right) => right.score - left.score)
     .slice(0, 5)
@@ -244,7 +251,7 @@ function normalizeStageType(value: unknown) { return ["warmup", "exercise", "coo
 function isValidStageType(value: unknown) { return typeof value === "string" && ["warmup", "exercise", "cooldown", "other"].includes(value); }
 function normalizeGoalType(value: unknown): GoalType | "" {
   const normalized = String(value);
-  return ["repetitions", "time", "buttonPress", "calories", "heartRate"].includes(normalized)
+  return ["repetitions", "time", "buttonPress"].includes(normalized)
     ? normalized as GoalType
     : "";
 }

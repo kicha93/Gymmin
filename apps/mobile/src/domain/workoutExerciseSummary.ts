@@ -157,7 +157,7 @@ export function getExerciseDetails(
   return {
     ...muscleGroups,
     animationUrl: null,
-    category: formatCodeLabel(exercise.garminCategory),
+    category: formatCodeLabel(exercise.category),
     commonMistakes: localizeList(techniqueContent?.commonMistakes),
     displayName: language === "pl" ? exercise.polishName : exercise.name,
     equipment: getRequiredEquipment(exercise).map(formatCodeLabel),

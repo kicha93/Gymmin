@@ -39,14 +39,12 @@ function formatProgressNumber(value: number | null | undefined, suffix = "") {
 
 function formatProgressLatestResult(
   entry: WorkoutSessionEntry,
-  language: LanguageCode,
-  caloriesSuffix: string
+  language: LanguageCode
 ) {
   const reps = entry.actualReps ? `${entry.actualReps} ${language === "en" ? "reps" : "powt."}` : "";
   const weight = entry.actualWeight ? `${entry.actualWeight} kg` : "";
   const duration = entry.actualDuration ?? "";
-  const calories = entry.actualCalories ? `${entry.actualCalories} ${caloriesSuffix}` : "";
-  const values = [reps, weight, duration, calories].filter(Boolean);
+  const values = [reps, weight, duration].filter(Boolean);
 
   return values.length ? values.join(", ") : "—";
 }
@@ -251,7 +249,7 @@ export function ProgressScreen({
                   icon="time-outline"
                   label={t("last")}
                   theme={theme}
-                  value={formatProgressLatestResult(item.lastResult.entry, language, t("caloriesSuffix"))}
+                  value={formatProgressLatestResult(item.lastResult.entry, language)}
                 />
                 <View style={[styles.progressMetricDivider, { backgroundColor: theme.border }]} />
                 <ProgressMetric

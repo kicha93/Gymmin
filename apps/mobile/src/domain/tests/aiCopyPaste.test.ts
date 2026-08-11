@@ -5,10 +5,12 @@ import {
   applyAiRewrite,
   buildAiWorkoutPrompt,
   canApplyAiWorkoutResult,
+  getCompactExerciseCatalog,
   parseAiWorkoutResponse,
   replaceUnknownExercise
 } from "../aiCopyPaste";
 import { exercises } from "../exercises";
+import { exerciseCatalogDataSource, type ExerciseCatalogDataSource } from "../exerciseCatalogDataSource";
 import type { SavedWorkout } from "../savedWorkouts";
 
 const catalogExercise = exercises[0];
@@ -50,6 +52,39 @@ describe("local AI copy/paste", () => {
     }
     expect(pl).toContain("Polish");
     expect(en).toContain("English");
+  });
+
+  it("builds the catalog section from the active exercise datasource", () => {
+    const availableExercises = exerciseCatalogDataSource.getAvailableExercises();
+    const compactCatalog = getCompactExerciseCatalog();
+
+    expect(compactCatalog.split("\n")).toHaveLength(availableExercises.length);
+    expect(availableExercises.length).toBeGreaterThan(0);
+    for (const exercise of availableExercises) {
+      expect(compactCatalog).toContain(`${exercise.id}|${exercise.name}|${exercise.polishName}`);
+      expect(exercise.libraryTier).not.toBe("progression");
+    }
+  });
+
+  it("does not keep a hardcoded prompt list and accepts a catalog datasource", () => {
+    const catalogDataSource: ExerciseCatalogDataSource = {
+      getAvailableExercises: () => [{
+        ...catalogExercise,
+        id: "datasource-exercise",
+        name: "Datasource exercise",
+        polishName: "Ćwiczenie ze źródła danych"
+      }]
+    };
+
+    const prompt = buildAiWorkoutPrompt({
+      catalogDataSource,
+      creatorDraft: { primaryGoal: "Strength" },
+      language: "en",
+      mode: "create"
+    });
+
+    expect(prompt).toContain("datasource-exercise|Datasource exercise|Ćwiczenie ze źródła danych");
+    expect(prompt).not.toContain(`${catalogExercise.id}|${catalogExercise.name}|${catalogExercise.polishName}`);
   });
 
   it("builds rewrite prompt with an immutable compact source workout", () => {

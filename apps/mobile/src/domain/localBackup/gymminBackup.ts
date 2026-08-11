@@ -304,7 +304,7 @@ function isValidDraft(value: unknown) {
     if (!isRecord(step) || !nonEmpty(step.id) || !["stage", "set", "exercise"].includes(String(step.kind))) return false;
     if (ids.has(step.id)) return false;
     ids.add(step.id);
-    for (const key of ["exerciseName", "goalType", "label", "loadKg", "intensity", "notes", "setCount", "stageType", "targetComparator", "targetValue"]) {
+    for (const key of ["exerciseName", "goalType", "label", "loadKg", "intensity", "notes", "setCount", "stageType", "targetValue"]) {
       if (typeof step[key] !== "string") return false;
     }
     if (step.kind === "stage") stages.add(step.id);

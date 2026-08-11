@@ -29,7 +29,7 @@ export function getExerciseMetaForLanguage(exercise: Exercise, language: Languag
     .slice(0, 2)
     .join(", ");
 
-  return [primaryMuscles, equipment, formatCodeLabel(exercise.garminCategory)]
+  return [primaryMuscles, equipment, formatCodeLabel(exercise.category)]
     .filter(Boolean)
     .join(" · ");
 }

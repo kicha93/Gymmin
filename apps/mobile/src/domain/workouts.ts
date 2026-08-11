@@ -1,8 +1,7 @@
 export type IntensityTarget = "light" | "moderate" | "heavy" | "max";
 export type WorkoutStepKind = "stage" | "set" | "exercise";
 export type StageType = "warmup" | "exercise" | "recovery" | "rest" | "cooldown" | "other";
-export type GoalType = "repetitions" | "time" | "buttonPress" | "calories" | "heartRate";
-export type TargetComparator = "below" | "above";
+export type GoalType = "repetitions" | "time" | "buttonPress";
 
 export type WorkoutStep = {
   exerciseId?: string;
@@ -19,7 +18,6 @@ export type WorkoutStep = {
   restSeconds?: string;
   setCount: string;
   stageType: StageType | "";
-  targetComparator: TargetComparator | "";
   targetValue: string;
 };
 
@@ -46,7 +44,6 @@ export function createStep(overrides: Partial<WorkoutStep> = {}): WorkoutStep {
     restSeconds: "",
     setCount: "",
     stageType: "",
-    targetComparator: "",
     targetValue: "",
     ...overrides
   };

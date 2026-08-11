@@ -1,4 +1,4 @@
-﻿import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFonts } from "expo-font";
 import * as Clipboard from "expo-clipboard";
@@ -57,7 +57,6 @@ import {
 import {
   GoalType,
   StageType,
-  TargetComparator,
   WorkoutDraft,
   WorkoutStep,
   createDefaultWorkout
@@ -300,8 +299,7 @@ async function getNotificationsModule() {
 }
 
 const stageTypeValues: StageType[] = ["warmup", "exercise", "recovery", "rest", "cooldown", "other"];
-const goalTypeValues: GoalType[] = ["repetitions", "time", "buttonPress", "calories", "heartRate"];
-const targetComparatorValues: TargetComparator[] = ["below", "above"];
+const goalTypeValues: GoalType[] = ["repetitions", "time", "buttonPress"];
 
 
 const stageTypeTranslationKeys: Record<StageType, TranslationKey> = {
@@ -315,15 +313,8 @@ const stageTypeTranslationKeys: Record<StageType, TranslationKey> = {
 
 const goalTypeTranslationKeys: Record<GoalType, TranslationKey> = {
   buttonPress: "goalButtonPress",
-  calories: "goalCalories",
-  heartRate: "goalHeartRate",
   repetitions: "goalRepetitions",
   time: "goalTime"
-};
-
-const targetComparatorTranslationKeys: Record<TargetComparator, TranslationKey> = {
-  above: "targetAbove",
-  below: "targetBelow"
 };
 
 function getStageTypeOptions(t: (key: TranslationKey) => string) {
@@ -332,10 +323,6 @@ function getStageTypeOptions(t: (key: TranslationKey) => string) {
 
 function getGoalTypeOptions(t: (key: TranslationKey) => string) {
   return goalTypeValues.map((value) => ({ label: t(goalTypeTranslationKeys[value]), value }));
-}
-
-function getTargetComparatorOptions(t: (key: TranslationKey) => string) {
-  return targetComparatorValues.map((value) => ({ label: t(targetComparatorTranslationKeys[value]), value }));
 }
 
 function getWorkoutExecutionModeOptions(t: (key: TranslationKey) => string) {
@@ -398,7 +385,6 @@ const initialWorkouts = [
           notes: "Lekka mobilizacja i przygotowanie do pracy z obciążeniem.",
           setCount: "",
           stageType: "warmup",
-          targetComparator: "",
           targetValue: "00:05:00"
         },
         {
@@ -412,7 +398,6 @@ const initialWorkouts = [
           notes: "Trening całego ciała. Dobierz ciężar tak, aby zostawić 1-2 powtórzenia w zapasie.",
           setCount: "",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: ""
         },
         {
@@ -427,7 +412,6 @@ const initialWorkouts = [
           parentStageId: "sample-main",
           setCount: "3",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: "10"
         },
         {
@@ -442,7 +426,6 @@ const initialWorkouts = [
           parentSetId: "sample-set-squat",
           setCount: "",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: "10"
         },
         {
@@ -457,7 +440,6 @@ const initialWorkouts = [
           parentStageId: "sample-main",
           setCount: "3",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: "8"
         },
         {
@@ -472,7 +454,6 @@ const initialWorkouts = [
           parentSetId: "sample-set-bench",
           setCount: "",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: "8"
         },
         {
@@ -487,7 +468,6 @@ const initialWorkouts = [
           parentStageId: "sample-main",
           setCount: "3",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: "10"
         },
         {
@@ -502,7 +482,6 @@ const initialWorkouts = [
           parentSetId: "sample-set-row",
           setCount: "",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: "10"
         },
         {
@@ -517,7 +496,6 @@ const initialWorkouts = [
           parentStageId: "sample-main",
           setCount: "2",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: "10"
         },
         {
@@ -532,7 +510,6 @@ const initialWorkouts = [
           parentSetId: "sample-set-rdl",
           setCount: "",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: "10"
         },
         {
@@ -547,7 +524,6 @@ const initialWorkouts = [
           parentStageId: "sample-main",
           setCount: "2",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: "00:00:30"
         },
         {
@@ -562,7 +538,6 @@ const initialWorkouts = [
           parentSetId: "sample-set-plank",
           setCount: "",
           stageType: "exercise",
-          targetComparator: "",
           targetValue: "00:00:30"
         },
         {
@@ -576,7 +551,6 @@ const initialWorkouts = [
           notes: "Spokojne rozciąganie i zejście z tętna.",
           setCount: "",
           stageType: "cooldown",
-          targetComparator: "",
           targetValue: "00:05:00"
         }
       ]
@@ -2307,9 +2281,7 @@ function GymminApp() {
     const values = [
       entry.actualReps ? `${entry.actualReps} ${t("repetitionsSuffix")}` : "",
       entry.actualWeight ? `${entry.actualWeight} kg` : "",
-      entry.actualDuration ? entry.actualDuration : "",
-      entry.actualCalories ? `${entry.actualCalories} ${t("caloriesSuffix")}` : "",
-      entry.actualHeartRate ? `${entry.actualHeartRate} bpm` : ""
+      entry.actualDuration ? entry.actualDuration : ""
     ].filter(Boolean);
 
     return values.length ? values.join(", ") : t("noData");

@@ -2,10 +2,10 @@ import { exercises } from "./exerciseCatalog";
 import { exerciseAliasMap } from "./exerciseAliases";
 import { exerciseIdAliasMap } from "./exerciseIdAliases";
 import { stageExerciseCategories } from "./stageExerciseCategories";
-import type { GarminCategory } from "./stageExerciseCategories";
+import type { ExerciseCategory } from "./stageExerciseCategories";
 import type { StageType } from "./workouts";
 
-export { exercises, exercisesByGarminCategory } from "./exerciseCatalog";
+export { exercises, exercisesByCategory } from "./exerciseCatalog";
 
 export const muscleKeys = [
   "abductors",
@@ -61,21 +61,15 @@ export const equipmentKeys = [
 
 export type MuscleKey = (typeof muscleKeys)[number];
 export type EquipmentKey = (typeof equipmentKeys)[number];
-export type InfluenceScore = 0 | 1 | 2;
+export type InfluenceScore = 0 | 1 | 2 | 3 | 4 | 5;
 export type EquipmentScore = 0 | 1;
-export type ExerciseLibraryTier = "main" | "advanced" | "sportSpecific" | "rehab" | "variation" | "progression" | "deprecated";
+export type ExerciseLibraryTier = "main" | "advanced" | "sportSpecific" | "rehab" | "variation" | "progression";
 
 export type Exercise = {
   id: string;
   name: string;
   polishName: string;
-  garminCategory: GarminCategory;
-  garminName: string;
-  foundInGarmin: boolean;
-  image: string;
-  url: string;
-  difficulty: string;
-  description: string;
+  category: ExerciseCategory;
   muscleImpact: Record<MuscleKey, InfluenceScore>;
   equipment: Record<EquipmentKey, EquipmentScore>;
   libraryTier?: ExerciseLibraryTier;
@@ -83,7 +77,7 @@ export type Exercise = {
 
 export type ExerciseOption = {
   exerciseId: string;
-  garminCategory: GarminCategory;
+  category: ExerciseCategory;
   label: string;
   libraryTier: ExerciseLibraryTier;
   muscleImpact: Record<MuscleKey, InfluenceScore>;
@@ -97,6 +91,14 @@ export type ExerciseSection = {
 
 
 export type ExerciseLanguage = "en" | "pl";
+
+export type MuscleImpactGroups = {
+  primary: MuscleKey[];
+  major: MuscleKey[];
+  significant: MuscleKey[];
+  secondary: MuscleKey[];
+  stabilizing: MuscleKey[];
+};
 
 export const muscleLabels: Record<ExerciseLanguage, Record<MuscleKey, string>> = {
   en: {
@@ -151,7 +153,7 @@ export function getExerciseDisplayName(name: string, language: ExerciseLanguage)
 export const activeExerciseLibraryTiers: readonly ExerciseLibraryTier[] = [
   "main", "variation", "advanced", "sportSpecific", "rehab"
 ];
-export type AdditionalExerciseLibraryTier = Exclude<ExerciseLibraryTier, "main" | "deprecated" | "progression">;
+export type AdditionalExerciseLibraryTier = Exclude<ExerciseLibraryTier, "main" | "progression">;
 
 export function filterExerciseOptionsForPicker(
   options: readonly ExerciseOption[],
@@ -161,7 +163,7 @@ export function filterExerciseOptionsForPicker(
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const enabledTiers = new Set<ExerciseLibraryTier>(["main", ...enabledAdditionalTiers]);
   const activeOptions = normalizedQuery
-    ? options.filter((option) => option.libraryTier !== "deprecated" && option.libraryTier !== "progression")
+    ? options.filter((option) => option.libraryTier !== "progression")
     : options.filter((option) => enabledTiers.has(option.libraryTier));
   const matchingOptions = normalizedQuery
     ? activeOptions.filter((option) => getNormalizedExerciseOptionLabel(option).includes(normalizedQuery))
@@ -189,7 +191,7 @@ function getNormalizedExerciseOptionLabel(option: ExerciseOption) {
 }
 
 export function getExerciseOptionTierBadge(option: ExerciseOption): AdditionalExerciseLibraryTier | null {
-  return option.libraryTier === "main" || option.libraryTier === "deprecated" || option.libraryTier === "progression"
+  return option.libraryTier === "main" || option.libraryTier === "progression"
     ? null
     : option.libraryTier;
 }
@@ -203,7 +205,7 @@ export function getExerciseOptions(
     .filter((exercise) => allowedTiers.has(exercise.libraryTier ?? "main"))
     .map((exercise) => ({
       exerciseId: exercise.id,
-      garminCategory: exercise.garminCategory,
+      category: exercise.category,
       label: language === "pl" ? exercise.polishName : exercise.name,
       libraryTier: exercise.libraryTier ?? "main",
       muscleImpact: exercise.muscleImpact,
@@ -227,10 +229,10 @@ export function getExerciseOptionsForStageType(
   }
 
   return exercises
-    .filter((exercise) => allowedCategories.has(exercise.garminCategory) && visibleTiers.includes(exercise.libraryTier ?? "main"))
+    .filter((exercise) => allowedCategories.has(exercise.category) && visibleTiers.includes(exercise.libraryTier ?? "main"))
     .map((exercise) => ({
       exerciseId: exercise.id,
-      garminCategory: exercise.garminCategory,
+      category: exercise.category,
       label: language === "pl" ? exercise.polishName : exercise.name,
       libraryTier: exercise.libraryTier ?? "main",
       muscleImpact: exercise.muscleImpact,
@@ -251,10 +253,10 @@ export function isExerciseAvailableForStageType(
     return true;
   }
 
-  return stageExerciseCategories[stageType].includes(exercise.garminCategory);
+  return stageExerciseCategories[stageType].includes(exercise.category);
 }
 
-function formatGarminCategory(category: string) {
+function formatExerciseCategory(category: string) {
   return category
     .toLowerCase()
     .split("_")
@@ -292,7 +294,7 @@ export function buildExerciseSections(
     let groupKeys: string[];
 
     if (selectedMuscle !== "all") {
-      if ((option.muscleImpact?.[selectedMuscle] ?? 0) <= 0) {
+      if ((option.muscleImpact?.[selectedMuscle] ?? 0) < 2) {
         return;
       }
 
@@ -301,12 +303,12 @@ export function buildExerciseSections(
       const maximumImpact = Math.max(...muscleKeys.map((muscle) => option.muscleImpact?.[muscle] ?? 0));
       groupKeys = maximumImpact > 0
         ? muscleKeys.filter((muscle) => (option.muscleImpact?.[muscle] ?? 0) === maximumImpact)
-        : [`garmin:${option.garminCategory || "OTHER"}`];
+        : [`category:${option.category || "OTHER"}`];
     }
 
     groupKeys.forEach((groupKey) => {
-      const title = groupKey.startsWith("garmin:")
-        ? formatGarminCategory(groupKey.slice("garmin:".length))
+      const title = groupKey.startsWith("category:")
+        ? formatExerciseCategory(groupKey.slice("category:".length))
         : muscleLabels[language][groupKey as MuscleKey];
       const currentGroup = getOrCreateGroup(groupKey, title);
 
@@ -492,8 +494,7 @@ for (const exercise of exercises as readonly Exercise[]) {
     exercise.id,
     exercise.name,
     exercise.polishName,
-    exercise.garminName,
-    `${exercise.garminCategory} ${exercise.garminName}`
+    `${exercise.category} ${exercise.name}`
   ];
 
   for (const candidate of candidates) {
@@ -521,11 +522,24 @@ export function findCatalogExerciseBestEffort(name: string): Exercise | undefine
 }
 
 export function getPrimaryMuscles(exercise: Exercise) {
-  return muscleKeys.filter((muscle) => exercise.muscleImpact[muscle] === 2);
+  return getMuscleImpactGroups(exercise.muscleImpact).primary;
 }
 
 export function getSecondaryMuscles(exercise: Exercise) {
-  return muscleKeys.filter((muscle) => exercise.muscleImpact[muscle] === 1);
+  const groups = getMuscleImpactGroups(exercise.muscleImpact);
+  return [...groups.major, ...groups.significant, ...groups.secondary];
+}
+
+export function getMuscleImpactGroups(
+  muscleImpact: Record<MuscleKey, InfluenceScore>
+): MuscleImpactGroups {
+  return {
+    primary: muscleKeys.filter((muscle) => muscleImpact[muscle] === 5),
+    major: muscleKeys.filter((muscle) => muscleImpact[muscle] === 4),
+    significant: muscleKeys.filter((muscle) => muscleImpact[muscle] === 3),
+    secondary: muscleKeys.filter((muscle) => muscleImpact[muscle] === 2),
+    stabilizing: muscleKeys.filter((muscle) => muscleImpact[muscle] === 1)
+  };
 }
 
 export function getRequiredEquipment(exercise: Exercise) {

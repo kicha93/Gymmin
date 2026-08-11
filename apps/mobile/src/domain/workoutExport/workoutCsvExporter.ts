@@ -20,7 +20,7 @@ function formatGoal(row: WorkoutExportRow): string {
   const value = row.durationSeconds !== null
     ? formatSeconds(row.durationSeconds)
     : row.goalValue;
-  return row.targetComparator ? `${row.targetComparator} ${value}` : value;
+  return value;
 }
 
 export const workoutExportColumns: readonly WorkoutExportColumn[] = [

@@ -1,6 +1,6 @@
 import type { StageType } from "./workouts";
 
-export const garminCategoryValues = [
+export const exerciseCategoryValues = [
   "BANDED_EXERCISES",
   "BATTLE_ROPE",
   "BENCH_PRESS",
@@ -57,9 +57,9 @@ export const garminCategoryValues = [
   "WARM_UP"
 ] as const;
 
-export type GarminCategory = (typeof garminCategoryValues)[number];
+export type ExerciseCategory = (typeof exerciseCategoryValues)[number];
 
-export const stageExerciseCategories: Record<StageType, readonly GarminCategory[]> = {
+export const stageExerciseCategories: Record<StageType, readonly ExerciseCategory[]> = {
   warmup: [
     "WARM_UP",
     "CARDIO",
@@ -145,5 +145,5 @@ export const stageExerciseCategories: Record<StageType, readonly GarminCategory[
     "HIP_STABILITY",
     "SHOULDER_STABILITY"
   ],
-  other: garminCategoryValues
+  other: exerciseCategoryValues
 };

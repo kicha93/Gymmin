@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  exercisesByCategory,
   findCatalogExerciseBestEffort,
   findExerciseById,
   findExerciseByName,
@@ -8,8 +9,11 @@ import {
   getExerciseOptionTierBadge,
   getExerciseOptions,
   getExerciseOptionsForStageType,
+  getMuscleImpactGroups,
+  getPrimaryMuscles,
   getExerciseSectionsForStageType,
   getRequiredEquipment,
+  getSecondaryMuscles,
   isExerciseAvailableForStageType,
   resolveExerciseId
 } from "../exercises";
@@ -33,8 +37,60 @@ describe("exercise catalog cleanup", () => {
   it("applies reviewed category and equipment fixes", () => {
     const barMuscleUp = findCatalogExerciseBestEffort("Bar Muscle-up");
 
-    expect(barMuscleUp?.garminCategory).toBe("PULL_UP");
+    expect(barMuscleUp?.category).toBe("PULL_UP");
     expect(barMuscleUp ? getRequiredEquipment(barMuscleUp) : []).toContain("pullupBar");
+  });
+
+  it("uses the reviewed 0-5 muscle impact scale for UI muscle groups", () => {
+    const exercise = findExerciseById("assisted-pull-up-machine");
+
+    expect(exercise?.muscleImpact.lats).toBe(5);
+    expect(exercise?.muscleImpact.biceps).toBe(4);
+    expect(exercise?.muscleImpact.traps).toBe(3);
+    expect(exercise?.muscleImpact.abs).toBe(2);
+    expect(exercise && getPrimaryMuscles(exercise)).toEqual(["lats"]);
+    expect(exercise && getSecondaryMuscles(exercise)).toEqual(expect.arrayContaining(["abs", "biceps", "forearm", "shoulders", "traps"]));
+    expect(exercise && getMuscleImpactGroups(exercise.muscleImpact)).toEqual({
+      primary: ["lats"],
+      major: ["biceps"],
+      significant: ["forearm", "traps"],
+      secondary: ["abs", "shoulders"],
+      stabilizing: []
+    });
+  });
+
+  it("uses movement categories while retaining equipment discovery", () => {
+    const bandedCurl = findExerciseById("banded-exercises-curl-6");
+    const sandbagSquat = findExerciseById("sandbag-back-squat-1091");
+    const suspensionRow = findExerciseById("suspension-row-1368");
+
+    expect(bandedCurl?.category).toBe("CURL");
+    expect(bandedCurl && getRequiredEquipment(bandedCurl)).toContain("band");
+    expect(sandbagSquat?.category).toBe("SQUAT");
+    expect(sandbagSquat && getRequiredEquipment(sandbagSquat)).toContain("sandbag");
+    expect(suspensionRow?.category).toBe("ROW");
+    expect(suspensionRow && getRequiredEquipment(suspensionRow)).toContain("trx");
+    expect(exercisesByCategory.CURL).toContain(bandedCurl);
+    expect(exercisesByCategory.SQUAT).toContain(sandbagSquat);
+    expect(exercisesByCategory.ROW).toContain(suspensionRow);
+  });
+
+  it("applies the final targeted catalog corrections", () => {
+    expect(findExerciseById("bench-press-partial-lockout-92")?.polishName).toBe("Częściowy wyprost w wyciskaniu");
+    expect(findExerciseById("hip-raise-kettlebell-swing-420")?.category).toBe("HIP_SWING");
+    expect(findExerciseById("squat-alternating-box-dumbbell-step-ups-1247")?.category).toBe("STEP_UP");
+    expect(findExerciseById("squat-dumbbell-split-squat-1271")?.category).toBe("LUNGE");
+    expect(findExerciseById("sit-up-russian-twist-on-swiss-ball-1213")?.category).toBe("CORE");
+    expect(findExerciseById("chop-cable-pull-through-157")?.category).toBe("DEADLIFT");
+    expect(findExerciseById("lunge-dumbbell-box-lunge-624")?.equipment.box).toBe(1);
+    expect(findExerciseById("row-banded-face-pulls-1033")?.muscleImpact.lats).toBe(1);
+    expect(findExerciseById("row-face-pull-1044")?.muscleImpact.lats).toBe(1);
+    expect(findExerciseById("row-face-pull-with-external-rotation-1045")?.muscleImpact.lats).toBe(1);
+    const facePull = findExerciseById("row-face-pull-1044");
+    expect(facePull && getPrimaryMuscles(facePull)).not.toContain("lats");
+    expect(facePull && getSecondaryMuscles(facePull)).not.toContain("lats");
+    expect(facePull && getMuscleImpactGroups(facePull.muscleImpact).stabilizing).toContain("lats");
+    expect(getExerciseSectionsForStageType("en", "exercise", "lats").flatMap((section) => section.data.map((entry) => entry.exerciseId))).not.toContain("row-face-pull-1044");
   });
 
   it("adds the recommended machine exercises with catalog metadata", () => {
@@ -42,9 +98,9 @@ describe("exercise catalog cleanup", () => {
     const assistedPullUp = findExerciseById("assisted-pull-up-machine");
 
     expect(machineHipThrust?.polishName).toBe("Hip thrust na maszynie");
-    expect(machineHipThrust?.garminCategory).toBe("HIP_RAISE");
+    expect(machineHipThrust?.category).toBe("HIP_RAISE");
     expect(machineHipThrust ? getRequiredEquipment(machineHipThrust) : []).toContain("machine");
-    expect(assistedPullUp?.garminCategory).toBe("PULL_UP");
+    expect(assistedPullUp?.category).toBe("PULL_UP");
   });
 
   it("registers supplied exercise image pairs while allowing image-less exercises", () => {
@@ -91,7 +147,7 @@ describe("exercise catalog cleanup", () => {
     const optionLabels = getExerciseOptions("en").map((option) => option.label);
 
     expect(groupedRaise?.polishName).toBe("Wznosy I-Y-T w leżeniu przodem");
-    expect(groupedRaise?.garminCategory).toBe("SHOULDER_STABILITY");
+    expect(groupedRaise?.category).toBe("SHOULDER_STABILITY");
     expect(optionLabels).not.toContain("Floor I Raise");
   });
 
@@ -115,10 +171,10 @@ describe("exercise catalog cleanup", () => {
   });
 
   it("uses dedicated categories for front raises, step-ups, good mornings and rope climbs", () => {
-    expect(findExerciseById("shoulder-press-dumbbell-front-raise-1117")?.garminCategory).toBe("FRONT_RAISE");
-    expect(findExerciseById("squat-step-up-1305")?.garminCategory).toBe("STEP_UP");
-    expect(findExerciseById("leg-curl-good-morning-573")?.garminCategory).toBe("GOOD_MORNING");
-    expect(findExerciseById("lateral-raise-rope-climb-557")?.garminCategory).toBe("ROPE_CLIMB");
+    expect(findExerciseById("shoulder-press-dumbbell-front-raise-1117")?.category).toBe("FRONT_RAISE");
+    expect(findExerciseById("squat-step-up-1305")?.category).toBe("STEP_UP");
+    expect(findExerciseById("leg-curl-good-morning-573")?.category).toBe("GOOD_MORNING");
+    expect(findExerciseById("lateral-raise-rope-climb-557")?.category).toBe("ROPE_CLIMB");
   });
 
   it("resolves old ids for image assets", () => {
@@ -136,8 +192,8 @@ describe("exercise catalog cleanup", () => {
     const rowingMachine = findExerciseById("row-indoor-row-1046");
 
     expect(declinePress ? getRequiredEquipment(declinePress) : []).toEqual(["bench", "dumbbell"]);
-    expect(toeRaise?.garminCategory).toBe("DORSIFLEXION");
-    expect(rowingMachine?.garminCategory).toBe("CARDIO");
+    expect(toeRaise?.category).toBe("DORSIFLEXION");
+    expect(rowingMachine?.category).toBe("CARDIO");
   });
 
   it("keeps specialist variants out of the default library", () => {
@@ -154,7 +210,6 @@ describe("exercise catalog cleanup", () => {
 
     const variation = getExerciseOptions("en", ["main", "variation"]);
     expect(variation.some((option) => option.libraryTier === "variation")).toBe(true);
-    expect(variation.some((option) => option.libraryTier === "deprecated")).toBe(false);
     expect(variation.some((option) => option.libraryTier === "progression")).toBe(false);
 
     const advanced = getExerciseOptionsForStageType("en", "exercise", ["main", "advanced"]);
@@ -182,7 +237,7 @@ describe("exercise catalog cleanup", () => {
 
     expect(results.length).toBeGreaterThan(1);
     expect(results[0]?.libraryTier).toBe("main");
-    expect(results.every((option) => option.libraryTier !== "deprecated" && option.libraryTier !== "progression")).toBe(true);
+    expect(results.every((option) => option.libraryTier !== "progression")).toBe(true);
   });
 
   it("reuses prebuilt default picker sections for an immediate first open", () => {

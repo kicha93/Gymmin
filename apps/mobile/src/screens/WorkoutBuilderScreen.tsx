@@ -30,7 +30,6 @@ import {
   getExerciseElementTypeOptions,
   getStageTypeOptions,
   getStageTypeTranslationKey,
-  getTargetComparatorOptions,
   normalizeSetCountInput
 } from "../domain/workoutBuilderConfiguration";
 import type { LanguageCode, TranslationKey } from "../i18n/translations";
@@ -167,40 +166,11 @@ function GoalTargetControl({ step, t, theme, updateStep }: GoalTargetControlProp
     );
   }
 
-  if (step.goalType === "heartRate") {
-    return (
-      <View style={styles.fieldGroup}>
-        <Text style={[styles.label, { color: theme.muted }]}>{t("goal")}</Text>
-        <View style={styles.heartRateTargetRow}>
-          <View style={styles.heartRateComparatorField}>
-            <SelectControl
-              onChange={(targetComparator) =>
-                updateStep(step.id, { ...step, targetComparator })
-              }
-              options={getTargetComparatorOptions(t)}
-              placeholder={t("select")}
-              theme={theme}
-              value={step.targetComparator}
-            />
-          </View>
-          <View style={styles.heartRateValueField}>
-            <SuffixedInput
-              suffix="bpm"
-              theme={theme}
-              value={step.targetValue}
-              onChangeText={(targetValue) => updateStep(step.id, { ...step, targetValue })}
-            />
-          </View>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.fieldGroup}>
       <Text style={[styles.label, { color: theme.muted }]}>{t("goal")}</Text>
       <SuffixedInput
-        suffix={step.goalType === "calories" ? t("caloriesSuffix") : t("repetitionsSuffix")}
+        suffix={t("repetitionsSuffix")}
         theme={theme}
         value={step.targetValue}
         onChangeText={(targetValue) => updateStep(step.id, { ...step, targetValue })}
@@ -414,7 +384,6 @@ export function StepConfiguration({
               updateStep(step.id, {
                 ...step,
                 goalType,
-                targetComparator: "",
                 targetValue: ""
               })
             }

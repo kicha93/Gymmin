@@ -41,7 +41,7 @@ export function FavoriteExercisesScreen({
         return (
           exercise.name.toLowerCase().includes(searchPhrase) ||
           exercise.polishName.toLowerCase().includes(searchPhrase) ||
-          exercise.garminName.toLowerCase().includes(searchPhrase)
+          exercise.category.toLowerCase().includes(searchPhrase)
         );
       })
       .sort((first, second) => getExerciseNameForLanguage(first, language).localeCompare(getExerciseNameForLanguage(second, language), language));
@@ -87,9 +87,6 @@ export function FavoriteExercisesScreen({
                   </Text>
                   <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={3}>
                     {getExerciseMetaForLanguage(exercise, language)}
-                  </Text>
-                  <Text style={[styles.workoutMeta, { color: theme.muted }]} numberOfLines={1}>
-                    {exercise.garminName}
                   </Text>
                 </View>
                 <Pressable

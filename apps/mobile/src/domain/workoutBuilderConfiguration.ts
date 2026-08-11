@@ -1,9 +1,8 @@
 import type { TranslationKey } from "../i18n/translations";
-import type { GoalType, StageType, TargetComparator } from "./workouts";
+import type { GoalType, StageType } from "./workouts";
 
 const stageTypeValues: StageType[] = ["warmup", "exercise", "recovery", "rest", "cooldown", "other"];
-const goalTypeValues: GoalType[] = ["repetitions", "time", "buttonPress", "calories", "heartRate"];
-const targetComparatorValues: TargetComparator[] = ["below", "above"];
+const goalTypeValues: GoalType[] = ["repetitions", "time", "buttonPress"];
 
 const stageTypeTranslationKeys: Record<StageType, TranslationKey> = {
   cooldown: "stageCooldown",
@@ -16,15 +15,8 @@ const stageTypeTranslationKeys: Record<StageType, TranslationKey> = {
 
 const goalTypeTranslationKeys: Record<GoalType, TranslationKey> = {
   buttonPress: "goalButtonPress",
-  calories: "goalCalories",
-  heartRate: "goalHeartRate",
   repetitions: "goalRepetitions",
   time: "goalTime"
-};
-
-const targetComparatorTranslationKeys: Record<TargetComparator, TranslationKey> = {
-  above: "targetAbove",
-  below: "targetBelow"
 };
 
 type Translate = (key: TranslationKey) => string;
@@ -45,10 +37,6 @@ export function getStageTypeTranslationKey(value: StageType) {
 
 export function getGoalTypeOptions(t: Translate) {
   return goalTypeValues.map((value) => ({ label: t(goalTypeTranslationKeys[value]), value }));
-}
-
-export function getTargetComparatorOptions(t: Translate) {
-  return targetComparatorValues.map((value) => ({ label: t(targetComparatorTranslationKeys[value]), value }));
 }
 
 export function normalizeSetCountInput(value: string) {

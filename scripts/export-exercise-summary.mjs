@@ -45,7 +45,7 @@ for (const fileName of files) {
       id: exercise.id,
       polishName: exercise.polishName,
       englishName: exercise.name,
-      exerciseType: exercise.garminCategory,
+      category: exercise.category,
       requiredEquipment: getRequiredEquipment(exercise.equipment),
       libraryTier: exercise.libraryTier ?? "main"
     });

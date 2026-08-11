@@ -109,9 +109,7 @@ export function WorkoutSessionScreen({
   function toggleWorkoutSessionEntryCompleted(entry: WorkoutSessionEntry) {
     if (entry.isCompleted) {
       updateWorkoutSessionEntry(entry.id, {
-        actualCalories: undefined,
         actualDuration: undefined,
-        actualHeartRate: undefined,
         actualReps: undefined,
         actualTarget: undefined,
         actualWeight: undefined,

@@ -4,7 +4,6 @@ import {
   getExerciseElementTypeOptions,
   getGoalTypeOptions,
   getStageTypeOptions,
-  getTargetComparatorOptions,
   normalizeSetCountInput
 } from "../workoutBuilderConfiguration";
 
@@ -20,9 +19,8 @@ describe("workoutBuilderConfiguration", () => {
       "cooldown",
       "other"
     ]);
-    expect(getGoalTypeOptions(translate).map((option) => option.value)).toContain("heartRate");
+    expect(getGoalTypeOptions(translate).map((option) => option.value)).toEqual(["repetitions", "time", "buttonPress"]);
     expect(getExerciseElementTypeOptions(translate).map((option) => option.value)).not.toContain("rest");
-    expect(getTargetComparatorOptions(translate).map((option) => option.value)).toEqual(["below", "above"]);
   });
 
   it("normalizes set count to a safe two-digit maximum", () => {

@@ -61,10 +61,13 @@ if ($LASTEXITCODE -ne 0) {
   }
 }
 
-$releaseExists = $true
-& $gh release view $ReleaseTag --repo $GitHubRepo *> $null
-if ($LASTEXITCODE -ne 0) {
-  $releaseExists = $false
+$previousErrorActionPreference = $ErrorActionPreference
+$ErrorActionPreference = "SilentlyContinue"
+try {
+  & $gh release view $ReleaseTag --repo $GitHubRepo *> $null
+  $releaseExists = $LASTEXITCODE -eq 0
+} finally {
+  $ErrorActionPreference = $previousErrorActionPreference
 }
 
 if (-not $releaseExists) {

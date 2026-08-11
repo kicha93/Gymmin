@@ -73,7 +73,7 @@ npm run mobile:store:aab
 
 Release builds require all four `GYMMIN_UPLOAD_*` values (directly or via the local ignored signing properties/environment file). Gradle fails closed when they are missing and never falls back to the debug keystore. Neither command accepts or embeds a backend URL.
 
-The one-click command reads the version, `versionCode`, and package directly from `apps/mobile/app.json`. It publishes a versioned APK such as `Gymmin-1.1-vc2-arm64-v8a-release.apk` to the matching `v1.1` private release unless tag/title overrides are supplied.
+The one-click command reads the version, `versionCode`, and package directly from `apps/mobile/app.json`. It publishes a versioned APK such as `Gymmin-1.0-vc2-arm64-v8a-release.apk` to the matching `v1.0` private release unless tag/title overrides are supplied. The user-facing version remains `1.0`; Android `versionCode` increments independently for upgrade compatibility.
 
 See [Android builds](docs/build-android-apk.md) and the [release checklist](docs/release-checklist.md).
 

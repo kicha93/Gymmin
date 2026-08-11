@@ -35,9 +35,9 @@ Record exactly one status for every scenario: `PASS`, `FAIL`, or `NOT TESTED`. A
 | Scenario | Priority | Result (`PASS` / `FAIL` / `NOT TESTED`) | Device / Android / build | Notes |
 | --- | --- | --- | --- | --- |
 | A. Fresh install | P1 | NOT TESTED |  |  |
-| B. Upgrade from an old installation | P0 | PASS | Physical Android / legacy vc1 -> local-only RC vc2 | Migration and migrated data confirmed by the user on 2026-08-10. |
+| B. Upgrade from an old installation | P1 | NOT TESTED |  | Pre-release account data is intentionally ignored; no customer accounts exist. |
 | C. Upgrade with an active workout | P0 | NOT TESTED |  |  |
-| D. Multiple legacy account namespaces | P1 | NOT TESTED |  |  |
+| D. Obsolete account namespaces do not block startup | P1 | NOT TESTED |  | Automated emulator coverage passed; physical smoke remains optional. |
 | E. Backup and restore | P0 | NOT TESTED |  |  |
 | F. Avatar | P1 | NOT TESTED |  |  |
 | G. AI create | P0 | NOT TESTED |  |  |
@@ -50,7 +50,7 @@ Record exactly one status for every scenario: `PASS`, `FAIL`, or `NOT TESTED`. A
 
 Exercise media visual smoke: **PASS** on a physical Android device (2026-08-10). The approved sample compared original PNG against Balanced WebP Q90, max 900 x 1140, without crop. This result does not change the status of unrelated A-M scenarios.
 
-P0 execution order: B → C → E → G → I → M. P1 follows after P0 or in parallel on a separate prepared device. If a smoke test fails, preserve RC commit `2947f7d`, document the exact failure and root cause, and make any approved fix in a separate commit.
+P0 execution order: C → E → G → I → M. P1 follows after P0 or in parallel on a separate prepared device. If a smoke test fails, preserve RC commit `2947f7d`, document the exact failure and root cause, and make any approved fix in a separate commit.
 
 ### A. Fresh install
 
@@ -64,14 +64,13 @@ P0 execution order: B → C → E → G → I → M. P1 follows after P0 or in p
 - [ ] configure a reminder and verify persistence
 - [ ] restart the app and confirm all data remains
 
-### B. Upgrade from an old installation
+### B. Upgrade from an old pre-release installation
 
 - [ ] prepare an old Gymmin version with workouts, history, favorites, weekly plan, creator profile, and achievements
 - [ ] install the new APK over it without uninstalling
-- [ ] complete the legacy-to-local migration
-- [ ] verify every listed data domain after migration
-- [ ] restart and verify data integrity again
-- [ ] confirm migration does not run a second time
+- [ ] confirm the app starts without a source-selection screen
+- [ ] confirm obsolete `gymmin.account.*` test data is not imported or merged
+- [ ] create local-only data, restart, and verify it persists
 
 ### C. Upgrade with an active workout
 
@@ -80,13 +79,12 @@ P0 execution order: B → C → E → G → I → M. P1 follows after P0 or in p
 - [ ] resume and complete the active workout
 - [ ] verify resulting history and progress
 
-### D. Multiple legacy account namespaces
+### D. Obsolete account namespaces do not block startup
 
-- [ ] prepare multiple meaningful `gymmin.account.*` namespaces
-- [ ] confirm the source-selection screen appears
-- [ ] confirm there is no silent merge
-- [ ] select a source and verify only the intended data is imported
-- [ ] restart and confirm the selection is not requested again
+- [ ] prepare multiple synthetic `gymmin.account.*` namespaces
+- [ ] confirm no source-selection screen appears
+- [ ] confirm no silent import or merge occurs
+- [ ] confirm Home opens and local-only data can be created normally
 
 ### E. Backup and restore
 

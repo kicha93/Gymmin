@@ -10,11 +10,7 @@ import {
 } from "../../domain/favoriteExercises";
 import type { LegacyAccountStorageMapping } from "../../domain/accountStorage";
 import {
-  prepareLocalOnlyStorageMigration,
-  markLocalOnlyRuntimeCutover,
-  selectLocalOnlyStorageMigrationSource,
-  type LocalOnlyMigrationResult,
-  type LocalOnlyStorageSourceSummary
+  initializeLocalOnlyStorageRuntime
 } from "../../domain/localOnlyStorageMigration";
 import { recoverInterruptedGymminBackupImport } from "../../domain/localBackup/gymminBackupStorage";
 import { WEEKLY_PLAN_STORAGE_BASE_KEY } from "../../domain/weeklyPlan";
@@ -53,17 +49,15 @@ export const localOnlyStorageBaseKeys = [
   WEEKLY_PLAN_STORAGE_BASE_KEY
 ] as const;
 
-export type AccountStorageMigrationHookState = {
+export type LocalOnlyStorageBootstrapHookState = {
   error: string;
   hasLoaded: boolean;
   isSelecting: boolean;
   retry: () => Promise<void>;
-  selectSource: (sourceId: string) => Promise<void>;
-  sources: LocalOnlyStorageSourceSummary[];
 };
 
-export function useAccountStorageMigration(): AccountStorageMigrationHookState {
-  const [result, setResult] = useState<LocalOnlyMigrationResult | null>(null);
+export function useLocalOnlyStorageBootstrap(): LocalOnlyStorageBootstrapHookState {
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState("");
   const [isSelecting, setIsSelecting] = useState(false);
 
@@ -73,15 +67,9 @@ export function useAccountStorageMigration(): AccountStorageMigrationHookState {
     async function runMigration() {
       try {
         await recoverInterruptedGymminBackupImport();
-        const nextResult = await prepareLocalOnlyStorageMigration(
-          [...localOnlyStorageBaseKeys],
-          accountStorageLegacyMappings
-        );
-        if (nextResult.status === "ready") {
-          await markLocalOnlyRuntimeCutover(nextResult.sourceId);
-        }
+        await initializeLocalOnlyStorageRuntime();
         if (isMounted) {
-          setResult(nextResult);
+          setHasLoaded(true);
         }
       } catch (migrationError) {
         console.error("Failed to prepare local-only storage migration", migrationError);
@@ -98,41 +86,13 @@ export function useAccountStorageMigration(): AccountStorageMigrationHookState {
     };
   }, []);
 
-  async function selectSource(sourceId: string) {
-    setIsSelecting(true);
-    setError("");
-    try {
-      const nextResult = await selectLocalOnlyStorageMigrationSource(
-        sourceId,
-        [...localOnlyStorageBaseKeys],
-        accountStorageLegacyMappings
-      );
-      if (nextResult.status !== "ready") {
-        throw new Error("Selected storage source did not complete migration.");
-      }
-      await markLocalOnlyRuntimeCutover(nextResult.sourceId);
-      setResult(nextResult);
-    } catch (migrationError) {
-      console.error("Failed to select local-only storage migration source", migrationError);
-      setError(migrationError instanceof Error ? migrationError.message : "Storage migration failed.");
-    } finally {
-      setIsSelecting(false);
-    }
-  }
-
   async function retry() {
     setIsSelecting(true);
     setError("");
     try {
       await recoverInterruptedGymminBackupImport();
-      const nextResult = await prepareLocalOnlyStorageMigration(
-        [...localOnlyStorageBaseKeys],
-        accountStorageLegacyMappings
-      );
-      if (nextResult.status === "ready") {
-        await markLocalOnlyRuntimeCutover(nextResult.sourceId);
-      }
-      setResult(nextResult);
+      await initializeLocalOnlyStorageRuntime();
+      setHasLoaded(true);
     } catch (migrationError) {
       console.error("Failed to retry local-only storage migration", migrationError);
       setError(migrationError instanceof Error ? migrationError.message : "Storage migration failed.");
@@ -143,10 +103,8 @@ export function useAccountStorageMigration(): AccountStorageMigrationHookState {
 
   return {
     error,
-    hasLoaded: result?.status === "ready",
+    hasLoaded,
     isSelecting,
-    retry,
-    selectSource,
-    sources: result?.status === "selection-required" ? result.sources : []
+    retry
   };
 }

@@ -6,6 +6,7 @@ import {
   LOCAL_ONLY_MIGRATION_STATE_KEY,
   discoverLocalOnlyStorageSources,
   getLocalOnlyStorageKey,
+  initializeLocalOnlyStorageRuntime,
   prepareLocalOnlyStorageMigration,
   selectLocalOnlyStorageMigrationSource
 } from "../localOnlyStorageMigration";
@@ -55,6 +56,19 @@ describe("local-only storage migration", () => {
     });
 
     expect(await AsyncStorage.getItem(getLocalOnlyStorageKey("localWorkouts.v1"))).toBeNull();
+    expect(await AsyncStorage.getItem(LOCAL_ONLY_MIGRATION_STATE_KEY)).toContain('"status":"complete"');
+  });
+
+  it("starts the product runtime without importing pre-release account data", async () => {
+    const oldWorkoutValue = workouts(2);
+    const localWorkoutValue = workouts(1, "2026-08-11T11:00:00.000Z");
+    await AsyncStorage.setItem(getAccountStorageKey("localWorkouts.v1", "test-account"), oldWorkoutValue);
+    await AsyncStorage.setItem(getLocalOnlyStorageKey("localWorkouts.v1"), localWorkoutValue);
+
+    await initializeLocalOnlyStorageRuntime(new Date("2026-08-11T12:00:00.000Z"));
+
+    expect(await AsyncStorage.getItem(getLocalOnlyStorageKey("localWorkouts.v1"))).toBe(localWorkoutValue);
+    expect(await AsyncStorage.getItem(getAccountStorageKey("localWorkouts.v1", "test-account"))).toBe(oldWorkoutValue);
     expect(await AsyncStorage.getItem(LOCAL_ONLY_MIGRATION_STATE_KEY)).toContain('"status":"complete"');
   });
 

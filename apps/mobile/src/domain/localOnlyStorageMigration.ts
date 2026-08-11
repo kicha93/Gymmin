@@ -2,10 +2,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { getAccountStorageKey, type LegacyAccountStorageMapping } from "./accountStorage";
 
-// COMPATIBILITY FREEZE: this is an import bridge from the former account/auth/sync
-// architecture, not active account storage. Users may upgrade directly from any old
-// Gymmin APK, so do not remove or redesign it before the explicitly agreed compatibility
-// window ends. No removal date has been set.
+// Historical import helpers for pre-release account/auth/sync builds. The production
+// runtime no longer invokes them because no customer account data exists. Keep them
+// isolated from startup; they remain useful only for regression fixtures and forensics.
 
 export const LOCAL_ONLY_STORAGE_PREFIX = "gymmin.local.v1";
 export const LOCAL_ONLY_MIGRATION_STATE_KEY = "gymmin.localOnlyMigration.v1";
@@ -61,6 +60,19 @@ export async function markLocalOnlyRuntimeCutover(sourceId: string | null, now =
 export async function isLocalOnlyMigrationComplete() {
   const state = await loadMigrationState();
   return state?.status === "complete";
+}
+
+/**
+ * Starts the final local-only runtime without importing former account namespaces.
+ * Old gymmin.account.* values are deliberately left untouched: they belonged only
+ * to pre-release test accounts and must not block startup or be merged automatically.
+ */
+export async function initializeLocalOnlyStorageRuntime(now = new Date()) {
+  const state = await loadMigrationState();
+  if (state?.status !== "complete") {
+    await markMigrationComplete(null, [], now);
+  }
+  await markLocalOnlyRuntimeCutover(state?.sourceId ?? null, now);
 }
 
 export async function prepareLocalOnlyStorageMigration(

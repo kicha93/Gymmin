@@ -13,7 +13,7 @@ Gymmin is a local-only Expo/React Native workout app created and maintained by *
 - workout CSV/XLSX export and backup work offline;
 - voluntary support only opens [Buy Me a Coffee](https://buymeacoffee.com/atomicjumpr) and grants no product benefits.
 
-The one compatibility exception is the upgrade importer for legacy `gymmin.account.*` storage. It reads old installations without auth or a server and copies validated data into `gymmin.local.v1.*`. See [local-only migration](docs/local-only-migration.md).
+The released runtime opens `gymmin.local.v1.*` directly. Pre-release `gymmin.account.*` test namespaces are ignored and never merged into product data; they cannot block startup.
 
 ## Stack
 

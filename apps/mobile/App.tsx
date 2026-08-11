@@ -232,7 +232,7 @@ import { useLocalWorkouts } from "./src/features/workouts/useLocalWorkouts";
 import { useWorkoutEditorController } from "./src/features/workouts/useWorkoutEditorController";
 import { useLocalCreatorProfiles } from "./src/features/workoutCreator/useLocalCreatorProfiles";
 import { useLocalWeeklyPlan } from "./src/features/weeklyPlan/useLocalWeeklyPlan";
-import { useAccountStorageMigration } from "./src/features/storage/useAccountStorageMigration";
+import { useLocalOnlyStorageBootstrap } from "./src/features/storage/useAccountStorageMigration";
 import { LocalOnlyStorageMigrationScreen } from "./src/features/storage/LocalOnlyStorageMigrationScreen";
 import {
   createGymminBackup,
@@ -790,10 +790,8 @@ function GymminApp() {
     error: accountStorageMigrationError,
     hasLoaded: hasLoadedAccountStorageMigration,
     isSelecting: isSelectingAccountStorageSource,
-    retry: retryAccountStorageMigration,
-    selectSource: selectAccountStorageSource,
-    sources: accountStorageMigrationSources
-  } = useAccountStorageMigration();
+    retry: retryAccountStorageMigration
+  } = useLocalOnlyStorageBootstrap();
   const {
     avatarUri: localAvatarUri,
     clearAvatar: clearLocalAvatar,
@@ -2684,9 +2682,7 @@ function GymminApp() {
 
   if (
     isAppLoading
-    || (!hasLoadedAccountStorageMigration
-      && accountStorageMigrationSources.length === 0
-      && !accountStorageMigrationError)
+    || (!hasLoadedAccountStorageMigration && !accountStorageMigrationError)
   ) {
     return (
       <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]}>
@@ -2708,13 +2704,9 @@ function GymminApp() {
         error={accountStorageMigrationError}
         isSelecting={isSelectingAccountStorageSource}
         language={language}
-        sources={accountStorageMigrationSources}
         theme={theme}
         onRetry={() => {
           void retryAccountStorageMigration();
-        }}
-        onSelect={(sourceId) => {
-          void selectAccountStorageSource(sourceId);
         }}
       />
     );

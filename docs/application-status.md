@@ -21,7 +21,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 
 ## Compatibility retained intentionally
 
-- legacy `gymmin.account.*` and old anonymous namespace readers;
+- dormant compatibility readers for pre-release `gymmin.account.*` fixtures; the product runtime does not invoke them;
 - multi-source selection, validation, copy-first migration, completion marker and interrupted recovery;
 - optional legacy sync-shaped fields in parsers only;
 - one-time obsolete auth credential cleanup through SecureStore.

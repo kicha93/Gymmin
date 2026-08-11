@@ -22,7 +22,7 @@ New runtime mutations do not create sync tombstones or remote metadata. Parsers 
 
 ## Legacy upgrade bridge
 
-`localOnlyStorageMigration.ts` and its feature hook are intentionally retained. They discover pre-local-only anonymous/account namespaces, let the user choose when multiple account sources exist, validate each domain, copy first, mark completion last, and resume interrupted migration. Existing local-only data wins and is never overwritten. No auth token or backend is required. Legacy sources are not automatically deleted in this compatibility release.
+The runtime opens `gymmin.local.v1.*` directly. Because the account-backed builds were used only for internal testing and no customer account data exists, old `gymmin.account.*` namespaces are not discovered, merged, or offered for selection. They remain untouched until the user explicitly uses “Delete all data”, so obsolete test data cannot block startup.
 
 `legacyAuthCleanup.ts` performs a separate one-time best-effort removal of obsolete credential keys. `expo-secure-store` remains only for this compatibility cleanup and can be reconsidered after the supported upgrade window.
 

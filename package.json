@@ -4,6 +4,7 @@
   "scripts": {
     "security:secrets": "node scripts/validate-tracked-secrets.mjs",
     "security:dependencies": "npm --prefix apps/mobile run security:dependencies",
+    "google-play:validate": "node scripts/validate-google-play-release.mjs",
     "mobile:test": "npm --prefix apps/mobile run test",
     "mobile:typecheck": "npm --prefix apps/mobile run typecheck",
     "mobile:guard:local-only": "node scripts/validate-local-only-runtime.mjs",

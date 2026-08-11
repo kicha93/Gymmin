@@ -53,6 +53,7 @@ npm run security:dependencies
 node scripts/validate-local-only-runtime.mjs
 node scripts/validate-local-product-runtime.mjs
 npm run exercise:media:validate
+npm run google-play:validate
 ```
 
 Exercise images use a reproducible source-to-runtime pipeline: paired PNG sources live outside the mobile bundle under `media-source/exercises`, while the app statically requires optimized WebP Q90 files constrained to 900 x 1140 without cropping. After importing or generating PNG sources, run `npm run exercise:media:optimize`; see [exercise media](docs/exercise-media.md).
@@ -75,7 +76,7 @@ Release builds require all four `GYMMIN_UPLOAD_*` values (directly or via the lo
 
 The one-click command reads the version, `versionCode`, and package directly from `apps/mobile/app.json`. It publishes a versioned APK such as `Gymmin-1.0-vc2-arm64-v8a-release.apk` to the matching `v1.0` private release unless tag/title overrides are supplied. The user-facing version remains `1.0`; Android `versionCode` increments independently for upgrade compatibility.
 
-See [Android builds](docs/build-android-apk.md) and the [release checklist](docs/release-checklist.md).
+See [Android builds](docs/build-android-apk.md), the [release checklist](docs/release-checklist.md), and the prepared [Google Play materials](docs/google-play/console-declarations.md).
 
 ## Privacy and support
 

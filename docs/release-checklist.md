@@ -13,6 +13,7 @@ Product availability invariants: the top-right local profile action is always vi
 - [ ] `npm run exercise:media:validate`
 - [ ] `npm run mobile:guard:local-only`
 - [ ] `npm run mobile:guard:local-product`
+- [ ] `npm run google-play:validate`
 - [ ] `npm run security:secrets`
 - [ ] `npm run security:dependencies`
 - [ ] `npm run mobile:security:android`

@@ -20,6 +20,10 @@ describe("workoutBuilderFlow", () => {
     });
   });
 
+  it("accepts a localized default workout name without changing the workout model", () => {
+    expect(createDefaultWorkout("New workout").name).toBe("New workout");
+  });
+
   it("updates stage, set and exercise counters as the draft grows", () => {
     const withStage = addWorkoutStep(createDefaultWorkout(), "stage", "exercise", "4");
     expect(getWorkoutBuilderSummary(withStage)).toMatchObject({ stageCount: 1, setCount: 0, exerciseCount: 0 });

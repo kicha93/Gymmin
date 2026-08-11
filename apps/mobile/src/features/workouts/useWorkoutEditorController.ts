@@ -13,6 +13,7 @@ import { createDefaultWorkout, type StageType, type WorkoutDraft, type WorkoutSt
 type Options = {
   defaultSetCount: string;
   defaultStageType: StageType;
+  defaultWorkoutName: string;
   editingWorkoutId: string | null;
   onNavigate: (screen: "builder" | "workoutDetail") => void;
   savedWorkouts: SavedWorkout[];
@@ -39,7 +40,7 @@ export function useWorkoutEditorController(options: Options) {
 
   function openNew() {
     options.setEditingWorkoutId(null);
-    options.setWorkout(createDefaultWorkout());
+    options.setWorkout(createDefaultWorkout(options.defaultWorkoutName));
     options.onNavigate("builder");
   }
 
@@ -53,7 +54,7 @@ export function useWorkoutEditorController(options: Options) {
   }
 
   function save() {
-    const normalizedName = options.workout.name.trim() || "Nowy trening";
+    const normalizedName = options.workout.name.trim() || options.defaultWorkoutName;
     const existing = options.editingWorkoutId
       ? options.savedWorkouts.find((item) => item.id === options.editingWorkoutId)
       : null;

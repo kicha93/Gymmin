@@ -52,9 +52,9 @@ export function createStep(overrides: Partial<WorkoutStep> = {}): WorkoutStep {
   };
 }
 
-export function createDefaultWorkout(): WorkoutDraft {
+export function createDefaultWorkout(name = "Nowy trening"): WorkoutDraft {
   return {
-    name: "Nowy trening",
+    name,
     notes: "",
     sport: "strength",
     steps: []

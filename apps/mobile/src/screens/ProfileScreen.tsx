@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, Text, View } from "react-native";
 import type { ImageSourcePropType } from "react-native";
 
-import { AppButton, AppInput } from "../components/AppControls";
+import { AppButton } from "../components/AppControls";
 import type { TranslationKey } from "../i18n/translations";
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
@@ -12,12 +12,10 @@ type ProfileScreenProps = {
   avatarMessage: string;
   avatarMessageIsSuccess: boolean;
   avatarSource: ImageSourcePropType | null;
-  displayName: string;
   isAvatarSubmitting: boolean;
   latestAchievementTitle?: string;
   onAvatarLoadError: () => void;
   onChangeAvatar: () => void;
-  onDisplayNameChange: (value: string) => void;
   onOpenAchievements: () => void;
   onOpenBugReport: () => void;
   onOpenSessions: () => void;
@@ -33,12 +31,10 @@ export function ProfileScreen({
   avatarMessage,
   avatarMessageIsSuccess,
   avatarSource,
-  displayName,
   isAvatarSubmitting,
   latestAchievementTitle,
   onAvatarLoadError,
   onChangeAvatar,
-  onDisplayNameChange,
   onOpenAchievements,
   onOpenBugReport,
   onOpenSessions,
@@ -59,15 +55,6 @@ export function ProfileScreen({
           )}
         </View>
         <View style={styles.profileDashboardInfo}>
-          <Text style={[styles.label, { color: theme.muted }]}>{t("localProfileName")}</Text>
-          <AppInput
-            maxLength={120}
-            placeholder={t("localProfileNamePlaceholder")}
-            theme={theme}
-            value={displayName}
-            onChangeText={onDisplayNameChange}
-          />
-          <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("localProfileNameOptional")}</Text>
           <View style={styles.profileDashboardAvatarActions}>
             <AppButton disabled={isAvatarSubmitting} icon="image-outline" style={styles.profileDashboardAvatarButton}
               textStyle={styles.profileDashboardAvatarButtonText} theme={theme} variant="outline" onPress={onChangeAvatar}>

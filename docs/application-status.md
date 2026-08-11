@@ -8,7 +8,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 
 - workout library/editor, archive, guided execution, active-session recovery and session-only/planned two-exercise supersets;
 - history, progress, weekly plan, favorites, achievements and local reminders;
-- local settings, creator profiles, display name and private avatar; every setting persists in local storage and participates in `.gymmin.json` backup/import rather than sync;
+- local settings, creator profiles and private avatar; every setting persists in local storage and participates in `.gymmin.json` backup/import rather than sync;
 - an always-visible header action for the local profile, with no login/account panel;
 - an always-available local workout creator that is never gated by connectivity, account state, or the number of saved workouts;
 - AI create/rewrite through copy/paste only;
@@ -16,7 +16,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 - `.gymmin.json` backup/import, including avatar and backward-compatible profile handling;
 - full local data deletion;
 - local Contact and safe bug-report email flows: both open the system email app, never submit HTTP forms, and provide clipboard fallback;
-- PL/EN About, author attribution, privacy and voluntary Buy Me a Coffee link.
+- PL/EN About, author attribution, privacy and voluntary Buy Me a Coffee link; the support card is the final standalone section below all Settings panels.
 - optimized offline exercise media: 64 static START/END pairs use WebP Q90 runtime assets generated reproducibly from non-bundled PNG sources; the supplied MP4 remains unchanged.
 
 ## Compatibility retained intentionally

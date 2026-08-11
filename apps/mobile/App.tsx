@@ -738,7 +738,7 @@ function GymminApp() {
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [includeArchivedWorkouts, setIncludeArchivedWorkouts] = useState(false);
-  const [workout, setWorkout] = useState<WorkoutDraft>(() => createDefaultWorkout());
+  const [workout, setWorkout] = useState<WorkoutDraft>(() => createDefaultWorkout(""));
   const [pendingLanguage, setPendingLanguage] = useState<LanguageCode>("en");
   const [pendingDefaultSetCount, setPendingDefaultSetCount] = useState("");
   const [pendingDefaultWeight, setPendingDefaultWeight] = useState("");
@@ -797,7 +797,6 @@ function GymminApp() {
     clearAvatar: clearLocalAvatar,
     profile: localUserProfile,
     setAvatar: setLocalAvatar,
-    setDisplayName: setLocalProfileDisplayName,
     setProfile: setLocalUserProfile
   } = useLocalUserProfile(hasLoadedAccountStorageMigration);
   const {
@@ -1132,6 +1131,7 @@ function GymminApp() {
   } = useWorkoutEditorController({
     defaultSetCount,
     defaultStageType: defaultStageType || "exercise",
+    defaultWorkoutName: t("newWorkout"),
     editingWorkoutId,
     onNavigate: setActiveScreen,
     savedWorkouts,
@@ -2455,6 +2455,8 @@ function GymminApp() {
         collapsed={isPanelCollapsed("workouts-list")}
         creatorButton={renderWorkoutCreatorButton()}
         filteredWorkouts={filteredWorkouts}
+        hasAnyWorkouts={savedWorkouts.length > 0}
+        hasArchivedWorkouts={savedWorkouts.some(isWorkoutArchived)}
         includeArchived={includeArchivedWorkouts}
         search={search}
         sortActions={renderWorkoutSortActions()}
@@ -2592,7 +2594,6 @@ function GymminApp() {
         avatarMessage={avatarMessage}
         avatarMessageIsSuccess={avatarMessage === t("avatarUpdated") || avatarMessage === t("avatarRemoved")}
         avatarSource={userAvatarSource}
-        displayName={localUserProfile.displayName ?? ""}
         isAvatarSubmitting={isAvatarSubmitting}
         latestAchievementTitle={latestUnlockedAchievement?.definition.title[language]}
         onAvatarLoadError={() => setHasLocalAvatarLoadFailed(true)}
@@ -2601,7 +2602,6 @@ function GymminApp() {
         totalAchievements={totalCount}
         unlockedAchievements={unlockedCount}
         onChangeAvatar={changeUserAvatar}
-        onDisplayNameChange={setLocalProfileDisplayName}
         onRemoveAvatar={removeUserAvatar}
         onOpenAchievements={() => setActiveScreen("achievements")}
         onOpenSessions={() => setActiveScreen("workoutHistory")}

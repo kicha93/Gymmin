@@ -5,7 +5,7 @@ Gymmin is a local-only Expo/React Native workout app created and maintained by *
 ## Product architecture
 
 - one mobile application; there is no Gymmin backend, account, authentication, synchronization, credit system, billing, or remote AI job;
-- workouts, sessions, history, weekly plan, favorites, achievements, settings, reminders, creator profiles, and the optional local profile/avatar stay in private device storage;
+- workouts, sessions, history, weekly plan, favorites, achievements, settings, reminders, creator profiles, and the optional local avatar stay in private device storage;
 - the local profile action is always visible in the top-right header and never opens login; the workout creator is always available regardless of saved workouts, account state, or connectivity;
 - AI create/rewrite works by local prompt generation, clipboard hand-off to an external AI chosen by the user, and strict local JSON validation/import;
 - backup/import uses `.gymmin.json`; v1 backups without `profile` preserve the current local profile;

@@ -16,7 +16,7 @@ External operations are explicit user intents only: email, HTTPS links, clipboar
 
 ## Local data
 
-The canonical namespace is `gymmin.local.v1.*`. It contains workouts, settings, creator profiles, active and completed sessions, favorites, achievements/usage stats, weekly plan, local profile metadata, migration state, and other local product records. The avatar is a file in private app storage; AsyncStorage stores only metadata/path.
+The canonical namespace is `gymmin.local.v1.*`. It contains workouts, settings, creator profiles, active and completed sessions, favorites, achievements/usage stats, weekly plan, local avatar metadata, migration state, and other local product records. The avatar is a file in private app storage; AsyncStorage stores only its metadata/path. Gymmin does not collect or store a profile display name.
 
 New runtime mutations do not create sync tombstones or remote metadata. Parsers may accept historical `deletedAt`/timestamps for backward compatibility.
 

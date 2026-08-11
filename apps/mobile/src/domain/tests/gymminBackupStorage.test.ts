@@ -71,7 +71,7 @@ describe("Gymmin backup transactional storage", () => {
 
   it("preserves the current local profile when importing a v1 backup without profile", async () => {
     const profileKey = getLocalOnlyStorageKey(LOCAL_USER_PROFILE_STORAGE_BASE_KEY);
-    const currentProfile = JSON.stringify({ displayName: "Current user", updatedAt: "2026-08-09T10:00:00.000Z", version: 1 });
+    const currentProfile = JSON.stringify({ avatarPath: "file:///documents/gymmin-profile/current.jpg", updatedAt: "2026-08-09T10:00:00.000Z", version: 1 });
     await AsyncStorage.setItem(profileKey, currentProfile);
 
     await importGymminBackupTransaction(createGymminBackup(emptySnapshot(), { appVersion: "1" }));

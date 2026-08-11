@@ -317,7 +317,6 @@ export function SettingsScreen({
         theme={theme}
         onToggle={() => onTogglePanel("settings-info")}
       >
-        <AuthorSupportCard onPress={onOpenSupport} t={t} theme={theme} />
         <InfoLinkRow
           icon="document-text-outline"
           label={t("terms")}
@@ -347,6 +346,8 @@ export function SettingsScreen({
           onPress={onOpenReportBug}
         />
       </SettingsSection>
+
+      <AuthorSupportCard onPress={onOpenSupport} t={t} theme={theme} />
     </>
   );
 }
@@ -362,21 +363,32 @@ function AuthorSupportCard({ onPress, t, theme }: AuthorSupportCardProps) {
     <View
       style={[
         styles.authorSupportCard,
-        { backgroundColor: theme.secondaryBand, borderColor: theme.border }
+        { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.text }
       ]}
     >
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={styles.authorSupportDecoration}
+      >
+        <Ionicons name="cafe-outline" size={92} color={theme.muted} />
+        <Ionicons name="leaf-outline" size={50} color={theme.muted} style={styles.authorSupportDecorationLeaf} />
+      </View>
       <View style={styles.authorSupportHeader}>
-        <View style={[styles.authorSupportIcon, { backgroundColor: theme.card }]}>
-          <Ionicons name="heart-outline" size={22} color={theme.primary} />
+        <View style={[styles.authorSupportIcon, { backgroundColor: theme.secondaryBand }]}>
+          <Ionicons name="cafe-outline" size={44} color={theme.primary} />
+          <Ionicons name="heart-outline" size={15} color={theme.primary} style={styles.authorSupportIconHeart} />
         </View>
         <View style={styles.authorSupportHeading}>
           <Text style={[styles.authorSupportEyebrow, { color: theme.primary }]}>
             {t("supportGymminDevelopment")}
           </Text>
           <Text style={[styles.authorSupportTitle, { color: theme.text }]}>Gymmin</Text>
+          <Text style={[styles.authorSupportAuthor, { color: theme.muted }]}>{t("createdByAuthor")}</Text>
         </View>
       </View>
-      <Text style={[styles.authorSupportAuthor, { color: theme.text }]}>{t("createdByAuthor")}</Text>
+      <View style={[styles.authorSupportDivider, { backgroundColor: theme.border }]} />
       <Text style={[styles.authorSupportCopy, { color: theme.muted }]}>{t("supportGymminCopy")}</Text>
       <Pressable
         accessibilityRole="link"
@@ -385,7 +397,7 @@ function AuthorSupportCard({ onPress, t, theme }: AuthorSupportCardProps) {
       >
         <Ionicons name="cafe-outline" size={20} color={theme.white} />
         <Text style={[styles.authorSupportButtonText, { color: theme.white }]}>{t("buyMeCoffee")}</Text>
-        <Ionicons name="open-outline" size={18} color={theme.white} />
+        <Ionicons name="open-outline" size={18} color={theme.white} style={styles.authorSupportButtonExternalIcon} />
       </Pressable>
     </View>
   );

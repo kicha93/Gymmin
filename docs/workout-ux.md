@@ -19,8 +19,10 @@ This note tracks the current workout-view UX decisions.
 
 ## Manual workout builder
 
+- The workout library never renders an unexplained empty panel: it distinguishes a fresh library, no search matches, and a library containing only hidden archived workouts with localized empty-state guidance.
 - Creating and editing a manual workout uses a three-step wizard: `Details -> Stages -> Save` (`Dane -> Etapy -> Zapis` in Polish).
 - The Details step contains only the workout name and optional notes. A name is required before continuing.
+- Automatically supplied editor values are localized: a new Polish draft starts as `Nowy trening`, while an English draft starts as `New workout`. User-entered workout and stage names are never translated automatically.
 - The Stages step shows horizontal stage pills and only one active editing context at a time. The stage view contains a compact set list; selecting a set replaces it with the set editor, and selecting an exercise replaces that with the exercise form.
 - Rows in `Sets in stage` identify their actual exercises and show each
   set/target pair, for example `Barbell squat` with `4×12`, instead of an

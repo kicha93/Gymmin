@@ -98,7 +98,7 @@ describe("Gymmin backup contract", () => {
     const withoutProfile = roundtrip();
     expect(withoutProfile.data.profile).toBeUndefined();
     const value = snapshot();
-    value.profile = { displayName: "Paweł", avatar: { base64: "/9j/2Q==", mimeType: "image/jpeg" } };
+    value.profile = { avatar: { base64: "/9j/2Q==", mimeType: "image/jpeg" } };
     expect(roundtrip(value).data.profile).toEqual(value.profile);
   });
 

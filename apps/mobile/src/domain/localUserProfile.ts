@@ -10,7 +10,6 @@ export const LOCAL_AVATAR_BACKUP_MAX_BYTES = 1_000_000;
 
 export type LocalUserProfile = {
   avatarPath?: string;
-  displayName?: string;
   updatedAt: string;
   version: 1;
 };
@@ -20,7 +19,6 @@ export type LocalUserProfileBackup = {
     base64: string;
     mimeType: "image/jpeg";
   };
-  displayName?: string;
 };
 
 export type StagedLocalUserProfileImport = {
@@ -42,21 +40,15 @@ function profileDirectory() {
   return new Directory(Paths.document, "gymmin-profile");
 }
 
-function normalizeDisplayName(value: unknown) {
-  return typeof value === "string" ? value.trim().slice(0, 120) : "";
-}
-
 export function normalizeLocalUserProfile(value: unknown): LocalUserProfile {
   const record = value && typeof value === "object" && !Array.isArray(value)
     ? value as Record<string, unknown>
     : {};
-  const displayName = normalizeDisplayName(record.displayName);
   const avatarPath = typeof record.avatarPath === "string" && record.avatarPath.startsWith("file:")
     ? record.avatarPath
     : undefined;
   return {
     ...(avatarPath ? { avatarPath } : {}),
-    ...(displayName ? { displayName } : {}),
     updatedAt: typeof record.updatedAt === "string" && Number.isFinite(Date.parse(record.updatedAt))
       ? new Date(record.updatedAt).toISOString()
       : new Date(0).toISOString(),
@@ -78,15 +70,6 @@ export async function saveLocalUserProfile(profile: LocalUserProfile) {
   const normalized = normalizeLocalUserProfile(profile);
   await AsyncStorage.setItem(profileStorageKey(), JSON.stringify(normalized));
   return normalized;
-}
-
-export async function updateLocalUserDisplayName(profile: LocalUserProfile, displayName: string) {
-  return saveLocalUserProfile({
-    ...profile,
-    displayName: normalizeDisplayName(displayName) || undefined,
-    updatedAt: new Date().toISOString(),
-    version: 1
-  });
 }
 
 export function getUsableLocalAvatarUri(profile: LocalUserProfile) {
@@ -145,23 +128,20 @@ export async function removeLocalAvatar(profile: LocalUserProfile) {
 }
 
 export async function createLocalUserProfileBackup(profile: LocalUserProfile): Promise<LocalUserProfileBackup> {
-  const displayName = normalizeDisplayName(profile.displayName);
   const avatarUri = getUsableLocalAvatarUri(profile);
-  if (!avatarUri) return displayName ? { displayName } : {};
+  if (!avatarUri) return {};
   const bytes = await new File(avatarUri).bytes();
   if (bytes.byteLength > LOCAL_AVATAR_BACKUP_MAX_BYTES) {
-    return displayName ? { displayName } : {};
+    return {};
   }
   return {
-    avatar: { base64: bytesToBase64(bytes), mimeType: "image/jpeg" },
-    ...(displayName ? { displayName } : {})
+    avatar: { base64: bytesToBase64(bytes), mimeType: "image/jpeg" }
   };
 }
 
 export function normalizeLocalUserProfileBackup(value: unknown): LocalUserProfileBackup | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const record = value as Record<string, unknown>;
-  const displayName = normalizeDisplayName(record.displayName);
   let avatar: LocalUserProfileBackup["avatar"];
   if (record.avatar && typeof record.avatar === "object" && !Array.isArray(record.avatar)) {
     const candidate = record.avatar as Record<string, unknown>;
@@ -171,7 +151,7 @@ export function normalizeLocalUserProfileBackup(value: unknown): LocalUserProfil
       avatar = { base64: candidate.base64, mimeType: "image/jpeg" };
     }
   }
-  return avatar || displayName ? { ...(avatar ? { avatar } : {}), ...(displayName ? { displayName } : {}) } : {};
+  return avatar ? { avatar } : {};
 }
 
 export async function stageLocalUserProfileBackupImport(value: LocalUserProfileBackup | undefined): Promise<StagedLocalUserProfileImport> {
@@ -197,7 +177,6 @@ export async function stageLocalUserProfileBackupImport(value: LocalUserProfileB
   }
   const nextProfile = normalizeLocalUserProfile({
     ...(avatarPath ? { avatarPath } : {}),
-    ...(value?.displayName ? { displayName: value.displayName } : {}),
     updatedAt: new Date().toISOString(),
     version: 1
   });

@@ -16,6 +16,8 @@ type WorkoutsScreenProps = {
   collapsed: boolean;
   creatorButton: ReactNode;
   filteredWorkouts: SavedWorkout[];
+  hasAnyWorkouts: boolean;
+  hasArchivedWorkouts: boolean;
   includeArchived: boolean;
   onChangeSearch: (value: string) => void;
   onOpenHistory: () => void;
@@ -34,6 +36,8 @@ export function WorkoutsScreen({
   collapsed,
   creatorButton,
   filteredWorkouts,
+  hasAnyWorkouts,
+  hasArchivedWorkouts,
   includeArchived,
   onChangeSearch,
   onOpenHistory,
@@ -46,6 +50,18 @@ export function WorkoutsScreen({
   t,
   theme
 }: WorkoutsScreenProps) {
+  const hasSearch = Boolean(search.trim());
+  const emptyTitle = hasSearch
+    ? t("workoutSearchEmptyTitle")
+    : hasAnyWorkouts && hasArchivedWorkouts && !includeArchived
+      ? t("workoutActiveEmptyTitle")
+      : t("workoutListEmptyTitle");
+  const emptyCopy = hasSearch
+    ? t("workoutSearchEmptyCopy")
+    : hasAnyWorkouts && hasArchivedWorkouts && !includeArchived
+      ? t("workoutActiveEmptyCopy")
+      : t("workoutListEmptyCopy");
+
   return (
     <>
       {activeSessionCard}
@@ -111,6 +127,13 @@ export function WorkoutsScreen({
       >
         <WorkoutList
           archivedLabel={t("archivedWorkout")}
+          emptyContent={(
+            <View style={[styles.emptyStatePanel, { backgroundColor: theme.secondaryBand }]}>
+              <Ionicons name={hasSearch ? "search-outline" : "barbell-outline"} size={30} color={theme.primary} />
+              <Text style={[styles.emptyStateTitle, { color: theme.text }]}>{emptyTitle}</Text>
+              <Text style={[styles.emptyStateCopy, { color: theme.muted }]}>{emptyCopy}</Text>
+            </View>
+          )}
           workouts={filteredWorkouts}
           theme={theme}
           onOpenWorkout={onOpenWorkout}

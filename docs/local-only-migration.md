@@ -26,7 +26,7 @@ A separate one-time best-effort cleanup removes known obsolete AsyncStorage/Secu
 
 ## Backup compatibility
 
-Backup schema remains v1. `profile` is optional. Importing an older v1 backup without `profile` preserves the current local profile/avatar. Backups never include auth tokens, API data, sync metadata, or obsolete creator jobs.
+Backup schema remains v1. `profile` is optional and contains only an optional private avatar. Importing an older v1 backup without `profile` preserves the current local avatar; obsolete `displayName` values from older backups are ignored. Backups never include auth tokens, API data, sync metadata, or obsolete creator jobs.
 
 ## Regression coverage
 

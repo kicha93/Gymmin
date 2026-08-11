@@ -54,20 +54,19 @@ import {
   normalizeLocalUserProfileBackup,
   removeLocalAvatar,
   replaceLocalAvatar,
-  saveLocalUserProfile,
-  updateLocalUserDisplayName
+  saveLocalUserProfile
 } from "../localUserProfile";
 import { getLocalOnlyStorageKey } from "../localOnlyStorageMigration";
 
 describe("local user profile", () => {
   beforeEach(async () => { files.clear(); await AsyncStorage.clear(); });
 
-  it("supports a fresh install and an optional display name", async () => {
+  it("supports a fresh install and drops obsolete display-name metadata", async () => {
     expect(await loadLocalUserProfile()).toMatchObject({ version: 1 });
-    expect((await loadLocalUserProfile()).displayName).toBeUndefined();
-    const saved = await updateLocalUserDisplayName(await loadLocalUserProfile(), "  Paweł  ");
-    expect(saved.displayName).toBe("Paweł");
-    expect((await loadLocalUserProfile()).displayName).toBe("Paweł");
+    expect(normalizeLocalUserProfile({ displayName: "Legacy user" })).toEqual({
+      updatedAt: new Date(0).toISOString(),
+      version: 1
+    });
   });
 
   it("stores only profile metadata in the neutral namespace", async () => {
@@ -101,18 +100,16 @@ describe("local user profile", () => {
     expect(await AsyncStorage.getItem(getLocalOnlyStorageKey(LOCAL_USER_PROFILE_STORAGE_BASE_KEY))).not.toContain("/9j/");
   });
 
-  it("imports an optional v1 profile and avatar", async () => {
+  it("imports an optional v1 profile avatar", async () => {
     const imported = await importLocalUserProfileBackup({
-      avatar: { base64: "/9j/2Q==", mimeType: "image/jpeg" },
-      displayName: "Imported"
+      avatar: { base64: "/9j/2Q==", mimeType: "image/jpeg" }
     });
-    expect(imported.displayName).toBe("Imported");
     expect(getUsableLocalAvatarUri(imported)).toBe(imported.avatarPath);
   });
 
-  it("accepts backward-compatible backups without profile and validates optional avatar payload", () => {
+  it("accepts backward-compatible backups, ignores legacy display names and validates optional avatar payload", () => {
     expect(normalizeLocalUserProfileBackup(undefined)).toBeUndefined();
-    expect(normalizeLocalUserProfileBackup({ displayName: "User" })).toEqual({ displayName: "User" });
+    expect(normalizeLocalUserProfileBackup({ displayName: "Legacy user" })).toEqual({});
     expect(normalizeLocalUserProfileBackup({ avatar: { base64: "/9j/2Q==", mimeType: "image/jpeg" } })).toEqual({
       avatar: { base64: "/9j/2Q==", mimeType: "image/jpeg" }
     });

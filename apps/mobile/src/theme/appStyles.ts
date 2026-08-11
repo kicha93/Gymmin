@@ -2756,15 +2756,6 @@ export const styles = StyleSheet.create({
     gap: 8,
     minWidth: 190
   },
-  profileDashboardName: {
-    fontSize: 24,
-    fontWeight: "900"
-  },
-  profileDashboardEmail: {
-    fontSize: 14,
-    fontWeight: "700",
-    lineHeight: 20
-  },
   profileDashboardAvatarActions: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -3331,63 +3322,98 @@ export const styles = StyleSheet.create({
     lineHeight: 19
   },
   authorSupportCard: {
-    borderRadius: 14,
+    borderRadius: 18,
     borderWidth: 1,
-    gap: 8,
+    elevation: 2,
+    gap: 14,
     marginBottom: 8,
-    padding: 16
+    overflow: "hidden",
+    padding: 20,
+    shadowOffset: { height: 2, width: 0 },
+    shadowOpacity: 0.08,
+    shadowRadius: 7
+  },
+  authorSupportDecoration: {
+    alignItems: "center",
+    flexDirection: "row",
+    opacity: 0.07,
+    position: "absolute",
+    right: 12,
+    top: 20
+  },
+  authorSupportDecorationLeaf: {
+    marginLeft: -22,
+    marginTop: 42,
+    transform: [{ rotate: "-18deg" }]
   },
   authorSupportHeader: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 12
+    gap: 16,
+    paddingRight: 20
   },
   authorSupportIcon: {
     alignItems: "center",
-    borderRadius: 10,
-    height: 44,
+    borderRadius: 16,
+    height: 88,
     justifyContent: "center",
-    width: 44
+    position: "relative",
+    width: 88
+  },
+  authorSupportIconHeart: {
+    position: "absolute",
+    top: 39
   },
   authorSupportHeading: {
     flex: 1,
-    gap: 2,
+    gap: 3,
     minWidth: 0
   },
   authorSupportEyebrow: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "900",
-    letterSpacing: 0.2
+    letterSpacing: 0.35,
+    textTransform: "uppercase"
   },
   authorSupportTitle: {
-    fontSize: 20,
-    fontWeight: "900"
+    fontSize: 26,
+    fontWeight: "900",
+    lineHeight: 31
   },
   authorSupportAuthor: {
-    fontSize: 15,
-    fontWeight: "900",
-    lineHeight: 21
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 19
+  },
+  authorSupportDivider: {
+    height: 1,
+    marginRight: 128
   },
   authorSupportCopy: {
     fontSize: 14,
     fontWeight: "600",
-    lineHeight: 21
+    lineHeight: 22
   },
   authorSupportButton: {
     alignItems: "center",
-    alignSelf: "flex-start",
-    borderRadius: 10,
+    alignSelf: "stretch",
+    borderRadius: 14,
     borderWidth: 1,
     flexDirection: "row",
     gap: 8,
     justifyContent: "center",
-    marginTop: 4,
-    minHeight: 46,
-    paddingHorizontal: 16
+    marginTop: 2,
+    minHeight: 52,
+    paddingHorizontal: 18,
+    position: "relative"
   },
   authorSupportButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "900"
+  },
+  authorSupportButtonExternalIcon: {
+    position: "absolute",
+    right: 18
   },
   reminderWeeklyBlock: {
     gap: 12,

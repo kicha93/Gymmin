@@ -90,7 +90,10 @@ import type {
   WorkoutSessionEntry,
   WorkoutSessionStatus
 } from "./src/domain/workoutSessions";
-import { clampWorkoutSessionEntryIndex } from "./src/domain/workoutSessionPresentation";
+import {
+  clampWorkoutSessionEntryIndex,
+  isSimpleWarmupEntry
+} from "./src/domain/workoutSessionPresentation";
 import {
   getWorkoutSessionSupersetCandidate,
   type WorkoutSessionSupersetSide,
@@ -1398,7 +1401,9 @@ function GymminApp() {
   }
 
   function isWorkoutSessionEntryFillRequired(entry: WorkoutSessionEntry) {
-    return entry.type !== "rest" && entry.type !== "warmup" && entry.plannedTargetType !== "buttonPress";
+    return entry.type !== "rest"
+      && !isSimpleWarmupEntry(entry)
+      && entry.plannedTargetType !== "buttonPress";
   }
 
   function hasIncompleteWorkoutSessionEntries(session: WorkoutSession) {

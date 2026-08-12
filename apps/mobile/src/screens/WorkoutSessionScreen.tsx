@@ -16,7 +16,8 @@ import {
   getPreviousExerciseValues,
   getSessionEntryPreviewStep,
   getSessionEntrySetTarget,
-  groupInlineWorkoutEntries
+  groupInlineWorkoutEntries,
+  isSimpleWarmupEntry
 } from "../domain/workoutSessionPresentation";
 import {
   getSupersetRoundRows,
@@ -555,10 +556,13 @@ export function WorkoutSessionScreen({
     const entry = group.entries[0];
     const setCount = String(group.entries.length || 1);
     const previewStep = getSessionEntryPreviewStep(session, entry);
-    const isUntimedWarmup = entry.type === "warmup" && !entry.plannedTarget?.trim();
-    const title = entry.type === "warmup"
+    const isSimpleWarmup = isSimpleWarmupEntry(entry);
+    const exerciseTitle = previewStep.exerciseName.trim()
+      ? getExerciseDisplayName(previewStep.exerciseName, language)
+      : "";
+    const title = exerciseTitle || (entry.type === "warmup"
       ? entry.sourceStageName?.trim() || t("stageWarmup")
-      : getExerciseDisplayName(previewStep.exerciseName, language);
+      : t("elementWithoutExercise"));
     const plannedTarget = entry.plannedTargetType === "repetitions"
       ? entry.plannedTarget?.trim()
       : entry.plannedTarget?.trim() || getSessionEntrySetTarget(entry);
@@ -581,7 +585,7 @@ export function WorkoutSessionScreen({
             ) : null}
             {title}
           </Text>
-          {!isUntimedWarmup ? (
+          {!isSimpleWarmup ? (
             <Pressable
               accessibilityLabel={t("showDetails")}
               accessibilityRole="button"
@@ -598,7 +602,7 @@ export function WorkoutSessionScreen({
             {entry.notes || previewStep.notes}
           </Text>
         ) : null}
-        {!isUntimedWarmup ? (
+        {!isSimpleWarmup ? (
           <View style={styles.guidedExerciseMetaRow}>
             <View style={styles.guidedRestGroup}>
               <Text style={[styles.guidedRestLabel, { color: theme.text }]}>{t("stageRest")}</Text>

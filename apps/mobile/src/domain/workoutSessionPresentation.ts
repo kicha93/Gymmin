@@ -17,6 +17,18 @@ export type InlineWorkoutEntryGroup = {
   title: string;
 };
 
+export function isSimpleWarmupEntry(entry: WorkoutSessionEntry) {
+  if (entry.type !== "warmup") {
+    return false;
+  }
+
+  return !entry.exerciseId?.trim()
+    && !entry.exerciseName?.trim()
+    && !entry.plannedTarget?.trim()
+    && !entry.plannedWeight?.trim()
+    && !entry.notes?.trim();
+}
+
 export function clampWorkoutSessionEntryIndex(
   entryIndex: unknown,
   session?: WorkoutSession | null

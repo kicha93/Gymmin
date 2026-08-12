@@ -54,8 +54,14 @@ try {
     Assert-LastExitCode "Expo Doctor"
   } finally { Pop-Location }
   Write-Step "Checking patch whitespace..."
-  git diff --check
+  # One-click must never open Git's interactive pager. Otherwise a successful
+  # whitespace check can stop at "(END)" and look like a failed build.
+  # The command is read-only, so disabling safecrlf for this invocation only
+  # suppresses noisy LF/CRLF conversion notices without changing repository
+  # files or the user's Git configuration.
+  git -c core.safecrlf=false --no-pager diff --check
   Assert-LastExitCode "git diff --check"
+  Write-Step "Patch whitespace check passed."
 } finally { Pop-Location }
 
 Write-Step "Running full mobile gates and building the signed release APK..."

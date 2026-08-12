@@ -6,7 +6,8 @@ import {
   getGuidedGroupIndex,
   getPreviousExerciseValues,
   getSessionEntryPreviewStep,
-  groupInlineWorkoutEntries
+  groupInlineWorkoutEntries,
+  isSimpleWarmupEntry
 } from "../workoutSessionPresentation";
 import type { WorkoutSession, WorkoutSessionEntry } from "../workoutSessions";
 import { createStep } from "../workouts";
@@ -39,6 +40,19 @@ function session(entries: WorkoutSessionEntry[], overrides: Partial<WorkoutSessi
 }
 
 describe("workoutSessionPresentation", () => {
+  it("simplifies only an actually empty warmup entry", () => {
+    expect(isSimpleWarmupEntry(entry({ type: "warmup" }))).toBe(true);
+    expect(isSimpleWarmupEntry(entry({
+      exerciseId: "bodyweight-squat",
+      exerciseName: "Bodyweight squat",
+      plannedTarget: "15",
+      plannedTargetType: "repetitions",
+      type: "warmup"
+    }))).toBe(false);
+    expect(isSimpleWarmupEntry(entry({ plannedTarget: "30", type: "warmup" }))).toBe(false);
+    expect(isSimpleWarmupEntry(entry({ exerciseName: "Leg swings", type: "warmup" }))).toBe(false);
+  });
+
   it("clamps persisted entry indexes to the current session shape", () => {
     const workoutSession = session([entry({ id: "one" }), entry({ id: "two" })]);
 

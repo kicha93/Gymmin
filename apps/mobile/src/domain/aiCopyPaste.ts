@@ -5,8 +5,6 @@ import { createStep, type GoalType, type WorkoutDraft, type WorkoutStep } from "
 import type { WorkoutCreatorDraft } from "./workoutCreator";
 
 export const AI_RESPONSE_MAX_LENGTH = 1_000_000;
-export type AiCopyPasteMode = "create" | "rewrite";
-
 export type AiWorkoutImportIssue = {
   code: "unknown-exercise" | "validation";
   exerciseName: string;
@@ -24,17 +22,12 @@ export type AiWorkoutImportResult = {
 type PromptOptions = {
   catalogDataSource?: ExerciseCatalogDataSource;
   creatorDraft?: WorkoutCreatorDraft;
-  instruction?: string;
   language: "pl" | "en";
-  mode: AiCopyPasteMode;
-  sourceWorkout?: SavedWorkout | null;
 };
 
 export function buildAiWorkoutPrompt(options: PromptOptions) {
   const languageLabel = options.language === "pl" ? "Polish" : "English";
-  const userInput = options.mode === "create"
-    ? JSON.stringify(options.creatorDraft ?? {}, null, 2)
-    : JSON.stringify({ instruction: options.instruction?.trim() ?? "", workout: compactWorkout(options.sourceWorkout) }, null, 2);
+  const userInput = JSON.stringify(options.creatorDraft ?? {}, null, 2);
   return [
     "You are preparing a workout for the offline Gymmin mobile app.",
     `Write user-facing text in ${languageLabel}.`,
@@ -66,7 +59,7 @@ export function buildAiWorkoutPrompt(options: PromptOptions) {
         }]
       }]
     }),
-    options.mode === "create" ? "TASK: Create a new workout plan from this local form:" : "TASK: Rewrite the workout according to the instruction. Preserve useful details unless asked to change them:",
+    "TASK: Create a new workout plan from this local form:",
     userInput,
     "CATALOG (id|English name|Polish name):",
     getCompactExerciseCatalog(options.catalogDataSource)
@@ -197,24 +190,6 @@ export function replaceUnknownExercise(result: AiWorkoutImportResult, stepId: st
 
 export function canApplyAiWorkoutResult(result: AiWorkoutImportResult | null) {
   return Boolean(result && result.workouts.length && !result.errors.length && !result.issues.length);
-}
-
-export function applyAiRewrite(source: SavedWorkout, proposal: SavedWorkout): SavedWorkout {
-  return {
-    ...proposal,
-    createdAt: source.createdAt,
-    id: source.id,
-    draft: { ...proposal.draft, steps: proposal.draft.steps.map((step) => ({ ...step })) }
-  };
-}
-
-function compactWorkout(workout?: SavedWorkout | null) {
-  if (!workout) return null;
-  return {
-    name: workout.name,
-    notes: workout.draft.notes,
-    steps: workout.draft.steps.map(({ id: _id, ...step }) => step)
-  };
 }
 
 function parseLooseJson(text: string): unknown | null {

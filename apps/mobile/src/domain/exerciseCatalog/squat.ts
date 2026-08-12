@@ -1370,9 +1370,9 @@ export const squat = [
     "libraryTier": "main"
   },
   {
-    "id": "machine-hack-squat",
-    "name": "Machine Hack Squat",
-    "polishName": "Hack squat na maszynie",
+    "id": "hack-squat",
+    "name": "Hack Squat",
+    "polishName": "Hack squat",
     "category": "SQUAT",
     "muscleImpact": {
       "abductors": 0,

@@ -800,9 +800,9 @@ export const benchPress = [
     "libraryTier": "main"
   },
   {
-    "id": "machine-chest-press",
-    "name": "Machine Chest Press",
-    "polishName": "Wyciskanie na maszynie siedząc",
+    "id": "chest-press",
+    "name": "Chest Press",
+    "polishName": "Wyciskanie na klatkę piersiową",
     "category": "BENCH_PRESS",
     "muscleImpact": {
       "abductors": 0,

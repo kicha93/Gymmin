@@ -60,7 +60,7 @@ for(const [source,target] of Object.entries(aliases)){
 }
 
 const reportData={exerciseCount:exercises.length,idMappingCount:Object.keys(idAliases).length,errors,warnings};
-if(exercises.length!==963)errors.push({code:"unexpected_exercise_count",expected:963,actual:exercises.length});
+if(exercises.length!==965)errors.push({code:"unexpected_exercise_count",expected:965,actual:exercises.length});
 let previousReport;
 try { previousReport=JSON.parse(await readFile(reportPath,"utf8")); } catch { previousReport=undefined; }
 const previousData=previousReport?{exerciseCount:previousReport.exerciseCount,idMappingCount:previousReport.idMappingCount,errors:previousReport.errors,warnings:previousReport.warnings}:undefined;

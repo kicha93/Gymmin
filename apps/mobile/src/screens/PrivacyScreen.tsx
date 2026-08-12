@@ -19,7 +19,7 @@ const content = {
       { title: "Eksport, email i linki zewnętrzne", text: "Dane opuszczają Gymmin tylko po świadomej akcji: utworzeniu eksportu lub backupu, wklejeniu treści do innej aplikacji albo wysłaniu wiadomości przez systemowego klienta poczty. Buy Me a Coffee, polityka prywatności i inne jawne linki HTTPS otwierają zewnętrzną aplikację. Gymmin nie wysyła danych w tle." },
       { title: "Zgłoszenia błędów i kontakt", text: "Formularz działa lokalnie: przygotowuje ograniczoną wiadomość do kontakt@gymmin.app i otwiera klienta poczty. Dopiero Ty sprawdzasz i wysyłasz email. Raport może zawierać opis, wersję aplikacji i systemu, model urządzenia, język, bieżący ekran oraz maksymalnie 10 bezpiecznych zdarzeń diagnostycznych. Nie dołączamy treningów, historii, ciężarów, promptów AI, tokenów ani dawnych identyfikatorów konta." },
       { title: "Retencja, usuwanie i kopie", text: "Gymmin nie ma serwerowej kopii Twoich danych. Dane pozostają na urządzeniu do czasu ich zmiany, importu backupu, użycia funkcji „Usuń wszystkie dane” albo odinstalowania aplikacji. W Ustawieniach możesz wcześniej utworzyć lokalną kopię .gymmin.json. Nie jest potrzebny osobny wniosek o usunięcie danych ani usunięcie konta, ponieważ Gymmin nie posiada kont użytkowników." },
-      { title: "Dobrowolne wsparcie", text: "Przycisk „Postaw mi kawę” jedynie otwiera https://buymeacoffee.com/atomicjumpr. Wsparcie jest dobrowolne, nie daje funkcji premium i Gymmin nie przekazuje tam danych użytkownika." }
+      { title: "Dobrowolne wsparcie", text: "Przycisk „Postaw kawę” jedynie otwiera https://buymeacoffee.com/atomicjumpr. Wsparcie jest dobrowolne, nie daje funkcji premium i Gymmin nie przekazuje tam danych użytkownika." }
     ]
   },
   en: {

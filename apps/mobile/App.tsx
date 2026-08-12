@@ -167,7 +167,6 @@ import {
 import { WorkoutHeaderElapsedTime } from "./src/components/WorkoutSessionControls";
 import { AiCopyPasteFlow } from "./src/components/AiCopyPasteFlow";
 import {
-  applyAiRewrite,
   buildAiWorkoutPrompt,
   canApplyAiWorkoutResult,
   parseAiWorkoutResponse,
@@ -190,7 +189,6 @@ import {
 import { WorkoutSessionDetailScreen } from "./src/screens/WorkoutSessionDetailScreen";
 import { WorkoutDetailScreen } from "./src/screens/WorkoutDetailScreen";
 import { WorkoutCreatorScreen } from "./src/screens/WorkoutCreatorScreen";
-import { WorkoutAiRewriteScreen } from "./src/screens/WorkoutAiRewriteScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { SettingsSheetContent } from "./src/components/SettingsSheetContent";
 import { ArticleDetailScreen } from "./src/screens/ArticleDetailScreen";
@@ -749,13 +747,6 @@ function GymminApp() {
   const [creatorAiPrompt, setCreatorAiPrompt] = useState("");
   const [creatorAiResponse, setCreatorAiResponse] = useState("");
   const [creatorAiResult, setCreatorAiResult] = useState<AiWorkoutImportResult | null>(null);
-  const [rewriteInstruction, setRewriteInstruction] = useState("");
-  const [rewriteError, setRewriteError] = useState("");
-  const [isRewriteSubmitting, setIsRewriteSubmitting] = useState(false);
-  const [rewriteSourceWorkoutId, setRewriteSourceWorkoutId] = useState<string | null>(null);
-  const [rewriteAiPrompt, setRewriteAiPrompt] = useState("");
-  const [rewriteAiResponse, setRewriteAiResponse] = useState("");
-  const [rewriteAiResult, setRewriteAiResult] = useState<AiWorkoutImportResult | null>(null);
   const [creatorCollapsedSections, setCreatorCollapsedSections] = useState<Record<string, boolean>>({});
   const [creatorProfileName, setCreatorProfileName] = useState("");
   const [trainingFactIndex, setTrainingFactIndex] = useState(0);
@@ -1119,11 +1110,6 @@ function GymminApp() {
   const selectedWorkout = useMemo(
     () => savedWorkouts.find((item) => item.id === selectedWorkoutId) ?? activeWorkouts[0] ?? savedWorkouts[0] ?? null,
     [activeWorkouts, savedWorkouts, selectedWorkoutId]
-  );
-
-  const rewriteSourceWorkout = useMemo(
-    () => savedWorkouts.find((item) => item.id === (rewriteSourceWorkoutId ?? selectedWorkoutId)) ?? null,
-    [rewriteSourceWorkoutId, savedWorkouts, selectedWorkoutId]
   );
 
   const selectedWorkoutSessions = useMemo(
@@ -1521,34 +1507,10 @@ function GymminApp() {
       return;
     }
     setCreatorSubmitError("");
-    setCreatorAiPrompt(buildAiWorkoutPrompt({ creatorDraft, language, mode: "create" }));
+    setCreatorAiPrompt(buildAiWorkoutPrompt({ creatorDraft, language }));
     setCreatorAiResponse("");
     setCreatorAiResult(null);
     setCreatorPhase("form");
-  }
-
-  async function submitWorkoutRewrite() {
-    const sourceWorkout = savedWorkouts.find((item) => item.id === (rewriteSourceWorkoutId ?? selectedWorkoutId));
-    const instruction = rewriteInstruction.trim();
-
-    if (isRewriteSubmitting) {
-      return;
-    }
-
-    if (!sourceWorkout) {
-      setRewriteError(t("noWorkout"));
-      return;
-    }
-
-    if (!instruction) {
-      setRewriteError(t("aiRewriteRequired"));
-      return;
-    }
-
-    setRewriteError("");
-    setRewriteAiPrompt(buildAiWorkoutPrompt({ instruction, language, mode: "rewrite", sourceWorkout }));
-    setRewriteAiResponse("");
-    setRewriteAiResult(null);
   }
 
   function applyCreatedAiWorkouts() {
@@ -1564,17 +1526,6 @@ function GymminApp() {
     setCreatorAiResponse("");
     setCreatorAiResult(null);
     setActiveScreen("workouts");
-  }
-
-  function applyLocalAiRewrite() {
-    if (!canApplyAiWorkoutResult(rewriteAiResult) || !rewriteSourceWorkout) return;
-    const nextWorkout = applyAiRewrite(rewriteSourceWorkout, rewriteAiResult!.workouts[0]);
-    setSavedWorkouts((current) => current.map((item) => item.id === nextWorkout.id ? nextWorkout : item));
-    setSelectedWorkoutId(nextWorkout.id);
-    setRewriteAiPrompt("");
-    setRewriteAiResponse("");
-    setRewriteAiResult(null);
-    setActiveScreen("workoutDetail");
   }
 
   function saveCreatorProfileAndSubmit() {
@@ -2045,11 +1996,6 @@ function GymminApp() {
       return true;
     }
 
-    if (activeScreen === "workoutAiRewrite") {
-      setActiveScreen("workoutDetail");
-      return true;
-    }
-
     if (activeScreen === "achievements") {
       setActiveScreen("profile");
       return true;
@@ -2363,7 +2309,6 @@ function GymminApp() {
         theme={theme}
         trainingFactPill={renderTrainingFactPill()}
         weeklyPlanCard={renderWeeklyPlanHomeCard()}
-        workoutCreatorButton={renderWorkoutCreatorButton()}
         workoutSortActions={renderWorkoutSortActions(false)}
         onOpenArticle={(articleId) => {
           setSelectedArticleId(articleId);
@@ -2576,7 +2521,6 @@ function GymminApp() {
         onChangeAvatar={changeUserAvatar}
         onRemoveAvatar={removeUserAvatar}
         onOpenAchievements={() => setActiveScreen("achievements")}
-        onOpenSessions={() => setActiveScreen("workoutHistory")}
         onOpenBugReport={() => setActiveScreen("bugReport")}
       />
     );
@@ -2918,41 +2862,6 @@ function GymminApp() {
                 />
               )
             )}
-            {activeScreen === "workoutAiRewrite" && (
-              rewriteAiPrompt ? (
-                <AiCopyPasteFlow
-                  canApply={canApplyAiWorkoutResult(rewriteAiResult)}
-                  language={language}
-                  prompt={rewriteAiPrompt}
-                  response={rewriteAiResponse}
-                  result={rewriteAiResult}
-                  t={t}
-                  theme={theme}
-                  onApply={applyLocalAiRewrite}
-                  onParse={() => setRewriteAiResult(parseAiWorkoutResponse(rewriteAiResponse))}
-                  onReplaceExercise={(stepId, exerciseId) => setRewriteAiResult((current) => current
-                    ? replaceUnknownExercise(current, stepId, exerciseId)
-                    : current)}
-                  onResponseChange={(value) => {
-                    setRewriteAiResponse(value);
-                    setRewriteAiResult(null);
-                  }}
-                />
-              ) : (
-                <WorkoutAiRewriteScreen
-                  error={rewriteError}
-                  instruction={rewriteInstruction}
-                  sourceWorkout={rewriteSourceWorkout}
-                  t={t}
-                  theme={theme}
-                  onInstructionChange={(value) => {
-                    setRewriteInstruction(value);
-                    if (rewriteError) setRewriteError("");
-                  }}
-                  onSubmit={() => void submitWorkoutRewrite()}
-                />
-              )
-            )}
             {activeScreen === "workoutDetail" && (
               <WorkoutDetailScreen
                 getExecutionModeLabel={getExecutionModeLabel}
@@ -2967,15 +2876,6 @@ function GymminApp() {
                 onEditWorkout={openWorkoutEditor}
                 onOpenExercise={openExerciseDetail}
                 onOpenHistory={openWorkoutHistory}
-                onModifyWithAi={(workoutId) => {
-                  setRewriteSourceWorkoutId(workoutId);
-                  setRewriteInstruction("");
-                  setRewriteError("");
-                  setRewriteAiPrompt("");
-                  setRewriteAiResponse("");
-                  setRewriteAiResult(null);
-                  setActiveScreen("workoutAiRewrite");
-                }}
                 onOpenSession={openWorkoutSessionDetail}
                 onSetArchived={updateWorkoutArchiveState}
                 onStartWorkout={() => startSelectedWorkoutSession()}
@@ -3065,7 +2965,6 @@ function GymminApp() {
               (item.key === "workouts" &&
                 (activeScreen === "workoutDetail" ||
                   activeScreen === "workoutCreator" ||
-                  activeScreen === "workoutAiRewrite" ||
                   activeScreen === "workoutHistory" ||
                   activeScreen === "workoutSessionDetail" ||
                   activeScreen === "progress" ||

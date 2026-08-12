@@ -381,11 +381,9 @@ function AuthorSupportCard({ onPress, t, theme }: AuthorSupportCardProps) {
           <Ionicons name="heart-outline" size={15} color={theme.primary} style={styles.authorSupportIconHeart} />
         </View>
         <View style={styles.authorSupportHeading}>
-          <Text style={[styles.authorSupportEyebrow, { color: theme.primary }]}>
+          <Text style={[styles.authorSupportTitle, { color: theme.text }]}>
             {t("supportGymminDevelopment")}
           </Text>
-          <Text style={[styles.authorSupportTitle, { color: theme.text }]}>Gymmin</Text>
-          <Text style={[styles.authorSupportAuthor, { color: theme.muted }]}>{t("createdByAuthor")}</Text>
         </View>
       </View>
       <View style={[styles.authorSupportDivider, { backgroundColor: theme.border }]} />

@@ -64,8 +64,8 @@ This note tracks the current workout-view UX decisions.
   `Archive | Delete` row and a full-width `Start workout` action.
   An archived workout becomes read-only: only `Unarchive | Delete` remain
   actionable, while edit, export and start are hidden.
-- `Modify with AI` opens the local copy/paste flow. It never calls the legacy AI
-  transport and does not alter the source workout before the user selects Apply.
+- Saved workouts are edited only in the regular workout editor. The former
+  `Modify with AI` flow and its navigation route have been removed.
 - Export opens a local format sheet for CSV or Excel XLSX and shows a disabled/loading state while the file is generated.
 - CSV uses UTF-8 with BOM, `;` separators, RFC-style quote escaping and neutralizes formula-like user text before it reaches a spreadsheet application.
 - CSV and XLSX contain the same compact columns: stage, type, exercise, sets,

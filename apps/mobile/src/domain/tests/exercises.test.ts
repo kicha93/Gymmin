@@ -93,18 +93,30 @@ describe("exercise catalog cleanup", () => {
     expect(getExerciseSectionsForStageType("en", "exercise", "lats").flatMap((section) => section.data.map((entry) => entry.exerciseId))).not.toContain("row-face-pull-1044");
   });
 
-  it("adds the recommended machine exercises with catalog metadata", () => {
-    const machineHipThrust = findExerciseById("machine-hip-thrust");
+  it("uses general names for canonical equipment exercises", () => {
+    const hipThrust = findExerciseById("hip-thrust");
     const assistedPullUp = findExerciseById("assisted-pull-up-machine");
 
-    expect(machineHipThrust?.polishName).toBe("Hip thrust na maszynie");
-    expect(machineHipThrust?.category).toBe("HIP_RAISE");
-    expect(machineHipThrust ? getRequiredEquipment(machineHipThrust) : []).toContain("machine");
+    expect(hipThrust?.name).toBe("Hip Thrust");
+    expect(hipThrust?.polishName).toBe("Hip thrust");
+    expect(hipThrust?.category).toBe("HIP_RAISE");
+    expect(hipThrust ? getRequiredEquipment(hipThrust) : []).toContain("machine");
     expect(assistedPullUp?.category).toBe("PULL_UP");
+
+    expect(findExerciseById("hack-squat")?.name).toBe("Hack Squat");
+    expect(findExerciseById("chest-press")?.name).toBe("Chest Press");
+    expect(findExerciseById("shoulder-press")?.name).toBe("Shoulder Press");
+    expect(findExerciseById("hip-abduction")?.name).toBe("Hip Abduction");
+    expect(findExerciseById("hip-adduction")?.name).toBe("Hip Adduction");
+    expect(findExerciseById("glute-kickback")?.name).toBe("Glute Kickback");
+    expect(findExerciseById("bulgarian-split-squat")?.name).toBe("Bulgarian Split Squat");
+    expect(findExerciseById("pullover")?.name).toBe("Pullover");
+    expect(findExerciseById("reverse-pec-deck")?.name).toBe("Reverse Pec Deck");
+
   });
 
   it("registers supplied exercise image pairs while allowing image-less exercises", () => {
-    expect(getExerciseImageAssetKeys("machine-hip-thrust")).toHaveLength(2);
+    expect(getExerciseImageAssetKeys("hip-thrust")).toHaveLength(2);
     expect(getExerciseImageAssetKeys("lying-leg-curl")).toHaveLength(0);
   });
 

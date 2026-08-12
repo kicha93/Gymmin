@@ -613,9 +613,9 @@
     "libraryTier": "main"
   },
   {
-    "id": "machine-chest-press",
-    "polishName": "Wyciskanie na maszynie siedząc",
-    "englishName": "Machine Chest Press",
+    "id": "chest-press",
+    "polishName": "Wyciskanie na klatkę piersiową",
+    "englishName": "Chest Press",
     "category": "BENCH_PRESS",
     "requiredEquipment": [
       "machine"
@@ -2585,9 +2585,9 @@
     "libraryTier": "main"
   },
   {
-    "id": "rear-delt-machine",
+    "id": "reverse-pec-deck",
     "polishName": "Odwrotne rozpiętki na maszynie",
-    "englishName": "Rear Delt Machine",
+    "englishName": "Reverse Pec Deck",
     "category": "FLYE",
     "requiredEquipment": [
       "machine"
@@ -2776,9 +2776,9 @@
     "libraryTier": "main"
   },
   {
-    "id": "cable-glute-kickback",
-    "polishName": "Kickback pośladkowy na wyciągu",
-    "englishName": "Cable Glute Kickback",
+    "id": "glute-kickback",
+    "polishName": "Kickback pośladkowy",
+    "englishName": "Glute Kickback",
     "category": "HIP_RAISE",
     "requiredEquipment": [
       "cableMachine"
@@ -2864,9 +2864,9 @@
     "libraryTier": "main"
   },
   {
-    "id": "machine-hip-thrust",
-    "polishName": "Hip thrust na maszynie",
-    "englishName": "Machine Hip Thrust",
+    "id": "hip-thrust",
+    "polishName": "Hip thrust",
+    "englishName": "Hip Thrust",
     "category": "HIP_RAISE",
     "requiredEquipment": [
       "machine"
@@ -2978,9 +2978,9 @@
     "libraryTier": "main"
   },
   {
-    "id": "machine-hip-abduction",
-    "polishName": "Odwodzenie bioder na maszynie",
-    "englishName": "Machine Hip Abduction",
+    "id": "hip-abduction",
+    "polishName": "Odwodzenie bioder",
+    "englishName": "Hip Abduction",
     "category": "HIP_STABILITY",
     "requiredEquipment": [
       "machine"
@@ -2988,9 +2988,9 @@
     "libraryTier": "main"
   },
   {
-    "id": "machine-hip-adduction",
-    "polishName": "Przywodzenie bioder na maszynie",
-    "englishName": "Machine Hip Adduction",
+    "id": "hip-adduction",
+    "polishName": "Przywodzenie bioder",
+    "englishName": "Hip Adduction",
     "category": "HIP_STABILITY",
     "requiredEquipment": [
       "machine"
@@ -3676,6 +3676,16 @@
     "category": "LEG_RAISE",
     "requiredEquipment": [],
     "libraryTier": "variation"
+  },
+  {
+    "id": "bulgarian-split-squat",
+    "polishName": "Przysiad bułgarski",
+    "englishName": "Bulgarian Split Squat",
+    "category": "LUNGE",
+    "requiredEquipment": [
+      "bench"
+    ],
+    "libraryTier": "main"
   },
   {
     "id": "lunge-alternating-barbell-forward-lunge-608",
@@ -5607,6 +5617,17 @@
     "libraryTier": "variation"
   },
   {
+    "id": "pullover",
+    "polishName": "Przenoszenie hantla za głowę leżąc",
+    "englishName": "Pullover",
+    "category": "PULLOVER",
+    "requiredEquipment": [
+      "bench",
+      "dumbbell"
+    ],
+    "libraryTier": "main"
+  },
+  {
     "id": "pull-up-ez-bar-pullover-906",
     "polishName": "Ściąganie sztangi z gryfem łamanym",
     "englishName": "EZ-Bar Pull-over",
@@ -6749,9 +6770,9 @@
     "libraryTier": "main"
   },
   {
-    "id": "machine-shoulder-press",
-    "polishName": "Wyciskanie barków na maszynie",
-    "englishName": "Machine Shoulder Press",
+    "id": "shoulder-press",
+    "polishName": "Wyciskanie nad głowę",
+    "englishName": "Shoulder Press",
     "category": "SHOULDER_PRESS",
     "requiredEquipment": [
       "machine"
@@ -7648,9 +7669,9 @@
     "libraryTier": "main"
   },
   {
-    "id": "machine-hack-squat",
-    "polishName": "Hack squat na maszynie",
-    "englishName": "Machine Hack Squat",
+    "id": "hack-squat",
+    "polishName": "Hack squat",
+    "englishName": "Hack Squat",
     "category": "SQUAT",
     "requiredEquipment": [
       "machine"

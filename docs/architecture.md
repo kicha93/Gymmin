@@ -28,7 +28,7 @@ The runtime opens `gymmin.local.v1.*` directly. Because the account-backed build
 
 ## AI
 
-Create and rewrite build a prompt locally. The user copies it into an external assistant and pastes JSON back. Gymmin validates/matches the result before a workout is saved. Prompts, responses, and creator profiles are not transmitted by Gymmin.
+Workout creation builds a prompt locally. The user copies it into an external assistant and pastes JSON back. Gymmin validates/matches the result before a workout is saved. Prompts, responses, and creator profiles are not transmitted by Gymmin. Saved workouts are modified only through the regular local editor; the AI rewrite flow has been removed.
 
 ## Backup and deletion
 

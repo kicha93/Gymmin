@@ -24,7 +24,6 @@ export type ScreenKey =
   | "workoutHistory"
   | "workoutSessionDetail"
   | "workoutCreator"
-  | "workoutAiRewrite"
   | "workoutDetail"
   | "workoutSession"
   | "weeklyPlan";
@@ -50,7 +49,6 @@ export function getScreenTitle(
     settings: t("settings"),
     terms: t("terms"),
     weeklyPlan: t("weeklyPlan"),
-    workoutAiRewrite: t("aiRewriteTitle"),
     workoutCreator: t("aiCreator"),
     workoutDetail: t("workout"),
     workoutHistory: t("workoutHistoryTitle"),

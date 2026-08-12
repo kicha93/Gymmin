@@ -10,8 +10,8 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 - history, progress, weekly plan, favorites, achievements and local reminders;
 - local settings, creator profiles and private avatar; every setting persists in local storage and participates in `.gymmin.json` backup/import rather than sync;
 - an always-visible header action for the local profile, with no login/account panel;
-- an always-available local workout creator that is never gated by connectivity, account state, or the number of saved workouts;
-- AI create/rewrite through copy/paste only;
+- a local workout creator available from Workouts and never gated by connectivity or the number of saved workouts; it is not duplicated on Home;
+- AI workout creation through copy/paste only; saved-workout AI rewrite has been removed;
 - offline workout CSV/XLSX export;
 - `.gymmin.json` backup/import, including avatar and backward-compatible profile handling;
 - full local data deletion;

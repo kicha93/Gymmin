@@ -3360,21 +3360,10 @@ export const styles = StyleSheet.create({
     gap: 3,
     minWidth: 0
   },
-  authorSupportEyebrow: {
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 0.35,
-    textTransform: "uppercase"
-  },
   authorSupportTitle: {
     fontSize: 26,
     fontWeight: "900",
     lineHeight: 31
-  },
-  authorSupportAuthor: {
-    fontSize: 14,
-    fontWeight: "700",
-    lineHeight: 19
   },
   authorSupportDivider: {
     height: 1,

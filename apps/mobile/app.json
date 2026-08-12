@@ -14,7 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
-        "foregroundImage": "./assets/gymmin-app-icon.png"
+        "foregroundImage": "./assets/gymmin-adaptive-icon.png"
       },
       "versionCode": 2,
       "package": "com.gymmin.app"

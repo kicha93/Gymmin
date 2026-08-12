@@ -572,9 +572,9 @@ export const shoulderPress = [
     "libraryTier": "main"
   },
   {
-    "id": "machine-shoulder-press",
-    "name": "Machine Shoulder Press",
-    "polishName": "Wyciskanie barków na maszynie",
+    "id": "shoulder-press",
+    "name": "Shoulder Press",
+    "polishName": "Wyciskanie nad głowę",
     "category": "SHOULDER_PRESS",
     "muscleImpact": {
       "abductors": 0,

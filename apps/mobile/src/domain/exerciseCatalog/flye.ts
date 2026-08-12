@@ -458,8 +458,8 @@ export const flye = [
     "libraryTier": "main"
   },
   {
-    "id": "rear-delt-machine",
-    "name": "Rear Delt Machine",
+    "id": "reverse-pec-deck",
+    "name": "Reverse Pec Deck",
     "polishName": "Odwrotne rozpiętki na maszynie",
     "category": "FLYE",
     "muscleImpact": {

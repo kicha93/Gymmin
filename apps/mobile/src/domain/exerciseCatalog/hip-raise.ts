@@ -173,9 +173,9 @@ export const hipRaise = [
     "libraryTier": "main"
   },
   {
-    "id": "cable-glute-kickback",
-    "name": "Cable Glute Kickback",
-    "polishName": "Kickback pośladkowy na wyciągu",
+    "id": "glute-kickback",
+    "name": "Glute Kickback",
+    "polishName": "Kickback pośladkowy",
     "category": "HIP_RAISE",
     "muscleImpact": {
       "abductors": 0,
@@ -743,9 +743,9 @@ export const hipRaise = [
     "libraryTier": "main"
   },
   {
-    "id": "machine-hip-thrust",
-    "name": "Machine Hip Thrust",
-    "polishName": "Hip thrust na maszynie",
+    "id": "hip-thrust",
+    "name": "Hip Thrust",
+    "polishName": "Hip thrust",
     "category": "HIP_RAISE",
     "muscleImpact": {
       "abductors": 0,

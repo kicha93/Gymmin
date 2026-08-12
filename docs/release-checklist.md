@@ -2,7 +2,7 @@
 
 Gymmin is a mobile-only, local-only application. This checklist contains no backend deployment, account, synchronization, billing, credits, or remote AI steps.
 
-Product availability invariants: the top-right local profile action is always visible, no login panel exists, and the workout creator is always available without an account or internet connection.
+Product availability invariants: the top-right local profile action is always visible, no login panel exists, and the workout creator is available from Workouts without an account or internet connection. Home does not duplicate the creator action. Saved-workout AI rewrite is not part of the product.
 
 ## Code gates
 
@@ -43,7 +43,6 @@ Record exactly one status for every scenario: `PASS`, `FAIL`, or `NOT TESTED`. A
 | F. Avatar | P1 | NOT TESTED |  |  |
 | G. AI create | P0 | NOT TESTED |  |  |
 | H. Invalid AI response | P1 | NOT TESTED |  |  |
-| I. AI rewrite | P0 | NOT TESTED |  |  |
 | J. Reminders | P1 | NOT TESTED |  |  |
 | K. Report Bug | P1 | NOT TESTED |  |  |
 | L. Buy Me a Coffee | P1 | NOT TESTED |  |  |
@@ -51,7 +50,7 @@ Record exactly one status for every scenario: `PASS`, `FAIL`, or `NOT TESTED`. A
 
 Exercise media visual smoke: **PASS** on a physical Android device (2026-08-10). The approved sample compared original PNG against Balanced WebP Q90, max 900 x 1140, without crop. This result does not change the status of unrelated A-M scenarios.
 
-P0 execution order: C → E → G → I → M. P1 follows after P0 or in parallel on a separate prepared device. If a smoke test fails, preserve RC commit `2947f7d`, document the exact failure and root cause, and make any approved fix in a separate commit.
+P0 execution order: C → E → G → M. P1 follows after P0 or in parallel on a separate prepared device. If a smoke test fails, preserve RC commit `2947f7d`, document the exact failure and root cause, and make any approved fix in a separate commit.
 
 ### A. Fresh install
 
@@ -115,13 +114,6 @@ P0 execution order: C → E → G → I → M. P1 follows after P0 or in paralle
 - [ ] paste malformed JSON and verify a useful validation error
 - [ ] paste an unknown exercise and select a catalog replacement
 - [ ] confirm Save remains disabled until all critical errors are fixed
-
-### I. AI rewrite
-
-- [ ] choose an existing workout and copy the rewrite prompt
-- [ ] paste an external AI response and review it
-- [ ] cancel and confirm the original workout is unchanged
-- [ ] repeat and Apply; verify only the intended workout changes
 
 ### J. Reminders
 

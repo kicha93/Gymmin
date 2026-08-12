@@ -18,7 +18,6 @@ type ProfileScreenProps = {
   onChangeAvatar: () => void;
   onOpenAchievements: () => void;
   onOpenBugReport: () => void;
-  onOpenSessions: () => void;
   onRemoveAvatar: () => void;
   t: (key: TranslationKey) => string;
   theme: Theme;
@@ -37,7 +36,6 @@ export function ProfileScreen({
   onChangeAvatar,
   onOpenAchievements,
   onOpenBugReport,
-  onOpenSessions,
   onRemoveAvatar,
   t,
   theme,
@@ -96,7 +94,6 @@ export function ProfileScreen({
       <View style={styles.profileQuickActionsSection}>
         <Text style={[styles.profileSectionHeading, { color: theme.text }]}>{t("quickActions")}</Text>
         <View style={styles.profileQuickActionsGrid}>
-          <LocalAction icon="calendar-outline" label={t("profileSessions")} theme={theme} onPress={onOpenSessions} />
           <LocalAction icon="warning-outline" label={t("bugReport")} theme={theme} onPress={onOpenBugReport} />
         </View>
       </View>

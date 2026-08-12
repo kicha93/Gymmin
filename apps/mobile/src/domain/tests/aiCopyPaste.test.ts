@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   AI_RESPONSE_MAX_LENGTH,
-  applyAiRewrite,
   buildAiWorkoutPrompt,
   canApplyAiWorkoutResult,
   getCompactExerciseCatalog,
@@ -11,7 +10,6 @@ import {
 } from "../aiCopyPaste";
 import { exercises } from "../exercises";
 import { exerciseCatalogDataSource, type ExerciseCatalogDataSource } from "../exerciseCatalogDataSource";
-import type { SavedWorkout } from "../savedWorkouts";
 
 const catalogExercise = exercises[0];
 
@@ -41,8 +39,8 @@ function response(exercise: Record<string, unknown> = {}) {
 
 describe("local AI copy/paste", () => {
   it("builds PL and EN create prompts from the canonical catalog without backend fields", () => {
-    const pl = buildAiWorkoutPrompt({ creatorDraft: { primaryGoal: "Siła" }, language: "pl", mode: "create" });
-    const en = buildAiWorkoutPrompt({ creatorDraft: { primaryGoal: "Strength" }, language: "en", mode: "create" });
+    const pl = buildAiWorkoutPrompt({ creatorDraft: { primaryGoal: "Siła" }, language: "pl" });
+    const en = buildAiWorkoutPrompt({ creatorDraft: { primaryGoal: "Strength" }, language: "en" });
     for (const prompt of [pl, en]) {
       expect(prompt).toContain(`${catalogExercise.id}|${catalogExercise.name}|${catalogExercise.polishName}`);
       expect(prompt).toContain("restSeconds");
@@ -79,21 +77,11 @@ describe("local AI copy/paste", () => {
     const prompt = buildAiWorkoutPrompt({
       catalogDataSource,
       creatorDraft: { primaryGoal: "Strength" },
-      language: "en",
-      mode: "create"
+      language: "en"
     });
 
     expect(prompt).toContain("datasource-exercise|Datasource exercise|Ćwiczenie ze źródła danych");
     expect(prompt).not.toContain(`${catalogExercise.id}|${catalogExercise.name}|${catalogExercise.polishName}`);
-  });
-
-  it("builds rewrite prompt with an immutable compact source workout", () => {
-    const source = sourceWorkout();
-    const before = JSON.stringify(source);
-    const prompt = buildAiWorkoutPrompt({ instruction: "Shorten it", language: "en", mode: "rewrite", sourceWorkout: source });
-    expect(prompt).toContain("Shorten it");
-    expect(prompt).toContain(source.name);
-    expect(JSON.stringify(source)).toBe(before);
   });
 
   it("parses plain JSON and Markdown fenced JSON with restSeconds", () => {
@@ -141,24 +129,4 @@ describe("local AI copy/paste", () => {
     expect(canApplyAiWorkoutResult(repaired)).toBe(true);
   });
 
-  it("does not mutate the original workout until rewrite apply", () => {
-    const source = sourceWorkout();
-    const before = JSON.stringify(source);
-    const proposal = parseAiWorkoutResponse(response(), 22).workouts[0];
-    expect(JSON.stringify(source)).toBe(before);
-    const applied = applyAiRewrite(source, proposal);
-    expect(applied.id).toBe(source.id);
-    expect(applied.createdAt).toBe(source.createdAt);
-    expect(applied.draft).not.toBe(source.draft);
-    expect(JSON.stringify(source)).toBe(before);
-  });
 });
-
-function sourceWorkout(): SavedWorkout {
-  return {
-    createdAt: "2026-01-01T00:00:00.000Z",
-    draft: { name: "Original", notes: "", sport: "strength", steps: [] },
-    id: "source",
-    name: "Original"
-  };
-}

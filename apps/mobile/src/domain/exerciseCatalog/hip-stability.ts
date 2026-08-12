@@ -401,9 +401,9 @@ export const hipStability = [
     "libraryTier": "main"
   },
   {
-    "id": "machine-hip-abduction",
-    "name": "Machine Hip Abduction",
-    "polishName": "Odwodzenie bioder na maszynie",
+    "id": "hip-abduction",
+    "name": "Hip Abduction",
+    "polishName": "Odwodzenie bioder",
     "category": "HIP_STABILITY",
     "muscleImpact": {
       "abductors": 5,
@@ -458,9 +458,9 @@ export const hipStability = [
     "libraryTier": "main"
   },
   {
-    "id": "machine-hip-adduction",
-    "name": "Machine Hip Adduction",
-    "polishName": "Przywodzenie bioder na maszynie",
+    "id": "hip-adduction",
+    "name": "Hip Adduction",
+    "polishName": "Przywodzenie bioder",
     "category": "HIP_STABILITY",
     "muscleImpact": {
       "abductors": 0,

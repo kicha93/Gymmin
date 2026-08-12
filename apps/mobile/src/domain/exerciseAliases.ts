@@ -170,7 +170,6 @@ export const exerciseAliasMap = {
   "High Pull Burpee": "Burpee",
   "Hip Raise with Head on Bosu® Balance Trainer": "Hip Raise",
   "Hip Stability": "Hip Raise",
-  "Hip thrust": "Barbell Hip Thrust with Bench",
   "Hip thrust z podłogi": "Barbell Glute Bridge",
   "Hip thrust ze sztangą": "Barbell Hip Thrust with Bench",
   "Incline I Raise": "Incline Bench I-Y-T-W Raise",

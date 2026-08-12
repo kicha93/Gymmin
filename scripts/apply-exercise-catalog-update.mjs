@@ -37,8 +37,8 @@ function normalizeIncomingExercise(exercise) {
 
 const input = JSON.parse(await readFile(path.resolve(sourcePath), "utf8"));
 const incoming = input.exercises;
-if (!Array.isArray(incoming) || incoming.length !== 963) {
-  throw new Error(`Expected exactly 963 incoming exercises, received ${incoming?.length ?? "invalid payload"}.`);
+if (!Array.isArray(incoming) || incoming.length !== 965) {
+  throw new Error(`Expected exactly 965 incoming exercises, received ${incoming?.length ?? "invalid payload"}.`);
 }
 
 const incomingById = new Map(incoming.map((exercise) => [exercise.id, exercise]));

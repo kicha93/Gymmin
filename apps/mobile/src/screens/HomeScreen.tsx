@@ -23,7 +23,6 @@ type HomeScreenProps = {
   theme: Theme;
   trainingFactPill: ReactNode;
   weeklyPlanCard: ReactNode;
-  workoutCreatorButton: ReactNode;
   workoutSortActions: ReactNode;
 };
 
@@ -39,7 +38,6 @@ export function HomeScreen({
   theme,
   trainingFactPill,
   weeklyPlanCard,
-  workoutCreatorButton,
   workoutSortActions
 }: HomeScreenProps) {
   return (
@@ -47,8 +45,6 @@ export function HomeScreen({
       {activeSessionCard}
       {weeklyPlanCard}
       {trainingFactPill}
-      {workoutCreatorButton}
-
       <CollapsiblePanel
         actions={workoutSortActions}
         isCollapsed={collapsedPanels["home-workouts"] ?? false}

@@ -129,9 +129,18 @@ function normalizeGymminBackupSnapshot(
   collapsedPanelDefaults: Record<string, boolean> = value.settings?.collapsedPanels ?? {}
 ): GymminBackupSnapshot {
   const workouts = value.workouts.items.map(normalizeSavedWorkoutTextFields);
+  const workoutIds = new Set(workouts.map((workout) => workout.id));
   const sessions = normalizeWorkoutSessions(value.workoutSessions.items).filter((session) => !session.deletedAt);
   const settings = normalizeAppSettings({ ...value.settings, updatedAt: now }, collapsedPanelDefaults, now);
-  const weeklyPlan = normalizeWeeklyPlanSettings({ ...value.weeklyPlan, updatedAt: now }, new Date(now));
+  const normalizedWeeklyPlan = normalizeWeeklyPlanSettings({ ...value.weeklyPlan, updatedAt: now }, new Date(now));
+  const weeklyPlanItems = normalizedWeeklyPlan.items
+    .filter((item) => workoutIds.has(item.workoutId))
+    .map((item, index) => ({ ...item, order: index }));
+  const weeklyPlan = {
+    ...normalizedWeeklyPlan,
+    enabled: normalizedWeeklyPlan.enabled && weeklyPlanItems.length > 0,
+    items: weeklyPlanItems
+  };
   const profiles = normalizeWorkoutCreatorProfiles(value.creatorProfiles.items);
   const favorites = getActiveFavoriteExercises(normalizeFavoriteExercises(value.favoriteExercises));
   const achievements = normalizeUserAchievements(value.achievements.unlocked);
@@ -264,8 +273,8 @@ function validateRawReferences(data: Record<string, unknown>) {
   const weeklyPlan = requireRecord(data.weeklyPlan, "weeklyPlan");
   if (!Array.isArray(weeklyPlan.items)) throwInvalid("invalid-section", "Invalid weeklyPlan section.");
   for (const item of weeklyPlan.items) {
-    if (!isRecord(item) || !nonEmpty(item.workoutId) || !workoutIds.has(item.workoutId)) {
-      throwInvalid("invalid-weekly-plan-reference", "Weekly plan references a missing workout.");
+    if (!isRecord(item) || !nonEmpty(item.workoutId)) {
+      throwInvalid("invalid-weekly-plan", "Weekly plan contains an invalid item.");
     }
   }
   if (workouts.selectedWorkoutId !== null && (!nonEmpty(workouts.selectedWorkoutId) || !workoutIds.has(workouts.selectedWorkoutId))) {

@@ -119,11 +119,15 @@ describe("Gymmin backup contract", () => {
     expect(() => parseGymminBackup(JSON.stringify(backup), defaults)).toThrowError(expect.objectContaining({ code: "invalid-workout" }));
   });
 
-  it("rejects broken weekly plan and active session references", () => {
+  it("drops an orphaned weekly plan reference without rejecting the remaining backup", () => {
     const backup = createGymminBackup(snapshot(), { appVersion: "1.0.0", now }) as any;
     backup.data.weeklyPlan.items[0].workoutId = "missing";
-    expect(() => parseGymminBackup(JSON.stringify(backup), defaults)).toThrowError(expect.objectContaining({ code: "invalid-weekly-plan-reference" }));
-    backup.data.weeklyPlan.items[0].workoutId = "workout-1";
+    const parsed = parseGymminBackup(JSON.stringify(backup), defaults);
+    expect(parsed.data.weeklyPlan).toMatchObject({ enabled: false, items: [] });
+  });
+
+  it("rejects a broken active session reference", () => {
+    const backup = createGymminBackup(snapshot(), { appVersion: "1.0.0", now }) as any;
     backup.data.workoutSessions.active.sessionId = "missing";
     expect(() => parseGymminBackup(JSON.stringify(backup), defaults)).toThrowError(expect.objectContaining({ code: "invalid-active-session-reference" }));
   });

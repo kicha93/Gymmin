@@ -1607,6 +1607,7 @@ function GymminApp() {
 
   function performDeleteWorkout(workoutId: string) {
     setSavedWorkouts((current) => current.filter((item) => item.id !== workoutId));
+    setWeeklyPlan((current) => removeWeeklyPlanItem(current, workoutId));
     setSelectedWorkoutId("");
     setEditingWorkoutId(null);
     setActiveScreen("workouts");

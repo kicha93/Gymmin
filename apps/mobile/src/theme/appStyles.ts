@@ -2721,44 +2721,153 @@ export const styles = StyleSheet.create({
     justifyContent: "center"
   },
   profileDashboardCard: {
-    alignItems: "center",
     borderRadius: 8,
     borderWidth: 1,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 18,
+    gap: 14,
     padding: 18
+  },
+  profileDashboardTopRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 16
+  },
+  profileDashboardAvatarWrap: {
+    flexShrink: 0,
+    position: "relative"
   },
   profileDashboardAvatarFrame: {
     alignItems: "center",
-    borderRadius: 58,
     flexShrink: 0,
-    height: 116,
     justifyContent: "center",
-    overflow: "hidden",
-    width: 116
+    overflow: "hidden"
   },
   profileDashboardAvatarImage: {
     height: "100%",
     width: "100%"
   },
-  profileDashboardInfo: {
+  profileDashboardAvatarEdit: {
+    alignItems: "center",
+    borderRadius: 22,
+    borderWidth: 3,
+    bottom: -2,
+    height: 44,
+    justifyContent: "center",
+    position: "absolute",
+    right: -2,
+    width: 44
+  },
+  profileDashboardIdentity: {
     flex: 1,
-    gap: 8,
-    minWidth: 190
+    gap: 5,
+    minWidth: 0
+  },
+  profileDashboardName: {
+    fontSize: 22,
+    fontWeight: "900",
+    lineHeight: 27
+  },
+  profileDashboardNameCompact: {
+    fontSize: 19,
+    lineHeight: 23
+  },
+  profileDashboardLocalMeta: {
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  profileDashboardStats: {
+    alignItems: "stretch",
+    borderTopWidth: 1,
+    flexDirection: "row",
+    marginTop: 7,
+    paddingTop: 9
+  },
+  profileDashboardStat: {
+    alignItems: "center",
+    flex: 1,
+    gap: 1,
+    minWidth: 0
+  },
+  profileDashboardStatValue: {
+    fontSize: 20,
+    fontWeight: "900"
+  },
+  profileDashboardStatLabel: {
+    fontSize: 11,
+    fontWeight: "800"
+  },
+  profileDashboardStatDivider: {
+    alignSelf: "stretch",
+    marginHorizontal: 7,
+    width: 1
   },
   profileDashboardAvatarActions: {
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: 10,
-    marginTop: 4
+    width: "100%"
+  },
+  profileDashboardAvatarActionsStacked: {
+    flexDirection: "column"
   },
   profileDashboardAvatarButton: {
+    flex: 1,
     minHeight: 40,
-    paddingHorizontal: 10
+    minWidth: 0,
+    paddingHorizontal: 8
   },
   profileDashboardAvatarButtonText: {
-    fontSize: 13
+    fontSize: 12
+  },
+  profileDashboardMessage: {
+    fontSize: 12,
+    fontWeight: "800",
+    textAlign: "center"
+  },
+  profileAchievementCard: {
+    alignItems: "stretch",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 14,
+    padding: 14
+  },
+  profileAchievementIcon: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    borderRadius: 10,
+    justifyContent: "center",
+    minHeight: 132,
+    width: 96
+  },
+  profileAchievementCopy: {
+    flex: 1,
+    gap: 9,
+    minWidth: 0
+  },
+  profileAchievementTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "space-between"
+  },
+  profileAchievementCount: {
+    fontSize: 18,
+    fontWeight: "900"
+  },
+  profileAchievementCta: {
+    alignItems: "center",
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 6,
+    justifyContent: "space-between",
+    marginTop: 2,
+    minHeight: 42,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  profileAchievementCtaText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "900"
   },
   profileAchievementLinkRow: {
     alignItems: "center",
@@ -2781,27 +2890,33 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 8,
     borderWidth: 1,
-    flexBasis: "47%",
     flexDirection: "row",
-    flexGrow: 1,
-    gap: 10,
-    minHeight: 76,
-    minWidth: 150,
-    padding: 12
+    gap: 12,
+    minHeight: 82,
+    padding: 14,
+    width: "100%"
   },
   profileQuickActionIcon: {
     alignItems: "center",
     borderRadius: 8,
     flexShrink: 0,
-    height: 42,
+    height: 52,
     justifyContent: "center",
-    width: 42
+    width: 52
+  },
+  profileQuickActionCopy: {
+    flex: 1,
+    gap: 3,
+    minWidth: 0
   },
   profileQuickActionLabel: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "900",
-    minWidth: 0
+    fontSize: 16,
+    fontWeight: "900"
+  },
+  profileQuickActionDescription: {
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 16
   },
   achievementSummaryCard: {
     borderRadius: 8,
@@ -3755,14 +3870,22 @@ export const styles = StyleSheet.create({
     fontSize: 16
   },
   weeklyMuscleVolumeContent: {
-    gap: 12,
+    gap: 9,
     paddingTop: 2
   },
-  weeklyMuscleVolumeSegments: {
-    alignSelf: "stretch",
-    borderRadius: 12,
+  weeklyMuscleVolumeControls: {
     flexDirection: "row",
-    marginHorizontal: 16,
+    gap: 8,
+    paddingHorizontal: 14
+  },
+  weeklyMuscleVolumeControlsStacked: {
+    flexDirection: "column"
+  },
+  weeklyMuscleVolumeSegments: {
+    borderRadius: 12,
+    flex: 1,
+    flexDirection: "row",
+    minWidth: 0,
     padding: 2
   },
   weeklyMuscleVolumeSegment: {
@@ -3770,8 +3893,9 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     flex: 1,
     justifyContent: "center",
-    minHeight: 40,
-    paddingHorizontal: 8
+    minHeight: 38,
+    minWidth: 0,
+    paddingHorizontal: 4
   },
   weeklyMuscleVolumeSegmentText: {
     fontFamily: "Inter_700Bold",
@@ -3781,29 +3905,40 @@ export const styles = StyleSheet.create({
     fontFamily: "Inter_500Medium",
     fontSize: 11,
     lineHeight: 16,
-    marginHorizontal: 18,
-    marginTop: -6,
+    marginHorizontal: 16,
+    marginTop: -3,
     textAlign: "center"
   },
   weeklyMuscleVolumeDashboard: {
     alignItems: "stretch",
     flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 14
+    gap: 8,
+    paddingHorizontal: 10
   },
   weeklyMuscleVolumeRows: {
     flex: 1,
-    gap: 12,
     minWidth: 0
   },
   weeklyMuscleVolumeRow: {
-    gap: 6
+    borderBottomWidth: 1,
+    gap: 5,
+    minHeight: 62,
+    paddingBottom: 7,
+    paddingTop: 6
+  },
+  weeklyMuscleVolumeRowDisabled: {
+    opacity: 0.62
   },
   weeklyMuscleVolumeRowTop: {
-    alignItems: "flex-end",
+    alignItems: "center",
     flexDirection: "row",
-    gap: 6,
+    gap: 4,
     justifyContent: "space-between"
+  },
+  weeklyMuscleVolumeRowTopStacked: {
+    alignItems: "flex-start",
+    flexDirection: "column",
+    gap: 2
   },
   weeklyMuscleVolumeNameWrap: {
     alignItems: "center",
@@ -3819,21 +3954,17 @@ export const styles = StyleSheet.create({
   weeklyMuscleVolumeName: {
     flexShrink: 1,
     fontFamily: "Inter_600SemiBold",
-    fontSize: 12
+    fontSize: 11,
+    lineHeight: 14
   },
   weeklyMuscleVolumeValue: {
+    flexShrink: 0,
     fontFamily: "Inter_600SemiBold",
-    fontSize: 10,
+    fontSize: 9,
     textAlign: "right"
-  },
-  weeklyMuscleVolumeRowBottom: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 7
   },
   weeklyMuscleVolumeTrack: {
     borderRadius: 4,
-    flex: 1,
     height: 6,
     overflow: "hidden",
     position: "relative"
@@ -3855,11 +3986,12 @@ export const styles = StyleSheet.create({
   },
   weeklyMuscleVolumeBadge: {
     alignItems: "center",
+    alignSelf: "flex-start",
     borderRadius: 7,
     justifyContent: "center",
-    minHeight: 24,
+    minHeight: 20,
     paddingHorizontal: 6,
-    width: 82
+    width: 78
   },
   weeklyMuscleVolumeBadgeText: {
     fontFamily: "Inter_700Bold",
@@ -3868,33 +4000,37 @@ export const styles = StyleSheet.create({
   },
   weeklyMuscleVolumeFigureWrap: {
     alignItems: "center",
+    borderRadius: 12,
+    borderWidth: 1,
     justifyContent: "center",
-    width: 92
-  },
-  weeklyMuscleVolumeFigure: {
-    height: 226,
-    width: 92
+    minWidth: 0,
+    overflow: "hidden",
+    paddingHorizontal: 2,
+    paddingVertical: 2
   },
   weeklyMuscleVolumeEmpty: {
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 24,
+    alignItems: "stretch",
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 10,
     paddingVertical: 4
   },
-  weeklyMuscleVolumeEmptyFigure: {
-    height: 130,
-    width: 62
+  weeklyMuscleVolumeEmptyCopyWrap: {
+    flex: 1,
+    gap: 6,
+    justifyContent: "center",
+    minWidth: 0
   },
   weeklyMuscleVolumeEmptyTitle: {
     fontFamily: "Inter_700Bold",
     fontSize: 14,
-    textAlign: "center"
+    textAlign: "left"
   },
   weeklyMuscleVolumeEmptyCopy: {
     fontFamily: "Inter_500Medium",
     fontSize: 12,
     lineHeight: 18,
-    textAlign: "center"
+    textAlign: "left"
   },
   weeklyMuscleVolumeInfoButton: {
     alignItems: "center",

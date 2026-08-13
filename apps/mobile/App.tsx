@@ -138,6 +138,7 @@ import {
   upsertWeeklyPlanItem
 } from "./src/domain/weeklyPlan";
 import { buildWeeklyMuscleVolumeSummary } from "./src/domain/weeklyMuscleVolume";
+import { getProfileDashboardStats } from "./src/domain/profileDashboard";
 import {
   WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY,
   cancelWorkoutReminders,
@@ -1062,6 +1063,10 @@ function GymminApp() {
   const visibleWorkoutSessions = useMemo(
     () => getActiveWorkoutSessionsForUi(workoutSessions),
     [workoutSessions]
+  );
+  const profileDashboardStats = useMemo(
+    () => getProfileDashboardStats(workoutSessions, savedWorkouts),
+    [savedWorkouts, workoutSessions]
   );
 
   const activeWorkoutSession = useMemo(
@@ -2527,6 +2532,7 @@ function GymminApp() {
         avatarMessage={avatarMessage}
         avatarMessageIsSuccess={avatarMessage === t("avatarUpdated") || avatarMessage === t("avatarRemoved")}
         avatarSource={userAvatarSource}
+        completedSessions={profileDashboardStats.completedSessions}
         isAvatarSubmitting={isAvatarSubmitting}
         latestAchievementTitle={latestUnlockedAchievement?.definition.title[language]}
         onAvatarLoadError={() => setHasLocalAvatarLoadFailed(true)}
@@ -2538,6 +2544,7 @@ function GymminApp() {
         onRemoveAvatar={removeUserAvatar}
         onOpenAchievements={() => setActiveScreen("achievements")}
         onOpenBugReport={() => setActiveScreen("bugReport")}
+        savedPlans={profileDashboardStats.savedPlans}
       />
     );
   }

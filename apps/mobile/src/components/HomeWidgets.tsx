@@ -1,9 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 
 import { AppButton } from "./AppControls";
 import { HumanMuscleFigure } from "./WorkoutPresentation";
+import {
+  getWeeklyMuscleVolumeLayout,
+  toggleWeeklyMuscleGroup,
+  type WeeklyMuscleVolumeLayout
+} from "./weeklyMuscleVolumeLayout";
 import type { MuscleKey } from "../domain/exercises";
 import {
   formatWeekRange,
@@ -163,6 +168,166 @@ function getEntryStatus(entry: WeeklyMuscleVolumeEntry, mode: WeeklyMuscleVolume
   return mode === "completed" ? entry.completedStatus : entry.projectedStatus;
 }
 
+type WeeklyMuscleVolumeControlsProps = CommonProps & {
+  layout: WeeklyMuscleVolumeLayout;
+  mode: WeeklyMuscleVolumeMode;
+  onModeChange: (mode: WeeklyMuscleVolumeMode) => void;
+  onSideChange: (side: WeeklyMuscleVolumeSide) => void;
+  side: WeeklyMuscleVolumeSide;
+};
+
+function WeeklyMuscleVolumeControls({
+  layout,
+  mode,
+  onModeChange,
+  onSideChange,
+  side,
+  t,
+  theme
+}: WeeklyMuscleVolumeControlsProps) {
+  return (
+    <View style={[styles.weeklyMuscleVolumeControls, layout.controlsStacked ? styles.weeklyMuscleVolumeControlsStacked : null]}>
+      <View style={[styles.weeklyMuscleVolumeSegments, { backgroundColor: theme.segment }]}>
+        {(["completed", "projected"] as const).map((option) => {
+          const selected = mode === option;
+          return (
+            <Pressable
+              key={option}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              style={[styles.weeklyMuscleVolumeSegment, selected ? { backgroundColor: theme.primary } : null]}
+              onPress={() => onModeChange(option)}
+            >
+              <Text
+                numberOfLines={1}
+                style={[styles.weeklyMuscleVolumeSegmentText, { color: selected ? theme.white : theme.text }]}
+              >
+                {t(option === "completed" ? "weeklyMuscleVolumeCompleted" : "weeklyMuscleVolumePlan")}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <View style={[styles.weeklyMuscleVolumeSegments, { backgroundColor: theme.segment }]}>
+        {(["front", "back"] as const).map((option) => {
+          const selected = side === option;
+          return (
+            <Pressable
+              key={option}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              style={[styles.weeklyMuscleVolumeSegment, selected ? { backgroundColor: theme.primary } : null]}
+              onPress={() => onSideChange(option)}
+            >
+              <Text
+                numberOfLines={1}
+                style={[styles.weeklyMuscleVolumeSegmentText, { color: selected ? theme.white : theme.text }]}
+              >
+                {t(option === "front" ? "bodyFront" : "bodyBack")}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+type WeeklyMuscleVolumeListProps = CommonProps & {
+  entries: WeeklyMuscleVolumeEntry[];
+  hiddenGroups: ReadonlySet<WeeklyMuscleVolumeGroupId>;
+  mode: WeeklyMuscleVolumeMode;
+  onToggleGroup: (group: WeeklyMuscleVolumeGroupId) => void;
+  rowMetaStacked: boolean;
+};
+
+function WeeklyMuscleVolumeList({
+  entries,
+  hiddenGroups,
+  mode,
+  onToggleGroup,
+  rowMetaStacked,
+  t,
+  theme
+}: WeeklyMuscleVolumeListProps) {
+  return (
+    <View style={styles.weeklyMuscleVolumeRows}>
+      {entries.map((entry) => {
+        const value = getEntryValue(entry, mode);
+        const status = getEntryStatus(entry, mode);
+        const isVisible = !hiddenGroups.has(entry.id);
+        const color = isVisible ? getVolumeStatusColor(status, theme) : theme.selectedOption;
+        const progress = Math.min(100, (value / entry.targetMax) * 100);
+        return (
+          <Pressable
+            key={entry.id}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: isVisible }}
+            style={[
+              styles.weeklyMuscleVolumeRow,
+              !isVisible ? styles.weeklyMuscleVolumeRowDisabled : null,
+              { borderBottomColor: theme.border }
+            ]}
+            onPress={() => onToggleGroup(entry.id)}
+          >
+            <View style={[styles.weeklyMuscleVolumeRowTop, rowMetaStacked ? styles.weeklyMuscleVolumeRowTopStacked : null]}>
+              <View style={styles.weeklyMuscleVolumeNameWrap}>
+                <View style={[styles.weeklyMuscleVolumeDot, { backgroundColor: color }]} />
+                <Text numberOfLines={2} style={[styles.weeklyMuscleVolumeName, { color: theme.text }]}>
+                  {t(weeklyMuscleLabelKeys[entry.id])}
+                </Text>
+              </View>
+              <Text numberOfLines={1} style={[styles.weeklyMuscleVolumeValue, { color: theme.text }]}>
+                {`${formatWeeklyMuscleSets(value)} / ${entry.targetMin}–${entry.targetMax} ${t("weeklyMuscleVolumeSets")}`}
+              </Text>
+            </View>
+            <View style={[styles.weeklyMuscleVolumeTrack, { backgroundColor: theme.secondaryBand }]}>
+              <View style={[styles.weeklyMuscleVolumeTargetBand, { backgroundColor: theme.border }]} />
+              <View style={[styles.weeklyMuscleVolumeFill, { backgroundColor: color, width: `${progress}%` }]} />
+            </View>
+            <View style={[styles.weeklyMuscleVolumeBadge, { backgroundColor: `${color}22` }]}>
+              <Text numberOfLines={1} style={[styles.weeklyMuscleVolumeBadgeText, { color }]}>
+                {t(weeklyMuscleStatusKeys[status])}
+              </Text>
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+type WeeklyMuscleAnatomyProps = CommonProps & {
+  entryByMuscle: Map<MuscleKey, WeeklyMuscleVolumeEntry>;
+  hiddenGroups: ReadonlySet<WeeklyMuscleVolumeGroupId>;
+  layout: WeeklyMuscleVolumeLayout;
+  mode: WeeklyMuscleVolumeMode;
+  side: WeeklyMuscleVolumeSide;
+};
+
+function WeeklyMuscleAnatomy({ entryByMuscle, hiddenGroups, layout, mode, side, theme }: WeeklyMuscleAnatomyProps) {
+  return (
+    <View
+      style={[
+        styles.weeklyMuscleVolumeFigureWrap,
+        { backgroundColor: theme.control, borderColor: theme.border, width: layout.anatomyWidth }
+      ]}
+    >
+      <HumanMuscleFigure
+        side={side}
+        style={{ height: layout.anatomyHeight, maxWidth: "100%", width: layout.anatomyWidth - 4 }}
+        fill={(muscle) => {
+          const entry = entryByMuscle.get(muscle);
+          if (!entry) return theme.secondaryBand;
+          return hiddenGroups.has(entry.id)
+            ? theme.selectedOption
+            : getVolumeStatusColor(getEntryStatus(entry, mode), theme);
+        }}
+      />
+    </View>
+  );
+}
+
 export function WeeklyPlanHomeCard({
   language,
   onOpenPlan,
@@ -173,10 +338,20 @@ export function WeeklyPlanHomeCard({
   t,
   theme
 }: WeeklyPlanHomeCardProps) {
+  const { width: windowWidth } = useWindowDimensions();
   const [isVolumeExpanded, setIsVolumeExpanded] = useState(false);
   const [showVolumeInfo, setShowVolumeInfo] = useState(false);
   const [volumeMode, setVolumeMode] = useState<WeeklyMuscleVolumeMode>("completed");
   const [volumeSide, setVolumeSide] = useState<WeeklyMuscleVolumeSide>("front");
+  const [hiddenVolumeGroups, setHiddenVolumeGroups] = useState<Set<WeeklyMuscleVolumeGroupId>>(() => new Set());
+  const volumeLayout = getWeeklyMuscleVolumeLayout(windowWidth);
+  const entryByMuscle = useMemo(() => {
+    const map = new Map<MuscleKey, WeeklyMuscleVolumeEntry>();
+    for (const entry of volumeSummary.entries) {
+      for (const muscle of entry.muscleKeys) map.set(muscle, entry);
+    }
+    return map;
+  }, [volumeSummary.entries]);
   if (!savedWorkoutCount) {
     return null;
   }
@@ -213,14 +388,6 @@ export function WeeklyPlanHomeCard({
   };
 
   const visibleVolumeEntries = getWeeklyMuscleVolumeEntriesForSide(volumeSummary, volumeSide);
-  const entryByMuscle = useMemo(() => {
-    const map = new Map<MuscleKey, WeeklyMuscleVolumeEntry>();
-    for (const entry of volumeSummary.entries) {
-      for (const muscle of entry.muscleKeys) map.set(muscle, entry);
-    }
-    return map;
-  }, [volumeSummary.entries]);
-
   return (
     <View style={[styles.weeklyPlanHomeCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <Pressable accessibilityRole="button" style={styles.weeklyPlanHomeTop} onPress={onOpenPlan}>
@@ -277,99 +444,64 @@ export function WeeklyPlanHomeCard({
             <Ionicons name="body-outline" size={18} color={theme.white} />
           </View>
           <Text style={[styles.weeklyMuscleVolumeTitle, { color: theme.text }]}>
-            {isVolumeExpanded ? t("weeklyMuscleVolumeTitle") : t("weeklyMuscleVolumeAction")}
+            {t("weeklyMuscleVolumeTitle")}
           </Text>
           <Ionicons name={isVolumeExpanded ? "chevron-up" : "chevron-down"} size={20} color={theme.primary} />
         </Pressable>
 
         {isVolumeExpanded ? (
           <View style={styles.weeklyMuscleVolumeContent}>
-            <View style={[styles.weeklyMuscleVolumeSegments, { backgroundColor: theme.segment }]}>
-              {(["completed", "projected"] as const).map((mode) => {
-                const selected = volumeMode === mode;
-                return (
-                  <Pressable
-                    key={mode}
-                    accessibilityRole="button"
-                    style={[styles.weeklyMuscleVolumeSegment, selected ? { backgroundColor: theme.primary } : null]}
-                    onPress={() => setVolumeMode(mode)}
-                  >
-                    <Text style={[styles.weeklyMuscleVolumeSegmentText, { color: selected ? theme.white : theme.text }]}>
-                      {t(mode === "completed" ? "weeklyMuscleVolumeCompleted" : "weeklyMuscleVolumePlan")}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <WeeklyMuscleVolumeControls
+              layout={volumeLayout}
+              mode={volumeMode}
+              side={volumeSide}
+              t={t}
+              theme={theme}
+              onModeChange={setVolumeMode}
+              onSideChange={setVolumeSide}
+            />
             {volumeMode === "projected" ? (
               <Text style={[styles.weeklyMuscleVolumePlanHint, { color: theme.muted }]}>{t("weeklyMuscleVolumePlanHint")}</Text>
             ) : null}
-            <View style={[styles.weeklyMuscleVolumeSegments, { backgroundColor: theme.segment }]}>
-              {(["front", "back"] as const).map((side) => {
-                const selected = volumeSide === side;
-                return (
-                  <Pressable
-                    key={side}
-                    accessibilityRole="button"
-                    style={[styles.weeklyMuscleVolumeSegment, selected ? { backgroundColor: theme.primary } : null]}
-                    onPress={() => setVolumeSide(side)}
-                  >
-                    <Text style={[styles.weeklyMuscleVolumeSegmentText, { color: selected ? theme.white : theme.text }]}>
-                      {t(side === "front" ? "bodyFront" : "bodyBack")}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
             {!volumeSummary.hasActivity ? (
               <View style={styles.weeklyMuscleVolumeEmpty}>
-                <HumanMuscleFigure fill={() => theme.secondaryBand} side={volumeSide} style={styles.weeklyMuscleVolumeEmptyFigure} />
-                <Text style={[styles.weeklyMuscleVolumeEmptyTitle, { color: theme.text }]}>{t("weeklyMuscleVolumeNoData")}</Text>
-                <Text style={[styles.weeklyMuscleVolumeEmptyCopy, { color: theme.muted }]}>{t("weeklyMuscleVolumeNoDataCopy")}</Text>
+                <View style={styles.weeklyMuscleVolumeEmptyCopyWrap}>
+                  <Text style={[styles.weeklyMuscleVolumeEmptyTitle, { color: theme.text }]}>{t("weeklyMuscleVolumeNoData")}</Text>
+                  <Text style={[styles.weeklyMuscleVolumeEmptyCopy, { color: theme.muted }]}>{t("weeklyMuscleVolumeNoDataCopy")}</Text>
+                </View>
+                <View
+                  style={[
+                    styles.weeklyMuscleVolumeFigureWrap,
+                    { backgroundColor: theme.control, borderColor: theme.border, width: volumeLayout.anatomyWidth }
+                  ]}
+                >
+                  <HumanMuscleFigure
+                    fill={() => theme.secondaryBand}
+                    side={volumeSide}
+                    style={{ height: volumeLayout.anatomyHeight, maxWidth: "100%", width: volumeLayout.anatomyWidth - 4 }}
+                  />
+                </View>
               </View>
             ) : (
               <View style={styles.weeklyMuscleVolumeDashboard}>
-                <View style={styles.weeklyMuscleVolumeRows}>
-                  {visibleVolumeEntries.map((entry) => {
-                    const value = getEntryValue(entry, volumeMode);
-                    const status = getEntryStatus(entry, volumeMode);
-                    const color = getVolumeStatusColor(status, theme);
-                    const progress = Math.min(100, (value / entry.targetMax) * 100);
-                    return (
-                      <View key={entry.id} style={styles.weeklyMuscleVolumeRow}>
-                        <View style={styles.weeklyMuscleVolumeRowTop}>
-                          <View style={styles.weeklyMuscleVolumeNameWrap}>
-                            <View style={[styles.weeklyMuscleVolumeDot, { backgroundColor: color }]} />
-                            <Text style={[styles.weeklyMuscleVolumeName, { color: theme.text }]}>{t(weeklyMuscleLabelKeys[entry.id])}</Text>
-                          </View>
-                          <Text style={[styles.weeklyMuscleVolumeValue, { color: theme.text }]}>
-                            {`${formatWeeklyMuscleSets(value)} / ${entry.targetMin}–${entry.targetMax} ${t("weeklyMuscleVolumeSets")}`}
-                          </Text>
-                        </View>
-                        <View style={styles.weeklyMuscleVolumeRowBottom}>
-                          <View style={[styles.weeklyMuscleVolumeTrack, { backgroundColor: theme.secondaryBand }]}>
-                            <View style={[styles.weeklyMuscleVolumeTargetBand, { backgroundColor: theme.border }]} />
-                            <View style={[styles.weeklyMuscleVolumeFill, { backgroundColor: color, width: `${progress}%` }]} />
-                          </View>
-                          <View style={[styles.weeklyMuscleVolumeBadge, { backgroundColor: `${color}22` }]}>
-                            <Text style={[styles.weeklyMuscleVolumeBadgeText, { color }]}>{t(weeklyMuscleStatusKeys[status])}</Text>
-                          </View>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-                <View style={styles.weeklyMuscleVolumeFigureWrap}>
-                  <HumanMuscleFigure
-                    side={volumeSide}
-                    style={styles.weeklyMuscleVolumeFigure}
-                    fill={(muscle) => {
-                      const entry = entryByMuscle.get(muscle);
-                      return entry ? getVolumeStatusColor(getEntryStatus(entry, volumeMode), theme) : theme.secondaryBand;
-                    }}
-                  />
-                </View>
+                <WeeklyMuscleVolumeList
+                  entries={visibleVolumeEntries}
+                  hiddenGroups={hiddenVolumeGroups}
+                  mode={volumeMode}
+                  onToggleGroup={(group) => setHiddenVolumeGroups((current) => toggleWeeklyMuscleGroup(current, group))}
+                  rowMetaStacked={volumeLayout.rowMetaStacked}
+                  t={t}
+                  theme={theme}
+                />
+                <WeeklyMuscleAnatomy
+                  entryByMuscle={entryByMuscle}
+                  hiddenGroups={hiddenVolumeGroups}
+                  layout={volumeLayout}
+                  mode={volumeMode}
+                  side={volumeSide}
+                  t={t}
+                  theme={theme}
+                />
               </View>
             )}
 

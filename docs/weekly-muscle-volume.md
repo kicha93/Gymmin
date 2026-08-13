@@ -104,6 +104,15 @@ Shoulders and forearms can be visible on both anatomy sides but remain one
 logical group and are never counted twice. The homepage reuses the same SVG
 anatomy component and body maps as Exercise Detail.
 
+## Dashboard interaction and responsive layout
+
+- `Completed | Plan` and `Front | Back` are independent segmented controls. They share one row on normal phones and stack only below 340 dp.
+- The result list occupies the flexible part of the dashboard. The anatomy column uses width-aware dimensions: 122 x 292 below 340 dp, 138 x 322 below 390 dp, and 154 x 350 on wider phones.
+- The figure preserves its aspect ratio, uses nearly the full anatomy column and shows only the selected body side.
+- Every visible muscle-group row is pressable. Turning a group off grays both the row and its anatomy regions; turning it on restores the color for the current volume status.
+- Hidden groups are transient UI state. They remain part of the calculation and are not persisted or included in backup.
+- The list, progress bars and anatomy always read the same completed/projected mode and the same status model. Empty weeks use a neutral figure rather than presenting every muscle as a warning.
+
 ## Limitations
 
 - no per-set RIR/RPE, velocity loss or technique-quality data;

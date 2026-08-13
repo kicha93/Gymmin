@@ -21,6 +21,7 @@ With Gymmin you can:
 • record weight and repetitions,
 • review workout history and progress,
 • organize a weekly workout plan,
+• review estimated weekly muscle volume on an interactive anatomy view,
 • schedule local reminders,
 • export workouts and create local backups,
 • prepare plans with an external AI of your choice using a safe copy-and-paste workflow.

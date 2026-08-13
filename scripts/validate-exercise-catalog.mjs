@@ -13,7 +13,7 @@ const categories = new Set(["BANDED_EXERCISES","BATTLE_ROPE","BENCH_PRESS","BIKE
 const equipment = new Set(["ankleWeight","band","barbell","battleRope","bench","bike","bosuBall","box","cableMachine","dumbbell","ezBar","foamRoller","jumpRope","kettlebell","machine","medicineBall","other","plate","pullupBar","rings","rope","sandbag","sled","slidingDisc","smithMachine","squatRack","swissBall","trx","weightVest"]);
 const tiers = new Set(["main","advanced","sportSpecific","rehab","variation","progression"]);
 const equipmentHints = [[/\bdumbbell\b/i,"dumbbell"],[/\bbarbell\b/i,"barbell"],[/\bcable\b/i,"cableMachine"],[/\bswiss ball\b/i,"swissBall"],[/\brings?\b/i,"rings"],[/\bkettlebell\b/i,"kettlebell"],[/\bsmith machine\b/i,"smithMachine"],[/\b(resistance band|banded)\b/i,"band"],[/\bbench\b/i,"bench"]];
-const equipmentHintExceptions = new Set(["bench-press-dumbbell-floor-press-83","bench-press-one-arm-floor-press-91"]);
+const equipmentHintExceptions = new Set(["bench-press-dumbbell-floor-press-83"]);
 const removedCatalogFields = ["garminCategory", "garminName", "foundInGarmin", "url", "image", "difficulty", "description"];
 const muscles = new Set(["abductors","abs","adductors","biceps","calves","chest","forearm","glutes","hamstrings","hips","lats","lowerBack","obliques","quads","shoulders","traps","triceps"]);
 const catalogFields = new Set(["id","name","polishName","category","muscleImpact","equipment","libraryTier"]);
@@ -60,7 +60,7 @@ for(const [source,target] of Object.entries(aliases)){
 }
 
 const reportData={exerciseCount:exercises.length,idMappingCount:Object.keys(idAliases).length,errors,warnings};
-if(exercises.length!==965)errors.push({code:"unexpected_exercise_count",expected:965,actual:exercises.length});
+if(exercises.length!==831)errors.push({code:"unexpected_exercise_count",expected:831,actual:exercises.length});
 let previousReport;
 try { previousReport=JSON.parse(await readFile(reportPath,"utf8")); } catch { previousReport=undefined; }
 const previousData=previousReport?{exerciseCount:previousReport.exerciseCount,idMappingCount:previousReport.idMappingCount,errors:previousReport.errors,warnings:previousReport.warnings}:undefined;

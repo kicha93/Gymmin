@@ -340,16 +340,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "banded-exercises-side-plank-leg-lifts-38",
-    "polishName": "Deska boczna z unoszeniem nogi (z gumą oporową)",
-    "englishName": "Banded Side Plank Leg Lifts",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "banded-exercises-squat-to-press-40",
     "polishName": "Przysiady z wyciskaniem (z gumą oporową)",
     "englishName": "Banded Squat to Press",
@@ -400,66 +390,6 @@
     "libraryTier": "rehab"
   },
   {
-    "id": "battle-rope-alternating-wave-50",
-    "polishName": "Naprzemienne falowanie linami treningowymi",
-    "englishName": "Battle Rope Alternating Wave",
-    "category": "BATTLE_ROPE",
-    "requiredEquipment": [
-      "battleRope"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "battle-rope-double-arm-slam-57",
-    "polishName": "Uderzanie linami treningowymi oburącz",
-    "englishName": "Battle Rope Double-arm Slam",
-    "category": "BATTLE_ROPE",
-    "requiredEquipment": [
-      "battleRope"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "battle-rope-double-arm-wave-58",
-    "polishName": "Podwójne falowanie linami treningowymi",
-    "englishName": "Battle Rope Double-arm Wave",
-    "category": "BATTLE_ROPE",
-    "requiredEquipment": [
-      "battleRope"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "battle-rope-inside-circle-62",
-    "polishName": "Krążenie linami treningowymi do wewnątrz",
-    "englishName": "Battle Rope Inside Circle",
-    "category": "BATTLE_ROPE",
-    "requiredEquipment": [
-      "battleRope"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "battle-rope-outside-circle-64",
-    "polishName": "Krążenie linami treningowymi na zewnątrz",
-    "englishName": "Battle Rope Outside Circle",
-    "category": "BATTLE_ROPE",
-    "requiredEquipment": [
-      "battleRope"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "battle-rope-sidewinder-67",
-    "polishName": "Falowanie na boki linami treningowymi",
-    "englishName": "Battle Rope Sidewinder",
-    "category": "BATTLE_ROPE",
-    "requiredEquipment": [
-      "battleRope"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
     "id": "bench-press-alternating-dumbbell-chest-press-74",
     "polishName": "Naprzemienne wyciskanie hantli na ławce płaskiej",
     "englishName": "Alternating Dumbbell Chest Press",
@@ -467,17 +397,6 @@
     "requiredEquipment": [
       "bench",
       "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "bench-press-alternating-dumbbell-chest-press-on-swiss-ball-75",
-    "polishName": "Naprzemienne wyciskanie hantli na piłce gimnastycznej",
-    "englishName": "Alternating Dumbbell Chest Press on Swiss Ball",
-    "category": "BENCH_PRESS",
-    "requiredEquipment": [
-      "dumbbell",
-      "swissBall"
     ],
     "libraryTier": "variation"
   },
@@ -645,16 +564,6 @@
     "libraryTier": "variation"
   },
   {
-    "id": "bench-press-one-arm-floor-press-91",
-    "polishName": "Wyciskanie jednorącz leżąc na podłodze",
-    "englishName": "One-arm Floor Press",
-    "category": "BENCH_PRESS",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "bench-press-partial-lockout-92",
     "polishName": "Częściowy wyprost w wyciskaniu",
     "englishName": "Partial Lockout",
@@ -720,17 +629,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "bench-press-swiss-ball-dumbbell-chest-press-98",
-    "polishName": "Wyciskanie hantli na piłce gimnastycznej",
-    "englishName": "Swiss Ball Dumbbell Chest Press",
-    "category": "BENCH_PRESS",
-    "requiredEquipment": [
-      "dumbbell",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "bench-press-triple-stop-barbell-bench-press-99",
     "polishName": "Wyciskanie sztangi na ławce z potrójnym zatrzymaniem",
     "englishName": "Triple-stop Barbell Bench Press",
@@ -771,14 +669,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "calf-raise-3-way-single-leg-calf-raise-104",
-    "polishName": "Wznosy łydki — trójpozycyjne",
-    "englishName": "3-way Single-leg Calf Raise",
-    "category": "CALF_RAISE",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
     "id": "calf-raise-3-way-weighted-calf-raise-105",
     "polishName": "Wznosy łydek — trójpozycyjne (z obciążeniem)",
     "englishName": "3-way Weighted Calf Raise",
@@ -787,16 +677,6 @@
       "dumbbell"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "calf-raise-3-way-weighted-single-leg-calf-raise-106",
-    "polishName": "Wznosy łydki — trójpozycyjne (z obciążeniem)",
-    "englishName": "3-way Weighted Single-leg Calf Raise",
-    "category": "CALF_RAISE",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-donkey-calf-raise-108",
@@ -818,42 +698,6 @@
       "other"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "calf-raise-single-leg-bent-knee-calf-raise-111",
-    "polishName": "Wznosy łydki przy ugiętym kolanie",
-    "englishName": "Single-leg Bent-knee Calf Raise",
-    "category": "CALF_RAISE",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "calf-raise-single-leg-donkey-calf-raise-113",
-    "polishName": "Wznosy łydki — osiołek",
-    "englishName": "Single-leg Donkey Calf Raise",
-    "category": "CALF_RAISE",
-    "requiredEquipment": [
-      "other"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "calf-raise-single-leg-standing-calf-raise-115",
-    "polishName": "Wznosy łydki stojąc",
-    "englishName": "Single-leg Standing Calf Raise",
-    "category": "CALF_RAISE",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "calf-raise-single-leg-standing-dumbbell-calf-raise-116",
-    "polishName": "Wznosy łydki z hantlem stojąc",
-    "englishName": "Single-leg Standing Dumbbell Calf Raise",
-    "category": "CALF_RAISE",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "calf-raise-standing-barbell-calf-raise-117",
@@ -1470,36 +1314,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "core-swiss-ball-jackknife-206",
-    "polishName": "Scyzoryki z piłką gimnastyczną",
-    "englishName": "Swiss Ball Jackknife",
-    "category": "CORE",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "core-swiss-ball-pike-207",
-    "polishName": "Szczupak na piłce gminastycznej",
-    "englishName": "Swiss Ball Pike",
-    "category": "CORE",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "core-swiss-ball-rollout-208",
-    "polishName": "Rolowanie na piłce gimnastycznej",
-    "englishName": "Swiss Ball Roll-out",
-    "category": "CORE",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "core-toes-to-elbows-209",
     "polishName": "Przyciąganie stopy do łokcia",
     "englishName": "Toes to Elbows",
@@ -1515,16 +1329,6 @@
     "englishName": "Triangle Hip Press",
     "category": "CORE",
     "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "core-trx-suspended-jackknife-211",
-    "polishName": "Scyzoryki w zwisie na taśmie podwieszanej",
-    "englishName": "TRX Suspended Jackknife",
-    "category": "CORE",
-    "requiredEquipment": [
-      "trx"
-    ],
     "libraryTier": "main"
   },
   {
@@ -1752,14 +1556,6 @@
     "libraryTier": "variation"
   },
   {
-    "id": "crunch-single-leg-reverse-crunch-274",
-    "polishName": "Odwrócone spięcia brzucha jednonóż",
-    "englishName": "Single-leg Reverse Crunch",
-    "category": "CRUNCH",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
     "id": "crunch-standing-cable-crunch-276",
     "polishName": "Spięcia brzucha z linką wyciągu górnego stojąc",
     "englishName": "Standing Cable Crunch",
@@ -1788,36 +1584,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "crunch-swiss-ball-crunch-280",
-    "polishName": "Spięcia brzucha na piłce gimnastycznej",
-    "englishName": "Swiss Ball Crunch",
-    "category": "CRUNCH",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "crunch-swiss-ball-reverse-crunch-281",
-    "polishName": "Odwrócone spięcia brzucha na piłce gimnastycznej",
-    "englishName": "Swiss Ball Reverse Crunch",
-    "category": "CRUNCH",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "crunch-swiss-ball-side-crunch-283",
-    "polishName": "Spięcia brzucha skośne na piłce gimnastycznej",
-    "englishName": "Swiss Ball Side Crunch",
-    "category": "CRUNCH",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "crunch-toes-to-bar-285",
     "polishName": "Unoszenie stóp do drążka w zwisie",
     "englishName": "Toes to Bar",
@@ -1834,17 +1600,6 @@
     "category": "CURL",
     "requiredEquipment": [
       "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "curl-alternating-dumbbell-biceps-curl-on-swiss-ball-324",
-    "polishName": "Naprzemienne uginanie ramion z hantlami na piłce gimnastycznej",
-    "englishName": "Alternating Dumbbell Biceps Curl on Swiss Ball",
-    "category": "CURL",
-    "requiredEquipment": [
-      "dumbbell",
-      "swissBall"
     ],
     "libraryTier": "variation"
   },
@@ -1898,16 +1653,6 @@
       "barbell"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "curl-behind-the-back-one-arm-cable-curl-330",
-    "polishName": "Uginanie ramienia zza pleców z linką wyciągu dolnego",
-    "englishName": "Behind-the-Back One-arm Cable Curl",
-    "category": "CURL",
-    "requiredEquipment": [
-      "cableMachine"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "curl-cable-biceps-curl-331",
@@ -2094,27 +1839,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "curl-one-arm-concentration-curl-351",
-    "polishName": "Uginanie ramienia z hantlem w podporze o kolano",
-    "englishName": "One-arm Concentration Curl",
-    "category": "CURL",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "curl-one-arm-preacher-curl-352",
-    "polishName": "Uginanie ramienia na modlitewniku",
-    "englishName": "One-arm Preacher Curl",
-    "category": "CURL",
-    "requiredEquipment": [
-      "dumbbell",
-      "other"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "curl-plate-pinch-curl-353",
     "polishName": "Uginanie ramion z talerzami w dłoniach",
     "englishName": "Plate Pinch Curl",
@@ -2239,18 +1963,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "curl-swiss-ball-ez-bar-preacher-curl-368",
-    "polishName": "Uginanie ramion ze sztangą łamaną na piłce gimnastycznej",
-    "englishName": "Swiss Ball EZ-Bar Preacher Curl",
-    "category": "CURL",
-    "requiredEquipment": [
-      "ezBar",
-      "other",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "curl-twisting-standing-dumbbell-biceps-curl-369",
     "polishName": "Uginanie ramion z hantlami z rotacją nadgarsków stojąc",
     "englishName": "Twisting Standing Dumbbell Biceps Curl",
@@ -2301,16 +2013,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "deadlift-dumbbell-single-leg-deadlift-to-row-376",
-    "polishName": "Martwy ciąg jednonóż z wiosłowaniem z hantlami",
-    "englishName": "Dumbbell Single-leg Deadlift to Row",
-    "category": "DEADLIFT",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "deadlift-dumbbell-straight-leg-deadlift-377",
     "polishName": "Martwy ciąg z hantlami na wyprostowanych nogach",
     "englishName": "Dumbbell Straight-leg Deadlift",
@@ -2351,16 +2053,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "deadlift-one-arm-one-leg-deadlift-381",
-    "polishName": "Martwy ciąg jednorącz i jednonóż",
-    "englishName": "One-arm One-leg Deadlift",
-    "category": "DEADLIFT",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "deadlift-rack-pull-382",
     "polishName": "Przyciąganie ciężaru ze stojaka",
     "englishName": "Rack Pull",
@@ -2395,36 +2087,6 @@
     "id": "deadlift-single-arm-deadlift-384",
     "polishName": "Martwy ciąg jednorącz",
     "englishName": "Single-arm Deadlift",
-    "category": "DEADLIFT",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "deadlift-single-leg-barbell-deadlift-385",
-    "polishName": "Martwy ciąg jednonóż ze sztangą",
-    "englishName": "Single-leg Barbell Deadlift",
-    "category": "DEADLIFT",
-    "requiredEquipment": [
-      "barbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "deadlift-single-leg-barbell-straight-leg-deadlift-386",
-    "polishName": "Martwy ciąg jednonóż z wyprostowaną nogą ze sztangą",
-    "englishName": "Single-leg Barbell Straight-leg Deadlift",
-    "category": "DEADLIFT",
-    "requiredEquipment": [
-      "barbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "deadlift-single-leg-romanian-deadlift-with-dumbbell-390",
-    "polishName": "Rumuński martwy ciąg jednonóż z hantlami",
-    "englishName": "Single-leg Romanian Deadlift with Dumbbell",
     "category": "DEADLIFT",
     "requiredEquipment": [
       "dumbbell"
@@ -2605,17 +2267,6 @@
     "libraryTier": "variation"
   },
   {
-    "id": "flye-swiss-ball-dumbbell-flye-406",
-    "polishName": "Rozpiętki z hantlami na piłce gimnastycznej",
-    "englishName": "Swiss Ball Dumbbell Fly",
-    "category": "FLYE",
-    "requiredEquipment": [
-      "dumbbell",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "banded-exercises-front-raise-14",
     "polishName": "Wznosy ramion przodem (z gumą oporową)",
     "englishName": "Banded Front Raise",
@@ -2705,16 +2356,6 @@
       "bench"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "leg-curl-single-leg-barbell-good-morning-576",
-    "polishName": "Ćwiczenie „dzień dobry” ze sztangą jednonóż",
-    "englishName": "Single-leg Barbell Good Morning",
-    "category": "GOOD_MORNING",
-    "requiredEquipment": [
-      "barbell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "leg-curl-split-barbell-good-morning-579",
@@ -2818,26 +2459,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "hip-raise-hip-raise-with-feet-on-swiss-ball-415",
-    "polishName": "Wznosy biodra ze stopami na piłce gimnastycznej",
-    "englishName": "Hip Raise with Feet on Swiss Ball",
-    "category": "HIP_RAISE",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "hip-raise-hip-raise-with-head-on-swiss-ball-417",
-    "polishName": "Wznosy biodra z głową na piłce gimnastycznej",
-    "englishName": "Hip Raise with Head on Swiss Ball",
-    "category": "HIP_RAISE",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "hip-raise-hip-raise-with-knee-squeeze-418",
     "polishName": "Wznosy biodra ze ściskaniem piłki lekarskiej kolanami",
     "englishName": "Hip Raise with Knee Squeeze",
@@ -2890,32 +2511,6 @@
       "bench"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "hip-raise-single-leg-hip-raise-424",
-    "polishName": "Wznosy biodra jednonóż",
-    "englishName": "Single-leg Hip Raise",
-    "category": "HIP_RAISE",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "hip-raise-single-leg-hip-raise-with-foot-on-bench-425",
-    "polishName": "Wznosy biodra jednonóż ze stopą na ławce",
-    "englishName": "Single-leg Hip Raise with Foot on Bench",
-    "category": "HIP_RAISE",
-    "requiredEquipment": [
-      "bench"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "calf-raise-single-leg-hip-raise-with-knee-hold-114",
-    "polishName": "Wznosy biodra jednonóż z przytrzymaniem kolana",
-    "englishName": "Single-leg Hip Raise with Knee Hold",
-    "category": "HIP_RAISE",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
   },
   {
     "id": "hip-stability-band-side-lying-leg-raise-451",
@@ -3124,14 +2719,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "hip-swing-one-arm-swing-488",
-    "polishName": "Wymachy ramieniem",
-    "englishName": "One-arm Swing",
-    "category": "HIP_SWING",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
     "id": "hip-swing-single-arm-dumbbell-swing-489",
     "polishName": "Wymachy hantlem jednorącz",
     "englishName": "Single-arm Dumbbell Swing",
@@ -3206,16 +2793,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "hyperextension-single-leg-back-extension-507",
-    "polishName": "Wyprost pleców jednonóż",
-    "englishName": "Single-leg Back Extension",
-    "category": "HYPEREXTENSION",
-    "requiredEquipment": [
-      "machine"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "hyperextension-spine-extension-508",
     "polishName": "Wyprost kręgosłupa",
     "englishName": "Spine Extension",
@@ -3240,46 +2817,6 @@
     "category": "HYPEREXTENSION",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "hyperextension-superman-on-swiss-ball-511",
-    "polishName": "Pozycja Supermana na piłce gimnastycznej",
-    "englishName": "Superman on Swiss Ball",
-    "category": "HYPEREXTENSION",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "hyperextension-swiss-ball-back-extension-512",
-    "polishName": "Wyprost pleców na piłce gimnastycznej",
-    "englishName": "Swiss Ball Back Extension",
-    "category": "HYPEREXTENSION",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "hyperextension-swiss-ball-hyperextension-513",
-    "polishName": "Unoszenie nóg na piłce gimnastycznej",
-    "englishName": "Swiss Ball Hyperextension",
-    "category": "HYPEREXTENSION",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "hyperextension-swiss-ball-opposite-arm-and-leg-lift-514",
-    "polishName": "Naprzemienne wznosy ręki i nogi w klęku podpartym z piłką gimnastyczną",
-    "englishName": "Swiss Ball Opposite Arm and Leg Lift",
-    "category": "HYPEREXTENSION",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "indoor-bike-air-bike-531",
@@ -3402,16 +2939,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "lateral-raise-one-arm-cable-lateral-raise-551",
-    "polishName": "Wznosy wyprostowanego ramienia bokiem z linką wyciągu dolnego",
-    "englishName": "One-arm Cable Lateral Raise",
-    "category": "LATERAL_RAISE",
-    "requiredEquipment": [
-      "cableMachine"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "lateral-raise-overhand-grip-rear-lateral-raise-552",
     "polishName": "Odwodzenie ramion w tył w opadzie tułowia nachwytem",
     "englishName": "Overhand-grip Rear Lateral Raise",
@@ -3514,16 +3041,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "leg-curl-single-leg-sliding-leg-curl-577",
-    "polishName": "Uginanie nogi na dysku ślizgowym leżąc",
-    "englishName": "Single-leg Sliding Leg Curl",
-    "category": "LEG_CURL",
-    "requiredEquipment": [
-      "slidingDisc"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "leg-curl-sliding-leg-curl-578",
     "polishName": "Uginanie nóg na dysku ślizgowym leżąc",
     "englishName": "Sliding Leg Curl",
@@ -3540,16 +3057,6 @@
     "category": "LEG_CURL",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "leg-curl-swiss-ball-hip-raise-and-leg-curl-582",
-    "polishName": "Wznosy biodra i uginanie nóg ułożonych na piłce gimnastycznej",
-    "englishName": "Swiss Ball Hip Raise and Leg Curl",
-    "category": "LEG_CURL",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "crunch-leg-extensions-260",
@@ -3580,16 +3087,6 @@
       "pullupBar"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "leg-raise-hanging-single-leg-raise-587",
-    "polishName": "Wznosy jednonożne w zwisie na drążku",
-    "englishName": "Hanging Single-leg Raise",
-    "category": "LEG_RAISE",
-    "requiredEquipment": [
-      "pullupBar"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "leg-raise-kettlebell-leg-raises-588",
@@ -3658,24 +3155,6 @@
     "category": "LEG_RAISE",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "leg-raise-reverse-leg-raise-on-swiss-ball-596",
-    "polishName": "Odwrócone wznosy wyprostowanej nogi na piłce gimnastycznej",
-    "englishName": "Reverse Leg Raise on Swiss Ball",
-    "category": "LEG_RAISE",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "leg-raise-single-leg-lowering-drill-597",
-    "polishName": "Opuszczanie nogi leżąc na plecach",
-    "englishName": "Single-leg Lowering Drill",
-    "category": "LEG_RAISE",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
   },
   {
     "id": "bulgarian-split-squat",
@@ -4734,25 +4213,9 @@
     "libraryTier": "main"
   },
   {
-    "id": "plank-inchworm-to-side-plank-738",
-    "polishName": "Kroczenie z przejściem do deski bocznej",
-    "englishName": "Inchworm to Side Plank",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
     "id": "plank-kneeling-plank-739",
     "polishName": "Deska na kolanach",
     "englishName": "Kneeling Plank",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-kneeling-side-plank-with-leg-lift-740",
-    "polishName": "Deska boczna z unoszeniem nogi w klęku",
-    "englishName": "Kneeling Side Plank with Leg Lift",
     "category": "PLANK",
     "requiredEquipment": [],
     "libraryTier": "main"
@@ -4886,16 +4349,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "plank-plank-with-feet-on-swiss-ball-757",
-    "polishName": "Deska ze stopami na piłce gimnastycznej",
-    "englishName": "Plank with Feet on Swiss Ball",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "plank-plank-with-knee-to-elbow-758",
     "polishName": "Deska z przyciąganiem kolana do łokcia",
     "englishName": "Plank with Knee-to-Elbow",
@@ -4920,14 +4373,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "plank-plyometric-side-plank-761",
-    "polishName": "Deska boczna z wymachem nogą",
-    "englishName": "Plyometric Side Plank",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
     "id": "plank-ring-plank-sprawls-762",
     "polishName": "Deska na kółkach gimnastycznych z wyciąganiem ramion w przód",
     "englishName": "Ring Plank Sprawls",
@@ -4938,128 +4383,12 @@
     "libraryTier": "main"
   },
   {
-    "id": "plank-rolling-side-plank-763",
-    "polishName": "Przejścia między deskami bocznymi",
-    "englishName": "Rolling Side Plank",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
     "id": "plank-side-kick-plank-764",
     "polishName": "Deska z wykopem bocznym",
     "englishName": "Side Kick Plank",
     "category": "PLANK",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "plank-side-plank-765",
-    "polishName": "Deska boczna",
-    "englishName": "Side Plank",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-side-plank-and-row-766",
-    "polishName": "Deska boczna z wiosłowaniem",
-    "englishName": "Side Plank and Row",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-side-plank-lift-767",
-    "polishName": "Deska boczna z unoszeniem biodra",
-    "englishName": "Side Plank Lift",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-side-plank-to-plank-with-reach-under-768",
-    "polishName": "Deska boczna z przejściem do deski i sięganiem pod tułów",
-    "englishName": "Side Plank to Plank with Reach Under",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-side-plank-with-elbow-on-bosu-ball-769",
-    "polishName": "Deska boczna z łokciem ułożonym na przyrządzie do ćwiczeń równowagi Bosu®",
-    "englishName": "Side Plank with Elbow on Bosu® Balance Trainer",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "bosuBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "plank-side-plank-with-feet-on-bench-770",
-    "polishName": "Deska boczna ze stopami na ławce",
-    "englishName": "Side Plank with Feet on Bench",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "bench"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-side-plank-with-knee-circle-771",
-    "polishName": "Deska boczna z krążeniem kolanami",
-    "englishName": "Side Plank with Knee Circle",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-side-plank-with-knee-tuck-772",
-    "polishName": "Deska boczna z przemieszczeniem kolana do łokcia",
-    "englishName": "Side Plank with Knee Tuck",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-side-plank-with-leg-lift-773",
-    "polishName": "Deska boczna z unoszeniem nogi",
-    "englishName": "Side Plank with Leg Lift",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-side-plank-with-reach-under-774",
-    "polishName": "Deska boczna z sięganiem pod tułów",
-    "englishName": "Side Plank with Reach Under",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-single-leg-elevated-feet-plank-775",
-    "polishName": "Deska z uniesioną nogą",
-    "englishName": "Single-leg Elevated-feet Plank",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "plank-single-leg-flex-and-extend-776",
-    "polishName": "Zgięcie i wyprost nogi w podporze",
-    "englishName": "Single-leg Flex and Extend",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "plank-single-leg-side-plank-777",
-    "polishName": "Deska z oparciem na jednej nodze",
-    "englishName": "Single-leg Side Plank",
-    "category": "PLANK",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
   },
   {
     "id": "plank-spiderman-plank-778",
@@ -5086,67 +4415,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "plank-swiss-ball-plank-781",
-    "polishName": "Deska na piłce gimnastycznej",
-    "englishName": "Swiss Ball Plank",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "plank-swiss-ball-plank-leg-lift-782",
-    "polishName": "Deska na piłce gimnastycznej i unoszeniem nogi",
-    "englishName": "Swiss Ball Plank Leg Lift",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "plank-swiss-ball-plank-leg-lift-and-hold-783",
-    "polishName": "Deska na piłce gimnastycznej z unoszeniem nogi i zatrzymaniem",
-    "englishName": "Swiss Ball Plank Leg Lift and Hold",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "plank-swiss-ball-plank-with-feet-on-bench-784",
-    "polishName": "Deska na piłce gimnastycznej ze stopami na ławce",
-    "englishName": "Swiss Ball Plank with Feet on Bench",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "bench",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "plank-swiss-ball-prone-jackknife-785",
-    "polishName": "Scyzoryki na brzuchu z piłką gimnastyczną",
-    "englishName": "Swiss Ball Prone Jackknife",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "plank-swiss-ball-side-plank-786",
-    "polishName": "Deska boczna z piłką gimnastyczną",
-    "englishName": "Swiss Ball Side Plank",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "plank-t-stabilization-787",
     "polishName": "Unoszenie ramienia w podporze bokiem",
     "englishName": "T-Stabilization",
@@ -5161,26 +4429,6 @@
     "category": "PLANK",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "plank-towel-plank-and-knee-in-789",
-    "polishName": "Deska na ręcznikach z podciąganiem kolan",
-    "englishName": "Towel Plank and Knee-in",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "other"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "plank-turkish-get-up-to-side-plank-790",
-    "polishName": "Tureckie wstawanie z przejściem do deski bocznej",
-    "englishName": "Turkish Get-up to Side Plank",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "advanced"
   },
   {
     "id": "plank-two-point-plank-791",
@@ -5576,27 +4824,6 @@
     "libraryTier": "sportSpecific"
   },
   {
-    "id": "pull-up-suspended-chin-up-922",
-    "polishName": "Podciąganie na drążku w zawieszeniu",
-    "englishName": "Suspended Chin-up",
-    "category": "PULL_UP",
-    "requiredEquipment": [
-      "pullupBar"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "pull-up-towel-pull-up-924",
-    "polishName": "Podciąganie na ręczniku",
-    "englishName": "Towel Pull-up",
-    "category": "PULL_UP",
-    "requiredEquipment": [
-      "other",
-      "pullupBar"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "pull-up-wide-grip-lat-pulldown-941",
     "polishName": "Ściąganie drążka wyciągu w chwycie szerokim",
     "englishName": "Wide-grip Lat Pull-down",
@@ -5656,17 +4883,6 @@
       "cableMachine"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "pull-up-swiss-ball-ez-bar-pullover-923",
-    "polishName": "Ściąganie sztangi z gryfem łamanym na piłce gimnastycznej",
-    "englishName": "Swiss Ball EZ-Bar Pull-over",
-    "category": "PULLOVER",
-    "requiredEquipment": [
-      "ezBar",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "push-up-alternating-staggered-push-up-944",
@@ -5879,14 +5095,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "push-up-one-arm-push-up-968",
-    "polishName": "Pompki na jednej ręce",
-    "englishName": "One-arm Push-up",
-    "category": "PUSH_UP",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
     "id": "push-up-parallette-handstand-push-up-969",
     "polishName": "Pompki w staniu na rękach na poręczach",
     "englishName": "Parallette Handstand Push-up",
@@ -5977,14 +5185,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "calf-raise-single-leg-decline-push-up-112",
-    "polishName": "Pompki z jedną nogą opartą o podwyższenie",
-    "englishName": "Single-leg Decline Push-up",
-    "category": "PUSH_UP",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
     "id": "push-up-spiderman-push-up-981",
     "polishName": "Pompki Spidermana",
     "englishName": "Spiderman Push-up",
@@ -6007,16 +5207,6 @@
     "category": "PUSH_UP",
     "requiredEquipment": [],
     "libraryTier": "variation"
-  },
-  {
-    "id": "push-up-suspended-push-up-984",
-    "polishName": "Pompki na taśmie podwieszanej",
-    "englishName": "Suspended Push-up",
-    "category": "PUSH_UP",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
   },
   {
     "id": "push-up-t-push-up-987",
@@ -6225,18 +5415,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "row-inverted-row-with-feet-on-swiss-ball-1048",
-    "polishName": "Odwrócone wiosłowanie ze stopami na piłce gimnastycznej",
-    "englishName": "Inverted Row with Feet on Swiss Ball",
-    "category": "ROW",
-    "requiredEquipment": [
-      "barbell",
-      "squatRack",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "row-kettlebell-row-1049",
     "polishName": "Wiosłowanie z odważnikiem",
     "englishName": "Kettlebell Row",
@@ -6284,37 +5462,6 @@
     "category": "ROW",
     "requiredEquipment": [
       "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "row-one-arm-bent-over-row-1052",
-    "polishName": "Wiosłowanie jednorącz w opadzie tułowia",
-    "englishName": "One-arm Bent-over Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "bench",
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "hyperextension-one-arm-one-leg-row-502",
-    "polishName": "Wiosłowanie jednorącz na jednej nodze",
-    "englishName": "One-arm One-leg Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "hyperextension-one-arm-row-with-band-503",
-    "polishName": "Wiosłowanie jednorącz (z gumą oporową)",
-    "englishName": "One-arm Row with Band",
-    "category": "ROW",
-    "requiredEquipment": [
-      "band"
     ],
     "libraryTier": "variation"
   },
@@ -6451,16 +5598,6 @@
     "libraryTier": "variation"
   },
   {
-    "id": "row-suspended-inverted-row-1067",
-    "polishName": "Odwrócone wiosłowanie na taśmach podwieszanych",
-    "englishName": "Suspended Inverted Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "row-t-bar-row-1068",
     "polishName": "Wiosłowanie sztangą T-bar",
     "englishName": "T-Bar Row",
@@ -6468,18 +5605,6 @@
     "requiredEquipment": [
       "barbell",
       "other"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "row-towel-grip-inverted-row-1069",
-    "polishName": "Podciąganie australijskie z ręcznikami w uchwycie",
-    "englishName": "Towel-grip Inverted Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "barbell",
-      "other",
-      "squatRack"
     ],
     "libraryTier": "main"
   },
@@ -6562,116 +5687,6 @@
     "category": "RUN",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "sandbag-back-squat-1091",
-    "polishName": "Przysiady tylne z workiem treningowym",
-    "englishName": "Sandbag Back Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "sandbag-bear-hug-squat-1093",
-    "polishName": "Przysiady z objętym oburącz workiem treningowym",
-    "englishName": "Sandbag Bear Hug Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "sandbag-clean-1094",
-    "polishName": "Zarzut worka treningowego",
-    "englishName": "Sandbag Clean",
-    "category": "OLYMPIC_LIFT",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "sandbag-clean-and-press-1095",
-    "polishName": "Zarzut i wyciskanie worka treningowego",
-    "englishName": "Sandbag Clean and Press",
-    "category": "OLYMPIC_LIFT",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "sandbag-curl-1096",
-    "polishName": "Uginanie ramion z workiem treningowym",
-    "englishName": "Sandbag Curl",
-    "category": "CURL",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "sandbag-front-carry-1097",
-    "polishName": "Chód z workiem treningowym przytrzymanym na ramionach pod brodą",
-    "englishName": "Sandbag Front Carry",
-    "category": "CARRY",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "sandbag-front-squat-1098",
-    "polishName": "Przysiady z workiem treningowym przytrzymanym na ramionach pod brodą",
-    "englishName": "Sandbag Front Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "sandbag-lunge-1099",
-    "polishName": "Wykroki z workiem treningowym",
-    "englishName": "Sandbag Lunge",
-    "category": "LUNGE",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "sandbag-overhead-press-1100",
-    "polishName": "Wyciskanie worka treningowego nad głowę",
-    "englishName": "Sandbag Overhead Press",
-    "category": "SHOULDER_PRESS",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "sandbag-row-1103",
-    "polishName": "Wiosłowanie workiem treningowym w pochyleniu",
-    "englishName": "Sandbag Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "sandbag-shouldering-1105",
-    "polishName": "Zarzut worka treningowego na barki",
-    "englishName": "Sandbag Shouldering",
-    "category": "OLYMPIC_LIFT",
-    "requiredEquipment": [
-      "sandbag"
-    ],
-    "libraryTier": "sportSpecific"
   },
   {
     "id": "shoulder-press-alternating-dumbbell-shoulder-press-1110",
@@ -6780,16 +5795,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "shoulder-press-one-arm-push-press-1124",
-    "polishName": "Wyciskanie hantla jednorącz",
-    "englishName": "One-arm Push Press",
-    "category": "SHOULDER_PRESS",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "shoulder-press-seated-barbell-shoulder-press-1127",
     "polishName": "Wyciskanie sztangi siedząc (żołnierskie)",
     "englishName": "Seated Barbell Shoulder Press",
@@ -6840,17 +5845,6 @@
       "dumbbell"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "shoulder-press-swiss-ball-dumbbell-shoulder-press-1134",
-    "polishName": "Wyciskanie hantli na piłce gimnastycznej (żołnierskie)",
-    "englishName": "Swiss Ball Dumbbell Shoulder Press",
-    "category": "SHOULDER_PRESS",
-    "requiredEquipment": [
-      "dumbbell",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "lateral-raise-45-degree-cable-external-rotation-536",
@@ -6985,16 +5979,6 @@
     "requiredEquipment": [
       "bench",
       "dumbbell"
-    ],
-    "libraryTier": "rehab"
-  },
-  {
-    "id": "stage2-swiss-ball-i-y-t-w-raise",
-    "polishName": "Wznosy I-Y-T-W na piłce gimnastycznej",
-    "englishName": "Swiss Ball I-Y-T-W Raise",
-    "category": "SHOULDER_STABILITY",
-    "requiredEquipment": [
-      "swissBall"
     ],
     "libraryTier": "rehab"
   },
@@ -7311,40 +6295,12 @@
     "libraryTier": "main"
   },
   {
-    "id": "sit-up-one-arm-full-sit-up-1210",
-    "polishName": "Brzuszki do siadu jednorącz",
-    "englishName": "One-arm Full Sit-up",
-    "category": "SIT_UP",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
     "id": "sit-up-reverse-curl-up-1212",
     "polishName": "Odwrócone curl-upy",
     "englishName": "Reverse Curl-up",
     "category": "SIT_UP",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "sit-up-russian-twist-on-swiss-ball-1213",
-    "polishName": "Rosyjski skręt tułowia na piłce gimnastycznej",
-    "englishName": "Russian Twist on Swiss Ball",
-    "category": "CORE",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "sit-up-single-leg-swiss-ball-jackknife-1214",
-    "polishName": "Scyzoryki jednonóż z piłką gimnastyczną",
-    "englishName": "Single-leg Swiss Ball Jackknife",
-    "category": "SIT_UP",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "sit-up-sit-up-1215",
@@ -7621,16 +6577,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "squat-elevated-single-leg-squat-1278",
-    "polishName": "Przysiady z uniesioną jedną nogą",
-    "englishName": "Elevated Single-leg Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "box"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "squat-figure-four-squats-1279",
     "polishName": "Przysiady w kształcie cyfry „4”",
     "englishName": "Figure Four Squats",
@@ -7727,14 +6673,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "squat-partial-single-leg-squat-1291",
-    "polishName": "Przysiady częściowe jednonóż",
-    "englishName": "Partial Single-leg Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
     "id": "squat-pistol-squat-1292",
     "polishName": "Przysiady pistoletowe",
     "englishName": "Pistol Squat",
@@ -7765,26 +6703,6 @@
     "category": "SQUAT",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "squat-single-leg-bench-get-up-1296",
-    "polishName": "Wstawanie z ławki jednonóż",
-    "englishName": "Single-leg Bench Get-up",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "bench"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "squat-single-leg-bench-squat-1297",
-    "polishName": "Przysiady na jednej nodze do podwyższenia",
-    "englishName": "Single-leg Bench Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "bench"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "smith-machine-squat",
@@ -7876,16 +6794,6 @@
     "libraryTier": "variation"
   },
   {
-    "id": "squat-swiss-ball-body-weight-wall-squat-1312",
-    "polishName": "Przysiady przy ścianie z piłką gimnastyczną (bez obciążenia)",
-    "englishName": "Swiss Ball Body-weight Wall Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "squat-thrusters-1313",
     "polishName": "Przysiady z wyrzutem ramion",
     "englishName": "Thrusters",
@@ -7922,17 +6830,6 @@
       "medicineBall"
     ],
     "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "squat-weighted-swiss-ball-wall-squat-1338",
-    "polishName": "Przysiady przy ścianie z piłką gimnastyczną (z obciążeniem)",
-    "englishName": "Weighted Swiss Ball Wall Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "plate",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "squat-weighted-wall-squat-1340",
@@ -8089,106 +6986,6 @@
     "category": "STEP_UP",
     "requiredEquipment": [
       "box"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "suspension-chest-fly-1345",
-    "polishName": "Rozpiętki na taśmach podwieszanych",
-    "englishName": "Suspension Chest Fly",
-    "category": "FLYE",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "suspension-chest-press-1346",
-    "polishName": "Pompki na taśmach podwieszanych",
-    "englishName": "Suspension Chest Press",
-    "category": "PUSH_UP",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "suspension-curl-1348",
-    "polishName": "Uginanie ramion na taśmie podwieszanej",
-    "englishName": "Suspension Curl",
-    "category": "CURL",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "suspension-face-pull-1350",
-    "polishName": "Przyciąganie do twarzy na taśmach podwieszanych",
-    "englishName": "Suspension Face Pull",
-    "category": "ROW",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "suspension-hamstring-curl-1352",
-    "polishName": "Uginanie nóg na taśmach podwieszanych",
-    "englishName": "Suspension Hamstring Curl",
-    "category": "LEG_CURL",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "suspension-lunge-1357",
-    "polishName": "Wykroki na taśmie podwieszanej",
-    "englishName": "Suspension Lunge",
-    "category": "LUNGE",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "suspension-plank-1361",
-    "polishName": "Deska na taśmie podwieszanej",
-    "englishName": "Suspension Plank",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "suspension-rollout-1367",
-    "polishName": "Rolowanie na taśmach podwieszanych",
-    "englishName": "Suspension Roll-out",
-    "category": "CORE",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "suspension-row-1368",
-    "polishName": "Wiosłowanie na taśmach podwieszanych",
-    "englishName": "Suspension Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "suspension-tricep-press-1376",
-    "polishName": "Pompki tricepsowe na taśmie podwieszanej",
-    "englishName": "Suspension Tricep Press",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "trx"
     ],
     "libraryTier": "main"
   },
@@ -8492,26 +7289,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "triceps-extension-single-leg-bench-dip-and-kick-1423",
-    "polishName": "Dipy na ławce jednonóż z kopnięciem",
-    "englishName": "Single-leg Bench Dip and Kick",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "bench"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "triceps-extension-single-leg-dip-1424",
-    "polishName": "Dipy jednonóż",
-    "englishName": "Single-leg Dip",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "bench"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "triceps-extension-static-lying-triceps-extension-1425",
     "polishName": "Wyprost tricepsów ze sztangą nad głową z przytrzymaniem leżąc",
     "englishName": "Static Lying Triceps Extension",
@@ -8521,60 +7298,6 @@
       "ezBar"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "triceps-extension-suspended-dip-1426",
-    "polishName": "Dipy na poręczach w zawieszeniu",
-    "englishName": "Suspended Dip",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "trx"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "triceps-extension-swiss-ball-dumbbell-lying-triceps-extension-1427",
-    "polishName": "Wyprost tricepsów z hantlami nad głową leżąc na piłce gimnastycznej",
-    "englishName": "Swiss Ball Dumbbell Lying Triceps Extension",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "dumbbell",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "curl-swiss-ball-dumbbell-overhead-triceps-extension-367",
-    "polishName": "Wyprost tricepsów z hantlami nad głowę na piłce gimnastycznej",
-    "englishName": "Swiss Ball Dumbbell Overhead Triceps Extension",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "dumbbell",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "triceps-extension-swiss-ball-ez-bar-lying-triceps-extension-1428",
-    "polishName": "Wyprost tricepsów nad głową ze sztangą łamaną leżąc na piłce gimnastycznej.",
-    "englishName": "Swiss Ball EZ-Bar Lying Triceps Extension",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "ezBar",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "triceps-extension-swiss-ball-ez-bar-overhead-triceps-extension-1429",
-    "polishName": "Wyprost tricepsów ze sztangą łamaną nad głowę na piłce gimnastycznej",
-    "englishName": "Swiss Ball EZ-Bar Overhead Triceps Extension",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "ezBar",
-      "swissBall"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-tabletop-dip-1430",
@@ -9082,36 +7805,6 @@
     "category": "WARM_UP",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "warm-up-swiss-ball-hip-crossover-1501",
-    "polishName": "Przenoszenie nóg na boki w leżeniu tyłem z nogami na piłce gimastycznej",
-    "englishName": "Swiss Ball Hip Crossover",
-    "category": "WARM_UP",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "warm-up-swiss-ball-reach-roll-and-lift-1502",
-    "polishName": "Sięgnięcie, rotacja i uniesienie ramienia na piłce gimnastycznej",
-    "englishName": "Swiss Ball Reach, Roll, and Lift",
-    "category": "WARM_UP",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "warm-up-swiss-ball-windshield-wipers-1503",
-    "polishName": "Wycieraczki z piłką gimnastyczną",
-    "englishName": "Swiss Ball Windshield Wipers",
-    "category": "WARM_UP",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "warm-up-thoracic-rotation-1504",

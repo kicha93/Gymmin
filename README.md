@@ -6,10 +6,11 @@ Gymmin is a local-only Expo/React Native workout app created and maintained by *
 
 - one mobile application; there is no Gymmin backend, account, authentication, synchronization, credit system, billing, or remote AI job;
 - workouts, sessions, history, weekly plan, favorites, achievements, settings, reminders, creator profiles, and the optional local avatar stay in private device storage;
-- Home can expand the current Monday-Sunday plan into a local weekly muscle-volume estimate, separating completed sets from projected end-of-week volume and reusing the exercise catalog's muscle-impact data;
+- Home can expand the current Monday-Sunday plan into a local weekly muscle-volume estimate, separating completed sets from projected end-of-week volume and reusing the exercise catalog's muscle-impact data; the responsive list and anatomy view share one status model, and individual muscle groups can be temporarily hidden or restored on the figure;
 - the local profile action is always visible in the top-right header and never opens login; the workout creator remains available from the Workouts screen regardless of saved workouts or connectivity, but is not duplicated on Home;
+- Profile is a local dashboard with a private avatar, derived completed-session and active-plan counts, achievements and bug reporting; Gymmin does not collect a display name, so the UI uses a localized local-profile label;
 - AI workout creation works by local prompt generation, clipboard hand-off to an external AI chosen by the user, and strict local JSON validation/import; AI modification of saved workouts is not part of the product;
-- backup/import uses `.gymmin.json`; v1 backups without `profile` preserve the current local profile;
+- backup/import uses `.gymmin.json`; v1 backups without `profile` preserve the current local profile, and orphan weekly-plan references are safely discarded without rejecting otherwise valid user data;
 - Contact and bug reports prepare `mailto:` messages locally for `kontakt@gymmin.app`; only the user can send them from the system email client, with clipboard fallback when no client is available;
 - workout CSV/XLSX export and backup work offline;
 - voluntary support only opens [Buy Me a Coffee](https://buymeacoffee.com/atomicjumpr) and grants no product benefits.
@@ -58,6 +59,8 @@ npm run google-play:validate
 ```
 
 Exercise images use a reproducible source-to-runtime pipeline: paired PNG sources live outside the mobile bundle under `media-source/exercises`, while the app statically requires optimized WebP Q90 files constrained to 900 x 1140 without cropping. After importing or generating PNG sources, run `npm run exercise:media:optimize`; see [exercise media](docs/exercise-media.md).
+
+The validated exercise catalog is the single source for creator prompts, exercise selection, localized names, technique content and the five-level muscle-involvement model. Deprecated integration-only metadata and unpopulated calorie/heart-rate fields are not part of the product model.
 
 The hypertrophy-oriented weekly dashboard uses fractional working sets rather than `sets x repetitions`. Its evidence basis, Gymmin heuristics and limitations are documented in [weekly muscle volume](docs/weekly-muscle-volume.md).
 

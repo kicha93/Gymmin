@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const catalogDir = path.join(repoRoot, "apps", "mobile", "src", "domain", "exerciseCatalog");
 const outputPath = path.join(repoRoot, "docs", "exercise-summary.json");
+const englishNamesOutputPath = path.join(repoRoot, "docs", "exercise-names-en.txt");
 
 function getArrayLiteral(source, fileName) {
   const start = source.indexOf("[");
@@ -54,5 +55,10 @@ for (const fileName of files) {
 
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, `${JSON.stringify(exercises, null, 2)}\n`, "utf8");
+const englishNames = exercises
+  .map((exercise) => exercise.englishName)
+  .sort((left, right) => left.localeCompare(right, "en", { numeric: true, sensitivity: "base" }));
+await writeFile(englishNamesOutputPath, `${englishNames.join("\n")}\n`, "utf8");
 
 console.log(`Exported ${exercises.length} exercises to ${path.relative(repoRoot, outputPath)}`);
+console.log(`Exported ${englishNames.length} English names to ${path.relative(repoRoot, englishNamesOutputPath)}`);

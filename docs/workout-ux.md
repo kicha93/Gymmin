@@ -1,19 +1,28 @@
 # Workout UX notes
 
-> Current architecture: every workflow below is local-only. Gymmin has no account, backend, sync, credits, billing, or remote AI request. Legacy account-shaped records are read only by the backward-compatible upgrade importer.
+> Current architecture: every workflow below is local-only. Gymmin has no account, backend, sync, credits, billing, or remote AI request. Historical account-shaped readers remain isolated for regression fixtures, but normal startup ignores those namespaces.
 
 Profile/avatar, creator profiles, weekly plan and settings persist in the neutral `gymmin.local.v1.*` namespace (with avatar bytes in private files). They do not synchronize between devices; device transfer is performed explicitly with `.gymmin.json` backup/import.
 
 The profile/avatar action is permanently visible in the top-right application header and opens the local profile directly. There is no login panel. The workout creator is permanently available from the product UI; it is not hidden after saving a workout and has no account or network availability gate.
 
-## Local AI creator and rewrite
+## Local AI creator
 
-- Both flows use four local steps: prepare prompt, copy it to an external AI chosen by the user, paste JSON, review and apply.
-- The source workout is unchanged until Apply. Unknown exercises block Apply and offer canonical catalog replacements.
+- The creator uses four local steps: prepare a prompt, copy it to an external AI chosen by the user, paste JSON, then review and save.
+- Unknown exercises block Save and offer canonical catalog replacements. There is no saved-workout AI rewrite or Apply flow.
 - Prompts use the current validated exercise catalog, canonical IDs and `restSeconds` on exercises; no standalone rest elements are generated.
 - Plain JSON, fenced JSON and a recoverable text wrapper are supported. Malformed, oversized and schema-invalid responses are rejected.
 - Auth, credits, billing, consent-to-upload, job status and polling are absent from the product flow.
 - Gymmin does not send creator-profile or workout data to an AI service.
+
+## Local profile dashboard
+
+- The global header avatar remains the entry point to Profile; it never opens authentication.
+- The profile card combines a large private avatar, a compact image-picker overlay, responsive change/remove actions and the localized `Local profile` / `Profil lokalny` fallback. Gymmin does not collect or persist a display name.
+- `Completed sessions` is derived from completed, non-deleted workout sessions. Active, abandoned and deleted sessions are excluded.
+- `Active plans` is derived from saved, non-archived workout definitions. Neither counter is stored separately or added to the backup schema.
+- The achievements card retains the existing progress calculation and adapts cleanly to zero, partial and complete states.
+- The Actions section contains a compact Report Bug row with its description and chevron. Support/author content remains under Settings rather than being duplicated on Profile.
 
 This note tracks the current workout-view UX decisions.
 
@@ -45,6 +54,7 @@ This note tracks the current workout-view UX decisions.
 - A set containing exactly two valid, non-rest exercises is shown as a planned
   superset. This reuses the existing stage/set/exercise model: there is no
   second superset field in the workout definition.
+- Detailed warm-up stages containing named exercises or meaningful targets remain normal guided sequences, with every movement visible and executable. Only a truly empty/simple warm-up placeholder receives the compact representation.
 
 ## Exercise rows
 
@@ -159,6 +169,10 @@ This note tracks the current workout-view UX decisions.
 W `Ustawienia -> Trening` użytkownik może włączyć albo wyłączyć widoczność timera odpoczynku podczas aktywnego treningu. Ustawienie jest domyślnie włączone i zapisuje się w neutralnym lokalnym storage. Wyłączenie ukrywa wyłącznie kontrolkę timera; planowany odpoczynek pozostaje widoczny w karcie ćwiczenia.
 
 ## Plan tygodnia
+
+The expandable muscle-volume dashboard keeps `Completed | Plan` and `Front | Back` in one compact row on typical phones. The list uses the flexible left column and the existing anatomy SVG fills a width-aware right column; screens narrower than 340 dp safely stack the segmented controls. Each visible muscle row can be toggled: a disabled row and its anatomy regions are grayed, while enabling it restores the color derived from the current status. This selection is transient presentation state and never changes calculations, weekly-plan data, storage or backup.
+
+Deleting a workout definition removes its assignments from the live weekly plan. Backup creation/import also normalizes the plan against included workouts, so an orphan assignment is skipped without rejecting the rest of an otherwise valid backup.
 
 Na stronie głównej plan tygodnia można rozwinąć o lokalną analizę objętości mięśni. Widok przełącza `Wykonane` i prognozę `Plan` oraz jedną sylwetkę `Przód` albo `Tył`. Wykonane opiera się na rzeczywiście ukończonych wpisach serii w zakończonych sesjach bieżącego tygodnia. Plan dodaje wyłącznie pozostałe, jeszcze niezrealizowane wystąpienia z planu tygodnia, więc trening nie jest liczony podwójnie.
 

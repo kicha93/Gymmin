@@ -28,6 +28,8 @@ A separate one-time best-effort cleanup removes known obsolete AsyncStorage/Secu
 
 Backup schema remains v1. `profile` is optional and contains only an optional private avatar. Importing an older v1 backup without `profile` preserves the current local avatar; obsolete `displayName` values from older backups are ignored. Backups never include auth tokens, API data, sync metadata, or obsolete creator jobs.
 
+Weekly-plan references are normalized against the workout definitions carried by the backup. A reference to a workout that is no longer present is omitted while the remaining valid backup data is retained. The active-session reference is deliberately stricter: importing an active session whose workout is missing remains an error because silently rewriting an in-progress session could lose user data. The v1 format and the rule that a backup without `profile` preserves the current local profile are unchanged.
+
 ## Regression coverage
 
 Tests verify that local-only bootstrap completes without importing obsolete account data, preserves those old values untouched, retains existing local-only data, supports backup recovery, and keeps the historical readers isolated from product startup.

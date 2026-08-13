@@ -21,17 +21,17 @@ import { getExerciseAnimationAssetKey, getExerciseImageAssetKeys } from "../exer
 
 describe("exercise catalog cleanup", () => {
   it("maps removed duplicate exercise names to their canonical target", () => {
-    const aliased = findCatalogExerciseBestEffort("TRX Inverted Row");
+    const aliased = findCatalogExerciseBestEffort("Back squat");
 
-    expect(aliased?.name).toBe("Suspended Inverted Row");
-    expect(findExerciseByName("TRX Inverted Row")?.name).toBe("Suspended Inverted Row");
+    expect(aliased?.name).toBe("Barbell Back Squat");
+    expect(findExerciseByName("Back squat")?.name).toBe("Barbell Back Squat");
   });
 
   it("does not expose removed duplicate names in exercise options", () => {
     const optionLabels = getExerciseOptions("en").map((option) => option.label);
 
-    expect(optionLabels).not.toContain("TRX Inverted Row");
-    expect(optionLabels).toContain("Suspended Inverted Row");
+    expect(optionLabels).not.toContain("Back squat");
+    expect(optionLabels).toContain("Barbell Back Squat");
   });
 
   it("applies reviewed category and equipment fixes", () => {
@@ -61,18 +61,10 @@ describe("exercise catalog cleanup", () => {
 
   it("uses movement categories while retaining equipment discovery", () => {
     const bandedCurl = findExerciseById("banded-exercises-curl-6");
-    const sandbagSquat = findExerciseById("sandbag-back-squat-1091");
-    const suspensionRow = findExerciseById("suspension-row-1368");
 
     expect(bandedCurl?.category).toBe("CURL");
     expect(bandedCurl && getRequiredEquipment(bandedCurl)).toContain("band");
-    expect(sandbagSquat?.category).toBe("SQUAT");
-    expect(sandbagSquat && getRequiredEquipment(sandbagSquat)).toContain("sandbag");
-    expect(suspensionRow?.category).toBe("ROW");
-    expect(suspensionRow && getRequiredEquipment(suspensionRow)).toContain("trx");
     expect(exercisesByCategory.CURL).toContain(bandedCurl);
-    expect(exercisesByCategory.SQUAT).toContain(sandbagSquat);
-    expect(exercisesByCategory.ROW).toContain(suspensionRow);
   });
 
   it("applies the final targeted catalog corrections", () => {
@@ -80,7 +72,6 @@ describe("exercise catalog cleanup", () => {
     expect(findExerciseById("hip-raise-kettlebell-swing-420")?.category).toBe("HIP_SWING");
     expect(findExerciseById("squat-alternating-box-dumbbell-step-ups-1247")?.category).toBe("STEP_UP");
     expect(findExerciseById("squat-dumbbell-split-squat-1271")?.category).toBe("LUNGE");
-    expect(findExerciseById("sit-up-russian-twist-on-swiss-ball-1213")?.category).toBe("CORE");
     expect(findExerciseById("chop-cable-pull-through-157")?.category).toBe("DEADLIFT");
     expect(findExerciseById("lunge-dumbbell-box-lunge-624")?.equipment.box).toBe(1);
     expect(findExerciseById("row-banded-face-pulls-1033")?.muscleImpact.lats).toBe(1);
@@ -148,8 +139,8 @@ describe("exercise catalog cleanup", () => {
     ]);
   });
 
-  it("preserves old Stage 2 exercise names as aliases to focused catalog entries", () => {
-    expect(findExerciseByName("Battle Rope")?.name).toBe("Battle Rope Alternating Wave");
+  it("does not resolve removed exercise families while preserving supported catalog aliases", () => {
+    expect(findExerciseByName("Battle Rope")).toBeUndefined();
     expect(findExerciseByName("Floor I Raise")?.name).toBe("Prone I-Y-T Raise");
     expect(findExerciseByName("Sledge Hammer")).toBeUndefined();
   });

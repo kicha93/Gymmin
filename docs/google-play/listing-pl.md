@@ -21,6 +21,7 @@ Z Gymmin możesz:
 • zapisywać ciężar i liczbę powtórzeń,
 • przeglądać historię oraz postępy,
 • planować tydzień treningowy,
+• analizować orientacyjną tygodniową objętość trenowanych mięśni na interaktywnej sylwetce,
 • ustawiać lokalne przypomnienia,
 • eksportować treningi i tworzyć lokalne kopie zapasowe,
 • przygotowywać plany z pomocą wybranego zewnętrznego AI przez bezpieczny mechanizm kopiuj/wklej.

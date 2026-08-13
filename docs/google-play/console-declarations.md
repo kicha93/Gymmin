@@ -20,7 +20,7 @@ Current architecture facts:
 - Gymmin performs no runtime HTTP request and the release manifest has no `INTERNET` permission;
 - backup/export happens only after an explicit user action and creates a local file selected or shared by the user;
 - Report Bug and Contact prepare a bounded message locally and hand it to an external email client; the user reviews and explicitly sends it;
-- AI create/rewrite uses local prompt generation and explicit copy/paste to an external service selected by the user;
+- AI workout creation uses local prompt generation and explicit copy/paste to an external service selected by the user; saved-workout AI rewrite is not part of the product;
 - Buy Me a Coffee and privacy links are explicit external intents and receive no Gymmin user data from the app.
 
 Likely form outcome: **the app does not collect or share user data automatically**. Verify the current Play Console definitions and exemptions for user-initiated transfers before submitting; do not copy this sentence without reviewing the live form.

@@ -9,6 +9,6 @@ Achievements are a fully local product feature.
 - backup/import preserves local achievement state;
 - “Delete all data” removes unlock state and counters.
 
-Legacy parsers/migration can read historical account-scoped achievement records and copy validated state into the neutral namespace. New runtime writes never recreate account or sync metadata.
+Historical parsers can still read account-scoped achievement fixtures for regression coverage, but normal product startup neither imports nor merges those test namespaces. New runtime writes never recreate account or sync metadata.
 
 Achievements must remain motivational only. They do not unlock premium features or grant monetary/credit value.

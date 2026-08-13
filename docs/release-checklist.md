@@ -63,6 +63,9 @@ P0 execution order: C → E → G → M. P1 follows after P0 or in parallel on a
 - [ ] confirm the expected achievement is unlocked
 - [ ] configure a reminder and verify persistence
 - [ ] restart the app and confirm all data remains
+- [ ] open Profile and confirm the localized local-profile fallback, zero derived counters, empty achievement state, and no `undefined`/blank identity field
+- [ ] expand weekly muscle analysis and confirm both segmented controls share one row on a normal phone
+- [ ] switch Completed/Plan and Front/Back, then toggle individual muscle rows and confirm only presentation/anatomy coloring changes
 
 ### B. Upgrade from an old pre-release installation
 
@@ -93,6 +96,8 @@ P0 execution order: C → E → G → M. P1 follows after P0 or in parallel on a
 - [ ] select the backup, review it, and confirm restore
 - [ ] restart and verify restored data
 - [ ] import a v1 backup without `profile` and confirm the current local profile is preserved
+- [ ] restore a valid v1 backup containing a weekly-plan reference to a removed workout; confirm restore succeeds, the orphan reference is omitted, and all other data survives restart
+- [ ] delete a workout assigned to the weekly plan, create a new backup, and confirm the deleted workout ID is absent from the exported plan
 
 ### F. Avatar
 
@@ -100,6 +105,22 @@ P0 execution order: C → E → G → M. P1 follows after P0 or in parallel on a
 - [ ] replace the avatar
 - [ ] delete the avatar
 - [ ] create a backup containing an avatar and restore it
+- [ ] confirm Profile counters include only completed non-deleted sessions and non-archived plans
+- [ ] confirm the avatar actions remain usable on a small phone without clipping or overlapping the counters
+
+### Profile and achievements dashboard
+
+- [ ] confirm Profile stores no display name and uses the localized `Local profile` / `Profil lokalny` label
+- [ ] confirm active, abandoned and deleted sessions do not increment Completed sessions
+- [ ] confirm archived workout definitions do not increment Active plans
+- [ ] verify achievements at zero, partial progress and all-unlocked states
+- [ ] open Report Bug from the compact Actions row
+
+### Detailed warm-up execution
+
+- [ ] create a warm-up stage with several named movements and targets
+- [ ] start guided execution and confirm every warm-up movement is visible as its own step
+- [ ] confirm only an actually empty/simple warm-up uses the compact placeholder presentation
 
 ### G. AI create
 

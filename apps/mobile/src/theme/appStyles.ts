@@ -3731,6 +3731,203 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12
   },
+  weeklyMuscleVolumeSection: {
+    borderTopWidth: 1
+  },
+  weeklyMuscleVolumeHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    minHeight: 54,
+    paddingHorizontal: 16,
+    paddingVertical: 10
+  },
+  weeklyMuscleVolumeIcon: {
+    alignItems: "center",
+    borderRadius: 18,
+    height: 36,
+    justifyContent: "center",
+    width: 36
+  },
+  weeklyMuscleVolumeTitle: {
+    flex: 1,
+    fontFamily: "Inter_700Bold",
+    fontSize: 16
+  },
+  weeklyMuscleVolumeContent: {
+    gap: 12,
+    paddingTop: 2
+  },
+  weeklyMuscleVolumeSegments: {
+    alignSelf: "stretch",
+    borderRadius: 12,
+    flexDirection: "row",
+    marginHorizontal: 16,
+    padding: 2
+  },
+  weeklyMuscleVolumeSegment: {
+    alignItems: "center",
+    borderRadius: 10,
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 40,
+    paddingHorizontal: 8
+  },
+  weeklyMuscleVolumeSegmentText: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 13
+  },
+  weeklyMuscleVolumePlanHint: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 11,
+    lineHeight: 16,
+    marginHorizontal: 18,
+    marginTop: -6,
+    textAlign: "center"
+  },
+  weeklyMuscleVolumeDashboard: {
+    alignItems: "stretch",
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 14
+  },
+  weeklyMuscleVolumeRows: {
+    flex: 1,
+    gap: 12,
+    minWidth: 0
+  },
+  weeklyMuscleVolumeRow: {
+    gap: 6
+  },
+  weeklyMuscleVolumeRowTop: {
+    alignItems: "flex-end",
+    flexDirection: "row",
+    gap: 6,
+    justifyContent: "space-between"
+  },
+  weeklyMuscleVolumeNameWrap: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 1,
+    gap: 6
+  },
+  weeklyMuscleVolumeDot: {
+    borderRadius: 4,
+    height: 8,
+    width: 8
+  },
+  weeklyMuscleVolumeName: {
+    flexShrink: 1,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 12
+  },
+  weeklyMuscleVolumeValue: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 10,
+    textAlign: "right"
+  },
+  weeklyMuscleVolumeRowBottom: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 7
+  },
+  weeklyMuscleVolumeTrack: {
+    borderRadius: 4,
+    flex: 1,
+    height: 6,
+    overflow: "hidden",
+    position: "relative"
+  },
+  weeklyMuscleVolumeTargetBand: {
+    bottom: 0,
+    left: "50%",
+    opacity: 0.8,
+    position: "absolute",
+    top: 0,
+    width: "50%"
+  },
+  weeklyMuscleVolumeFill: {
+    borderRadius: 4,
+    bottom: 0,
+    left: 0,
+    position: "absolute",
+    top: 0
+  },
+  weeklyMuscleVolumeBadge: {
+    alignItems: "center",
+    borderRadius: 7,
+    justifyContent: "center",
+    minHeight: 24,
+    paddingHorizontal: 6,
+    width: 82
+  },
+  weeklyMuscleVolumeBadgeText: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 9,
+    textAlign: "center"
+  },
+  weeklyMuscleVolumeFigureWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 92
+  },
+  weeklyMuscleVolumeFigure: {
+    height: 226,
+    width: 92
+  },
+  weeklyMuscleVolumeEmpty: {
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 24,
+    paddingVertical: 4
+  },
+  weeklyMuscleVolumeEmptyFigure: {
+    height: 130,
+    width: 62
+  },
+  weeklyMuscleVolumeEmptyTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 14,
+    textAlign: "center"
+  },
+  weeklyMuscleVolumeEmptyCopy: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: "center"
+  },
+  weeklyMuscleVolumeInfoButton: {
+    alignItems: "center",
+    alignSelf: "center",
+    flexDirection: "row",
+    gap: 5,
+    minHeight: 34,
+    paddingHorizontal: 12
+  },
+  weeklyMuscleVolumeInfoButtonText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 11
+  },
+  weeklyMuscleVolumeInfo: {
+    borderTopWidth: 1,
+    fontFamily: "Inter_500Medium",
+    fontSize: 11,
+    lineHeight: 17,
+    marginHorizontal: 16,
+    paddingTop: 10
+  },
+  weeklyMuscleVolumeCollapse: {
+    alignItems: "center",
+    borderTopWidth: 1,
+    flexDirection: "row",
+    gap: 6,
+    justifyContent: "center",
+    minHeight: 46
+  },
+  weeklyMuscleVolumeCollapseText: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 12
+  },
   weeklyPlanToday: {
     minWidth: 0,
     width: "100%"

@@ -137,6 +137,7 @@ import {
   toggleWeeklyPlanItemDay,
   upsertWeeklyPlanItem
 } from "./src/domain/weeklyPlan";
+import { buildWeeklyMuscleVolumeSummary } from "./src/domain/weeklyMuscleVolume";
 import {
   WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY,
   cancelWorkoutReminders,
@@ -1069,6 +1070,15 @@ function GymminApp() {
   );
   const weeklyPlanSummary = useMemo(
     () => getWeeklyPlanSummary(weeklyPlan, activeWorkouts, visibleWorkoutSessions, new Date()),
+    [activeWorkouts, visibleWorkoutSessions, weeklyPlan]
+  );
+  const weeklyMuscleVolumeSummary = useMemo(
+    () => buildWeeklyMuscleVolumeSummary({
+      now: new Date(),
+      plan: weeklyPlan,
+      sessions: visibleWorkoutSessions,
+      workouts: activeWorkouts
+    }),
     [activeWorkouts, visibleWorkoutSessions, weeklyPlan]
   );
   const shouldShowWorkoutHeaderTime = activeScreen === "workoutSession" && Boolean(activeWorkoutSession);
@@ -2281,6 +2291,7 @@ function GymminApp() {
         language={language}
         savedWorkoutCount={activeWorkouts.length}
         summary={weeklyPlanSummary}
+        volumeSummary={weeklyMuscleVolumeSummary}
         t={t}
         theme={theme}
         onOpenPlan={() => setActiveScreen("weeklyPlan")}

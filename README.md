@@ -6,6 +6,7 @@ Gymmin is a local-only Expo/React Native workout app created and maintained by *
 
 - one mobile application; there is no Gymmin backend, account, authentication, synchronization, credit system, billing, or remote AI job;
 - workouts, sessions, history, weekly plan, favorites, achievements, settings, reminders, creator profiles, and the optional local avatar stay in private device storage;
+- Home can expand the current Monday-Sunday plan into a local weekly muscle-volume estimate, separating completed sets from projected end-of-week volume and reusing the exercise catalog's muscle-impact data;
 - the local profile action is always visible in the top-right header and never opens login; the workout creator remains available from the Workouts screen regardless of saved workouts or connectivity, but is not duplicated on Home;
 - AI workout creation works by local prompt generation, clipboard hand-off to an external AI chosen by the user, and strict local JSON validation/import; AI modification of saved workouts is not part of the product;
 - backup/import uses `.gymmin.json`; v1 backups without `profile` preserve the current local profile;
@@ -57,6 +58,8 @@ npm run google-play:validate
 ```
 
 Exercise images use a reproducible source-to-runtime pipeline: paired PNG sources live outside the mobile bundle under `media-source/exercises`, while the app statically requires optimized WebP Q90 files constrained to 900 x 1140 without cropping. After importing or generating PNG sources, run `npm run exercise:media:optimize`; see [exercise media](docs/exercise-media.md).
+
+The hypertrophy-oriented weekly dashboard uses fractional working sets rather than `sets x repetitions`. Its evidence basis, Gymmin heuristics and limitations are documented in [weekly muscle volume](docs/weekly-muscle-volume.md).
 
 ## Android artifacts
 

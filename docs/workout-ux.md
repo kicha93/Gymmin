@@ -160,6 +160,10 @@ W `Ustawienia -> Trening` użytkownik może włączyć albo wyłączyć widoczno
 
 ## Plan tygodnia
 
+Na stronie głównej plan tygodnia można rozwinąć o lokalną analizę objętości mięśni. Widok przełącza `Wykonane` i prognozę `Plan` oraz jedną sylwetkę `Przód` albo `Tył`. Wykonane opiera się na rzeczywiście ukończonych wpisach serii w zakończonych sesjach bieżącego tygodnia. Plan dodaje wyłącznie pozostałe, jeszcze niezrealizowane wystąpienia z planu tygodnia, więc trening nie jest liczony podwójnie.
+
+Metryką są orientacyjne fractional working sets: główny wpływ katalogowy liczy 1 serię, duży lub znaczący wpływ pomocniczy 0,5, a mniejsze role nie są sztucznie punktowane. Powtórzenia i ciężar nie są mnożnikiem tej metryki. Wszystkie grupy mają wspólny szeroki zakres referencyjny 10–20; nie jest to indywidualna recepta treningowa. Pełne założenia i źródła opisuje [weekly-muscle-volume.md](weekly-muscle-volume.md).
+
 Plan tygodnia jest lokalny i przypisany do aktualnego ownera storage. Każdy zapisany trening można dodać do wielu dni tygodnia, a homepage pokazuje zakres bieżącego tygodnia, wykonane/do wykonania oraz najbliższy trening na dziś. Każdy zaplanowany dzień jest osobnym wykonaniem; ukończona sesja zalicza jedno z nich nawet wtedy, gdy została wykonana w innym dniu niż zaplanowany.
 
 Panel `Treningi` na homepage pokazuje wszystkie unikalne treningi przypisane do

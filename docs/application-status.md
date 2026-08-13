@@ -8,6 +8,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 
 - workout library/editor, archive, guided execution, active-session recovery and session-only/planned two-exercise supersets;
 - history, progress, weekly plan, favorites, achievements and local reminders;
+- an expandable Home analysis of current-week muscle volume, with completed/projected fractional working sets, front/back anatomy and one shared approximate hypertrophy reference range;
 - local settings, creator profiles and private avatar; every setting persists in local storage and participates in `.gymmin.json` backup/import rather than sync;
 - an always-visible header action for the local profile, with no login/account panel;
 - a local workout creator available from Workouts and never gated by connectivity or the number of saved workouts; it is not duplicated on Home;

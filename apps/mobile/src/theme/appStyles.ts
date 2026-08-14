@@ -475,43 +475,55 @@ export const styles = StyleSheet.create({
     gap: 14
   },
   progressStatsRow: {
-    gap: 10,
-    paddingRight: 2
+    alignItems: "stretch",
+    flexDirection: "row",
+    gap: 8,
+    width: "100%"
   },
   progressStatCard: {
     alignItems: "center",
     borderRadius: 8,
     borderWidth: 1,
-    flexDirection: "row",
-    gap: 10,
-    minHeight: 88,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    width: 156
+    flex: 1,
+    gap: 7,
+    height: 140,
+    justifyContent: "flex-start",
+    minWidth: 0,
+    paddingHorizontal: 7,
+    paddingVertical: 10
   },
   progressStatIcon: {
     alignItems: "center",
     borderRadius: 999,
-    height: 42,
+    height: 36,
     justifyContent: "center",
-    width: 42
+    width: 36
   },
   progressStatCopy: {
-    flex: 1,
+    alignItems: "center",
     minWidth: 0
   },
   progressStatTitle: {
     fontSize: 12,
-    fontWeight: "800"
+    fontWeight: "800",
+    lineHeight: 16,
+    textAlign: "center",
+    width: "100%"
   },
   progressStatValue: {
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: "900",
-    lineHeight: 27
+    lineHeight: 27,
+    textAlign: "center",
+    width: "100%"
   },
   progressStatCaption: {
-    fontSize: 12,
-    fontWeight: "700"
+    fontSize: 11,
+    fontWeight: "700",
+    lineHeight: 15,
+    minHeight: 30,
+    textAlign: "center",
+    width: "100%"
   },
   progressFilterRow: {
     flexDirection: "row",
@@ -1030,9 +1042,88 @@ export const styles = StyleSheet.create({
   },
   muscleOverviewFigures: {
     alignItems: "center",
-    flexDirection: "row",
-    gap: 12,
     justifyContent: "center"
+  },
+  muscleOverviewSingleFigure: {
+    height: 320,
+    maxWidth: "100%",
+    width: 192
+  },
+  workoutMuscleLegendList: {
+    gap: 8
+  },
+  workoutMuscleLegendRow: {
+    borderRadius: 10,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  workoutMuscleLegendPressable: {
+    gap: 9,
+    paddingHorizontal: 12,
+    paddingVertical: 10
+  },
+  workoutMuscleLegendHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 9
+  },
+  workoutMuscleLegendDot: {
+    borderRadius: 9,
+    height: 18,
+    width: 18
+  },
+  workoutMuscleLegendLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "800",
+    lineHeight: 18,
+    minWidth: 0
+  },
+  workoutMuscleLegendBadge: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 28,
+    justifyContent: "center",
+    minWidth: 32,
+    paddingHorizontal: 8
+  },
+  workoutMuscleLegendBadgeText: {
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  workoutMuscleLegendTrack: {
+    borderRadius: 3,
+    height: 5,
+    marginLeft: 27,
+    overflow: "hidden"
+  },
+  workoutMuscleLegendFill: {
+    borderRadius: 3,
+    height: "100%"
+  },
+  workoutMuscleLegendDetails: {
+    borderTopWidth: 1,
+    gap: 7,
+    marginHorizontal: 12,
+    paddingBottom: 11,
+    paddingLeft: 27,
+    paddingTop: 9
+  },
+  workoutMuscleLegendMuscleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8
+  },
+  workoutMuscleLegendMuscleDot: {
+    borderRadius: 3,
+    height: 6,
+    width: 6
+  },
+  workoutMuscleLegendMuscleText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 17
   },
   humanMuscleFigure: {
     aspectRatio: 0.6,
@@ -2810,10 +2901,6 @@ export const styles = StyleSheet.create({
   profileDashboardNameCompact: {
     fontSize: 19,
     lineHeight: 23
-  },
-  profileDashboardLocalMeta: {
-    fontSize: 12,
-    fontWeight: "700"
   },
   profileDashboardStats: {
     alignItems: "stretch",

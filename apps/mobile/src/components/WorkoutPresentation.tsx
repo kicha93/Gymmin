@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 import { SvgXml } from "react-native-svg";
@@ -14,11 +14,18 @@ import {
   findExerciseById,
   findExerciseByName,
   getExerciseDisplayName,
+  muscleLabels,
   muscleKeys,
   type InfluenceScore,
   type MuscleKey
 } from "../domain/exercises";
-import { getMuscleImpactColor, MuscleImpactLegend } from "./MuscleImpactPresentation";
+import { getMuscleImpactColor, muscleImpactColors } from "./MuscleImpactPresentation";
+import {
+  getWorkoutMuscleLegendCategories,
+  toggleWorkoutMuscleLegendScore,
+  type WorkoutMuscleLegendCategory,
+  type WorkoutMuscleSide
+} from "./workoutMuscleOverview";
 import { getExerciseTargetDisplay, isRestTargetStep } from "../domain/workoutExerciseSummary";
 import {
   formatWorkoutDuration,
@@ -74,20 +81,131 @@ type WorkoutMuscleOverviewProps = {
   workout: WorkoutDraft;
 };
 
+const workoutMuscleLegendLabels: Record<InfluenceScore, TranslationKey> = {
+  0: "inactiveMuscleGroups",
+  1: "stabilizingMuscles",
+  2: "secondaryImpactMuscles",
+  3: "significantSynergistMuscles",
+  4: "majorContributorMuscles",
+  5: "primaryMuscles"
+};
+
+type MuscleEngagementLegendRowProps = {
+  category: WorkoutMuscleLegendCategory;
+  expanded: boolean;
+  language: LanguageCode;
+  onPress: () => void;
+  theme: Theme;
+};
+
+function MuscleEngagementLegendRow({
+  category,
+  expanded,
+  language,
+  onPress,
+  theme
+}: MuscleEngagementLegendRowProps) {
+  const color = muscleImpactColors[category.score];
+
+  return (
+    <View style={[styles.workoutMuscleLegendRow, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        style={styles.workoutMuscleLegendPressable}
+        onPress={onPress}
+      >
+        <View style={styles.workoutMuscleLegendHeader}>
+          <View style={[styles.workoutMuscleLegendDot, { backgroundColor: color }]} />
+          <Text style={[styles.workoutMuscleLegendLabel, { color: theme.text }]} numberOfLines={2}>
+            {translate(language, workoutMuscleLegendLabels[category.score])}
+          </Text>
+          <View style={[styles.workoutMuscleLegendBadge, { backgroundColor: `${color}20` }]}>
+            <Text style={[styles.workoutMuscleLegendBadgeText, { color }]}>{category.count}</Text>
+          </View>
+          <Ionicons color={theme.text} name={expanded ? "chevron-up" : "chevron-down"} size={18} />
+        </View>
+        <View style={[styles.workoutMuscleLegendTrack, { backgroundColor: theme.segment }]}>
+          <View
+            style={[
+              styles.workoutMuscleLegendFill,
+              { backgroundColor: color, width: `${Math.min(1, Math.max(0, category.ratio)) * 100}%` }
+            ]}
+          />
+        </View>
+      </Pressable>
+      {expanded && category.muscles.length ? (
+        <View style={[styles.workoutMuscleLegendDetails, { borderTopColor: theme.border }]}>
+          {category.muscles.map((muscle) => (
+            <View key={muscle} style={styles.workoutMuscleLegendMuscleRow}>
+              <View style={[styles.workoutMuscleLegendMuscleDot, { backgroundColor: color }]} />
+              <Text style={[styles.workoutMuscleLegendMuscleText, { color: theme.text }]}>
+                {muscleLabels[language][muscle]}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 export function WorkoutMuscleOverviewContent({ language, theme, workout }: WorkoutMuscleOverviewProps) {
+  const [side, setSide] = useState<WorkoutMuscleSide>("front");
+  const [expandedScore, setExpandedScore] = useState<InfluenceScore | null>(null);
   const usage = useMemo(() => getWorkoutMuscleUsage(workout), [workout]);
+  const legendCategories = useMemo(() => getWorkoutMuscleLegendCategories(usage, side), [side, usage]);
 
   function fill(muscle: MuscleKey) {
     return getMuscleImpactColor(usage[muscle]);
   }
 
+  function selectSide(nextSide: WorkoutMuscleSide) {
+    setSide(nextSide);
+    setExpandedScore(null);
+  }
+
   return (
     <>
       <View style={styles.muscleOverviewFigures}>
-        <HumanMuscleFigure fill={fill} side="front" />
-        <HumanMuscleFigure fill={fill} side="back" />
+        <HumanMuscleFigure fill={fill} side={side} style={styles.muscleOverviewSingleFigure} />
       </View>
-      <MuscleImpactLegend impact={usage} t={(key) => translate(language, key)} theme={theme} />
+      <View style={styles.exerciseDetailSideToggle}>
+        {(["front", "back"] as const).map((option) => {
+          const selected = side === option;
+
+          return (
+            <Pressable
+              key={option}
+              accessibilityRole="button"
+              style={[
+                styles.exerciseDetailSideButton,
+                {
+                  backgroundColor: selected ? theme.primary : theme.card,
+                  borderColor: selected ? theme.primary : theme.border
+                }
+              ]}
+              onPress={() => selectSide(option)}
+            >
+              <Text style={[styles.exerciseDetailSideButtonText, { color: selected ? theme.white : theme.text }]}>
+                {translate(language, option === "front" ? "bodyFront" : "bodyBack")}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <View style={styles.workoutMuscleLegendList}>
+        {legendCategories.map((category) => (
+          <MuscleEngagementLegendRow
+            key={category.score}
+            category={category}
+            expanded={expandedScore === category.score}
+            language={language}
+            onPress={() => setExpandedScore((current) => toggleWorkoutMuscleLegendScore(current, category.score))}
+            theme={theme}
+          />
+        ))}
+      </View>
     </>
   );
 }

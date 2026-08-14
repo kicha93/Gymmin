@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Input, InputField } from "@gluestack-ui/themed";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { SvgXml } from "react-native-svg";
 
 import { getExerciseDisplayName } from "../domain/exercises";
@@ -88,19 +88,33 @@ function ProgressStatCard({
   return (
     <View style={[styles.progressStatCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <View style={[styles.progressStatIcon, { backgroundColor: theme.secondaryBand }]}>
-        <Ionicons name={icon} size={22} color={theme.primary} />
+        <Ionicons name={icon} size={20} color={theme.primary} />
       </View>
       <View style={styles.progressStatCopy}>
-        <Text style={[styles.progressStatTitle, { color: theme.muted }]}>{title}</Text>
         <Text
           adjustsFontSizeToFit
-          minimumFontScale={0.65}
+          minimumFontScale={0.82}
+          numberOfLines={1}
+          style={[styles.progressStatTitle, { color: theme.text }]}
+        >
+          {title}
+        </Text>
+        <Text
+          adjustsFontSizeToFit
+          minimumFontScale={0.62}
           numberOfLines={1}
           style={[styles.progressStatValue, { color: theme.text }]}
         >
           {value}
         </Text>
-        <Text style={[styles.progressStatCaption, { color: theme.muted }]}>{caption}</Text>
+        <Text
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+          numberOfLines={2}
+          style={[styles.progressStatCaption, { color: theme.muted }]}
+        >
+          {caption}
+        </Text>
       </View>
     </View>
   );
@@ -171,7 +185,7 @@ export function ProgressScreen({
         />
       </Input>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.progressStatsRow}>
+      <View style={styles.progressStatsRow}>
         <ProgressStatCard
           caption={t("progressTracked")}
           icon="barbell-outline"
@@ -193,7 +207,7 @@ export function ProgressScreen({
           title={t("volume")}
           value={formatProgressDashboardVolume(stats.monthlyVolume, language)}
         />
-      </ScrollView>
+      </View>
 
       <View style={styles.progressFilterRow}>
         {filterOptions.map((option) => {

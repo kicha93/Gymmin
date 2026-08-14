@@ -114,8 +114,6 @@ export function ProfileScreen({
             >
               {profileName}
             </Text>
-            <Text style={[styles.profileDashboardLocalMeta, { color: theme.muted }]}>{t("localProfileMeta")}</Text>
-
             <View style={[styles.profileDashboardStats, { borderTopColor: theme.border }]}>
               <ProfileStat label={t("profileCompleted")} value={completedSessions} theme={theme} />
               <View style={[styles.profileDashboardStatDivider, { backgroundColor: theme.border }]} />

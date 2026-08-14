@@ -11,6 +11,10 @@ import {
   frontBodySvg
 } from "../domain/bodyMaps";
 import {
+  getAdvancedDisplayFamily,
+  getAdvancedMuscleSubdivision
+} from "../domain/advancedMuscles";
+import {
   findExerciseById,
   findExerciseByName,
   getExerciseDisplayName,
@@ -21,9 +25,9 @@ import {
 } from "../domain/exercises";
 import { getMuscleImpactColor, muscleImpactColors } from "./MuscleImpactPresentation";
 import {
+  getWorkoutAdvancedMuscleOverview,
   getWorkoutMuscleLegendCategories,
   toggleWorkoutMuscleLegendScore,
-  type WorkoutMuscleLegendCategory,
   type WorkoutMuscleSide
 } from "./workoutMuscleOverview";
 import { getExerciseTargetDisplay, isRestTargetStep } from "../domain/workoutExerciseSummary";
@@ -76,6 +80,7 @@ function getWorkoutMuscleUsage(workout: WorkoutDraft): MuscleUsage {
 }
 
 type WorkoutMuscleOverviewProps = {
+  advancedMuscleMode?: boolean;
   language: LanguageCode;
   theme: Theme;
   workout: WorkoutDraft;
@@ -91,7 +96,12 @@ const workoutMuscleLegendLabels: Record<InfluenceScore, TranslationKey> = {
 };
 
 type MuscleEngagementLegendRowProps = {
-  category: WorkoutMuscleLegendCategory;
+  category: {
+    count: number;
+    items: Array<{ id: string; label: string }>;
+    ratio: number;
+    score: InfluenceScore;
+  };
   expanded: boolean;
   language: LanguageCode;
   onPress: () => void;
@@ -134,13 +144,13 @@ function MuscleEngagementLegendRow({
           />
         </View>
       </Pressable>
-      {expanded && category.muscles.length ? (
+      {expanded && category.items.length ? (
         <View style={[styles.workoutMuscleLegendDetails, { borderTopColor: theme.border }]}>
-          {category.muscles.map((muscle) => (
-            <View key={muscle} style={styles.workoutMuscleLegendMuscleRow}>
+          {category.items.map((item) => (
+            <View key={item.id} style={styles.workoutMuscleLegendMuscleRow}>
               <View style={[styles.workoutMuscleLegendMuscleDot, { backgroundColor: color }]} />
               <Text style={[styles.workoutMuscleLegendMuscleText, { color: theme.text }]}>
-                {muscleLabels[language][muscle]}
+                {item.label}
               </Text>
             </View>
           ))}
@@ -150,11 +160,55 @@ function MuscleEngagementLegendRow({
   );
 }
 
-export function WorkoutMuscleOverviewContent({ language, theme, workout }: WorkoutMuscleOverviewProps) {
+export function WorkoutMuscleOverviewContent({
+  advancedMuscleMode = false,
+  language,
+  theme,
+  workout
+}: WorkoutMuscleOverviewProps) {
   const [side, setSide] = useState<WorkoutMuscleSide>("front");
   const [expandedScore, setExpandedScore] = useState<InfluenceScore | null>(null);
   const usage = useMemo(() => getWorkoutMuscleUsage(workout), [workout]);
-  const legendCategories = useMemo(() => getWorkoutMuscleLegendCategories(usage, side), [side, usage]);
+  const advancedOverview = useMemo(
+    () => advancedMuscleMode ? getWorkoutAdvancedMuscleOverview(workout, side) : null,
+    [advancedMuscleMode, side, workout]
+  );
+  const legendCategories = useMemo(() => {
+    if (advancedOverview) {
+      return advancedOverview.categories.map((category) => ({
+        ...category,
+        items: category.items.map((item) => {
+          if (item.subdivisionId) {
+            const subdivision = getAdvancedMuscleSubdivision(item.subdivisionId);
+            const family = subdivision ? getAdvancedDisplayFamily(subdivision.displayFamilyId) : undefined;
+            return {
+              id: item.id,
+              label: subdivision
+                ? `${family?.names[language] ?? muscleLabels[language][subdivision.standardParentMuscle]} — ${subdivision.names[language]}`
+                : item.id
+            };
+          }
+          return {
+            id: item.id,
+            label: item.muscle ? muscleLabels[language][item.muscle] : item.id
+          };
+        })
+      }));
+    }
+
+    return getWorkoutMuscleLegendCategories(usage, side).map((category) => ({
+      ...category,
+      items: category.muscles.map((muscle) => ({ id: muscle, label: muscleLabels[language][muscle] }))
+    }));
+  }, [advancedOverview, language, side, usage]);
+  const advancedRegionFills = useMemo(
+    () => advancedOverview
+      ? Object.fromEntries(
+          Object.entries(advancedOverview.regionLevels).map(([regionId, level]) => [regionId, getMuscleImpactColor(level)])
+        )
+      : undefined,
+    [advancedOverview]
+  );
 
   function fill(muscle: MuscleKey) {
     return getMuscleImpactColor(usage[muscle]);
@@ -168,7 +222,12 @@ export function WorkoutMuscleOverviewContent({ language, theme, workout }: Worko
   return (
     <>
       <View style={styles.muscleOverviewFigures}>
-        <HumanMuscleFigure fill={fill} side={side} style={styles.muscleOverviewSingleFigure} />
+        <HumanMuscleFigure
+          advancedRegionFills={advancedRegionFills}
+          fill={fill}
+          side={side}
+          style={styles.muscleOverviewSingleFigure}
+        />
       </View>
       <View style={styles.exerciseDetailSideToggle}>
         {(["front", "back"] as const).map((option) => {

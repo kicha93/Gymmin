@@ -37,6 +37,7 @@ import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
 
 type WorkoutSessionScreenProps = {
+  advancedMuscleMode: boolean;
   activeWorkoutSession: WorkoutSession | null;
   activeWorkoutSessionId: string | null;
   formatNumber: (value: number | null | undefined, suffix?: string) => string;
@@ -76,6 +77,7 @@ type WorkoutSessionScreenProps = {
 };
 
 export function WorkoutSessionScreen({
+  advancedMuscleMode,
   abandonActiveWorkoutSession,
   activeWorkoutSession,
   activeWorkoutSessionId,
@@ -887,7 +889,12 @@ export function WorkoutSessionScreen({
           title={t("overview")}
           onToggle={() => toggleReadOnlyWorkoutPanel(`${panelPrefix}-overview`)}
         >
-          <WorkoutMuscleOverviewContent language={language} theme={theme} workout={workout} />
+          <WorkoutMuscleOverviewContent
+            advancedMuscleMode={advancedMuscleMode}
+            language={language}
+            theme={theme}
+            workout={workout}
+          />
         </CollapsiblePanel>
 
         <View style={styles.workoutDetailStages}>

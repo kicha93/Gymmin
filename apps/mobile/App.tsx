@@ -2576,6 +2576,7 @@ function GymminApp() {
   function renderWorkoutSession() {
     return (
       <WorkoutSessionScreen
+        advancedMuscleMode={advancedMuscleMode}
         abandonActiveWorkoutSession={abandonActiveWorkoutSession}
         activeWorkoutSession={activeWorkoutSession}
         activeWorkoutSessionId={activeWorkoutSessionId}
@@ -2893,6 +2894,7 @@ function GymminApp() {
             )}
             {activeScreen === "workoutDetail" && (
               <WorkoutDetailScreen
+                advancedMuscleMode={advancedMuscleMode}
                 getExecutionModeLabel={getExecutionModeLabel}
                 getSessionStatusLabel={getSessionStatusLabel}
                 isPanelCollapsed={isReadOnlyWorkoutPanelCollapsed}

@@ -30,6 +30,7 @@ type WorkoutDetailItem = {
 };
 
 type WorkoutDetailScreenProps = {
+  advancedMuscleMode: boolean;
   getExecutionModeLabel: (mode: WorkoutSession["executionMode"]) => string;
   getSessionStatusLabel: (status: WorkoutSession["status"]) => string;
   isPanelCollapsed: (panelId: string) => boolean;
@@ -49,6 +50,7 @@ type WorkoutDetailScreenProps = {
 };
 
 export function WorkoutDetailScreen({
+  advancedMuscleMode,
   getExecutionModeLabel,
   getSessionStatusLabel,
   isPanelCollapsed,
@@ -237,7 +239,12 @@ export function WorkoutDetailScreen({
         title={t("overview")}
         onToggle={() => onTogglePanel("workout-overview")}
       >
-        <WorkoutMuscleOverviewContent language={language} theme={theme} workout={workout.draft} />
+        <WorkoutMuscleOverviewContent
+          advancedMuscleMode={advancedMuscleMode}
+          language={language}
+          theme={theme}
+          workout={workout.draft}
+        />
       </CollapsiblePanel>
 
       <View style={styles.workoutDetailStages}>

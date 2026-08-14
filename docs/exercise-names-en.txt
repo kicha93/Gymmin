@@ -265,7 +265,6 @@ Dumbbell Lunge
 Dumbbell Lunge and Rotation
 Dumbbell Lying Triceps Extension
 Dumbbell Overhead Bulgarian Split Squat
-Dumbbell Overhead Squat Single-arm
 Dumbbell Overhead Walking Lunge
 Dumbbell Power Clean and Jerk
 Dumbbell Power Clean and Push Press
@@ -508,9 +507,6 @@ Neutral-grip Pull-up
 Obliques Stretch
 Offset Dumbbell Lunge
 Offset Dumbbell Reverse Lunge
-One-hand Dumbbell Split Snatch
-One-legged Dumbbell Row
-One-legged Squat
 Open Knee Tucks
 Opposite Arm and Leg Balance
 Over-under Shoulder Stretch
@@ -564,7 +560,6 @@ Push Jerk
 Push-up
 Push-up and Row
 Push-up Plus
-Push-up with One Hand on Medicine Ball
 Quad Stretch
 Quadruped
 Quadruped Hip Extension
@@ -607,7 +602,6 @@ Ring Plank Sprawls
 Ring Push-up
 Ring Row
 Romanian Deadlift
-Rope Climb
 Rope Press-down
 Rope-handle Cable Row
 Rotational Dumbbell Straight-leg Deadlift
@@ -639,7 +633,6 @@ Seated Lateral Raise
 Seated Leg Curl
 Seated Rear Lateral Raise
 Seated Reverse Dumbbell Curl
-Seated Single-arm Overhead Dumbbell Extension
 Seated Underhand-grip Cable Row
 Serratus Chair Shrug
 Serratus Shrug
@@ -666,24 +659,6 @@ Side-lying Leg Raise
 Side-to-Side Leg Swings
 Side-to-Side Medicine Ball Throws
 Siff Jump Lunge
-Single-arm Cable Chest Press
-Single-arm Cable Row
-Single-arm Cable Row and Rotation
-Single-arm Deadlift
-Single-arm Dumbbell Bench Press
-Single-arm Dumbbell Overhead Triceps Extension
-Single-arm Dumbbell Shoulder Press
-Single-arm Dumbbell Snatch
-Single-arm Dumbbell Swing
-Single-arm Hang Snatch
-Single-arm Inverted Row
-Single-arm Kettlebell Snatch
-Single-arm Kettlebell Swing
-Single-arm Neutral-grip Dumbbell Row
-Single-arm Neutral-grip Dumbbell Row and Rotation
-Single-arm Reverse Lunge and Press
-Single-arm Standing Cable Reverse Fly
-Single-arm Step-up and Press
 Single-dumbbell Seated Overhead Triceps Extension
 Sit-up
 Sit-up Turkish Get-up
@@ -751,7 +726,6 @@ Straddle Stretch
 Straight-arm Plank
 Straight-arm Plank with Shoulder Touch
 Straight-arm Pull-down
-Straight-leg Crunch with Ball
 Straight-leg Deadlift
 Stretch Lying Abduction
 Suitcase Squats

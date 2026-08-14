@@ -1,8 +1,8 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
-export const EXPECTED_EXERCISE_IMAGE_COUNT = 122;
-export const EXPECTED_EXERCISE_PAIR_COUNT = 61;
+export const EXPECTED_EXERCISE_IMAGE_COUNT = 116;
+export const EXPECTED_EXERCISE_PAIR_COUNT = 58;
 export const MAX_RUNTIME_WIDTH = 900;
 export const MAX_RUNTIME_HEIGHT = 1140;
 export const MAX_RUNTIME_WEBP_BYTES = 192 * 1024;

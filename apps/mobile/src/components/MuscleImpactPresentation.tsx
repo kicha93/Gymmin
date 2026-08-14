@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import {
   getMuscleImpactGroups,
   muscleLabels,
+  muscleKeys,
   type ExerciseLanguage,
   type InfluenceScore,
   type MuscleKey
@@ -22,6 +23,38 @@ export const muscleImpactColors: Record<InfluenceScore, string> = {
 
 export function getMuscleImpactColor(impact: InfluenceScore | undefined) {
   return muscleImpactColors[impact ?? 0];
+}
+
+const muscleImpactLegendEntries: Array<{ impact: InfluenceScore; label: TranslationKey }> = [
+  { impact: 5, label: "primaryMuscles" },
+  { impact: 4, label: "majorContributorMuscles" },
+  { impact: 3, label: "significantSynergistMuscles" },
+  { impact: 2, label: "secondaryImpactMuscles" },
+  { impact: 1, label: "stabilizingMuscles" },
+  { impact: 0, label: "inactiveMuscleGroups" }
+];
+
+type MuscleImpactLegendProps = {
+  impact: Record<MuscleKey, InfluenceScore>;
+  t: (key: TranslationKey) => string;
+  theme: Theme;
+};
+
+export function MuscleImpactLegend({ impact, t, theme }: MuscleImpactLegendProps) {
+  const count = (score: InfluenceScore) => muscleKeys.filter((muscle) => impact[muscle] === score).length;
+
+  return (
+    <View style={styles.muscleOverviewLegend}>
+      {muscleImpactLegendEntries.map((entry) => (
+        <View key={entry.impact} style={styles.muscleLegendItem}>
+          <View style={[styles.muscleLegendDot, { backgroundColor: muscleImpactColors[entry.impact] }]} />
+          <Text style={[styles.muscleLegendText, { color: theme.muted }]}>
+            {`${t(entry.label)} (${count(entry.impact)})`}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
 }
 
 type MuscleImpactTextGroupsProps = {

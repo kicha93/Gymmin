@@ -34,7 +34,6 @@ import { pullUp } from "./pull-up";
 import { pullover } from "./pullover";
 import { pushUp } from "./push-up";
 import { row } from "./row";
-import { ropeClimb } from "./rope-climb";
 import { run } from "./run";
 import { runIndoor } from "./run-indoor";
 import { sandbag } from "./sandbag";
@@ -90,7 +89,6 @@ export const exercises = [
   ...pullover,
   ...pushUp,
   ...row,
-  ...ropeClimb,
   ...run,
   ...runIndoor,
   ...sandbag,

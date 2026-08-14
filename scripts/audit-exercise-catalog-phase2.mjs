@@ -7,7 +7,7 @@ const catalogDir = path.join(root, "apps/mobile/src/domain/exerciseCatalog");
 const namesDir = path.join(root, "apps/mobile/src/domain/exerciseNames");
 const reportPath = path.join(root, "docs/reports/exercise-catalog-refactor.json");
 const tiers = ["main", "advanced", "sportSpecific", "rehab", "variation", "progression"];
-const categoryFiles = { FRONT_RAISE: "front-raise", GOOD_MORNING: "good-morning", ROPE_CLIMB: "rope-climb", STEP_UP: "step-up" };
+const categoryFiles = { FRONT_RAISE: "front-raise", GOOD_MORNING: "good-morning", STEP_UP: "step-up" };
 
 function arrayLiteral(source, file) {
   const start = source.indexOf("[");
@@ -61,7 +61,6 @@ async function main() {
     if (/front raise/i.test(exercise.name)) next = "FRONT_RAISE";
     else if (/\b(step-up|step up|stepover|step-over)\b/i.test(exercise.name)) next = "STEP_UP";
     else if (/good morning/i.test(exercise.name)) next = "GOOD_MORNING";
-    else if (/rope climb/i.test(exercise.name)) next = "ROPE_CLIMB";
     if (next !== exercise.category) {
       categoryChanges.push({ id: exercise.id, name: exercise.name, before: exercise.category, after: next });
       exercise.category = next;

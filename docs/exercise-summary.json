@@ -597,27 +597,6 @@
     "libraryTier": "variation"
   },
   {
-    "id": "bench-press-single-arm-cable-chest-press-95",
-    "polishName": "Wyciskanie jednorącz na wyciągu",
-    "englishName": "Single-arm Cable Chest Press",
-    "category": "BENCH_PRESS",
-    "requiredEquipment": [
-      "cableMachine"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "bench-press-single-arm-dumbbell-bench-press-96",
-    "polishName": "Wyciskanie hantla na ławce jednorącz",
-    "englishName": "Single-arm Dumbbell Bench Press",
-    "category": "BENCH_PRESS",
-    "requiredEquipment": [
-      "bench",
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "bench-press-smith-machine-bench-press-97",
     "polishName": "Wyciskanie na ławce na maszynie Smitha",
     "englishName": "Smith Machine Bench Press",
@@ -1574,16 +1553,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "crunch-straight-leg-crunch-with-ball-279",
-    "polishName": "Spięcia brzucha z wyprostowanymi nogami (z piłką)",
-    "englishName": "Straight-leg Crunch with Ball",
-    "category": "CRUNCH",
-    "requiredEquipment": [
-      "swissBall"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "crunch-toes-to-bar-285",
     "polishName": "Unoszenie stóp do drążka w zwisie",
     "englishName": "Toes to Bar",
@@ -2084,16 +2053,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "deadlift-single-arm-deadlift-384",
-    "polishName": "Martwy ciąg jednorącz",
-    "englishName": "Single-arm Deadlift",
-    "category": "DEADLIFT",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "deadlift-straight-leg-deadlift-395",
     "polishName": "Martwy ciąg na wyprostowanych nogach",
     "englishName": "Straight-leg Deadlift",
@@ -2255,16 +2214,6 @@
       "machine"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "flye-single-arm-standing-cable-reverse-flye-405",
-    "polishName": "Odwrócone rozpiętki jednorącz z linką wyciągu dolnego stojąc",
-    "englishName": "Single-arm Standing Cable Reverse Fly",
-    "category": "FLYE",
-    "requiredEquipment": [
-      "cableMachine"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "banded-exercises-front-raise-14",
@@ -2717,26 +2666,6 @@
       "kettlebell"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "hip-swing-single-arm-dumbbell-swing-489",
-    "polishName": "Wymachy hantlem jednorącz",
-    "englishName": "Single-arm Dumbbell Swing",
-    "category": "HIP_SWING",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "hip-swing-single-arm-kettlebell-swing-490",
-    "polishName": "Wymachy odważnikiem jednorącz",
-    "englishName": "Single-arm Kettlebell Swing",
-    "category": "HIP_SWING",
-    "requiredEquipment": [
-      "kettlebell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "hip-swing-step-out-swing-491",
@@ -3745,16 +3674,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "lunge-single-arm-reverse-lunge-and-press-674",
-    "polishName": "Zakroki z wyciskaniem hantla jednorącz",
-    "englishName": "Single-arm Reverse Lunge and Press",
-    "category": "LUNGE",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "lunge-sliding-lateral-lunge-675",
     "polishName": "Wypady nogi z dyskiem ślizgowym",
     "englishName": "Sliding Lateral Lunge",
@@ -4053,52 +3972,12 @@
     "libraryTier": "sportSpecific"
   },
   {
-    "id": "olympic-lift-one-hand-dumbbell-split-snatch-720",
-    "polishName": "Podrywanie hantla jednorącz w rozkroku",
-    "englishName": "One-hand Dumbbell Split Snatch",
-    "category": "OLYMPIC_LIFT",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
     "id": "olympic-lift-push-jerk-721",
     "polishName": "Podrzut",
     "englishName": "Push Jerk",
     "category": "OLYMPIC_LIFT",
     "requiredEquipment": [
       "barbell"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "olympic-lift-single-arm-dumbbell-snatch-722",
-    "polishName": "Podrywanie hantla jednorącz",
-    "englishName": "Single-arm Dumbbell Snatch",
-    "category": "OLYMPIC_LIFT",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "olympic-lift-single-arm-hang-snatch-723",
-    "polishName": "Rwanie jednorącz w zwisie",
-    "englishName": "Single-arm Hang Snatch",
-    "category": "OLYMPIC_LIFT",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "olympic-lift-single-arm-kettlebell-snatch-724",
-    "polishName": "Podrywanie odważnika jednorącz",
-    "englishName": "Single-arm Kettlebell Snatch",
-    "category": "OLYMPIC_LIFT",
-    "requiredEquipment": [
-      "kettlebell"
     ],
     "libraryTier": "sportSpecific"
   },
@@ -5139,16 +5018,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "push-up-push-up-with-one-hand-on-medicine-ball-975",
-    "polishName": "Pompki z jedną ręką na piłce lekarskiej",
-    "englishName": "Push-up with One Hand on Medicine Ball",
-    "category": "PUSH_UP",
-    "requiredEquipment": [
-      "medicineBall"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "push-up-ring-handstand-push-up-976",
     "polishName": "Pompki w staniu na rękach na kółkach gimnastycznych",
     "englishName": "Ring Handstand Push-up",
@@ -5239,16 +5108,6 @@
     "category": "PUSH_UP",
     "requiredEquipment": [],
     "libraryTier": "variation"
-  },
-  {
-    "id": "lateral-raise-rope-climb-557",
-    "polishName": "Wspinaczka po linie",
-    "englishName": "Rope Climb",
-    "category": "ROPE_CLIMB",
-    "requiredEquipment": [
-      "rope"
-    ],
-    "libraryTier": "sportSpecific"
   },
   {
     "id": "row-alternating-dumbbell-row-1032",
@@ -5466,16 +5325,6 @@
     "libraryTier": "variation"
   },
   {
-    "id": "row-one-legged-dumbbell-row-1053",
-    "polishName": "Wiosłowanie hantlem w opadzie tułowia jednonóż",
-    "englishName": "One-legged Dumbbell Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "row-renegade-row-1054",
     "polishName": "Wiosłowanie renegata",
     "englishName": "Renegade Row",
@@ -5545,57 +5394,6 @@
       "cableMachine"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "row-single-arm-cable-row-1062",
-    "polishName": "Wiosłowanie jednorącz z linką wyciągu dolnego",
-    "englishName": "Single-arm Cable Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "cableMachine"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "row-single-arm-cable-row-and-rotation-1063",
-    "polishName": "Wiosłowanie jednorącz z rotacją z linką wyciągu dolnego",
-    "englishName": "Single-arm Cable Row and Rotation",
-    "category": "ROW",
-    "requiredEquipment": [
-      "cableMachine"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "row-single-arm-inverted-row-1064",
-    "polishName": "Odwrócone wiosłowanie jednorącz",
-    "englishName": "Single-arm Inverted Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "barbell",
-      "squatRack"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "row-single-arm-neutral-grip-dumbbell-row-1065",
-    "polishName": "Wiosłowanie hantlem jednorącz",
-    "englishName": "Single-arm Neutral-grip Dumbbell Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "row-single-arm-neutral-grip-dumbbell-row-and-rotation-1066",
-    "polishName": "Wiosłowanie hantlem jednorącz z rotacją w chwycie neutralnym",
-    "englishName": "Single-arm Neutral-grip Dumbbell Row and Rotation",
-    "category": "ROW",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "row-t-bar-row-1068",
@@ -5815,16 +5613,6 @@
       "dumbbell"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "shoulder-press-single-arm-dumbbell-shoulder-press-1129",
-    "polishName": "Wyciskanie hantla jednorącz (żołnierskie)",
-    "englishName": "Single-arm Dumbbell Shoulder Press",
-    "category": "SHOULDER_PRESS",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "shoulder-press-smith-machine-overhead-press-1131",
@@ -6537,16 +6325,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "squat-dumbbell-overhead-squat-single-arm-1270",
-    "polishName": "Przysiady z hantlem nad głową jednorącz",
-    "englishName": "Dumbbell Overhead Squat Single-arm",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "squat-dumbbell-split-squat-1271",
     "polishName": "Przysiady wykroczne z hantlami",
     "englishName": "Dumbbell Split Squat",
@@ -6632,14 +6410,6 @@
     "requiredEquipment": [
       "medicineBall"
     ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "squat-one-legged-squat-1287",
-    "polishName": "Przysiady jednonóż",
-    "englishName": "One-legged Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [],
     "libraryTier": "main"
   },
   {
@@ -6969,17 +6739,6 @@
     "libraryTier": "variation"
   },
   {
-    "id": "shoulder-press-single-arm-step-up-and-press-1130",
-    "polishName": "Wyciskanie hantla jednorącz z wejściem na podwyższenie",
-    "englishName": "Single-arm Step-up and Press",
-    "category": "STEP_UP",
-    "requiredEquipment": [
-      "box",
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "squat-step-up-1305",
     "polishName": "Wchodzenie na podwyższenie",
     "englishName": "Step-up",
@@ -7254,28 +7013,6 @@
       "ezBar"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "triceps-extension-seated-single-arm-overhead-dumbbell-extension-1420",
-    "polishName": "Podnoszenie jednorącz hantla nad głowę siedząc",
-    "englishName": "Seated Single-arm Overhead Dumbbell Extension",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "bench",
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "triceps-extension-single-arm-dumbbell-overhead-triceps-extension-1421",
-    "polishName": "Wyprost jednorącz tricepsa z hantlem nad głowę",
-    "englishName": "Single-arm Dumbbell Overhead Triceps Extension",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "bench",
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-single-dumbbell-seated-overhead-triceps-extension-1422",

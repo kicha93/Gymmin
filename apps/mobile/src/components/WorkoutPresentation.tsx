@@ -18,7 +18,7 @@ import {
   type InfluenceScore,
   type MuscleKey
 } from "../domain/exercises";
-import { getMuscleImpactColor, muscleImpactColors } from "./MuscleImpactPresentation";
+import { getMuscleImpactColor, MuscleImpactLegend } from "./MuscleImpactPresentation";
 import { getExerciseTargetDisplay, isRestTargetStep } from "../domain/workoutExerciseSummary";
 import {
   formatWorkoutDuration,
@@ -76,7 +76,6 @@ type WorkoutMuscleOverviewProps = {
 
 export function WorkoutMuscleOverviewContent({ language, theme, workout }: WorkoutMuscleOverviewProps) {
   const usage = useMemo(() => getWorkoutMuscleUsage(workout), [workout]);
-  const count = (impact: InfluenceScore) => muscleKeys.filter((muscle) => usage[muscle] === impact).length;
 
   function fill(muscle: MuscleKey) {
     return getMuscleImpactColor(usage[muscle]);
@@ -88,14 +87,7 @@ export function WorkoutMuscleOverviewContent({ language, theme, workout }: Worko
         <HumanMuscleFigure fill={fill} side="front" />
         <HumanMuscleFigure fill={fill} side="back" />
       </View>
-      <View style={styles.muscleOverviewLegend}>
-        <LegendItem color={muscleImpactColors[5]} label={`${translate(language, "primaryMuscles")} (${count(5)})`} theme={theme} />
-        <LegendItem color={muscleImpactColors[4]} label={`${translate(language, "majorContributorMuscles")} (${count(4)})`} theme={theme} />
-        <LegendItem color={muscleImpactColors[3]} label={`${translate(language, "significantSynergistMuscles")} (${count(3)})`} theme={theme} />
-        <LegendItem color={muscleImpactColors[2]} label={`${translate(language, "secondaryImpactMuscles")} (${count(2)})`} theme={theme} />
-        <LegendItem color={muscleImpactColors[1]} label={`${translate(language, "stabilizingMuscles")} (${count(1)})`} theme={theme} />
-        <LegendItem color={muscleImpactColors[0]} label={`${translate(language, "inactiveMuscleGroups")} (${count(0)})`} theme={theme} />
-      </View>
+      <MuscleImpactLegend impact={usage} t={(key) => translate(language, key)} theme={theme} />
     </>
   );
 }
@@ -235,21 +227,6 @@ export function ExerciseSummaryRow({
         </View>
       </View>
     </Pressable>
-  );
-}
-
-type LegendItemProps = {
-  color: string;
-  label: string;
-  theme: Theme;
-};
-
-function LegendItem({ color, label, theme }: LegendItemProps) {
-  return (
-    <View style={styles.muscleLegendItem}>
-      <View style={[styles.muscleLegendDot, { backgroundColor: color }]} />
-      <Text style={[styles.muscleLegendText, { color: theme.muted }]}>{label}</Text>
-    </View>
   );
 }
 

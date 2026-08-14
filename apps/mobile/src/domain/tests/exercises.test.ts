@@ -173,11 +173,10 @@ describe("exercise catalog cleanup", () => {
     expect(findExerciseById("curl-ez-bar-preacher-curl-344")?.name).toBe("EZ-Bar Preacher Curl");
   });
 
-  it("uses dedicated categories for front raises, step-ups, good mornings and rope climbs", () => {
+  it("uses dedicated categories for front raises, step-ups and good mornings", () => {
     expect(findExerciseById("shoulder-press-dumbbell-front-raise-1117")?.category).toBe("FRONT_RAISE");
     expect(findExerciseById("squat-step-up-1305")?.category).toBe("STEP_UP");
     expect(findExerciseById("leg-curl-good-morning-573")?.category).toBe("GOOD_MORNING");
-    expect(findExerciseById("lateral-raise-rope-climb-557")?.category).toBe("ROPE_CLIMB");
   });
 
   it("resolves old ids for image assets", () => {

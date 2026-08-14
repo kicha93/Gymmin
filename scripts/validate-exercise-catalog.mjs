@@ -9,7 +9,7 @@ const reportPath = path.join(root, "docs", "reports", "exercise-catalog-validati
 const idAliasPath = path.join(root, "apps", "mobile", "src", "domain", "exerciseIdAliases.ts");
 const aliasPath = path.join(root, "apps", "mobile", "src", "domain", "exerciseAliases.ts");
 
-const categories = new Set(["BANDED_EXERCISES","BATTLE_ROPE","BENCH_PRESS","BIKE_OUTDOOR","CALF_RAISE","CARDIO","CARRY","CHOP","CORE","CRUNCH","CURL","DEADLIFT","DORSIFLEXION","ELLIPTICAL","FLOOR_CLIMB","FLYE","FRONT_RAISE","GOOD_MORNING","HIP_RAISE","HIP_STABILITY","HIP_SWING","HYPEREXTENSION","INDOOR_BIKE","LADDER","LATERAL_RAISE","LEG_CURL","LEG_EXTENSION","LEG_RAISE","LUNGE","OLYMPIC_LIFT","PLANK","PLYO","PULL_UP","PULLOVER","PUSH_UP","ROPE_CLIMB","ROW","RUN","RUN_INDOOR","SANDBAG","SHOULDER_PRESS","SHOULDER_STABILITY","SHRUG","SIT_UP","SLED","SLEDGE_HAMMER","SQUAT","STAIR_STEPPER","STEP_UP","SUSPENSION","TIRE","TOTAL_BODY","TRICEPS_EXTENSION","WARM_UP"]);
+const categories = new Set(["BANDED_EXERCISES","BATTLE_ROPE","BENCH_PRESS","BIKE_OUTDOOR","CALF_RAISE","CARDIO","CARRY","CHOP","CORE","CRUNCH","CURL","DEADLIFT","DORSIFLEXION","ELLIPTICAL","FLOOR_CLIMB","FLYE","FRONT_RAISE","GOOD_MORNING","HIP_RAISE","HIP_STABILITY","HIP_SWING","HYPEREXTENSION","INDOOR_BIKE","LADDER","LATERAL_RAISE","LEG_CURL","LEG_EXTENSION","LEG_RAISE","LUNGE","OLYMPIC_LIFT","PLANK","PLYO","PULL_UP","PULLOVER","PUSH_UP","ROW","RUN","RUN_INDOOR","SANDBAG","SHOULDER_PRESS","SHOULDER_STABILITY","SHRUG","SIT_UP","SLED","SLEDGE_HAMMER","SQUAT","STAIR_STEPPER","STEP_UP","SUSPENSION","TIRE","TOTAL_BODY","TRICEPS_EXTENSION","WARM_UP"]);
 const equipment = new Set(["ankleWeight","band","barbell","battleRope","bench","bike","bosuBall","box","cableMachine","dumbbell","ezBar","foamRoller","jumpRope","kettlebell","machine","medicineBall","other","plate","pullupBar","rings","rope","sandbag","sled","slidingDisc","smithMachine","squatRack","swissBall","trx","weightVest"]);
 const tiers = new Set(["main","advanced","sportSpecific","rehab","variation","progression"]);
 const equipmentHints = [[/\bdumbbell\b/i,"dumbbell"],[/\bbarbell\b/i,"barbell"],[/\bcable\b/i,"cableMachine"],[/\bswiss ball\b/i,"swissBall"],[/\brings?\b/i,"rings"],[/\bkettlebell\b/i,"kettlebell"],[/\bsmith machine\b/i,"smithMachine"],[/\b(resistance band|banded)\b/i,"band"],[/\bbench\b/i,"bench"]];
@@ -60,7 +60,7 @@ for(const [source,target] of Object.entries(aliases)){
 }
 
 const reportData={exerciseCount:exercises.length,idMappingCount:Object.keys(idAliases).length,errors,warnings};
-if(exercises.length!==831)errors.push({code:"unexpected_exercise_count",expected:831,actual:exercises.length});
+if(exercises.length!==805)errors.push({code:"unexpected_exercise_count",expected:805,actual:exercises.length});
 let previousReport;
 try { previousReport=JSON.parse(await readFile(reportPath,"utf8")); } catch { previousReport=undefined; }
 const previousData=previousReport?{exerciseCount:previousReport.exerciseCount,idMappingCount:previousReport.idMappingCount,errors:previousReport.errors,warnings:previousReport.warnings}:undefined;

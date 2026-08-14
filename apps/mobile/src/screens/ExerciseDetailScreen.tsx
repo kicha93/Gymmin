@@ -4,7 +4,11 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
-import { getMuscleImpactColor, MuscleImpactTextGroups } from "../components/MuscleImpactPresentation";
+import {
+  getMuscleImpactColor,
+  MuscleImpactLegend,
+  MuscleImpactTextGroups
+} from "../components/MuscleImpactPresentation";
 import { HumanMuscleFigure } from "../components/WorkoutPresentation";
 import { exerciseImageSources } from "../exerciseImageSources";
 import { exerciseVideoSources } from "../exerciseVideoSources";
@@ -188,14 +192,17 @@ export function ExerciseDetailScreen({
             </View>
           ) : null}
           {hasMuscleData ? (
-            <View style={styles.exerciseDetailMuscleContent}>
-              {muscleImpact ? (
-                <MuscleImpactTextGroups impact={muscleImpact} language={language} t={t} theme={theme} />
-              ) : null}
-              <View style={styles.exerciseDetailSingleFigure}>
-                <HumanMuscleFigure fill={fill} side={muscleSide} style={styles.exerciseDetailHumanFigure} />
+            <>
+              <View style={styles.exerciseDetailMuscleContent}>
+                {muscleImpact ? (
+                  <MuscleImpactTextGroups impact={muscleImpact} language={language} t={t} theme={theme} />
+                ) : null}
+                <View style={styles.exerciseDetailSingleFigure}>
+                  <HumanMuscleFigure fill={fill} side={muscleSide} style={styles.exerciseDetailHumanFigure} />
+                </View>
               </View>
-            </View>
+              {muscleImpact ? <MuscleImpactLegend impact={muscleImpact} t={t} theme={theme} /> : null}
+            </>
           ) : (
             <Text style={[styles.emptyBuilderCopy, { color: theme.muted }]}>{t("noExerciseMuscleData")}</Text>
           )}

@@ -1,0 +1,56 @@
+{
+  "coreVolumeCategories": [
+    "CHOP",
+    "CORE",
+    "CRUNCH",
+    "LEG_RAISE",
+    "PLANK",
+    "SIT_UP"
+  ],
+  "forearmVolumeCategories": [
+    "CURL"
+  ],
+  "lowerBackDirectCategories": [
+    "HYPEREXTENSION"
+  ],
+  "lowerBackIndirectCategories": [
+    "DEADLIFT",
+    "GOOD_MORNING"
+  ],
+  "trapsStabilizationCategories": [
+    "LATERAL_RAISE"
+  ],
+  "overrides": {
+    "carry-bar-holds-147": {
+      "forearm": "direct"
+    },
+    "carry-farmers-carry-walk-lunge-152": {
+      "forearm": "indirect"
+    },
+    "carry-farmers-walk-153": {
+      "forearm": "indirect"
+    },
+    "carry-farmers-walk-on-toes-154": {
+      "forearm": "indirect"
+    },
+    "carry-hex-dumbbell-hold-155": {
+      "forearm": "direct"
+    },
+    "lateral-raise-bent-over-lateral-raise-539": {
+      "traps": "indirect"
+    },
+    "lateral-raise-overhand-grip-rear-lateral-raise-552": {
+      "traps": "indirect"
+    },
+    "lateral-raise-seated-rear-lateral-raise-560": {
+      "traps": "indirect"
+    },
+    "lateral-raise-underhand-grip-rear-lateral-raise-564": {
+      "traps": "indirect"
+    },
+    "row-renegade-row-1054": {
+      "abs": "direct",
+      "obliques": "indirect"
+    }
+  }
+}

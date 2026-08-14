@@ -5,11 +5,17 @@ import type { SavedWorkout } from "../savedWorkouts";
 import {
   buildWeeklyMuscleVolumeSummary,
   formatWeeklyMuscleSets,
-  getFractionalSetWeight,
   getWeeklyMuscleVolumeEntriesForSide,
-  getWeeklyMuscleVolumeStatus,
+  getWeeklyVolumeBand,
   isWorkoutSessionEntryActuallyCompleted
 } from "../weeklyMuscleVolume";
+import {
+  getWeeklyVolumeRole,
+  getWeeklyVolumeRoleForMuscles,
+  getWeeklyVolumeRoleWeight,
+  validateWeeklyVolumeClassifier
+} from "../weeklyVolumeClassifier";
+import { exerciseCatalogDataSource } from "../exerciseCatalogDataSource";
 import type { WeeklyPlanSettings } from "../weeklyPlan";
 import type { WorkoutSession, WorkoutSessionEntry } from "../workoutSessions";
 import type { WorkoutDraft, WorkoutStep } from "../workouts";
@@ -138,8 +144,11 @@ function volume(summary: ReturnType<typeof calculate>, id: string) {
 }
 
 describe("weekly muscle volume", () => {
-  it("uses a small direct/indirect fractional model", () => {
-    expect([0, 1, 2, 3, 4, 5].map(getFractionalSetWeight)).toEqual([0, 0, 0, 0.5, 0.5, 1]);
+  it("uses explicit direct/indirect/stabilization roles", () => {
+    expect((["direct", "indirect", "stabilizationOnly", "notApplicable"] as const).map(getWeeklyVolumeRoleWeight)).toEqual([1, 0.5, 0, 0]);
+    expect(getWeeklyVolumeRole(bench, "chest")).toBe("direct");
+    expect(getWeeklyVolumeRole(bench, "triceps")).toBe("indirect");
+    expect(getWeeklyVolumeRole(bench, "abs")).toBe("notApplicable");
   });
 
   it("counts four direct sets and fractional compound contributions", () => {
@@ -153,6 +162,20 @@ describe("weekly muscle volume", () => {
     const summary = calculate({ workouts: [savedWorkout("workout", draft(["row"], "4"))] });
     expect(volume(summary, "back").projectedSets).toBe(4);
     expect(volume(summary, "biceps").projectedSets).toBe(2);
+    expect(getWeeklyVolumeRole(row, "lats")).toBe("direct");
+    expect(getWeeklyVolumeRole(row, "traps")).toBe("indirect");
+    expect(getWeeklyVolumeRole(row, "lowerBack")).toBe("stabilizationOnly");
+    expect(getWeeklyVolumeRoleForMuscles(row, ["lats", "traps", "lowerBack"])).toBe("direct");
+  });
+
+  it("does not count an ordinary lateral raise as weekly Back volume", () => {
+    const lateralRaise = findExerciseById("lateral-raise-dumbbell-lateral-raise-545")!;
+    const rearLateralRaise = findExerciseById("lateral-raise-seated-rear-lateral-raise-560")!;
+
+    expect(getWeeklyVolumeRole(lateralRaise, "traps")).toBe("stabilizationOnly");
+    expect(getWeeklyVolumeRoleForMuscles(lateralRaise, ["lats", "traps", "lowerBack"])).toBe("stabilizationOnly");
+    expect(getWeeklyVolumeRole(rearLateralRaise, "traps")).toBe("indirect");
+    expect(getWeeklyVolumeRoleForMuscles(rearLateralRaise, ["lats", "traps", "lowerBack"])).toBe("indirect");
   });
 
   it("adds several exercises and keeps supersets as their original sets", () => {
@@ -184,6 +207,47 @@ describe("weekly muscle volume", () => {
     const summary = calculate({ plan: repeatedPlan, sessions: [session()] });
     expect(volume(summary, "chest").completedSets).toBe(1);
     expect(volume(summary, "chest").projectedSets).toBe(5);
+  });
+
+  it("projects completed A and early C plus only the remaining B workout", () => {
+    const workouts = [
+      savedWorkout("A", draft(["bench"], "4")),
+      savedWorkout("B", draft(["row"], "4")),
+      savedWorkout("C", draft(["bench"], "2"))
+    ];
+    const weeklyPlan = plan([
+      { day: "monday", order: 0, workoutId: "A" },
+      { day: "wednesday", order: 1, workoutId: "B" },
+      { day: "friday", order: 2, workoutId: "C" }
+    ]);
+    const sessions = [
+      session({
+        id: "session-A",
+        sourceWorkoutId: "A",
+        entries: Array.from({ length: 3 }, (_, index) => entry({ id: `A-${index}`, setIteration: index + 1 }))
+      }),
+      session({
+        id: "session-C-early",
+        sourceWorkoutId: "C",
+        startedAt: "2026-08-11T10:00:00.000Z",
+        entries: Array.from({ length: 2 }, (_, index) => entry({ id: `C-${index}`, setIteration: index + 1 }))
+      })
+    ];
+    const summary = buildWeeklyMuscleVolumeSummary({
+      exercises: [bench, row],
+      now: new Date(2026, 7, 12, 12),
+      plan: weeklyPlan,
+      sessions,
+      workouts
+    });
+    expect(volume(summary, "chest").completedSets).toBe(5);
+    expect(volume(summary, "chest").projectedSets).toBe(5);
+    expect(volume(summary, "chest").completedStatus).toBe("moderate");
+    expect(volume(summary, "chest").projectedStatus).toBe("moderate");
+    expect(volume(summary, "back").completedSets).toBe(0);
+    expect(volume(summary, "back").projectedSets).toBe(4);
+    expect(volume(summary, "back").completedStatus).toBe("none");
+    expect(volume(summary, "back").projectedStatus).toBe("low");
   });
 
   it("counts unplanned completed sessions and leaves the plan untouched", () => {
@@ -241,9 +305,9 @@ describe("weekly muscle volume", () => {
     expect(volume(summary, "quads").completedSets).toBeGreaterThan(0);
   });
 
-  it("classifies ranges and formats fractional values", () => {
-    expect([0, 7, 7.5, 10, 20, 20.5].map((value) => getWeeklyMuscleVolumeStatus(value))).toEqual([
-      "none", "below", "near", "inRange", "inRange", "high"
+  it("classifies neutral bands at every accepted boundary", () => {
+    expect([0, 0.5, 4.5, 5, 9.5, 10, 20, 20.5].map(getWeeklyVolumeBand)).toEqual([
+      "none", "low", "low", "moderate", "moderate", "high", "high", "veryHigh"
     ]);
     expect(formatWeeklyMuscleSets(7)).toBe("7");
     expect(formatWeeklyMuscleSets(7.5)).toBe("7.5");
@@ -258,5 +322,85 @@ describe("weekly muscle volume", () => {
   it("is identical regardless of the presentation-only advanced muscle preference", () => {
     const summaries = [false, true].map((_advancedMuscleMode) => calculate());
     expect(summaries[1]).toEqual(summaries[0]);
+  });
+
+  it("counts six direct cable-crunch sets as moderate core volume", () => {
+    const cableCrunch = findExerciseById("crunch-kneeling-cable-crunch-255")!;
+    const completed = session({
+      entries: Array.from({ length: 6 }, (_, index) => entry({
+        exerciseId: cableCrunch.id,
+        id: `crunch-${index}`,
+        setIteration: index + 1
+      })),
+      sourceWorkoutId: "abs"
+    });
+    const summary = buildWeeklyMuscleVolumeSummary({
+      exercises: [cableCrunch],
+      now: new Date(2026, 7, 12, 12),
+      plan: plan([]),
+      sessions: [completed],
+      workouts: []
+    });
+    expect(volume(summary, "core").completedSets).toBe(6);
+    expect(volume(summary, "core").completedStatus).toBe("moderate");
+  });
+
+  it("does not count ordinary compound stabilization as core volume", () => {
+    const ids = [
+      "squat-barbell-back-squat-1251",
+      "deadlift-romanian-deadlift-374",
+      "shoulder-press-overhead-barbell-press-1125"
+    ];
+    const compounds = ids.map((id) => findExerciseById(id)!);
+    expect(compounds.every(Boolean)).toBe(true);
+    expect(compounds.flatMap((exercise) => [
+      getWeeklyVolumeRole(exercise, "abs"),
+      getWeeklyVolumeRole(exercise, "obliques")
+    ]).every((role) => role === "stabilizationOnly" || role === "notApplicable")).toBe(true);
+  });
+
+  it("keeps meaningful bench/triceps and pull-up/biceps contributions fractional", () => {
+    const barbellBench = findExerciseById("bench-press-barbell-bench-press-76")!;
+    const pullUp = findExerciseById("pull-up-pull-up-918")!;
+    expect(getWeeklyVolumeRole(barbellBench, "chest")).toBe("direct");
+    expect(getWeeklyVolumeRole(barbellBench, "triceps")).toBe("indirect");
+    expect(getWeeklyVolumeRole(pullUp, "lats")).toBe("direct");
+    expect(getWeeklyVolumeRole(pullUp, "biceps")).toBe("indirect");
+
+    const completed = session({
+      entries: [barbellBench, pullUp].flatMap((exercise, exerciseIndex) =>
+        Array.from({ length: 4 }, (_, setIndex) => entry({
+          elementIndex: exerciseIndex,
+          exerciseId: exercise.id,
+          id: `${exercise.id}-${setIndex}`,
+          setIteration: setIndex + 1
+        }))
+      ),
+      sourceWorkoutId: "compound"
+    });
+    const summary = buildWeeklyMuscleVolumeSummary({
+      exercises: [barbellBench, pullUp],
+      now: new Date(2026, 7, 12, 12),
+      plan: plan([]),
+      sessions: [completed],
+      workouts: []
+    });
+    expect(volume(summary, "chest").completedSets).toBe(4);
+    expect(volume(summary, "triceps").completedSets).toBe(2);
+    expect(volume(summary, "back").completedSets).toBe(4);
+    expect(volume(summary, "biceps").completedSets).toBe(2);
+  });
+
+  it("validates every catalog relation without silent gaps", () => {
+    const result = validateWeeklyVolumeClassifier(exerciseCatalogDataSource.getAvailableExercises());
+    expect(result.invalid).toEqual([]);
+    expect(result.coverage.needsReview).toBe(0);
+    expect(result.coverage.total).toBe(exerciseCatalogDataSource.getAvailableExercises().length * 17);
+    expect(
+      result.coverage.direct
+      + result.coverage.indirect
+      + result.coverage.stabilizationOnly
+      + result.coverage.notApplicable
+    ).toBe(result.coverage.total);
   });
 });

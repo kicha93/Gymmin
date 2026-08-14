@@ -5,10 +5,11 @@ import type { SavedWorkout } from "./savedWorkouts";
 import { getCurrentWeekRange, normalizeWeeklyPlanSettings, type WeeklyPlanSettings } from "./weeklyPlan";
 import type { WorkoutSession, WorkoutSessionEntry } from "./workoutSessions";
 import type { WorkoutDraft } from "./workouts";
+import { getWeeklyVolumeRoleForMuscles, getWeeklyVolumeRoleWeight } from "./weeklyVolumeClassifier";
 
 export type WeeklyMuscleVolumeMode = "completed" | "projected";
 export type WeeklyMuscleVolumeSide = "front" | "back";
-export type WeeklyMuscleVolumeStatus = "none" | "below" | "near" | "inRange" | "high";
+export type WeeklyVolumeBand = "none" | "low" | "moderate" | "high" | "veryHigh";
 
 export type WeeklyMuscleVolumeGroupId =
   | "chest"
@@ -33,10 +34,8 @@ export type WeeklyMuscleVolumeGroup = {
 export type WeeklyMuscleVolumeEntry = WeeklyMuscleVolumeGroup & {
   completedSets: number;
   projectedSets: number;
-  completedStatus: WeeklyMuscleVolumeStatus;
-  projectedStatus: WeeklyMuscleVolumeStatus;
-  targetMin: number;
-  targetMax: number;
+  completedStatus: WeeklyVolumeBand;
+  projectedStatus: WeeklyVolumeBand;
 };
 
 export type WeeklyMuscleVolumeSummary = {
@@ -44,10 +43,11 @@ export type WeeklyMuscleVolumeSummary = {
   hasActivity: boolean;
 };
 
-export const weeklyMuscleVolumeRecommendation = {
-  targetMin: 10,
-  targetMax: 20,
-  nearTargetRatio: 0.75
+export const weeklyVolumeBandThresholds = {
+  lowMax: 4.5,
+  moderateMax: 9.5,
+  highMax: 20,
+  visualScaleMax: 20
 } as const;
 
 export const weeklyMuscleVolumeGroups: readonly WeeklyMuscleVolumeGroup[] = [
@@ -86,21 +86,12 @@ export function getWeeklyMuscleVolumeEntriesForSide(
   );
 }
 
-export function getFractionalSetWeight(score: number): number {
-  if (score === 5) return 1;
-  if (score === 4 || score === 3) return 0.5;
-  return 0;
-}
-
-export function getWeeklyMuscleVolumeStatus(
-  sets: number,
-  recommendation = weeklyMuscleVolumeRecommendation
-): WeeklyMuscleVolumeStatus {
+export function getWeeklyVolumeBand(sets: number): WeeklyVolumeBand {
   if (sets <= 0) return "none";
-  if (sets < recommendation.targetMin * recommendation.nearTargetRatio) return "below";
-  if (sets < recommendation.targetMin) return "near";
-  if (sets <= recommendation.targetMax) return "inRange";
-  return "high";
+  if (sets <= weeklyVolumeBandThresholds.lowMax) return "low";
+  if (sets <= weeklyVolumeBandThresholds.moderateMax) return "moderate";
+  if (sets <= weeklyVolumeBandThresholds.highMax) return "high";
+  return "veryHigh";
 }
 
 export function formatWeeklyMuscleSets(value: number): string {
@@ -122,9 +113,8 @@ function addExerciseSet(
     // A compound set can affect multiple catalog muscles in one dashboard
     // group. Taking the maximum prevents one physical set from being counted
     // two or three times as, for example, "back" volume.
-    const contribution = Math.max(
-      0,
-      ...group.muscleKeys.map((muscle) => getFractionalSetWeight(exercise.muscleImpact[muscle]))
+    const contribution = getWeeklyVolumeRoleWeight(
+      getWeeklyVolumeRoleForMuscles(exercise, group.muscleKeys)
     );
     if (contribution > 0) {
       totals.set(group.id, (totals.get(group.id) ?? 0) + contribution);
@@ -248,10 +238,8 @@ export function buildWeeklyMuscleVolumeSummary({
       ...group,
       completedSets,
       projectedSets,
-      completedStatus: getWeeklyMuscleVolumeStatus(completedSets),
-      projectedStatus: getWeeklyMuscleVolumeStatus(projectedSets),
-      targetMin: weeklyMuscleVolumeRecommendation.targetMin,
-      targetMax: weeklyMuscleVolumeRecommendation.targetMax
+      completedStatus: getWeeklyVolumeBand(completedSets),
+      projectedStatus: getWeeklyVolumeBand(projectedSets)
     };
   });
 

@@ -23,8 +23,9 @@ import {
   type WeeklyMuscleVolumeGroupId,
   type WeeklyMuscleVolumeMode,
   type WeeklyMuscleVolumeSide,
-  type WeeklyMuscleVolumeStatus,
-  type WeeklyMuscleVolumeSummary
+  type WeeklyMuscleVolumeSummary,
+  type WeeklyVolumeBand,
+  weeklyVolumeBandThresholds
 } from "../domain/weeklyMuscleVolume";
 import type { WorkoutSession } from "../domain/workoutSessions";
 import type { LanguageCode, TranslationKey } from "../i18n/translations";
@@ -142,20 +143,20 @@ const weeklyMuscleLabelKeys: Record<WeeklyMuscleVolumeGroupId, TranslationKey> =
   triceps: "weeklyMuscleTriceps"
 };
 
-const weeklyMuscleStatusKeys: Record<WeeklyMuscleVolumeStatus, TranslationKey> = {
-  below: "weeklyMuscleVolumeStatusBelow",
+const weeklyMuscleStatusKeys: Record<WeeklyVolumeBand, TranslationKey> = {
   high: "weeklyMuscleVolumeStatusHigh",
-  inRange: "weeklyMuscleVolumeStatusInRange",
-  near: "weeklyMuscleVolumeStatusNear",
-  none: "weeklyMuscleVolumeStatusNone"
+  low: "weeklyMuscleVolumeStatusLow",
+  moderate: "weeklyMuscleVolumeStatusModerate",
+  none: "weeklyMuscleVolumeStatusNone",
+  veryHigh: "weeklyMuscleVolumeStatusVeryHigh"
 };
 
-function getVolumeStatusColor(status: WeeklyMuscleVolumeStatus, theme: Theme) {
+function getVolumeStatusColor(status: WeeklyVolumeBand, theme: Theme) {
   switch (status) {
-    case "below": return "#e58a19";
-    case "near": return "#d5ab32";
-    case "inRange": return theme.primary;
-    case "high": return "#687b79";
+    case "low": return "#e58a19";
+    case "moderate": return "#d5ab32";
+    case "high": return theme.primary;
+    case "veryHigh": return "#527876";
     default: return theme.secondaryBand;
   }
 }
@@ -236,6 +237,7 @@ function WeeklyMuscleVolumeControls({
 type WeeklyMuscleVolumeListProps = CommonProps & {
   entries: WeeklyMuscleVolumeEntry[];
   hiddenGroups: ReadonlySet<WeeklyMuscleVolumeGroupId>;
+  language: LanguageCode;
   mode: WeeklyMuscleVolumeMode;
   onToggleGroup: (group: WeeklyMuscleVolumeGroupId) => void;
   rowMetaStacked: boolean;
@@ -244,12 +246,24 @@ type WeeklyMuscleVolumeListProps = CommonProps & {
 function WeeklyMuscleVolumeList({
   entries,
   hiddenGroups,
+  language,
   mode,
   onToggleGroup,
   rowMetaStacked,
   t,
   theme
 }: WeeklyMuscleVolumeListProps) {
+  const getSetsLabel = (value: number) => {
+    if (language !== "pl") return t(value === 1 ? "weeklyMuscleVolumeSetOne" : "weeklyMuscleVolumeSets");
+    if (!Number.isInteger(value)) return t("weeklyMuscleVolumeSets");
+    const lastTwo = value % 100;
+    const last = value % 10;
+    if (value === 1) return t("weeklyMuscleVolumeSetOne");
+    if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) {
+      return t("weeklyMuscleVolumeSetsFew");
+    }
+    return t("weeklyMuscleVolumeSets");
+  };
   return (
     <View style={styles.weeklyMuscleVolumeRows}>
       {entries.map((entry) => {
@@ -257,7 +271,7 @@ function WeeklyMuscleVolumeList({
         const status = getEntryStatus(entry, mode);
         const isVisible = !hiddenGroups.has(entry.id);
         const color = isVisible ? getVolumeStatusColor(status, theme) : theme.selectedOption;
-        const progress = Math.min(100, (value / entry.targetMax) * 100);
+        const progress = Math.min(100, (value / weeklyVolumeBandThresholds.visualScaleMax) * 100);
         return (
           <Pressable
             key={entry.id}
@@ -278,11 +292,10 @@ function WeeklyMuscleVolumeList({
                 </Text>
               </View>
               <Text numberOfLines={1} style={[styles.weeklyMuscleVolumeValue, { color: theme.text }]}>
-                {`${formatWeeklyMuscleSets(value)} / ${entry.targetMin}–${entry.targetMax} ${t("weeklyMuscleVolumeSets")}`}
+                {`${formatWeeklyMuscleSets(value)} ${getSetsLabel(value)}`}
               </Text>
             </View>
             <View style={[styles.weeklyMuscleVolumeTrack, { backgroundColor: theme.secondaryBand }]}>
-              <View style={[styles.weeklyMuscleVolumeTargetBand, { backgroundColor: theme.border }]} />
               <View style={[styles.weeklyMuscleVolumeFill, { backgroundColor: color, width: `${progress}%` }]} />
             </View>
             <View style={[styles.weeklyMuscleVolumeBadge, { backgroundColor: `${color}22` }]}>
@@ -487,6 +500,7 @@ export function WeeklyPlanHomeCard({
                 <WeeklyMuscleVolumeList
                   entries={visibleVolumeEntries}
                   hiddenGroups={hiddenVolumeGroups}
+                  language={language}
                   mode={volumeMode}
                   onToggleGroup={(group) => setHiddenVolumeGroups((current) => toggleWeeklyMuscleGroup(current, group))}
                   rowMetaStacked={volumeLayout.rowMetaStacked}

@@ -4097,14 +4097,6 @@ export const styles = StyleSheet.create({
     overflow: "hidden",
     position: "relative"
   },
-  weeklyMuscleVolumeTargetBand: {
-    bottom: 0,
-    left: "50%",
-    opacity: 0.8,
-    position: "absolute",
-    top: 0,
-    width: "50%"
-  },
   weeklyMuscleVolumeFill: {
     borderRadius: 4,
     bottom: 0,

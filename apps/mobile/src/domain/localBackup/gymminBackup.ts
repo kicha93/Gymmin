@@ -260,7 +260,8 @@ function validateSettings(settings: Record<string, unknown>) {
   const strings = ["defaultSetCount", "defaultStageType", "defaultWorkoutExecutionMode", "defaultWorkoutTableOrientation", "defaultWeight", "language", "themeName"];
   if (strings.some((key) => typeof settings[key] !== "string")
     || !isRecord(settings.collapsedPanels) || !isRecord(settings.workoutReminders)
-    || typeof settings.showRestTimer !== "boolean") {
+    || typeof settings.showRestTimer !== "boolean"
+    || ("advancedMuscleMode" in settings && typeof settings.advancedMuscleMode !== "boolean")) {
     throwInvalid("invalid-settings", "The backup contains invalid application settings.");
   }
 }

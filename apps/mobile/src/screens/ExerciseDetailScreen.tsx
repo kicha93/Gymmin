@@ -5,6 +5,7 @@ import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import {
+  AdvancedMuscleImpactGroups,
   getMuscleImpactColor,
   MuscleImpactLegend,
   MuscleImpactTextGroups
@@ -13,6 +14,7 @@ import { HumanMuscleFigure } from "../components/WorkoutPresentation";
 import { exerciseImageSources } from "../exerciseImageSources";
 import { exerciseVideoSources } from "../exerciseVideoSources";
 import { getExerciseDisplayName, muscleKeys, type MuscleKey } from "../domain/exercises";
+import { getAdvancedAnatomyRegionLevels } from "../domain/advancedMuscles";
 import { getExerciseProgressSummary, type WorkoutSession, type WorkoutSessionEntry } from "../domain/workoutSessions";
 import { getExerciseDetails, getExerciseProgressKeyForDetails } from "../domain/workoutExerciseSummary";
 import type { WorkoutStep } from "../domain/workouts";
@@ -21,6 +23,7 @@ import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
 
 type ExerciseDetailScreenProps = {
+  advancedMuscleMode: boolean;
   collapsedPanels: Record<string, boolean>;
   formatEntryActual: (entry: WorkoutSessionEntry) => string;
   formatNumber: (value: number | null | undefined, suffix?: string) => string;
@@ -73,6 +76,7 @@ function ExerciseLoopVideo({
 }
 
 export function ExerciseDetailScreen({
+  advancedMuscleMode,
   collapsedPanels,
   formatEntryActual,
   formatNumber,
@@ -96,6 +100,10 @@ export function ExerciseDetailScreen({
     const displayName = details?.displayName ?? fallbackName;
     const muscleImpact = details?.exercise?.muscleImpact;
     const hasMuscleData = Boolean(muscleImpact && muscleKeys.some((muscle) => muscleImpact[muscle] > 0));
+    const advancedRegionFills = advancedMuscleMode && details?.exercise?.id
+      ? Object.fromEntries(Object.entries(getAdvancedAnatomyRegionLevels(details.exercise.id, muscleSide))
+        .map(([regionId, level]) => [regionId, getMuscleImpactColor(level)]))
+      : undefined;
 
     useEffect(() => {
       setHasVideoPlaybackFailed(false);
@@ -194,11 +202,24 @@ export function ExerciseDetailScreen({
           {hasMuscleData ? (
             <>
               <View style={styles.exerciseDetailMuscleContent}>
-                {muscleImpact ? (
+                {muscleImpact ? (advancedMuscleMode && details?.exercise?.id ?
+                  <AdvancedMuscleImpactGroups
+                    exerciseId={details.exercise.id}
+                    impact={muscleImpact}
+                    language={language}
+                    side={muscleSide}
+                    t={t}
+                    theme={theme}
+                  /> :
                   <MuscleImpactTextGroups impact={muscleImpact} language={language} t={t} theme={theme} />
                 ) : null}
                 <View style={styles.exerciseDetailSingleFigure}>
-                  <HumanMuscleFigure fill={fill} side={muscleSide} style={styles.exerciseDetailHumanFigure} />
+                  <HumanMuscleFigure
+                    advancedRegionFills={advancedRegionFills}
+                    fill={fill}
+                    side={muscleSide}
+                    style={styles.exerciseDetailHumanFigure}
+                  />
                 </View>
               </View>
               {muscleImpact ? <MuscleImpactLegend impact={muscleImpact} t={t} theme={theme} /> : null}

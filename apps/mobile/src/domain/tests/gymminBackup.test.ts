@@ -102,6 +102,16 @@ describe("Gymmin backup contract", () => {
     expect(roundtrip(value).data.profile).toEqual(value.profile);
   });
 
+  it("keeps advanced muscle mode backward compatible without changing backup v1", () => {
+    const legacy = createGymminBackup(snapshot(), { appVersion: "1.0.0", now }) as any;
+    delete legacy.data.settings.advancedMuscleMode;
+    expect(parseGymminBackup(JSON.stringify(legacy), defaults).data.settings.advancedMuscleMode).toBe(false);
+
+    const current = snapshot();
+    current.settings.advancedMuscleMode = true;
+    expect(roundtrip(current).data.settings.advancedMuscleMode).toBe(true);
+  });
+
   it.each([
     ["malformed-json", "{bad"],
     ["invalid-format", JSON.stringify({ format: "other", version: 1 })],

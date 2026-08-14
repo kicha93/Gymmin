@@ -8,6 +8,11 @@ import {
   type InfluenceScore,
   type MuscleKey
 } from "../domain/exercises";
+import {
+  getAdvancedDisplayFamily,
+  getAdvancedExerciseProfile,
+  getAdvancedMuscleSubdivision
+} from "../domain/advancedMuscles";
 import type { TranslationKey } from "../i18n/translations";
 import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
@@ -88,6 +93,73 @@ export function MuscleImpactTextGroups({ impact, language, t, theme }: MuscleImp
             <Text style={[styles.workoutMeta, { color: theme.text }]}>
               {muscles.map((muscle) => muscleLabels[language][muscle]).join(", ")}
             </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+type AdvancedMuscleImpactGroupsProps = MuscleImpactTextGroupsProps & {
+  exerciseId: string;
+  side: "front" | "back";
+};
+
+export function AdvancedMuscleImpactGroups({ exerciseId, impact, language, side, t, theme }: AdvancedMuscleImpactGroupsProps) {
+  const profile = getAdvancedExerciseProfile(exerciseId);
+  if (!profile) return <MuscleImpactTextGroups impact={impact} language={language} t={t} theme={theme} />;
+
+  const categoryLabel = (score: InfluenceScore) => {
+    if (score === 5) return t("primaryMuscles");
+    if (score === 4) return t("majorContributorMuscles");
+    if (score === 3) return t("significantSynergistMuscles");
+    if (score === 2) return t("secondaryImpactMuscles");
+    return t("stabilizingMuscles");
+  };
+
+  return (
+    <View style={styles.exerciseMuscleLists}>
+      {profile.parents.map((parent) => {
+        const parentLevel = impact[parent.standardParentMuscle];
+        if (parent.status !== "mapped") {
+          return (
+            <View key={parent.standardParentMuscle} style={styles.advancedMuscleParent}>
+              <View style={styles.advancedMuscleParentHeader}>
+                <Text style={[styles.workoutMeta, { color: theme.text }]}>{muscleLabels[language][parent.standardParentMuscle]}</Text>
+                <Text style={[styles.advancedMuscleCategory, { color: theme.muted }]}>{categoryLabel(parentLevel)}</Text>
+              </View>
+            </View>
+          );
+        }
+
+        const subdivisions = parent.engagement.flatMap(([subdivisionId, level]) => {
+          const subdivision = getAdvancedMuscleSubdivision(subdivisionId);
+          return subdivision && (subdivision.side === "both" || subdivision.side === side)
+            ? [{ level, subdivision }]
+            : [];
+        });
+        if (!subdivisions.length) return null;
+        const family = getAdvancedDisplayFamily(subdivisions[0].subdivision.displayFamilyId);
+
+        return (
+          <View key={parent.standardParentMuscle} style={styles.advancedMuscleParent}>
+            <View style={styles.advancedMuscleParentHeader}>
+              <Text style={[styles.workoutMeta, { color: theme.text }]}>
+                {family?.names[language] ?? muscleLabels[language][parent.standardParentMuscle]}
+              </Text>
+              <Text style={[styles.advancedMuscleCategory, { color: theme.muted }]}>{categoryLabel(parentLevel)}</Text>
+            </View>
+            {subdivisions.map(({ level, subdivision }) => (
+              <View key={subdivision.id} style={styles.advancedMuscleRow}>
+                <View style={[styles.advancedMuscleBranch, { borderColor: theme.border }]} />
+                <View style={styles.advancedMuscleRowContent}>
+                  <Text style={[styles.advancedMuscleName, { color: theme.muted }]}>{subdivision.names[language]}</Text>
+                  <View style={[styles.advancedMuscleTrack, { backgroundColor: theme.segment }]}>
+                    <View style={{ backgroundColor: getMuscleImpactColor(parentLevel), borderRadius: 999, height: "100%", width: `${level * 20}%` }} />
+                  </View>
+                </View>
+              </View>
+            ))}
           </View>
         );
       })}

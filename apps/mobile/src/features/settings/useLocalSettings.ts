@@ -19,6 +19,7 @@ export function useLocalSettings(
   collapsedPanelDefaults: Record<string, boolean>
 ) {
   const [language, setLanguage] = useState<LanguageCode>("en");
+  const [advancedMuscleMode, setAdvancedMuscleMode] = useState(false);
   const [themeName, setThemeName] = useState<ThemeName>("light");
   const [defaultSetCount, setDefaultSetCount] = useState("");
   const [defaultWeight, setDefaultWeight] = useState("");
@@ -43,6 +44,7 @@ export function useLocalSettings(
   const hasPersistedLocalSettingsRef = useRef(false);
 
   function applySettings(settings: AppSettings) {
+    setAdvancedMuscleMode(settings.advancedMuscleMode);
     setLanguage(settings.language);
     setThemeName(settings.themeName);
     setDefaultSetCount(settings.defaultSetCount);
@@ -59,6 +61,7 @@ export function useLocalSettings(
 
   function buildSettings(updatedAt = localSettingsUpdatedAt): AppSettings {
     return {
+      advancedMuscleMode,
       collapsedPanels,
       defaultSetCount,
       defaultStageType,
@@ -121,6 +124,7 @@ export function useLocalSettings(
       console.error("Failed to save local settings", error);
     });
   }, [
+    advancedMuscleMode,
     collapsedPanels,
     defaultSetCount,
     defaultStageType,
@@ -135,6 +139,7 @@ export function useLocalSettings(
   ]);
 
   return {
+    advancedMuscleMode,
     applySettings,
     buildSettings,
     collapsedPanels,
@@ -148,6 +153,7 @@ export function useLocalSettings(
     language,
     localSettingsUpdatedAt,
     setCollapsedPanels,
+    setAdvancedMuscleMode,
     setDefaultSetCount,
     setDefaultStageType,
     setDefaultWeight,

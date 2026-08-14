@@ -725,6 +725,47 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12
   },
+  advancedMuscleParent: {
+    gap: 8,
+    marginBottom: 12
+  },
+  advancedMuscleParentHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "space-between"
+  },
+  advancedMuscleCategory: {
+    flexShrink: 1,
+    fontSize: 11,
+    fontWeight: "700",
+    textAlign: "right"
+  },
+  advancedMuscleRow: {
+    flexDirection: "row",
+    minHeight: 38,
+    paddingLeft: 7
+  },
+  advancedMuscleBranch: {
+    borderBottomWidth: 1,
+    borderLeftWidth: 1,
+    height: 18,
+    marginRight: 8,
+    width: 10
+  },
+  advancedMuscleRowContent: {
+    flex: 1,
+    gap: 5
+  },
+  advancedMuscleName: {
+    fontSize: 12,
+    fontWeight: "600"
+  },
+  advancedMuscleTrack: {
+    borderRadius: 999,
+    height: 6,
+    overflow: "hidden"
+  },
   exerciseDetailSingleFigure: {
     alignItems: "center",
     flexShrink: 0,

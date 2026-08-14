@@ -98,6 +98,7 @@ describe("localDataRepositories", () => {
       "settings-training": false
     };
     const settings: AppSettings = {
+      advancedMuscleMode: true,
       collapsedPanels: panels,
       defaultSetCount: "5",
       defaultStageType: "exercise",

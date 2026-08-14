@@ -1,0 +1,115 @@
+{
+  "catalogExerciseCount": 805,
+  "eligibleExerciseCount": 739,
+  "eligibleParentEngagementCount": 2331,
+  "eligible": 2331,
+  "intentionallyNotDetailed": 427,
+  "mapped": 1904,
+  "needsReview": [],
+  "silentMissing": 0,
+  "coveragePercent": 81.68,
+  "perParent": {
+    "biceps": {
+      "eligible": 94,
+      "intentionallyNotDetailed": 1,
+      "mapped": 93,
+      "needsReview": 0
+    },
+    "forearm": {
+      "eligible": 101,
+      "intentionallyNotDetailed": 5,
+      "mapped": 96,
+      "needsReview": 0
+    },
+    "lats": {
+      "eligible": 73,
+      "intentionallyNotDetailed": 73,
+      "mapped": 0,
+      "needsReview": 0
+    },
+    "traps": {
+      "eligible": 171,
+      "intentionallyNotDetailed": 13,
+      "mapped": 158,
+      "needsReview": 0
+    },
+    "abs": {
+      "eligible": 279,
+      "intentionallyNotDetailed": 0,
+      "mapped": 279,
+      "needsReview": 0
+    },
+    "obliques": {
+      "eligible": 129,
+      "intentionallyNotDetailed": 0,
+      "mapped": 129,
+      "needsReview": 0
+    },
+    "glutes": {
+      "eligible": 278,
+      "intentionallyNotDetailed": 38,
+      "mapped": 240,
+      "needsReview": 0
+    },
+    "hamstrings": {
+      "eligible": 132,
+      "intentionallyNotDetailed": 25,
+      "mapped": 107,
+      "needsReview": 0
+    },
+    "lowerBack": {
+      "eligible": 75,
+      "intentionallyNotDetailed": 0,
+      "mapped": 75,
+      "needsReview": 0
+    },
+    "hips": {
+      "eligible": 91,
+      "intentionallyNotDetailed": 91,
+      "mapped": 0,
+      "needsReview": 0
+    },
+    "calves": {
+      "eligible": 77,
+      "intentionallyNotDetailed": 11,
+      "mapped": 66,
+      "needsReview": 0
+    },
+    "abductors": {
+      "eligible": 47,
+      "intentionallyNotDetailed": 47,
+      "mapped": 0,
+      "needsReview": 0
+    },
+    "shoulders": {
+      "eligible": 303,
+      "intentionallyNotDetailed": 41,
+      "mapped": 262,
+      "needsReview": 0
+    },
+    "chest": {
+      "eligible": 83,
+      "intentionallyNotDetailed": 3,
+      "mapped": 80,
+      "needsReview": 0
+    },
+    "quads": {
+      "eligible": 216,
+      "intentionallyNotDetailed": 23,
+      "mapped": 193,
+      "needsReview": 0
+    },
+    "adductors": {
+      "eligible": 34,
+      "intentionallyNotDetailed": 34,
+      "mapped": 0,
+      "needsReview": 0
+    },
+    "triceps": {
+      "eligible": 148,
+      "intentionallyNotDetailed": 22,
+      "mapped": 126,
+      "needsReview": 0
+    }
+  }
+}

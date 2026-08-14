@@ -10,6 +10,7 @@ describe("appSettings", () => {
 
   it("creates safe defaults", () => {
     expect(createDefaultAppSettings(panels, "2026-01-01T00:00:00.000Z")).toMatchObject({
+      advancedMuscleMode: false,
       collapsedPanels: panels,
       defaultWorkoutExecutionMode: "guided",
       defaultWorkoutTableOrientation: "vertical",
@@ -37,11 +38,16 @@ describe("appSettings", () => {
     }, panels, "2026-01-01T00:00:00.000Z");
 
     expect(normalized.collapsedPanels).toEqual({ account: false, info: false });
+    expect(normalized.advancedMuscleMode).toBe(false);
     expect(normalized.defaultStageType).toBe("");
     expect(normalized.defaultWorkoutExecutionMode).toBe("inline-table");
     expect(normalized.themeName).toBe("light");
     expect(normalized.workoutReminders.weeklySchedule.filter((day) => day.enabled).map((day) => day.day))
       .toEqual(["monday", "friday"]);
+  });
+
+  it("persists an explicitly enabled advanced muscle mode", () => {
+    expect(normalizeAppSettings({ advancedMuscleMode: true }, panels).advancedMuscleMode).toBe(true);
   });
 
 });

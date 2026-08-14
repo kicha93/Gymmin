@@ -27,6 +27,9 @@
     "exercise:catalog:export:enrichment": "node scripts/export-exercise-enrichment-catalog.mjs",
     "exercise:catalog:apply": "node scripts/apply-exercise-catalog-update.mjs",
     "exercise:catalog:report": "node scripts/generate-exercise-refactor-report.mjs",
-    "exercise:catalog:audit:phase2": "node scripts/audit-exercise-catalog-phase2.mjs"
+    "exercise:catalog:audit:phase2": "node scripts/audit-exercise-catalog-phase2.mjs",
+    "exercise:muscles:generate": "node scripts/generate-advanced-muscle-profiles.mjs",
+    "exercise:muscles:validate": "node scripts/validate-advanced-muscles.mjs",
+    "exercise:muscles:audit": "node scripts/audit-advanced-muscle-profiles.mjs"
   }
 }

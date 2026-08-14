@@ -254,4 +254,9 @@ describe("weekly muscle volume", () => {
     expect(summary.hasActivity).toBe(false);
     expect(summary.entries.every((item) => item.completedSets === 0 && item.projectedSets === 0)).toBe(true);
   });
+
+  it("is identical regardless of the presentation-only advanced muscle preference", () => {
+    const summaries = [false, true].map((_advancedMuscleMode) => calculate());
+    expect(summaries[1]).toEqual(summaries[0]);
+  });
 });

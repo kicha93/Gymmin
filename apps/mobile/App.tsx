@@ -776,6 +776,7 @@ function GymminApp() {
     setWeeklyPlan
   } = useLocalWeeklyPlan(hasLoadedAccountStorageMigration);
   const {
+    advancedMuscleMode,
     applySettings: applyLocalSettingsState,
     buildSettings: buildCurrentSettingsPayload,
     collapsedPanels,
@@ -789,6 +790,7 @@ function GymminApp() {
     language,
     localSettingsUpdatedAt,
     setCollapsedPanels,
+    setAdvancedMuscleMode,
     setDefaultSetCount,
     setDefaultStageType,
     setDefaultWeight,
@@ -2436,6 +2438,7 @@ function GymminApp() {
   function renderExerciseDetailScreen() {
     return (
       <ExerciseDetailScreen
+        advancedMuscleMode={advancedMuscleMode}
         collapsedPanels={exerciseDetailCollapsedPanels}
         formatEntryActual={formatEntryActual}
         formatNumber={formatNumber}
@@ -2774,6 +2777,7 @@ function GymminApp() {
             {activeScreen === "workouts" && renderWorkouts()}
             {activeScreen === "settings" && (
               <SettingsScreen
+                advancedMuscleMode={advancedMuscleMode}
                 defaultSetCount={defaultSetCount}
                 defaultStageTypeLabel={
                   getStageTypeOptions(t).find((option) => option.value === defaultStageType)?.label ?? t("toChoose")
@@ -2825,6 +2829,7 @@ function GymminApp() {
                 onReminderDescriptionChange={updateWorkoutReminderDescription}
                 onReminderMessageChange={updateWorkoutReminderMessage}
                 onTogglePanel={togglePanel}
+                onToggleAdvancedMuscleMode={() => setAdvancedMuscleMode((current) => !current)}
                 onToggleReminderDay={(dayNumber) => {
                   void toggleWorkoutReminderDay(dayNumber);
                 }}

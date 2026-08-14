@@ -21,6 +21,7 @@ import { styles } from "../theme/appStyles";
 import type { Theme } from "../theme/theme";
 
 type SettingsScreenProps = {
+  advancedMuscleMode: boolean;
   defaultSetCount: string;
   defaultStageTypeLabel: string;
   defaultWeight: string;
@@ -55,10 +56,12 @@ type SettingsScreenProps = {
   onToggleReminderOnlyIfNoWorkoutToday: () => void;
   onToggleReminders: () => void;
   onToggleRestTimer: () => void;
+  onToggleAdvancedMuscleMode: () => void;
   onToggleTheme: () => void;
 };
 
 export function SettingsScreen({
+  advancedMuscleMode,
   defaultSetCount,
   defaultStageTypeLabel,
   defaultWeight,
@@ -86,6 +89,7 @@ export function SettingsScreen({
   onToggleReminderOnlyIfNoWorkoutToday,
   onToggleReminders,
   onToggleRestTimer,
+  onToggleAdvancedMuscleMode,
   onToggleTheme,
   reminderDescriptionPlaceholder,
   reminderMessagePlaceholder,
@@ -120,6 +124,14 @@ export function SettingsScreen({
           theme={theme}
           onPress={onToggleTheme}
         />
+        <SettingsOption
+          icon="body-outline"
+          label={t("advancedMuscleMode")}
+          value={advancedMuscleMode ? t("enabled") : t("disabled")}
+          theme={theme}
+          onPress={onToggleAdvancedMuscleMode}
+        />
+        <Text style={[styles.settingsHint, { color: theme.muted }]}>{t("advancedMuscleModeDescription")}</Text>
       </SettingsSection>
 
       <SettingsSection

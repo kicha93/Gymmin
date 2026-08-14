@@ -11,6 +11,7 @@ import type { WorkoutExecutionMode } from "./workoutSessions";
 export type WorkoutTableOrientation = "vertical" | "horizontal";
 
 export type AppSettings = {
+  advancedMuscleMode: boolean;
   collapsedPanels: Record<string, boolean>;
   defaultSetCount: string;
   defaultStageType: StageType | "";
@@ -74,6 +75,7 @@ export function createDefaultAppSettings(
   now = new Date().toISOString()
 ): AppSettings {
   return {
+    advancedMuscleMode: false,
     collapsedPanels,
     defaultSetCount: "",
     defaultStageType: "",
@@ -97,6 +99,7 @@ export function normalizeAppSettings(
   const language = isLanguageCode(record.language) ? record.language : "en";
 
   return {
+    advancedMuscleMode: record.advancedMuscleMode === true,
     collapsedPanels: normalizeCollapsedPanels(record.collapsedPanels, collapsedPanelDefaults),
     defaultSetCount: typeof record.defaultSetCount === "string" ? record.defaultSetCount : "",
     defaultStageType: record.defaultStageType === "" || isStageType(record.defaultStageType)

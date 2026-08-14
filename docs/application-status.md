@@ -1,6 +1,6 @@
 # Application status
 
-Status date: 2026-08-13.
+Status date: 2026-08-14.
 
 Gymmin is now a local-only mobile product. Backend source, auth, synchronization, remote creator jobs, AI credits, billing, remote profile/avatar transport, system status, HTTP clients, and API URL build configuration have been removed.
 
@@ -20,6 +20,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 - PL/EN About, author attribution, privacy and voluntary Buy Me a Coffee link; the support card is the final standalone section below all Settings panels.
 - optimized offline exercise media: 58 static START/END pairs use WebP Q90 runtime assets generated reproducibly from non-bundled PNG sources; the supplied MP4 remains unchanged.
 - a validated catalog of 805 exercises with localized presentation and richer muscle-involvement data; the reviewed Towel, Swiss Ball, Suspension/TRX, Single-leg, Single-arm/One-hand/One-legged, Side Plank, Sandbag, One-arm, Battle Rope and Rope Climb variants are absent.
+- an opt-in Advanced Muscle Mode in Preferences; Exercise Detail can show 38 localized anatomical subdivisions generated for canonical exercise IDs, while the default standard view and weekly muscle-volume calculations remain unchanged.
 - detailed warm-up stages remain visible as their actual exercises during guided execution; only a truly empty/simple warm-up placeholder receives the compact representation.
 
 ## Compatibility retained intentionally

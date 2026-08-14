@@ -231,21 +231,34 @@ export function ExerciseSummaryRow({
 }
 
 type HumanMuscleFigureProps = {
+  advancedRegionFills?: Readonly<Record<string, string>>;
   fill: (muscle: MuscleKey) => string;
   side: "front" | "back";
   style?: StyleProp<ViewStyle>;
 };
 
-export function HumanMuscleFigure({ fill, side, style }: HumanMuscleFigureProps) {
+export function HumanMuscleFigure({ advancedRegionFills, fill, side, style }: HumanMuscleFigureProps) {
   const svgSource = side === "front" ? frontBodySvg : backBodySvg;
   const regionMap = side === "front" ? frontBodyRegionMap : backBodyRegionMap;
-  const xml = useMemo(() => colorizeBodySvg(svgSource, regionMap, fill), [fill, regionMap, svgSource]);
+  const xml = useMemo(
+    () => colorizeAdvancedRegions(colorizeBodySvg(svgSource, regionMap, fill), advancedRegionFills),
+    [advancedRegionFills, fill, regionMap, svgSource]
+  );
 
   return (
     <View style={[styles.humanMuscleFigure, style]}>
       <SvgXml height="100%" width="100%" xml={xml} />
     </View>
   );
+}
+
+function colorizeAdvancedRegions(svg: string, regionFills?: Readonly<Record<string, string>>) {
+  if (!regionFills) return svg;
+  return Object.entries(regionFills).reduce((currentSvg, [regionId, fill]) => {
+    const escapedId = regionId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regionPattern = new RegExp(`(<[^>]+\\bid="${escapedId}"[^>]*>)`, "g");
+    return currentSvg.replace(regionPattern, (tag) => tag.replace(/\bfill="[^"]*"/, `fill="${fill}"`));
+  }, svg);
 }
 
 function colorizeBodySvg(

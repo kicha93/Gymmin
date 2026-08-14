@@ -14,6 +14,7 @@ Gymmin is a local-only Expo/React Native workout app created and maintained by *
 - Contact and bug reports prepare `mailto:` messages locally for `kontakt@gymmin.app`; only the user can send them from the system email client, with clipboard fallback when no client is available;
 - workout CSV/XLSX export and backup work offline;
 - voluntary support only opens [Buy Me a Coffee](https://buymeacoffee.com/atomicjumpr) and grants no product benefits.
+- optional [Advanced Muscle Mode](docs/advanced-muscle-mode.md) adds local, generated subdivision profiles to Exercise Detail without changing the standard catalog or weekly-volume semantics.
 
 The released runtime opens `gymmin.local.v1.*` directly. Pre-release `gymmin.account.*` test namespaces are ignored and never merged into product data; they cannot block startup.
 

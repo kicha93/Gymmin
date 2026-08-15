@@ -217,6 +217,7 @@ export function ExerciseDetailScreen({
                   <HumanMuscleFigure
                     advancedRegionFills={advancedRegionFills}
                     fill={fill}
+                    language={language}
                     side={muscleSide}
                     style={styles.exerciseDetailHumanFigure}
                   />

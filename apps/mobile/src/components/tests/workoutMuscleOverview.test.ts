@@ -91,7 +91,14 @@ describe("workout muscle overview", () => {
 
     expect(detailedIds).toContain("chest.clavicular");
     expect(detailedIds).toContain("chest.sternocostal");
-    expect(overview.regionLevels.left_pectoralis_major).toBeGreaterThan(0);
+    expect(overview.regionLevels.advanced_left_chest_sternocostal).toBeGreaterThan(0);
+    expect(overview.categories.flatMap((category) => category.items)).toContainEqual(
+      expect.objectContaining({
+        anatomyRegionIds: expect.arrayContaining(["advanced_left_chest_sternocostal"]),
+        isAnatomyVisible: true,
+        subdivisionId: "chest.sternocostal"
+      })
+    );
     expect(overview.categories.reduce((sum, category) => sum + category.count, 0)).toBeGreaterThan(9);
   });
 

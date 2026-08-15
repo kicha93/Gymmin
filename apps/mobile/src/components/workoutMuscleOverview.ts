@@ -24,7 +24,9 @@ export type WorkoutMuscleLegendCategory = {
 };
 
 export type WorkoutAdvancedMuscleLegendItem = {
+  anatomyRegionIds: readonly string[];
   id: string;
+  isAnatomyVisible: boolean;
   muscle?: MuscleKey;
   score: InfluenceScore;
   subdivisionId?: AdvancedMuscleSubdivisionId;
@@ -130,7 +132,9 @@ export function getWorkoutAdvancedMuscleOverview(
   );
   const detailedParents = new Set(sideSubdivisions.map((subdivision) => subdivision.standardParentMuscle));
   const items: WorkoutAdvancedMuscleLegendItem[] = sideSubdivisions.map((subdivision) => ({
+    anatomyRegionIds: subdivision.anatomyRegionIds,
     id: subdivision.id,
+    isAnatomyVisible: subdivision.isAnatomyVisible,
     score: subdivisionLevels.get(subdivision.id) ?? 0,
     subdivisionId: subdivision.id
   }));
@@ -139,7 +143,9 @@ export function getWorkoutAdvancedMuscleOverview(
     const fallbackLevel = fallbackLevels.get(muscle) ?? 0;
     if (!detailedParents.has(muscle) || fallbackLevel > 0) {
       items.push({
+        anatomyRegionIds: [],
         id: `muscle:${muscle}`,
+        isAnatomyVisible: false,
         muscle,
         score: fallbackLevel || standardUsage.get(muscle) || 0
       });

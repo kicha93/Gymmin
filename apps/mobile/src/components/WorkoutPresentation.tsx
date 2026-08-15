@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Modal, Pressable, Text, View } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 import { SvgXml } from "react-native-svg";
 
@@ -14,6 +14,7 @@ import {
   getAdvancedDisplayFamily,
   getAdvancedMuscleSubdivision
 } from "../domain/advancedMuscles";
+import { addAdvancedAnatomyOverlays } from "../domain/advancedAnatomyOverlays";
 import {
   findExerciseById,
   findExerciseByName,
@@ -98,12 +99,20 @@ const workoutMuscleLegendLabels: Record<InfluenceScore, TranslationKey> = {
 type MuscleEngagementLegendRowProps = {
   category: {
     count: number;
-    items: Array<{ id: string; label: string }>;
+    items: Array<{
+      anatomyRegionIds: readonly string[];
+      id: string;
+      isAnatomyVisible: boolean;
+      label: string;
+      score: InfluenceScore;
+    }>;
     ratio: number;
     score: InfluenceScore;
   };
   expanded: boolean;
+  focusedItemId: string | null;
   language: LanguageCode;
+  onFocusItem: (itemId: string) => void;
   onPress: () => void;
   theme: Theme;
 };
@@ -111,7 +120,9 @@ type MuscleEngagementLegendRowProps = {
 function MuscleEngagementLegendRow({
   category,
   expanded,
+  focusedItemId,
   language,
+  onFocusItem,
   onPress,
   theme
 }: MuscleEngagementLegendRowProps) {
@@ -146,14 +157,41 @@ function MuscleEngagementLegendRow({
       </Pressable>
       {expanded && category.items.length ? (
         <View style={[styles.workoutMuscleLegendDetails, { borderTopColor: theme.border }]}>
-          {category.items.map((item) => (
-            <View key={item.id} style={styles.workoutMuscleLegendMuscleRow}>
-              <View style={[styles.workoutMuscleLegendMuscleDot, { backgroundColor: color }]} />
-              <Text style={[styles.workoutMuscleLegendMuscleText, { color: theme.text }]}>
-                {item.label}
-              </Text>
-            </View>
-          ))}
+          {category.items.map((item) => {
+            const canFocus = item.isAnatomyVisible && item.anatomyRegionIds.length > 0;
+            const selected = focusedItemId === item.id;
+            const content = (
+              <>
+                <View style={[styles.workoutMuscleLegendMuscleDot, { backgroundColor: color }]} />
+                <Text style={[styles.workoutMuscleLegendMuscleText, { color: theme.text }]}>
+                  {item.label}
+                </Text>
+                {canFocus ? (
+                  <Ionicons color={selected ? theme.primary : theme.muted} name="body-outline" size={15} />
+                ) : null}
+              </>
+            );
+
+            return canFocus ? (
+              <Pressable
+                key={item.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => onFocusItem(item.id)}
+                style={[
+                  styles.workoutMuscleLegendMuscleRow,
+                  styles.workoutMuscleLegendMusclePressable,
+                  selected ? { backgroundColor: `${theme.primary}12`, borderColor: theme.primary } : null
+                ]}
+              >
+                {content}
+              </Pressable>
+            ) : (
+              <View key={item.id} style={styles.workoutMuscleLegendMuscleRow}>
+                {content}
+              </View>
+            );
+          })}
         </View>
       ) : null}
     </View>
@@ -168,6 +206,7 @@ export function WorkoutMuscleOverviewContent({
 }: WorkoutMuscleOverviewProps) {
   const [side, setSide] = useState<WorkoutMuscleSide>("front");
   const [expandedScore, setExpandedScore] = useState<InfluenceScore | null>(null);
+  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const usage = useMemo(() => getWorkoutMuscleUsage(workout), [workout]);
   const advancedOverview = useMemo(
     () => advancedMuscleMode ? getWorkoutAdvancedMuscleOverview(workout, side) : null,
@@ -182,15 +221,21 @@ export function WorkoutMuscleOverviewContent({
             const subdivision = getAdvancedMuscleSubdivision(item.subdivisionId);
             const family = subdivision ? getAdvancedDisplayFamily(subdivision.displayFamilyId) : undefined;
             return {
+              anatomyRegionIds: subdivision?.anatomyRegionIds ?? [],
               id: item.id,
+              isAnatomyVisible: subdivision?.isAnatomyVisible ?? false,
               label: subdivision
                 ? `${family?.names[language] ?? muscleLabels[language][subdivision.standardParentMuscle]} — ${subdivision.names[language]}`
-                : item.id
+                : item.id,
+              score: item.score
             };
           }
           return {
+            anatomyRegionIds: [],
             id: item.id,
-            label: item.muscle ? muscleLabels[language][item.muscle] : item.id
+            isAnatomyVisible: false,
+            label: item.muscle ? muscleLabels[language][item.muscle] : item.id,
+            score: item.score
           };
         })
       }));
@@ -198,25 +243,49 @@ export function WorkoutMuscleOverviewContent({
 
     return getWorkoutMuscleLegendCategories(usage, side).map((category) => ({
       ...category,
-      items: category.muscles.map((muscle) => ({ id: muscle, label: muscleLabels[language][muscle] }))
+      items: category.muscles.map((muscle) => ({
+        anatomyRegionIds: [],
+        id: muscle,
+        isAnatomyVisible: false,
+        label: muscleLabels[language][muscle],
+        score: category.score
+      }))
     }));
   }, [advancedOverview, language, side, usage]);
+  const focusedItem = useMemo(
+    () => legendCategories.flatMap((category) => category.items).find((item) => item.id === focusedItemId),
+    [focusedItemId, legendCategories]
+  );
+  const highlightedAdvancedRegionIds = useMemo(
+    () => focusedItem ? new Set(focusedItem.anatomyRegionIds) : undefined,
+    [focusedItem]
+  );
   const advancedRegionFills = useMemo(
     () => advancedOverview
       ? Object.fromEntries(
-          Object.entries(advancedOverview.regionLevels).map(([regionId, level]) => [regionId, getMuscleImpactColor(level)])
+          Object.entries(advancedOverview.regionLevels).map(([regionId, level]) => [
+            regionId,
+            focusedItem
+              ? getMuscleImpactColor(focusedItem.anatomyRegionIds.includes(regionId) ? focusedItem.score : 0)
+              : getMuscleImpactColor(level)
+          ])
         )
       : undefined,
-    [advancedOverview]
+    [advancedOverview, focusedItem]
   );
 
+  useEffect(() => {
+    if (!advancedMuscleMode) setFocusedItemId(null);
+  }, [advancedMuscleMode]);
+
   function fill(muscle: MuscleKey) {
-    return getMuscleImpactColor(usage[muscle]);
+    return getMuscleImpactColor(focusedItem ? 0 : usage[muscle]);
   }
 
   function selectSide(nextSide: WorkoutMuscleSide) {
     setSide(nextSide);
     setExpandedScore(null);
+    setFocusedItemId(null);
   }
 
   return (
@@ -225,11 +294,13 @@ export function WorkoutMuscleOverviewContent({
         <HumanMuscleFigure
           advancedRegionFills={advancedRegionFills}
           fill={fill}
+          highlightedAdvancedRegionIds={highlightedAdvancedRegionIds}
+          language={language}
           side={side}
           style={styles.muscleOverviewSingleFigure}
         />
       </View>
-      <View style={styles.exerciseDetailSideToggle}>
+      <View style={[styles.weeklyMuscleVolumeSegments, { backgroundColor: theme.segment }]}>
         {(["front", "back"] as const).map((option) => {
           const selected = side === option;
 
@@ -237,16 +308,14 @@ export function WorkoutMuscleOverviewContent({
             <Pressable
               key={option}
               accessibilityRole="button"
+              accessibilityState={{ selected }}
               style={[
-                styles.exerciseDetailSideButton,
-                {
-                  backgroundColor: selected ? theme.primary : theme.card,
-                  borderColor: selected ? theme.primary : theme.border
-                }
+                styles.weeklyMuscleVolumeSegment,
+                selected ? { backgroundColor: theme.primary } : null
               ]}
               onPress={() => selectSide(option)}
             >
-              <Text style={[styles.exerciseDetailSideButtonText, { color: selected ? theme.white : theme.text }]}>
+              <Text style={[styles.weeklyMuscleVolumeSegmentText, { color: selected ? theme.white : theme.text }]}>
                 {translate(language, option === "front" ? "bodyFront" : "bodyBack")}
               </Text>
             </Pressable>
@@ -259,8 +328,13 @@ export function WorkoutMuscleOverviewContent({
             key={category.score}
             category={category}
             expanded={expandedScore === category.score}
+            focusedItemId={focusedItemId}
             language={language}
-            onPress={() => setExpandedScore((current) => toggleWorkoutMuscleLegendScore(current, category.score))}
+            onFocusItem={(itemId) => setFocusedItemId((current) => current === itemId ? null : itemId)}
+            onPress={() => {
+              setExpandedScore((current) => toggleWorkoutMuscleLegendScore(current, category.score));
+              setFocusedItemId(null);
+            }}
             theme={theme}
           />
         ))}
@@ -410,31 +484,82 @@ export function ExerciseSummaryRow({
 type HumanMuscleFigureProps = {
   advancedRegionFills?: Readonly<Record<string, string>>;
   fill: (muscle: MuscleKey) => string;
+  highlightedAdvancedRegionIds?: ReadonlySet<string>;
+  language: LanguageCode;
   side: "front" | "back";
   style?: StyleProp<ViewStyle>;
 };
 
-export function HumanMuscleFigure({ advancedRegionFills, fill, side, style }: HumanMuscleFigureProps) {
+export function HumanMuscleFigure({
+  advancedRegionFills,
+  fill,
+  highlightedAdvancedRegionIds,
+  language,
+  side,
+  style
+}: HumanMuscleFigureProps) {
+  const [previewOpen, setPreviewOpen] = useState(false);
   const svgSource = side === "front" ? frontBodySvg : backBodySvg;
   const regionMap = side === "front" ? frontBodyRegionMap : backBodyRegionMap;
   const xml = useMemo(
-    () => colorizeAdvancedRegions(colorizeBodySvg(svgSource, regionMap, fill), advancedRegionFills),
-    [advancedRegionFills, fill, regionMap, svgSource]
+    () => {
+      const bodySvg = advancedRegionFills ? addAdvancedAnatomyOverlays(svgSource, side) : svgSource;
+      return colorizeAdvancedRegions(
+        colorizeBodySvg(bodySvg, regionMap, fill),
+        advancedRegionFills,
+        highlightedAdvancedRegionIds
+      );
+    },
+    [advancedRegionFills, fill, highlightedAdvancedRegionIds, regionMap, side, svgSource]
   );
 
+  const accessibilityLabel = `${translate(language, "enlargeBodyFigure")}: ${translate(
+    language,
+    side === "front" ? "bodyFront" : "bodyBack"
+  )}`;
+
   return (
-    <View style={[styles.humanMuscleFigure, style]}>
-      <SvgXml height="100%" width="100%" xml={xml} />
-    </View>
+    <>
+      <Pressable
+        accessibilityLabel={accessibilityLabel}
+        accessibilityRole="button"
+        onPress={() => setPreviewOpen(true)}
+        style={[styles.humanMuscleFigure, style]}
+      >
+        <SvgXml height="100%" width="100%" xml={xml} />
+      </Pressable>
+      <Modal animationType="fade" transparent visible={previewOpen} onRequestClose={() => setPreviewOpen(false)}>
+        <Pressable
+          accessibilityLabel={translate(language, "close")}
+          accessibilityRole="button"
+          onPress={() => setPreviewOpen(false)}
+          style={styles.achievementPreviewBackdrop}
+        >
+          <View style={styles.bodyFigurePreviewSurface}>
+            <View style={[styles.humanMuscleFigure, styles.bodyFigurePreviewFigure]}>
+              <SvgXml height="100%" width="100%" xml={xml} />
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
-function colorizeAdvancedRegions(svg: string, regionFills?: Readonly<Record<string, string>>) {
+function colorizeAdvancedRegions(
+  svg: string,
+  regionFills?: Readonly<Record<string, string>>,
+  highlightedRegionIds?: ReadonlySet<string>
+) {
   if (!regionFills) return svg;
   return Object.entries(regionFills).reduce((currentSvg, [regionId, fill]) => {
     const escapedId = regionId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regionPattern = new RegExp(`(<[^>]+\\bid="${escapedId}"[^>]*>)`, "g");
-    return currentSvg.replace(regionPattern, (tag) => tag.replace(/\bfill="[^"]*"/, `fill="${fill}"`));
+    return currentSvg.replace(regionPattern, (tag) => {
+      const colorized = tag.replace(/\bfill="[^"]*"/, `fill="${fill}"`);
+      if (!highlightedRegionIds?.has(regionId)) return colorized;
+      return colorized.replace(/\s*\/?>$/, ' stroke="#fffdf8" stroke-width="8" stroke-linejoin="round" />');
+    });
   }, svg);
 }
 

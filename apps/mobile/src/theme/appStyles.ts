@@ -1049,6 +1049,22 @@ export const styles = StyleSheet.create({
     maxWidth: "100%",
     width: 192
   },
+  bodyFigurePreviewSurface: {
+    alignItems: "center",
+    backgroundColor: "#fffdf8",
+    borderRadius: 20,
+    height: "86%",
+    justifyContent: "center",
+    maxHeight: 760,
+    maxWidth: 480,
+    padding: 16,
+    width: "92%"
+  },
+  bodyFigurePreviewFigure: {
+    height: "100%",
+    maxWidth: "100%",
+    width: "100%"
+  },
   workoutMuscleLegendList: {
     gap: 8
   },
@@ -1113,6 +1129,14 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 8
+  },
+  workoutMuscleLegendMusclePressable: {
+    borderColor: "transparent",
+    borderRadius: 8,
+    borderWidth: 1,
+    marginHorizontal: -6,
+    paddingHorizontal: 6,
+    paddingVertical: 5
   },
   workoutMuscleLegendMuscleDot: {
     borderRadius: 3,
@@ -4117,6 +4141,61 @@ export const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     fontSize: 9,
     textAlign: "center"
+  },
+  weeklyMuscleAdvancedToggle: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: 3,
+    minHeight: 28,
+    paddingRight: 4
+  },
+  weeklyMuscleAdvancedToggleText: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 9
+  },
+  weeklyMuscleAdvancedList: {
+    borderLeftWidth: 2,
+    gap: 7,
+    marginBottom: 3,
+    marginLeft: 4,
+    paddingLeft: 8,
+    paddingTop: 2
+  },
+  weeklyMuscleAdvancedItem: {
+    gap: 3
+  },
+  weeklyMuscleAdvancedItemTop: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 5,
+    justifyContent: "space-between"
+  },
+  weeklyMuscleAdvancedName: {
+    flex: 1,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 9,
+    lineHeight: 12
+  },
+  weeklyMuscleAdvancedShare: {
+    flexShrink: 0,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 8
+  },
+  weeklyMuscleAdvancedTrack: {
+    borderRadius: 3,
+    height: 4,
+    overflow: "hidden"
+  },
+  weeklyMuscleAdvancedFill: {
+    borderRadius: 3,
+    height: "100%"
+  },
+  weeklyMuscleAdvancedHint: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 8,
+    lineHeight: 11,
+    marginTop: 2
   },
   weeklyMuscleVolumeFigureWrap: {
     alignItems: "center",

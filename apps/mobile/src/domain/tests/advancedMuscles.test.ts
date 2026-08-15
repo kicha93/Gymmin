@@ -63,7 +63,7 @@ describe("advanced muscle taxonomy", () => {
   });
 
   it("filters visible advanced anatomy regions by front and back", () => {
-    expect(Object.keys(getAdvancedAnatomyRegionLevels("bench-press-barbell-bench-press-76", "front"))).toContain("left_pectoralis_major");
-    expect(Object.keys(getAdvancedAnatomyRegionLevels("bench-press-barbell-bench-press-76", "back"))).not.toContain("left_pectoralis_major");
+    expect(Object.keys(getAdvancedAnatomyRegionLevels("bench-press-barbell-bench-press-76", "front"))).toContain("advanced_left_chest_sternocostal");
+    expect(Object.keys(getAdvancedAnatomyRegionLevels("bench-press-barbell-bench-press-76", "back"))).not.toContain("advanced_left_chest_sternocostal");
   });
 });

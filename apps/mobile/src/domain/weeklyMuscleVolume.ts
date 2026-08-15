@@ -1,11 +1,20 @@
 import { resolveExerciseId, type Exercise, type MuscleKey } from "./exercises";
+import {
+  getAdvancedExerciseProfile,
+  getAdvancedMuscleSubdivision,
+  type AdvancedMuscleSubdivisionId
+} from "./advancedMuscles";
 import { exerciseCatalogDataSource } from "./exerciseCatalogDataSource";
 import { groupWorkoutBuilderSteps } from "./workoutEditor";
 import type { SavedWorkout } from "./savedWorkouts";
 import { getCurrentWeekRange, normalizeWeeklyPlanSettings, type WeeklyPlanSettings } from "./weeklyPlan";
 import type { WorkoutSession, WorkoutSessionEntry } from "./workoutSessions";
 import type { WorkoutDraft } from "./workouts";
-import { getWeeklyVolumeRoleForMuscles, getWeeklyVolumeRoleWeight } from "./weeklyVolumeClassifier";
+import {
+  getWeeklyVolumeRole,
+  getWeeklyVolumeRoleForMuscles,
+  getWeeklyVolumeRoleWeight
+} from "./weeklyVolumeClassifier";
 
 export type WeeklyMuscleVolumeMode = "completed" | "projected";
 export type WeeklyMuscleVolumeSide = "front" | "back";
@@ -31,7 +40,17 @@ export type WeeklyMuscleVolumeGroup = {
   sides: readonly WeeklyMuscleVolumeSide[];
 };
 
+export type WeeklyAdvancedMuscleExposure = {
+  completedExposure: number;
+  id: string;
+  muscle?: MuscleKey;
+  projectedExposure: number;
+  sides: readonly WeeklyMuscleVolumeSide[];
+  subdivisionId?: AdvancedMuscleSubdivisionId;
+};
+
 export type WeeklyMuscleVolumeEntry = WeeklyMuscleVolumeGroup & {
+  advancedExposure: WeeklyAdvancedMuscleExposure[];
   completedSets: number;
   projectedSets: number;
   completedStatus: WeeklyVolumeBand;
@@ -105,8 +124,57 @@ function emptyVolumeMap() {
   );
 }
 
+type AdvancedExposureMap = Map<WeeklyMuscleVolumeGroupId, Map<string, number>>;
+
+function emptyAdvancedExposureMap(): AdvancedExposureMap {
+  return new Map(weeklyMuscleVolumeGroups.map((group) => [group.id, new Map()]));
+}
+
+function addAdvancedExposure(
+  totals: AdvancedExposureMap,
+  groupId: WeeklyMuscleVolumeGroupId,
+  id: string,
+  contribution: number
+) {
+  if (contribution <= 0) return;
+  const groupTotals = totals.get(groupId);
+  if (!groupTotals) return;
+  groupTotals.set(id, (groupTotals.get(id) ?? 0) + contribution);
+}
+
+function addExerciseAdvancedExposure(
+  totals: AdvancedExposureMap,
+  exercise: Exercise
+) {
+  const mappedParents = new Map(
+    (getAdvancedExerciseProfile(exercise.id)?.parents ?? []).map((parent) => [parent.standardParentMuscle, parent])
+  );
+
+  for (const group of weeklyMuscleVolumeGroups) {
+    for (const muscle of group.muscleKeys) {
+      const roleWeight = getWeeklyVolumeRoleWeight(getWeeklyVolumeRole(exercise, muscle));
+      if (roleWeight <= 0) continue;
+      const parent = mappedParents.get(muscle);
+      if (parent?.status === "mapped") {
+        for (const [subdivisionId, level] of parent.engagement) {
+          // The 0-5 advanced level describes relative involvement. Multiplying
+          // it by the already-approved weekly role weight creates a comparison
+          // score, not a new set count or muscle-specific recommendation.
+          addAdvancedExposure(totals, group.id, subdivisionId, roleWeight * (level / 5));
+        }
+      } else {
+        // Some useful structures intentionally have no subdivision in v1
+        // (for example latissimus dorsi). Keep their exposure visible instead
+        // of making the detailed view imply that they did no work.
+        addAdvancedExposure(totals, group.id, `muscle:${muscle}`, roleWeight);
+      }
+    }
+  }
+}
+
 function addExerciseSet(
   totals: Map<WeeklyMuscleVolumeGroupId, number>,
+  advancedTotals: AdvancedExposureMap,
   exercise: Exercise
 ) {
   for (const group of weeklyMuscleVolumeGroups) {
@@ -120,6 +188,7 @@ function addExerciseSet(
       totals.set(group.id, (totals.get(group.id) ?? 0) + contribution);
     }
   }
+  addExerciseAdvancedExposure(advancedTotals, exercise);
 }
 
 function parseSetCount(value: string) {
@@ -138,6 +207,7 @@ function resolveFromMap(exerciseId: string | undefined, exerciseMap: Map<string,
 
 function addPlannedWorkoutVolume(
   totals: Map<WeeklyMuscleVolumeGroupId, number>,
+  advancedTotals: AdvancedExposureMap,
   draft: WorkoutDraft,
   exerciseMap: Map<string, Exercise>
 ) {
@@ -150,7 +220,7 @@ function addPlannedWorkoutVolume(
         const exercise = resolveFromMap(element.exerciseId, exerciseMap);
         if (!exercise) continue;
         for (let iteration = 0; iteration < setCount; iteration += 1) {
-          addExerciseSet(totals, exercise);
+          addExerciseSet(totals, advancedTotals, exercise);
         }
       }
     }
@@ -166,13 +236,14 @@ export function isWorkoutSessionEntryActuallyCompleted(entry: WorkoutSessionEntr
 
 function addCompletedSessionVolume(
   totals: Map<WeeklyMuscleVolumeGroupId, number>,
+  advancedTotals: AdvancedExposureMap,
   session: WorkoutSession,
   exerciseMap: Map<string, Exercise>
 ) {
   for (const entry of session.entries) {
     if (!isWorkoutSessionEntryActuallyCompleted(entry)) continue;
     const exercise = resolveFromMap(entry.exerciseId, exerciseMap);
-    if (exercise) addExerciseSet(totals, exercise);
+    if (exercise) addExerciseSet(totals, advancedTotals, exercise);
   }
 }
 
@@ -200,6 +271,8 @@ export function buildWeeklyMuscleVolumeSummary({
   const exerciseMap = buildExerciseMap(exercises);
   const completedTotals = emptyVolumeMap();
   const projectedTotals = emptyVolumeMap();
+  const completedAdvancedTotals = emptyAdvancedExposureMap();
+  const projectedAdvancedTotals = emptyAdvancedExposureMap();
   const currentWeekSessions = sessions.filter((session) => {
     if (session.status !== "completed" || session.deletedAt) return false;
     const startedAt = new Date(session.startedAt);
@@ -207,8 +280,8 @@ export function buildWeeklyMuscleVolumeSummary({
   });
 
   for (const session of currentWeekSessions) {
-    addCompletedSessionVolume(completedTotals, session, exerciseMap);
-    addCompletedSessionVolume(projectedTotals, session, exerciseMap);
+    addCompletedSessionVolume(completedTotals, completedAdvancedTotals, session, exerciseMap);
+    addCompletedSessionVolume(projectedTotals, projectedAdvancedTotals, session, exerciseMap);
   }
 
   const workoutById = new Map(workouts.map((workout) => [workout.id, workout]));
@@ -228,14 +301,44 @@ export function buildWeeklyMuscleVolumeSummary({
       consumedByWorkoutId.set(item.workoutId, consumed + 1);
       continue;
     }
-    addPlannedWorkoutVolume(projectedTotals, workout.draft, exerciseMap);
+    addPlannedWorkoutVolume(projectedTotals, projectedAdvancedTotals, workout.draft, exerciseMap);
   }
 
   const entries = weeklyMuscleVolumeGroups.map((group) => {
     const completedSets = completedTotals.get(group.id) ?? 0;
     const projectedSets = projectedTotals.get(group.id) ?? 0;
+    const completedAdvanced = completedAdvancedTotals.get(group.id) ?? new Map<string, number>();
+    const projectedAdvanced = projectedAdvancedTotals.get(group.id) ?? new Map<string, number>();
+    const advancedIds = new Set([...completedAdvanced.keys(), ...projectedAdvanced.keys()]);
+    const advancedExposure = [...advancedIds].map((id): WeeklyAdvancedMuscleExposure => {
+      if (id.startsWith("muscle:")) {
+        const muscle = id.slice("muscle:".length) as MuscleKey;
+        return {
+          completedExposure: completedAdvanced.get(id) ?? 0,
+          id,
+          muscle,
+          projectedExposure: projectedAdvanced.get(id) ?? 0,
+          sides: group.sides
+        };
+      }
+      const subdivisionId = id as AdvancedMuscleSubdivisionId;
+      const subdivision = getAdvancedMuscleSubdivision(subdivisionId);
+      const sides: readonly WeeklyMuscleVolumeSide[] = subdivision?.side === "both"
+        ? ["front", "back"]
+        : subdivision?.side
+          ? [subdivision.side]
+          : group.sides;
+      return {
+        completedExposure: completedAdvanced.get(id) ?? 0,
+        id,
+        projectedExposure: projectedAdvanced.get(id) ?? 0,
+        sides,
+        subdivisionId
+      };
+    });
     return {
       ...group,
+      advancedExposure,
       completedSets,
       projectedSets,
       completedStatus: getWeeklyVolumeBand(completedSets),

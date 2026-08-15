@@ -57,8 +57,8 @@ export function ExerciseMuscleModal({ language, onClose, onShowDetails, step, t,
             >
               {muscleImpact ? <MuscleImpactTextGroups impact={muscleImpact} language={language} t={t} theme={theme} /> : null}
               <View style={styles.muscleOverviewFigures}>
-                <HumanMuscleFigure fill={fill} side="front" />
-                <HumanMuscleFigure fill={fill} side="back" />
+                <HumanMuscleFigure fill={fill} language={language} side="front" />
+                <HumanMuscleFigure fill={fill} language={language} side="back" />
               </View>
             </ScrollView>
           ) : (

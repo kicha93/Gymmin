@@ -46,11 +46,15 @@ Jawne wyjątki po researchu: Bar Muscle-up, Muscle-up (progression) i Ring Muscl
 
 ## Ograniczenia anatomy
 
-Sylwetka jest uproszczonym widokiem powierzchniowym. Engine obsługuje kolory konkretnych regionów SVG, ale kilka podgrup współdzieli jeden czytelny na telefonie kształt. Lista nadal je rozróżnia, a figura pokazuje najwyższy poziom widocznych podgrup w regionie. `isAnatomyVisible: false` oznacza ograniczenie wizualizacji, a nie brak udziału danego mięśnia. Głębokich struktur nie wizualizujemy w sposób sugerujący fałszywą precyzję.
+Sylwetka jest uproszczonym widokiem powierzchniowym. W trybie advanced istniejący SVG otrzymuje deterministyczne nakładki dzielące czytelne na telefonie regiony: klatkę, przednie/boczne barki, czworogłowe, pośladki, łydki oraz środkową/dolną część kapturowego. Bazowa anatomia i tryb standardowy pozostają bez zmian.
 
-## Przyszła tygodniowa objętość
+W rozwiniętej legendzie treningu można dotknąć podgrupy posiadającej własny widoczny region. Figura wyszarza wtedy pozostałe obszary, a wybrany pozostawia w kolorze i obrysowuje. Ponowne dotknięcie wyłącza skupienie. Kilka podgrup nadal może współdzielić jeden czytelny kształt, a niewidoczne powierzchniowo struktury pozostają wyłącznie na liście. `isAnatomyVisible: false` oznacza ograniczenie wizualizacji, a nie brak udziału danego mięśnia. Głębokich struktur, osobnych głów bicepsa i tricepsa ani równoległobocznych nie wizualizujemy w sposób sugerujący fałszywą precyzję.
 
-Canonical subdivision IDs pozwolą później liczyć fractional weekly sets per subdivision. Obecny `weeklyMuscleVolume` celowo nadal korzysta wyłącznie z high-level engagement.
+## Tygodniowa analiza podgrup
+
+Główny wynik `weeklyMuscleVolume` nadal korzysta wyłącznie z zatwierdzonych high-level effective/fractional sets i neutralnych pasm V2. Po włączeniu trybu zaawansowanego użytkownik może rozwinąć grupę na HomeScreen i zobaczyć względny rozkład ekspozycji między jej podgrupami. Wynik wykorzystuje statyczny poziom 0–5 podgrupy oraz zatwierdzoną rolę weekly-volume parenta (`direct = 1`, `indirect = 0.5`, stabilizacja = 0).
+
+Paski podgrup są normalizowane względem najsilniej eksponowanej podgrupy w danej grupie i tygodniu. Nie są dodatkowymi seriami, targetami, zaleceniami ani muscle-specific optimum. Struktury świadomie niepodzielone w v1, na przykład latissimus dorsi, pozostają widoczne jako high-level element zamiast znikać z analizy.
 
 ## Wybrane źródła
 

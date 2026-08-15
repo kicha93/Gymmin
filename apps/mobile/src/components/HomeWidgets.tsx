@@ -9,7 +9,8 @@ import {
   toggleWeeklyMuscleGroup,
   type WeeklyMuscleVolumeLayout
 } from "./weeklyMuscleVolumeLayout";
-import type { MuscleKey } from "../domain/exercises";
+import { getAdvancedMuscleSubdivision } from "../domain/advancedMuscles";
+import { muscleLabels, type MuscleKey } from "../domain/exercises";
 import {
   formatWeekRange,
   getCurrentWeekRange,
@@ -120,6 +121,7 @@ export function ActiveWorkoutSessionCard({
 }
 
 type WeeklyPlanHomeCardProps = CommonProps & {
+  advancedMuscleMode: boolean;
   language: LanguageCode;
   onOpenPlan: () => void;
   onOpenWorkout: (workoutId: string) => void;
@@ -235,21 +237,29 @@ function WeeklyMuscleVolumeControls({
 }
 
 type WeeklyMuscleVolumeListProps = CommonProps & {
+  advancedMuscleMode: boolean;
   entries: WeeklyMuscleVolumeEntry[];
+  expandedAdvancedGroups: ReadonlySet<WeeklyMuscleVolumeGroupId>;
   hiddenGroups: ReadonlySet<WeeklyMuscleVolumeGroupId>;
   language: LanguageCode;
   mode: WeeklyMuscleVolumeMode;
+  onToggleAdvancedGroup: (group: WeeklyMuscleVolumeGroupId) => void;
   onToggleGroup: (group: WeeklyMuscleVolumeGroupId) => void;
   rowMetaStacked: boolean;
+  side: WeeklyMuscleVolumeSide;
 };
 
 function WeeklyMuscleVolumeList({
+  advancedMuscleMode,
   entries,
+  expandedAdvancedGroups,
   hiddenGroups,
   language,
   mode,
+  onToggleAdvancedGroup,
   onToggleGroup,
   rowMetaStacked,
+  side,
   t,
   theme
 }: WeeklyMuscleVolumeListProps) {
@@ -272,6 +282,16 @@ function WeeklyMuscleVolumeList({
         const isVisible = !hiddenGroups.has(entry.id);
         const color = isVisible ? getVolumeStatusColor(status, theme) : theme.selectedOption;
         const progress = Math.min(100, (value / weeklyVolumeBandThresholds.visualScaleMax) * 100);
+        const advancedItems = entry.advancedExposure
+          .filter((item) => item.sides.includes(side))
+          .map((item) => ({
+            ...item,
+            exposure: mode === "completed" ? item.completedExposure : item.projectedExposure
+          }))
+          .filter((item) => item.exposure > 0)
+          .sort((left, right) => right.exposure - left.exposure);
+        const maxAdvancedExposure = Math.max(0, ...advancedItems.map((item) => item.exposure));
+        const advancedExpanded = expandedAdvancedGroups.has(entry.id);
         return (
           <Pressable
             key={entry.id}
@@ -303,6 +323,55 @@ function WeeklyMuscleVolumeList({
                 {t(weeklyMuscleStatusKeys[status])}
               </Text>
             </View>
+            {advancedMuscleMode && advancedItems.length ? (
+              <>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: advancedExpanded }}
+                  style={styles.weeklyMuscleAdvancedToggle}
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    onToggleAdvancedGroup(entry.id);
+                  }}
+                >
+                  <Text style={[styles.weeklyMuscleAdvancedToggleText, { color: theme.primary }]}>
+                    {t("weeklyMuscleAdvancedSubgroups")}
+                  </Text>
+                  <Ionicons name={advancedExpanded ? "chevron-up" : "chevron-down"} size={14} color={theme.primary} />
+                </Pressable>
+                {advancedExpanded ? (
+                  <View style={[styles.weeklyMuscleAdvancedList, { borderLeftColor: color }]}>
+                    {advancedItems.map((item) => {
+                      const subdivision = item.subdivisionId
+                        ? getAdvancedMuscleSubdivision(item.subdivisionId)
+                        : undefined;
+                      const label = subdivision?.names[language]
+                        ?? (item.muscle ? muscleLabels[language][item.muscle] : item.id);
+                      const relative = maxAdvancedExposure > 0 ? item.exposure / maxAdvancedExposure : 0;
+                      const involvementKey: TranslationKey = relative >= 0.75
+                        ? "weeklyMuscleAdvancedHighShare"
+                        : relative >= 0.4
+                          ? "weeklyMuscleAdvancedModerateShare"
+                          : "weeklyMuscleAdvancedLowShare";
+                      return (
+                        <View key={item.id} style={styles.weeklyMuscleAdvancedItem}>
+                          <View style={styles.weeklyMuscleAdvancedItemTop}>
+                            <Text numberOfLines={2} style={[styles.weeklyMuscleAdvancedName, { color: theme.text }]}>{label}</Text>
+                            <Text numberOfLines={1} style={[styles.weeklyMuscleAdvancedShare, { color: theme.muted }]}>{t(involvementKey)}</Text>
+                          </View>
+                          <View style={[styles.weeklyMuscleAdvancedTrack, { backgroundColor: theme.secondaryBand }]}>
+                            <View style={[styles.weeklyMuscleAdvancedFill, { backgroundColor: color, width: `${relative * 100}%` }]} />
+                          </View>
+                        </View>
+                      );
+                    })}
+                    <Text style={[styles.weeklyMuscleAdvancedHint, { color: theme.muted }]}>
+                      {t("weeklyMuscleAdvancedRelativeHint")}
+                    </Text>
+                  </View>
+                ) : null}
+              </>
+            ) : null}
           </Pressable>
         );
       })}
@@ -313,12 +382,13 @@ function WeeklyMuscleVolumeList({
 type WeeklyMuscleAnatomyProps = CommonProps & {
   entryByMuscle: Map<MuscleKey, WeeklyMuscleVolumeEntry>;
   hiddenGroups: ReadonlySet<WeeklyMuscleVolumeGroupId>;
+  language: LanguageCode;
   layout: WeeklyMuscleVolumeLayout;
   mode: WeeklyMuscleVolumeMode;
   side: WeeklyMuscleVolumeSide;
 };
 
-function WeeklyMuscleAnatomy({ entryByMuscle, hiddenGroups, layout, mode, side, theme }: WeeklyMuscleAnatomyProps) {
+function WeeklyMuscleAnatomy({ entryByMuscle, hiddenGroups, language, layout, mode, side, theme }: WeeklyMuscleAnatomyProps) {
   return (
     <View
       style={[
@@ -327,6 +397,7 @@ function WeeklyMuscleAnatomy({ entryByMuscle, hiddenGroups, layout, mode, side, 
       ]}
     >
       <HumanMuscleFigure
+        language={language}
         side={side}
         style={{ height: layout.anatomyHeight, maxWidth: "100%", width: layout.anatomyWidth - 4 }}
         fill={(muscle) => {
@@ -342,6 +413,7 @@ function WeeklyMuscleAnatomy({ entryByMuscle, hiddenGroups, layout, mode, side, 
 }
 
 export function WeeklyPlanHomeCard({
+  advancedMuscleMode,
   language,
   onOpenPlan,
   onOpenWorkout,
@@ -357,6 +429,7 @@ export function WeeklyPlanHomeCard({
   const [volumeMode, setVolumeMode] = useState<WeeklyMuscleVolumeMode>("completed");
   const [volumeSide, setVolumeSide] = useState<WeeklyMuscleVolumeSide>("front");
   const [hiddenVolumeGroups, setHiddenVolumeGroups] = useState<Set<WeeklyMuscleVolumeGroupId>>(() => new Set());
+  const [expandedAdvancedGroups, setExpandedAdvancedGroups] = useState<Set<WeeklyMuscleVolumeGroupId>>(() => new Set());
   const volumeLayout = getWeeklyMuscleVolumeLayout(windowWidth);
   const entryByMuscle = useMemo(() => {
     const map = new Map<MuscleKey, WeeklyMuscleVolumeEntry>();
@@ -490,6 +563,7 @@ export function WeeklyPlanHomeCard({
                 >
                   <HumanMuscleFigure
                     fill={() => theme.secondaryBand}
+                    language={language}
                     side={volumeSide}
                     style={{ height: volumeLayout.anatomyHeight, maxWidth: "100%", width: volumeLayout.anatomyWidth - 4 }}
                   />
@@ -498,18 +572,23 @@ export function WeeklyPlanHomeCard({
             ) : (
               <View style={styles.weeklyMuscleVolumeDashboard}>
                 <WeeklyMuscleVolumeList
+                  advancedMuscleMode={advancedMuscleMode}
                   entries={visibleVolumeEntries}
+                  expandedAdvancedGroups={expandedAdvancedGroups}
                   hiddenGroups={hiddenVolumeGroups}
                   language={language}
                   mode={volumeMode}
+                  onToggleAdvancedGroup={(group) => setExpandedAdvancedGroups((current) => toggleWeeklyMuscleGroup(current, group))}
                   onToggleGroup={(group) => setHiddenVolumeGroups((current) => toggleWeeklyMuscleGroup(current, group))}
                   rowMetaStacked={volumeLayout.rowMetaStacked}
+                  side={volumeSide}
                   t={t}
                   theme={theme}
                 />
                 <WeeklyMuscleAnatomy
                   entryByMuscle={entryByMuscle}
                   hiddenGroups={hiddenVolumeGroups}
+                  language={language}
                   layout={volumeLayout}
                   mode={volumeMode}
                   side={volumeSide}

@@ -158,6 +158,25 @@ describe("weekly muscle volume", () => {
     expect(volume(summary, "shoulders").projectedSets).toBe(2);
   });
 
+  it("derives advanced subgroup exposure from the same planned sets without creating subgroup targets", () => {
+    const barbellBench = findExerciseById("bench-press-barbell-bench-press-76")!;
+    const summary = buildWeeklyMuscleVolumeSummary({
+      exercises: [barbellBench],
+      now: new Date(2026, 7, 12, 12),
+      plan: plan(),
+      sessions: [],
+      workouts: [savedWorkout("workout", draft([barbellBench.id], "4"))]
+    });
+    const chest = summary.entries.find((item) => item.id === "chest")!;
+    const exposure = Object.fromEntries(chest.advancedExposure.map((item) => [item.id, item.projectedExposure]));
+
+    expect(chest.projectedSets).toBe(4);
+    expect(exposure["chest.sternocostal"]).toBe(4);
+    expect(exposure["chest.clavicular"]).toBeCloseTo(2.4);
+    expect(exposure["chest.abdominal"]).toBeCloseTo(2.4);
+    expect(chest.advancedExposure.every((item) => item.completedExposure === 0)).toBe(true);
+  });
+
   it("uses the maximum contribution inside an aggregate group", () => {
     const summary = calculate({ workouts: [savedWorkout("workout", draft(["row"], "4"))] });
     expect(volume(summary, "back").projectedSets).toBe(4);
@@ -248,6 +267,12 @@ describe("weekly muscle volume", () => {
     expect(volume(summary, "back").projectedSets).toBe(4);
     expect(volume(summary, "back").completedStatus).toBe("none");
     expect(volume(summary, "back").projectedStatus).toBe("low");
+    const chestFallback = volume(summary, "chest").advancedExposure.find((item) => item.id === "muscle:chest")!;
+    const backLatsFallback = volume(summary, "back").advancedExposure.find((item) => item.id === "muscle:lats")!;
+    expect(chestFallback.completedExposure).toBe(5);
+    expect(chestFallback.projectedExposure).toBe(5);
+    expect(backLatsFallback.completedExposure).toBe(0);
+    expect(backLatsFallback.projectedExposure).toBe(4);
   });
 
   it("counts unplanned completed sessions and leaves the plan untouched", () => {

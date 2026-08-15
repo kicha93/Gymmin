@@ -2296,6 +2296,7 @@ function GymminApp() {
   function renderWeeklyPlanHomeCard() {
     return (
       <WeeklyPlanHomeCard
+        advancedMuscleMode={advancedMuscleMode}
         language={language}
         savedWorkoutCount={activeWorkouts.length}
         summary={weeklyPlanSummary}

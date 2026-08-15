@@ -380,7 +380,9 @@ function WeeklyMuscleVolumeList({
 }
 
 type WeeklyMuscleAnatomyProps = CommonProps & {
+  advancedMuscleMode: boolean;
   entryByMuscle: Map<MuscleKey, WeeklyMuscleVolumeEntry>;
+  entries: WeeklyMuscleVolumeEntry[];
   hiddenGroups: ReadonlySet<WeeklyMuscleVolumeGroupId>;
   language: LanguageCode;
   layout: WeeklyMuscleVolumeLayout;
@@ -388,7 +390,42 @@ type WeeklyMuscleAnatomyProps = CommonProps & {
   side: WeeklyMuscleVolumeSide;
 };
 
-function WeeklyMuscleAnatomy({ entryByMuscle, hiddenGroups, language, layout, mode, side, theme }: WeeklyMuscleAnatomyProps) {
+function WeeklyMuscleAnatomy({
+  advancedMuscleMode,
+  entries,
+  entryByMuscle,
+  hiddenGroups,
+  language,
+  layout,
+  mode,
+  side,
+  theme
+}: WeeklyMuscleAnatomyProps) {
+  const advancedRegionFills = useMemo(() => {
+    if (!advancedMuscleMode) return undefined;
+    const fills: Record<string, string> = {};
+    for (const entry of entries) {
+      const advancedItems = entry.advancedExposure.filter((item) => item.sides.includes(side));
+      const maximum = Math.max(0, ...advancedItems.map((item) => getAdvancedExposure(item, mode)));
+      const baseColor = hiddenGroups.has(entry.id)
+        ? theme.selectedOption
+        : getVolumeStatusColor(getEntryStatus(entry, mode), theme);
+      for (const item of advancedItems) {
+        if (!item.subdivisionId) continue;
+        const subdivision = getAdvancedMuscleSubdivision(item.subdivisionId);
+        if (!subdivision?.isAnatomyVisible) continue;
+        const exposure = getAdvancedExposure(item, mode);
+        if (exposure <= 0) continue;
+        const relative = maximum > 0 ? exposure / maximum : 0;
+        const fill = hiddenGroups.has(entry.id)
+          ? baseColor
+          : withSvgOpacity(baseColor, relative >= 0.75 ? "FF" : relative >= 0.4 ? "B8" : "78");
+        for (const regionId of subdivision.anatomyRegionIds) fills[regionId] = fill;
+      }
+    }
+    return fills;
+  }, [advancedMuscleMode, entries, hiddenGroups, mode, side, theme]);
+
   return (
     <View
       style={[
@@ -397,6 +434,7 @@ function WeeklyMuscleAnatomy({ entryByMuscle, hiddenGroups, language, layout, mo
       ]}
     >
       <HumanMuscleFigure
+        advancedRegionFills={advancedRegionFills}
         language={language}
         side={side}
         style={{ height: layout.anatomyHeight, maxWidth: "100%", width: layout.anatomyWidth - 4 }}
@@ -410,6 +448,17 @@ function WeeklyMuscleAnatomy({ entryByMuscle, hiddenGroups, language, layout, mo
       />
     </View>
   );
+}
+
+function getAdvancedExposure(
+  item: WeeklyMuscleVolumeEntry["advancedExposure"][number],
+  mode: WeeklyMuscleVolumeMode
+) {
+  return mode === "completed" ? item.completedExposure : item.projectedExposure;
+}
+
+function withSvgOpacity(color: string, alpha: string) {
+  return /^#[0-9a-f]{6}$/i.test(color) ? `${color}${alpha}` : color;
 }
 
 export function WeeklyPlanHomeCard({
@@ -562,6 +611,7 @@ export function WeeklyPlanHomeCard({
                   ]}
                 >
                   <HumanMuscleFigure
+                    advancedRegionFills={advancedMuscleMode ? {} : undefined}
                     fill={() => theme.secondaryBand}
                     language={language}
                     side={volumeSide}
@@ -586,6 +636,8 @@ export function WeeklyPlanHomeCard({
                   theme={theme}
                 />
                 <WeeklyMuscleAnatomy
+                  advancedMuscleMode={advancedMuscleMode}
+                  entries={visibleVolumeEntries}
                   entryByMuscle={entryByMuscle}
                   hiddenGroups={hiddenVolumeGroups}
                   language={language}

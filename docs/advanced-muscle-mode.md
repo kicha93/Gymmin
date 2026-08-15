@@ -46,15 +46,19 @@ Jawne wyjątki po researchu: Bar Muscle-up, Muscle-up (progression) i Ring Muscl
 
 ## Ograniczenia anatomy
 
-Sylwetka jest uproszczonym widokiem powierzchniowym. W trybie advanced istniejący SVG otrzymuje deterministyczne nakładki dzielące czytelne na telefonie regiony: klatkę, przednie/boczne barki, czworogłowe, pośladki, łydki oraz środkową/dolną część kapturowego. Bazowa anatomia i tryb standardowy pozostają bez zmian.
+Sylwetka jest uproszczonym widokiem powierzchniowym. Tryb standardowy nadal korzysta z dotychczasowych figur. Tryb advanced używa osobnych, statycznych SVG z rzeczywistymi regionami podgrup. Pliki źródłowe znajdują się w `scripts/anatomy-source`, a `scripts/generate-body-maps.mjs` normalizuje płótna, usuwa nieobsługiwane metadane i generuje moduł runtime. Generator oraz testy blokują zduplikowane lub nieistniejące ID.
 
-W rozwiniętej legendzie treningu można dotknąć podgrupy posiadającej własny widoczny region. Figura wyszarza wtedy pozostałe obszary, a wybrany pozostawia w kolorze i obrysowuje. Ponowne dotknięcie wyłącza skupienie. Kilka podgrup nadal może współdzielić jeden czytelny kształt, a niewidoczne powierzchniowo struktury pozostają wyłącznie na liście. `isAnatomyVisible: false` oznacza ograniczenie wizualizacji, a nie brak udziału danego mięśnia. Głębokich struktur, osobnych głów bicepsa i tricepsa ani równoległobocznych nie wizualizujemy w sposób sugerujący fałszywą precyzję.
+W rozwiniętej legendzie treningu można dotknąć podgrupy posiadającej własny widoczny region. Figura wyszarza wtedy pozostałe obszary, a wybrany pozostawia w kolorze i obrysowuje. Ponowne dotknięcie wyłącza skupienie. Kilka podgrup nadal może współdzielić jeden czytelny kształt, a niewidoczne powierzchniowo struktury pozostają wyłącznie na liście. `isAnatomyVisible: false` oznacza ograniczenie wizualizacji, a nie brak udziału danego mięśnia. Głębokich struktur ani równoległobocznych nie wizualizujemy w sposób sugerujący fałszywą precyzję.
+
+Widoczne mapowanie obejmuje 30 z 38 podgrup, w tym osobne głowy bicepsa i tricepsa, powierzchniowe części klatki, barków, czworogłowych, hamstrings, pośladków, łydek, kapturowego i prostowników grzbietu. Osiem głębokich albo nierozróżnialnych struktur pozostaje tekstowych: brachialis, brachioradialis, transversus abdominis, internal oblique, vastus intermedius, krótka głowa biceps femoris, gluteus minimus i rhomboids.
 
 ## Tygodniowa analiza podgrup
 
 Główny wynik `weeklyMuscleVolume` nadal korzysta wyłącznie z zatwierdzonych high-level effective/fractional sets i neutralnych pasm V2. Po włączeniu trybu zaawansowanego użytkownik może rozwinąć grupę na HomeScreen i zobaczyć względny rozkład ekspozycji między jej podgrupami. Wynik wykorzystuje statyczny poziom 0–5 podgrupy oraz zatwierdzoną rolę weekly-volume parenta (`direct = 1`, `indirect = 0.5`, stabilizacja = 0).
 
 Paski podgrup są normalizowane względem najsilniej eksponowanej podgrupy w danej grupie i tygodniu. Nie są dodatkowymi seriami, targetami, zaleceniami ani muscle-specific optimum. Struktury świadomie niepodzielone w v1, na przykład latissimus dorsi, pozostają widoczne jako high-level element zamiast znikać z analizy.
+
+W trybie advanced ten sam względny rozkład jest przedstawiany na szczegółowej sylwetce. Intensywność wypełnienia odpowiada udziałowi pokazywanemu na liście; nie tworzy nowej metryki ani dodatkowej objętości.
 
 ## Wybrane źródła
 

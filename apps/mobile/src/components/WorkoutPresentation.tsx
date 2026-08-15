@@ -5,16 +5,20 @@ import type { StyleProp, ViewStyle } from "react-native";
 import { SvgXml } from "react-native-svg";
 
 import {
+  advancedBackBodyRegionMap,
+  advancedBackBodySvg,
+  advancedFrontBodyRegionMap,
+  advancedFrontBodySvg,
   backBodyRegionMap,
   backBodySvg,
   frontBodyRegionMap,
   frontBodySvg
 } from "../domain/bodyMaps";
+import { colorizeAdvancedRegions, colorizeBodySvg } from "../domain/bodySvgColorizer";
 import {
   getAdvancedDisplayFamily,
   getAdvancedMuscleSubdivision
 } from "../domain/advancedMuscles";
-import { addAdvancedAnatomyOverlays } from "../domain/advancedAnatomyOverlays";
 import {
   findExerciseById,
   findExerciseByName,
@@ -499,13 +503,17 @@ export function HumanMuscleFigure({
   style
 }: HumanMuscleFigureProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
-  const svgSource = side === "front" ? frontBodySvg : backBodySvg;
-  const regionMap = side === "front" ? frontBodyRegionMap : backBodyRegionMap;
+  const isAdvanced = advancedRegionFills !== undefined;
+  const svgSource = isAdvanced
+    ? side === "front" ? advancedFrontBodySvg : advancedBackBodySvg
+    : side === "front" ? frontBodySvg : backBodySvg;
+  const regionMap = isAdvanced
+    ? side === "front" ? advancedFrontBodyRegionMap : advancedBackBodyRegionMap
+    : side === "front" ? frontBodyRegionMap : backBodyRegionMap;
   const xml = useMemo(
     () => {
-      const bodySvg = advancedRegionFills ? addAdvancedAnatomyOverlays(svgSource, side) : svgSource;
       return colorizeAdvancedRegions(
-        colorizeBodySvg(bodySvg, regionMap, fill),
+        colorizeBodySvg(svgSource, regionMap, fill),
         advancedRegionFills,
         highlightedAdvancedRegionIds
       );
@@ -544,36 +552,4 @@ export function HumanMuscleFigure({
       </Modal>
     </>
   );
-}
-
-function colorizeAdvancedRegions(
-  svg: string,
-  regionFills?: Readonly<Record<string, string>>,
-  highlightedRegionIds?: ReadonlySet<string>
-) {
-  if (!regionFills) return svg;
-  return Object.entries(regionFills).reduce((currentSvg, [regionId, fill]) => {
-    const escapedId = regionId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regionPattern = new RegExp(`(<[^>]+\\bid="${escapedId}"[^>]*>)`, "g");
-    return currentSvg.replace(regionPattern, (tag) => {
-      const colorized = tag.replace(/\bfill="[^"]*"/, `fill="${fill}"`);
-      if (!highlightedRegionIds?.has(regionId)) return colorized;
-      return colorized.replace(/\s*\/?>$/, ' stroke="#fffdf8" stroke-width="8" stroke-linejoin="round" />');
-    });
-  }, svg);
-}
-
-function colorizeBodySvg(
-  svg: string,
-  regionMap: Record<string, MuscleKey>,
-  fill: (muscle: MuscleKey) => string
-) {
-  return Object.entries(regionMap).reduce((currentSvg, [regionId, muscle]) => {
-    const escapedId = regionId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regionPattern = new RegExp(`(<[^>]+\\bid="${escapedId}"[^>]*>)`, "g");
-
-    return currentSvg.replace(regionPattern, (tag) =>
-      tag.replace(/\bfill="[^"]*"/, `fill="${fill(muscle)}"`)
-    );
-  }, svg);
 }

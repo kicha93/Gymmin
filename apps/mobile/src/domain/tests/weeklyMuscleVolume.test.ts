@@ -177,6 +177,22 @@ describe("weekly muscle volume", () => {
     expect(chest.advancedExposure.every((item) => item.completedExposure === 0)).toBe(true);
   });
 
+  it("builds advanced exposure for the complete production catalog without malformed identifiers", () => {
+    const exercises = exerciseCatalogDataSource.getAvailableExercises();
+    const summary = buildWeeklyMuscleVolumeSummary({
+      exercises,
+      now: new Date(2026, 7, 12, 12),
+      plan: plan(),
+      sessions: [],
+      workouts: [savedWorkout("workout", draft(exercises.map((exercise) => exercise.id), "1"))]
+    });
+
+    const exposure = summary.entries.flatMap((item) => item.advancedExposure);
+    expect(exposure.length).toBeGreaterThan(0);
+    expect(exposure.every((item) => typeof item.id === "string" && item.id.length > 0)).toBe(true);
+    expect(exposure.every((item) => Number.isFinite(item.projectedExposure))).toBe(true);
+  });
+
   it("uses the maximum contribution inside an aggregate group", () => {
     const summary = calculate({ workouts: [savedWorkout("workout", draft(["row"], "4"))] });
     expect(volume(summary, "back").projectedSets).toBe(4);

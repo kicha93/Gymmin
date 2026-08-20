@@ -136,7 +136,11 @@ function addAdvancedExposure(
   id: string,
   contribution: number
 ) {
-  if (contribution <= 0) return;
+  // Generated catalog data is validated during development, but this helper is
+  // also a runtime boundary used while restoring user workouts. Never allow a
+  // malformed identifier or numeric value to poison the summary map and crash
+  // the whole application during startup.
+  if (typeof id !== "string" || id.length === 0 || !Number.isFinite(contribution) || contribution <= 0) return;
   const groupTotals = totals.get(groupId);
   if (!groupTotals) return;
   groupTotals.set(id, (groupTotals.get(id) ?? 0) + contribution);
@@ -309,9 +313,14 @@ export function buildWeeklyMuscleVolumeSummary({
     const projectedSets = projectedTotals.get(group.id) ?? 0;
     const completedAdvanced = completedAdvancedTotals.get(group.id) ?? new Map<string, number>();
     const projectedAdvanced = projectedAdvancedTotals.get(group.id) ?? new Map<string, number>();
-    const advancedIds = new Set([...completedAdvanced.keys(), ...projectedAdvanced.keys()]);
-    const advancedExposure = [...advancedIds].map((id): WeeklyAdvancedMuscleExposure => {
-      if (id.startsWith("muscle:")) {
+    const advancedIds = new Set<unknown>([...completedAdvanced.keys(), ...projectedAdvanced.keys()]);
+    const advancedExposure = [...advancedIds]
+      .filter((id): id is string => typeof id === "string" && id.length > 0)
+      .map((id): WeeklyAdvancedMuscleExposure => {
+      // Avoid relying on String.prototype.startsWith here. This path runs while
+      // the root app state is assembled, so an unexpected value must degrade to
+      // an omitted detail rather than take down the complete application.
+      if (id.slice(0, "muscle:".length) === "muscle:") {
         const muscle = id.slice("muscle:".length) as MuscleKey;
         return {
           completedExposure: completedAdvanced.get(id) ?? 0,
@@ -335,7 +344,7 @@ export function buildWeeklyMuscleVolumeSummary({
         sides,
         subdivisionId
       };
-    });
+      });
     return {
       ...group,
       advancedExposure,

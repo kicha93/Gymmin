@@ -47,9 +47,16 @@ try {
   Write-Step "Checking dependency advisories..."
   npm run security:dependencies
   Assert-LastExitCode "Dependency audit"
-  Write-Step "Running Expo Doctor..."
+  Write-Step "Checking Expo SDK patch alignment..."
   Push-Location $mobileRoot
   try {
+    npx --no-install expo install --check
+    if ($LASTEXITCODE -ne 0) {
+      Write-Step "Aligning compatible Expo SDK patch dependencies automatically..."
+      npx --no-install expo install --fix
+      Assert-LastExitCode "Expo SDK patch alignment"
+    }
+    Write-Step "Running Expo Doctor..."
     npx --no-install expo-doctor
     Assert-LastExitCode "Expo Doctor"
   } finally { Pop-Location }

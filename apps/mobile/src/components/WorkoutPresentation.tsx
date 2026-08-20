@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { Modal, Pressable, Text, View } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 import { SvgXml } from "react-native-svg";
@@ -15,6 +16,7 @@ import {
   frontBodySvg
 } from "../domain/bodyMaps";
 import { colorizeAdvancedRegions, colorizeBodySvg } from "../domain/bodySvgColorizer";
+import { addDiagnosticEvent } from "../domain/appDiagnostics";
 import {
   getAdvancedDisplayFamily,
   getAdvancedMuscleSubdivision
@@ -520,6 +522,12 @@ export function HumanMuscleFigure({
     },
     [advancedRegionFills, fill, highlightedAdvancedRegionIds, regionMap, side, svgSource]
   );
+  const standardSvgSource = side === "front" ? frontBodySvg : backBodySvg;
+  const standardRegionMap = side === "front" ? frontBodyRegionMap : backBodyRegionMap;
+  const fallbackXml = useMemo(
+    () => colorizeBodySvg(standardSvgSource, standardRegionMap, fill),
+    [fill, standardRegionMap, standardSvgSource]
+  );
 
   const accessibilityLabel = `${translate(language, "enlargeBodyFigure")}: ${translate(
     language,
@@ -534,7 +542,7 @@ export function HumanMuscleFigure({
         onPress={() => setPreviewOpen(true)}
         style={[styles.humanMuscleFigure, style]}
       >
-        <SvgXml height="100%" width="100%" xml={xml} />
+        <SafeBodySvg fallbackXml={fallbackXml} xml={xml} />
       </Pressable>
       <Modal animationType="fade" transparent visible={previewOpen} onRequestClose={() => setPreviewOpen(false)}>
         <Pressable
@@ -545,11 +553,38 @@ export function HumanMuscleFigure({
         >
           <View style={styles.bodyFigurePreviewSurface}>
             <View style={[styles.humanMuscleFigure, styles.bodyFigurePreviewFigure]}>
-              <SvgXml height="100%" width="100%" xml={xml} />
+              <SafeBodySvg fallbackXml={fallbackXml} xml={xml} />
             </View>
           </View>
         </Pressable>
       </Modal>
     </>
+  );
+}
+
+function SafeBodySvg({ fallbackXml, xml }: { fallbackXml: string; xml: string }) {
+  const reportSvgError = (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    addDiagnosticEvent({
+      area: "ui",
+      level: "error",
+      message: `Nie udało się wyświetlić szczegółowej sylwetki: ${message}`,
+      screen: "muscle-anatomy"
+    });
+  };
+  return (
+    <ErrorBoundary
+      fallbackRender={() => <SvgXml height="100%" width="100%" xml={fallbackXml} />}
+      onError={reportSvgError}
+      resetKeys={[xml]}
+    >
+      <SvgXml
+        fallback={<SvgXml height="100%" width="100%" xml={fallbackXml} />}
+        height="100%"
+        onError={reportSvgError}
+        width="100%"
+        xml={xml}
+      />
+    </ErrorBoundary>
   );
 }

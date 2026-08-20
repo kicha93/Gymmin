@@ -8,6 +8,7 @@ import {
 } from "@gluestack-ui/themed";
 import { ErrorBoundary } from "react-error-boundary";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { PropsWithChildren } from "react";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Animated,
@@ -685,16 +686,29 @@ export default function App() {
   return (
     <GluestackUIProvider config={gluestackConfig}>
       <SafeAreaProvider>
-        <ErrorBoundary
-          FallbackComponent={GlobalErrorFallback}
-          onError={(error, info) => {
-            console.error("Global app error", error, info.componentStack);
-          }}
-        >
+        <AppErrorBoundary>
           <GymminApp />
-        </ErrorBoundary>
+        </AppErrorBoundary>
       </SafeAreaProvider>
     </GluestackUIProvider>
+  );
+}
+
+function AppErrorBoundary({ children }: PropsWithChildren) {
+  const [componentStack, setComponentStack] = useState("");
+
+  return (
+    <ErrorBoundary
+      fallbackRender={(props) => <GlobalErrorFallback {...props} componentStack={componentStack} />}
+      onError={(error, info) => {
+        const nextComponentStack = info.componentStack ?? "";
+        setComponentStack(nextComponentStack);
+        console.error("Global app error", error, nextComponentStack);
+      }}
+      onReset={() => setComponentStack("")}
+    >
+      {children}
+    </ErrorBoundary>
   );
 }
 

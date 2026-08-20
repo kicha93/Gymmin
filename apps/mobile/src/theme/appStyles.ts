@@ -4724,7 +4724,7 @@ export const styles = StyleSheet.create({
     lineHeight: 18
   },
   errorScreen: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     padding: 20
   },

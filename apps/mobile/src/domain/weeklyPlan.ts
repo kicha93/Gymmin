@@ -39,6 +39,25 @@ export const weeklyPlanLimits = {
   workoutIdLength: 128
 } as const;
 
+export function sortWeeklyPlanItemsForDisplay<
+  T extends WeeklyPlanItem & { workout: WeeklyPlanWorkout }
+>(items: T[]): T[] {
+  const dayOrder = new Map(weeklyPlanDays.map((day, index) => [day, index]));
+
+  return [...items].sort((left, right) => {
+    const dayDifference = (dayOrder.get(left.day) ?? weeklyPlanDays.length)
+      - (dayOrder.get(right.day) ?? weeklyPlanDays.length);
+    if (dayDifference !== 0) {
+      return dayDifference;
+    }
+
+    const nameDifference = left.workout.name.localeCompare(right.workout.name, undefined, {
+      sensitivity: "base"
+    });
+    return nameDifference || left.workout.id.localeCompare(right.workout.id) || left.order - right.order;
+  });
+}
+
 export function getDefaultWeeklyPlanSettings(now = new Date()): WeeklyPlanSettings {
   return { enabled: false, items: [], updatedAt: now.toISOString() };
 }

@@ -367,6 +367,10 @@ export function getExerciseProgressItems(sessions: WorkoutSession[]): ExercisePr
 
   getCompletedWorkoutSessions(sessions).forEach((session) => {
     session.entries.forEach((entry) => {
+      if (entry.type === "warmup") {
+        return;
+      }
+
       const exerciseKey = getExerciseKey(entry);
       if (!exerciseKey) {
         return;

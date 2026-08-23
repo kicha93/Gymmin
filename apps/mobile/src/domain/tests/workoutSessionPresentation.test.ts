@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  canRecordWorkoutSessionPerformance,
   clampWorkoutSessionEntryIndex,
   getGuidedEntryGroups,
   getGuidedGroupIndex,
@@ -40,6 +41,19 @@ function session(entries: WorkoutSessionEntry[], overrides: Partial<WorkoutSessi
 }
 
 describe("workoutSessionPresentation", () => {
+  it("never exposes performance inputs for warmup entries", () => {
+    expect(canRecordWorkoutSessionPerformance(entry({
+      exerciseId: "jumping-jacks",
+      exerciseName: "Jumping jacks",
+      plannedTarget: "60",
+      plannedTargetType: "time",
+      type: "warmup"
+    }))).toBe(false);
+    expect(canRecordWorkoutSessionPerformance(entry({ type: "rest" }))).toBe(false);
+    expect(canRecordWorkoutSessionPerformance(entry({ plannedTargetType: "buttonPress" }))).toBe(false);
+    expect(canRecordWorkoutSessionPerformance(entry({ plannedTargetType: "repetitions" }))).toBe(true);
+  });
+
   it("simplifies only an actually empty warmup entry", () => {
     expect(isSimpleWarmupEntry(entry({ type: "warmup" }))).toBe(true);
     expect(isSimpleWarmupEntry(entry({

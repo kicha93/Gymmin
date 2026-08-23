@@ -7,6 +7,7 @@ import { InteractionManager, Pressable, Text, View } from "react-native";
 import { AppButton, AppInput, AppTextarea, SelectControl, SuffixedInput } from "../components/AppControls";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { ExercisePicker } from "../components/ExercisePicker";
+import { ExercisePickerV2 } from "../features/exercisePickerV2/ExercisePickerV2";
 import { WorkoutMuscleOverviewContent } from "../components/WorkoutPresentation";
 import {
   activeExerciseLibraryTiers,
@@ -17,6 +18,7 @@ import {
   isExerciseAvailableForStageType
 } from "../domain/exercises";
 import { groupWorkoutBuilderSteps } from "../domain/workoutEditor";
+import type { ExerciseUsageById } from "../domain/exerciseSearch";
 import {
   createStep,
   formatWorkoutDuration,
@@ -54,6 +56,7 @@ type WorkoutBuilderProps = {
 };
 
 type StepConfigurationProps = {
+  exerciseUsageById?: ExerciseUsageById;
   favoriteExerciseIds: ReadonlySet<string>;
   language: LanguageCode;
   onToggleFavoriteExercise: (exerciseId: string) => void;
@@ -64,6 +67,9 @@ type StepConfigurationProps = {
   typeLabel: string;
   updateStep: (stepId: string, nextStep: WorkoutStep) => void;
 };
+
+const USE_EXERCISE_PICKER_V2 = true;
+const emptyExerciseUsageById: ExerciseUsageById = new Map();
 
 type StageConfigurationProps = {
   stage: WorkoutStep;
@@ -207,6 +213,7 @@ export function StageConfiguration({ stage, t, theme, updateStep }: StageConfigu
 }
 
 export function StepConfiguration({
+  exerciseUsageById = emptyExerciseUsageById,
   favoriteExerciseIds,
   language,
   onToggleFavoriteExercise,
@@ -336,7 +343,27 @@ export function StepConfiguration({
         {shouldShowExerciseFields ? (
           <View style={styles.fieldGroup}>
             <Text style={[styles.label, { color: theme.muted }]}>{t("exercise")}</Text>
-            <ExercisePicker
+            {USE_EXERCISE_PICKER_V2 ? <ExercisePickerV2
+              disabled={!hasSelectedType || !canSelectExercise}
+              favoriteExerciseIds={favoriteExerciseIds}
+              language={language}
+              onChange={(exerciseName) => {
+                const catalogExercise = findCatalogExerciseBestEffort(exerciseName);
+                updateStep(step.id, {
+                  ...step,
+                  exerciseId: catalogExercise?.id ?? "",
+                  exerciseName: catalogExercise?.name ?? exerciseName,
+                  loadKg: step.loadKg
+                });
+              }}
+              onToggleFavorite={onToggleFavoriteExercise}
+              placeholder={t("select")}
+              stageType={exerciseCatalogStageType}
+              t={t}
+              theme={theme}
+              usageById={exerciseUsageById}
+              value={step.exerciseName}
+            /> : <ExercisePicker
               disabled={!hasSelectedType || !canSelectExercise}
               emptyText={t("exercisePickerEmpty")}
               favoriteExerciseIds={favoriteExerciseIds}
@@ -370,7 +397,7 @@ export function StepConfiguration({
               theme={theme}
               title={t("exercisePickerTitle")}
               value={step.exerciseName}
-            />
+            />}
           </View>
         ) : null}
       </View>

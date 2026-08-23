@@ -11,6 +11,7 @@ import {
   mergeWeeklyPlans,
   removeWeeklyPlanItem,
   saveWeeklyPlan,
+  sortWeeklyPlanItemsForDisplay,
   toggleWeeklyPlanItemDay,
   upsertWeeklyPlanItem
 } from "../weeklyPlan";
@@ -85,6 +86,17 @@ describe("weeklyPlan", () => {
     plan = toggleWeeklyPlanItemDay(plan, "workout-a", "monday");
     expect(plan.items.map((item) => item.day)).toEqual(["friday"]);
     expect(removeWeeklyPlanItem(plan, "workout-a").items).toEqual([]);
+  });
+
+  it("sorts plan display from Monday to Sunday and then by workout name", () => {
+    const items = sortWeeklyPlanItemsForDisplay([
+      { completed: false, day: "friday", order: 0, workout: { id: "friday", name: "Nogi" }, workoutId: "friday" },
+      { completed: false, day: "monday", order: 1, workout: { id: "push", name: "Push" }, workoutId: "push" },
+      { completed: false, day: "wednesday", order: 2, workout: { id: "zulu", name: "Zulu" }, workoutId: "zulu" },
+      { completed: false, day: "wednesday", order: 3, workout: { id: "alpha", name: "Alpha" }, workoutId: "alpha" }
+    ]);
+
+    expect(items.map((item) => item.workoutId)).toEqual(["push", "alpha", "zulu", "friday"]);
   });
 
   it("returns every unique active planned workout in plan order", () => {

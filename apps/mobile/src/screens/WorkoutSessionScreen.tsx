@@ -20,7 +20,6 @@ import {
   isSimpleWarmupEntry
 } from "../domain/workoutSessionPresentation";
 import {
-  getSupersetRoundRows,
   getWorkoutSessionExerciseGroups,
   getWorkoutSessionGuidedStepIndex,
   getWorkoutSessionGuidedSteps,
@@ -29,7 +28,11 @@ import {
   type WorkoutSessionSupersetValueField
 } from "../domain/workoutSessionSupersets";
 import { formatRestDuration, formatWorkoutProgressPercent, getWorkoutProgress } from "../domain/workoutSessionUi";
-import { groupWorkoutBuilderSteps } from "../domain/workoutEditor";
+import {
+  getWorkoutStageExerciseNumber,
+  groupWorkoutBuilderSteps,
+  isSimpleWarmupStageGroup
+} from "../domain/workoutEditor";
 import { formatExerciseSetTarget, isRestTargetStep } from "../domain/workoutExerciseSummary";
 import { type WorkoutDraft, type WorkoutStep } from "../domain/workouts";
 import type { LanguageCode, TranslationKey } from "../i18n/translations";
@@ -553,7 +556,8 @@ export function WorkoutSessionScreen({
     group: { entries: WorkoutSessionEntry[]; restEntry?: WorkoutSessionEntry },
     exerciseNumber: number,
     embedded = false,
-    supersetSide?: WorkoutSessionSupersetSide
+    supersetSide?: WorkoutSessionSupersetSide,
+    showEmbeddedNumber = false
   ) {
     const entry = group.entries[0];
     const setCount = String(group.entries.length || 1);
@@ -574,7 +578,7 @@ export function WorkoutSessionScreen({
     const content = (
       <>
         <View style={styles.guidedExerciseHeader}>
-          {!embedded ? (
+          {!embedded || showEmbeddedNumber ? (
             <View style={[styles.guidedExerciseNumber, { backgroundColor: theme.secondaryBand }]}>
               <Text style={[styles.guidedExerciseNumberText, { color: theme.primary }]}>{exerciseNumber}</Text>
             </View>
@@ -674,155 +678,6 @@ export function WorkoutSessionScreen({
     );
   }
 
-  function renderSupersetPrefillButton(
-    entries: WorkoutSessionEntry[],
-    field: WorkoutSessionSupersetValueField,
-    value: string
-  ) {
-    if (!value) {
-      return <View style={styles.guidedSupersetPrefillEmpty} />;
-    }
-
-    return (
-      <Pressable
-        accessibilityRole="button"
-        style={[styles.guidedSupersetPrefillButton, { backgroundColor: theme.control, borderColor: theme.border }]}
-        onPress={() => applyPreviousExerciseValue(entries, field, value)}
-      >
-        <Text
-          adjustsFontSizeToFit
-          minimumFontScale={0.8}
-          numberOfLines={1}
-          style={[styles.guidedSupersetPrefillText, { color: theme.primary }]}
-        >
-          {field === "actualWeight" ? `${t("previousWeight")}: ${value} kg` : `${t("previousReps")}: ${value}`}
-        </Text>
-      </Pressable>
-    );
-  }
-
-  function renderSupersetInput(
-    entry: WorkoutSessionEntry | null,
-    supersetId: string,
-    roundIndex: number,
-    exerciseSide: WorkoutSessionSupersetSide,
-    field: WorkoutSessionSupersetValueField
-  ) {
-    if (!entry) {
-      return (
-        <View style={[styles.guidedSupersetInputDisabled, { backgroundColor: theme.background, borderColor: theme.border }]}>
-          <Text style={{ color: theme.muted }}>—</Text>
-        </View>
-      );
-    }
-
-    return (
-      <SessionValueInput
-        keyboardType={field === "actualWeight" ? "decimal-pad" : "number-pad"}
-        placeholder="-"
-        suffix={field === "actualWeight" ? "kg" : undefined}
-        theme={theme}
-        value={entry[field] ?? ""}
-        onChangeText={(value) =>
-          updateWorkoutSessionSupersetRound(supersetId, roundIndex, exerciseSide, field, value)
-        }
-      />
-    );
-  }
-
-  function renderSupersetRoundTable(session: WorkoutSession, supersetId: string) {
-    const rounds = getSupersetRoundRows(session, supersetId);
-    const superset = session.supersets?.find((item) => item.id === supersetId);
-    const exerciseGroups = getWorkoutSessionExerciseGroups(session);
-    const groupA = exerciseGroups.find((group) => group.entries[0]?.id === superset?.entryIds[0]);
-    const groupB = exerciseGroups.find((group) => group.entries[0]?.id === superset?.entryIds[1]);
-    const previousA = getPreviousExerciseValues(groupA?.entries ?? [], visibleWorkoutSessions);
-    const previousB = getPreviousExerciseValues(groupB?.entries ?? [], visibleWorkoutSessions);
-    const hasPrefillValues = Boolean(
-      previousA.weight || previousA.reps || previousB.weight || previousB.reps
-    );
-
-    return (
-      <View style={[styles.guidedSupersetTableCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <ScrollView
-          horizontal
-          keyboardShouldPersistTaps="handled"
-          showsHorizontalScrollIndicator
-          contentContainerStyle={styles.guidedSupersetTableScrollContent}
-        >
-          <View style={styles.guidedSupersetTable}>
-            <View style={[styles.guidedSupersetTableRow, styles.guidedSupersetTableHeader]}>
-              <View style={styles.guidedSupersetStatusCell} />
-              <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetWeightCell]}>
-                <Text style={[styles.guidedSupersetHeaderText, { color: theme.primary }]}>{t("supersetAWeight")}</Text>
-              </View>
-              <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetRepsCell]}>
-                <Text style={[styles.guidedSupersetHeaderText, { color: theme.primary }]}>{t("supersetAReps")}</Text>
-              </View>
-              <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetWeightCell]}>
-                <Text style={[styles.guidedSupersetHeaderText, { color: theme.primary }]}>{t("supersetBWeight")}</Text>
-              </View>
-              <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetRepsCell]}>
-                <Text style={[styles.guidedSupersetHeaderText, { color: theme.primary }]}>{t("supersetBReps")}</Text>
-              </View>
-            </View>
-            {hasPrefillValues ? (
-              <View style={[styles.guidedSupersetTableRow, styles.guidedSupersetPrefillRow]}>
-                <View style={styles.guidedSupersetStatusCell} />
-                <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetWeightCell]}>
-                  {renderSupersetPrefillButton(groupA?.entries ?? [], "actualWeight", previousA.weight)}
-                </View>
-                <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetRepsCell]}>
-                  {renderSupersetPrefillButton(groupA?.entries ?? [], "actualReps", previousA.reps)}
-                </View>
-                <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetWeightCell]}>
-                  {renderSupersetPrefillButton(groupB?.entries ?? [], "actualWeight", previousB.weight)}
-                </View>
-                <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetRepsCell]}>
-                  {renderSupersetPrefillButton(groupB?.entries ?? [], "actualReps", previousB.reps)}
-                </View>
-              </View>
-            ) : null}
-            {rounds.map((round) => (
-              <View key={`${supersetId}-${round.number}`} style={styles.guidedSupersetTableRow}>
-                <Pressable
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: round.isCompleted }}
-                  style={styles.guidedSupersetStatusCell}
-                  onPress={() => toggleWorkoutSessionSupersetRound(supersetId, round.index)}
-                >
-                  <View
-                    style={[
-                      styles.sessionCheckbox,
-                      {
-                        backgroundColor: round.isCompleted ? theme.primary : theme.control,
-                        borderColor: round.isCompleted ? theme.primary : theme.border
-                      }
-                    ]}
-                  >
-                    {round.isCompleted ? <Ionicons name="checkmark" size={16} color={theme.white} /> : null}
-                  </View>
-                </Pressable>
-                <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetWeightCell]}>
-                  {renderSupersetInput(round.entryA, supersetId, round.index, "A", "actualWeight")}
-                </View>
-                <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetRepsCell]}>
-                  {renderSupersetInput(round.entryA, supersetId, round.index, "A", "actualReps")}
-                </View>
-                <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetWeightCell]}>
-                  {renderSupersetInput(round.entryB, supersetId, round.index, "B", "actualWeight")}
-                </View>
-                <View style={[styles.guidedSupersetValueCell, styles.guidedSupersetRepsCell]}>
-                  {renderSupersetInput(round.entryB, supersetId, round.index, "B", "actualReps")}
-                </View>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
-    );
-  }
-
   function renderGuidedSuperset(
     session: WorkoutSession,
     supersetId: string,
@@ -847,22 +702,51 @@ export function WorkoutSessionScreen({
         </View>
         <View style={[styles.guidedSupersetCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           {renderGuidedPlanPreview(session, groups[0], firstExerciseNumber, true, "A")}
-          <View style={styles.guidedSupersetSeparator}>
-            <View style={[styles.guidedSupersetSeparatorLine, { backgroundColor: theme.border }]} />
-            <Text style={[styles.guidedSupersetSeparatorText, { color: theme.primary }]}>{t("supersetAlternate")}</Text>
-            <View style={[styles.guidedSupersetSeparatorLine, { backgroundColor: theme.border }]} />
-          </View>
-          {renderGuidedPlanPreview(session, groups[1], firstExerciseNumber + 1, true, "B")}
+          {renderGuidedEntryTable(groups[0].entries)}
         </View>
-        {renderSupersetRoundTable(session, supersetId)}
+        <View style={styles.guidedSupersetSeparator}>
+          <View style={[styles.guidedSupersetSeparatorLine, { backgroundColor: theme.border }]} />
+          <Text style={[styles.guidedSupersetSeparatorText, { color: theme.primary }]}>{t("supersetAlternate")}</Text>
+          <View style={[styles.guidedSupersetSeparatorLine, { backgroundColor: theme.border }]} />
+        </View>
+        <View style={[styles.guidedSupersetCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          {renderGuidedPlanPreview(session, groups[1], firstExerciseNumber + 1, true, "B")}
+          {renderGuidedEntryTable(groups[1].entries)}
+        </View>
         {renderSupersetRestTimer(supersetId, groups)}
       </>
     );
   }
 
+  function renderGuidedWarmup(
+    session: WorkoutSession,
+    groups: WorkoutSessionExerciseGroup[],
+    firstExerciseNumber: number
+  ) {
+    return (
+      <View style={[styles.guidedWarmupCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        {groups.map((group, index) => (
+          <View key={group.key} style={styles.guidedWarmupExercise}>
+            {index > 0 ? (
+              <View style={[styles.guidedWarmupSeparator, { backgroundColor: theme.border }]} />
+            ) : null}
+            {renderGuidedPlanPreview(
+              session,
+              group,
+              firstExerciseNumber + index,
+              true,
+              undefined,
+              true
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  }
+
   function renderReadOnlyWorkoutPlan(workout: WorkoutDraft, panelPrefix: string) {
     const stageGroups = groupWorkoutBuilderSteps(workout.steps)
-      .filter(({ stage }) => stage.stageType !== "warmup");
+      .filter((group) => !isSimpleWarmupStageGroup(group));
 
     return (
       <>
@@ -938,7 +822,7 @@ export function WorkoutSessionScreen({
                           ]}
                         >
                           <View style={styles.workoutInfo}>
-                            {elements.map((element) => (
+                            {elements.map((element, elementIndex) => (
                               <View key={element.id} style={styles.workoutDetailElementRow}>
                                 <ExerciseSummaryRow
                                   language={language}
@@ -957,7 +841,9 @@ export function WorkoutSessionScreen({
                                       })()
                                       : undefined
                                   }
-                                  seriesIndex={headerElement?.id === element.id ? setIndex + 1 : undefined}
+                                  seriesIndex={stage.stageType === "warmup"
+                                    ? getWorkoutStageExerciseNumber(series, setIndex, elementIndex)
+                                    : headerElement?.id === element.id ? setIndex + 1 : undefined}
                                   step={element}
                                   targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
                                   theme={theme}
@@ -1021,6 +907,12 @@ export function WorkoutSessionScreen({
       const firstExerciseNumber = (currentStep?.firstGroupIndex ?? 0) + 1;
       const lastExerciseNumber = (currentStep?.lastGroupIndex ?? currentStep?.firstGroupIndex ?? 0) + 1;
       const isSuperset = Boolean(currentStep?.superset && currentStep.groups.length === 2);
+      const isWarmupStep = Boolean(
+        currentStep?.groups.length &&
+        currentStep.groups.every((group) =>
+          group.entries.length > 0 && group.entries.every((entry) => entry.type === "warmup")
+        )
+      );
 
       return (
         <View style={styles.sessionScreen}>
@@ -1029,6 +921,10 @@ export function WorkoutSessionScreen({
             session,
             currentStep.superset.id,
             currentStep.groups as [WorkoutSessionExerciseGroup, WorkoutSessionExerciseGroup],
+            firstExerciseNumber
+          ) : isWarmupStep && currentStep ? renderGuidedWarmup(
+            session,
+            currentStep.groups,
             firstExerciseNumber
           ) : (
             <>

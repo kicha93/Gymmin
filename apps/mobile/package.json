@@ -4,10 +4,11 @@
   "private": true,
   "main": "expo/AppEntry.js",
   "scripts": {
-    "pretest": "node ../../scripts/validate-tracked-secrets.mjs && node ../../scripts/validate-exercise-catalog.mjs && node ../../scripts/validate-advanced-muscles.mjs && node ../../scripts/generate-body-maps.mjs --check && node ../../scripts/validate-exercise-media.mjs && node ../../scripts/validate-android-release-security.mjs && node ../../scripts/validate-local-only-runtime.mjs && node ../../scripts/validate-local-product-runtime.mjs && npm run validate:weekly-volume --silent",
+    "pretest": "node ../../scripts/validate-tracked-secrets.mjs && node ../../scripts/validate-exercise-catalog.mjs && node ../../scripts/validate-advanced-muscles.mjs && node ../../scripts/generate-body-maps.mjs --check && node ../../scripts/validate-exercise-media.mjs && node ../../scripts/validate-android-release-security.mjs && node ../../scripts/validate-local-only-runtime.mjs && node ../../scripts/validate-local-product-runtime.mjs && npm run validate:weekly-volume --silent && npm run validate:exercise-search --silent",
     "start": "expo start",
     "test": "vitest run",
     "validate:weekly-volume": "vitest run src/domain/tests/weeklyMuscleVolumeClassifierValidation.test.ts --reporter=verbose",
+    "validate:exercise-search": "vitest run src/domain/tests/exerciseSearch.test.ts --reporter=verbose",
     "validate:body-maps": "node ../../scripts/generate-body-maps.mjs --check && vitest run src/domain/tests/bodyMaps.test.ts --reporter=verbose",
     "typecheck": "tsc --noEmit",
     "security:android": "node ../../scripts/validate-android-release-security.mjs",

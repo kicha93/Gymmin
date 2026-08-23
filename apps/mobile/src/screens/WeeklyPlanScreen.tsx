@@ -8,6 +8,7 @@ import {
   getCurrentWeekRange,
   getWeeklyPlanDay,
   removeWeeklyPlanItem,
+  sortWeeklyPlanItemsForDisplay,
   toggleWeeklyPlanItemDay,
   upsertWeeklyPlanItem,
   type WeeklyPlanSettings,
@@ -53,7 +54,7 @@ export function WeeklyPlanScreen({
     const availableWorkouts = savedWorkouts.filter((workout) => !plannedIds.has(workout.id));
     const range = formatWeekRange(getCurrentWeekRange(new Date()), language);
     const groupedItems = Array.from(
-      summary.items.reduce((groups, item) => {
+      sortWeeklyPlanItemsForDisplay(summary.items).reduce((groups, item) => {
         const existing = groups.get(item.workoutId);
         if (existing) {
           existing.items.push(item);
@@ -151,4 +152,3 @@ export function WeeklyPlanScreen({
       </View>
     );
   }
-

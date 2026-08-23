@@ -18,6 +18,7 @@ import {
 } from "../domain/workoutBuilderFlow";
 import { groupWorkoutBuilderSteps, isWorkoutSeriesSuperset } from "../domain/workoutEditor";
 import { normalizeSetCountInput } from "../domain/workoutBuilderConfiguration";
+import type { ExerciseUsageById } from "../domain/exerciseSearch";
 import {
   createStep,
   formatWorkoutDuration,
@@ -37,6 +38,7 @@ type Props = {
   defaultStageType: StageType | "";
   defaultWeight: string;
   favoriteExerciseIds: ReadonlySet<string>;
+  exerciseUsageById: ExerciseUsageById;
   language: LanguageCode;
   moveStep: (stepId: string, direction: -1 | 1) => void;
   onSaveWorkout: () => void;
@@ -55,6 +57,7 @@ export function WorkoutBuilderWizardScreen(props: Props) {
     defaultSetCount,
     defaultStageType,
     defaultWeight,
+    exerciseUsageById,
     favoriteExerciseIds,
     language,
     moveStep,
@@ -494,6 +497,7 @@ export function WorkoutBuilderWizardScreen(props: Props) {
           {exerciseIndex >= 0 ? elementActions(exerciseDraft, exerciseIndex, activeSet.elements.length) : null}
         </View>
         <StepConfiguration
+          exerciseUsageById={exerciseUsageById}
           favoriteExerciseIds={favoriteExerciseIds}
           language={language}
           onToggleFavoriteExercise={onToggleFavoriteExercise}

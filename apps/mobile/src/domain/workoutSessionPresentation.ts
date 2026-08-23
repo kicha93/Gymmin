@@ -17,6 +17,12 @@ export type InlineWorkoutEntryGroup = {
   title: string;
 };
 
+export function canRecordWorkoutSessionPerformance(entry: WorkoutSessionEntry) {
+  return entry.type !== "rest"
+    && entry.type !== "warmup"
+    && entry.plannedTargetType !== "buttonPress";
+}
+
 export function isSimpleWarmupEntry(entry: WorkoutSessionEntry) {
   if (entry.type !== "warmup") {
     return false;

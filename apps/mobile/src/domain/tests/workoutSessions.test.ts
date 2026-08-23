@@ -92,6 +92,21 @@ describe("workoutSessions", () => {
     expect(progress[0].results).toHaveLength(2);
   });
 
+  it("excludes warm-up exercises from progress", () => {
+    const completedSession = session({
+      status: "completed",
+      finishedAt: "2026-01-01T11:00:00.000Z",
+      entries: [
+        { id: "warmup", stageIndex: 0, seriesIndex: 0, setIteration: 1, elementIndex: 0, type: "warmup", exerciseName: "Jumping jacks", isCompleted: true },
+        { id: "main", stageIndex: 1, seriesIndex: 0, setIteration: 1, elementIndex: 0, type: "exercise", exerciseName: "Bench press", actualWeight: "60", actualReps: "8", isCompleted: true }
+      ]
+    });
+
+    const progress = getExerciseProgressItems([completedSession]);
+
+    expect(progress.map((item) => item.exerciseName)).toEqual(["Bench press"]);
+  });
+
   it("canonicalizes historical exercise ids while normalizing synced sessions", () => {
     const normalized = normalizeWorkoutSessions([session({
       entries: [{ id: "old", stageIndex: 0, seriesIndex: 0, setIteration: 1, elementIndex: 0, type: "exercise", exerciseId: "squat-back-squats-1249", exerciseName: "Back Squats", isCompleted: true }]

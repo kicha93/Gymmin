@@ -92,8 +92,8 @@ import type {
   WorkoutSessionStatus
 } from "./src/domain/workoutSessions";
 import {
-  clampWorkoutSessionEntryIndex,
-  isSimpleWarmupEntry
+  canRecordWorkoutSessionPerformance,
+  clampWorkoutSessionEntryIndex
 } from "./src/domain/workoutSessionPresentation";
 import {
   getWorkoutSessionSupersetCandidate,
@@ -139,6 +139,7 @@ import {
   upsertWeeklyPlanItem
 } from "./src/domain/weeklyPlan";
 import { buildWeeklyMuscleVolumeSummary } from "./src/domain/weeklyMuscleVolume";
+import { buildExerciseUsageById } from "./src/domain/exerciseSearch";
 import { getProfileDashboardStats } from "./src/domain/profileDashboard";
 import {
   WORKOUT_REMINDER_NOTIFICATION_IDS_BASE_KEY,
@@ -1080,6 +1081,10 @@ function GymminApp() {
     () => getActiveWorkoutSessionsForUi(workoutSessions),
     [workoutSessions]
   );
+  const exerciseUsageById = useMemo(
+    () => buildExerciseUsageById(visibleWorkoutSessions),
+    [visibleWorkoutSessions]
+  );
   const profileDashboardStats = useMemo(
     () => getProfileDashboardStats(workoutSessions, savedWorkouts),
     [savedWorkouts, workoutSessions]
@@ -1432,9 +1437,7 @@ function GymminApp() {
   }
 
   function isWorkoutSessionEntryFillRequired(entry: WorkoutSessionEntry) {
-    return entry.type !== "rest"
-      && !isSimpleWarmupEntry(entry)
-      && entry.plannedTargetType !== "buttonPress";
+    return canRecordWorkoutSessionPerformance(entry);
   }
 
   function hasIncompleteWorkoutSessionEntries(session: WorkoutSession) {
@@ -2372,6 +2375,7 @@ function GymminApp() {
           defaultSetCount={defaultSetCount}
           defaultStageType={defaultStageType}
           defaultWeight={defaultWeight}
+          exerciseUsageById={exerciseUsageById}
           favoriteExerciseIds={validFavoriteExerciseIds}
           language={language}
           moveStep={moveStep}

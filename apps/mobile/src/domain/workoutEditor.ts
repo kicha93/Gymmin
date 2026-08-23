@@ -37,6 +37,54 @@ export function groupWorkoutBuilderSteps(steps: readonly WorkoutStep[]): Workout
   }));
 }
 
+export function getWorkoutStageExerciseNumber(
+  series: WorkoutStageGroup["series"],
+  setIndex: number,
+  elementIndex: number
+): number | undefined {
+  const element = series[setIndex]?.elements[elementIndex];
+  if (!element || element.stageType === "rest") {
+    return undefined;
+  }
+
+  const precedingExercises = series
+    .slice(0, setIndex)
+    .reduce(
+      (total, item) => total + item.elements.filter((itemElement) => itemElement.stageType !== "rest").length,
+      0
+    );
+  const positionInSet = series[setIndex].elements
+    .slice(0, elementIndex + 1)
+    .filter((itemElement) => itemElement.stageType !== "rest")
+    .length;
+
+  return precedingExercises + positionInSet;
+}
+
+export function isSimpleWarmupStageGroup(group: WorkoutStageGroup): boolean {
+  if (group.stage.stageType !== "warmup") {
+    return false;
+  }
+
+  const hasStageDetails = Boolean(
+    group.stage.notes.trim()
+    || group.stage.targetValue.trim()
+    || group.stage.loadKg.trim()
+  );
+  const hasDetailedElement = group.series.some(({ elements }) => elements.some((element) => Boolean(
+    element.exerciseId?.trim()
+    || element.exerciseName.trim()
+    || element.label.trim()
+    || element.targetValue.trim()
+    || element.loadKg.trim()
+    || element.notes.trim()
+    || element.restSeconds?.trim()
+    || (element.goalType && element.goalType !== "buttonPress")
+  )));
+
+  return !hasStageDetails && !hasDetailedElement;
+}
+
 /**
  * A set containing exactly two executable exercises is the persistent workout
  * definition of a superset. Its session grouping remains removable, so

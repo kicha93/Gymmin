@@ -527,17 +527,18 @@ export const styles = StyleSheet.create({
   },
   progressFilterRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10
+    gap: 10,
+    width: "100%"
   },
   progressFilterChip: {
     alignItems: "center",
     borderRadius: 999,
     borderWidth: 1,
+    flex: 1,
     justifyContent: "center",
     minHeight: 42,
-    minWidth: 104,
-    paddingHorizontal: 18
+    minWidth: 0,
+    paddingHorizontal: 12
   },
   progressFilterChipText: {
     fontSize: 14,
@@ -2240,6 +2241,19 @@ export const styles = StyleSheet.create({
     gap: 18,
     padding: 18
   },
+  guidedWarmupCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 16,
+    padding: 18
+  },
+  guidedWarmupExercise: {
+    gap: 16
+  },
+  guidedWarmupSeparator: {
+    height: 1,
+    width: "100%"
+  },
   guidedExerciseHeader: {
     alignItems: "center",
     flexDirection: "row",
@@ -2376,76 +2390,6 @@ export const styles = StyleSheet.create({
   guidedSupersetSeparatorText: {
     fontSize: 12,
     fontWeight: "900"
-  },
-  guidedSupersetTableCard: {
-    borderRadius: 8,
-    borderWidth: 1,
-    overflow: "hidden",
-    paddingVertical: 8
-  },
-  guidedSupersetTableScrollContent: {
-    paddingBottom: 2,
-    paddingHorizontal: 8
-  },
-  guidedSupersetTable: {
-    width: 548
-  },
-  guidedSupersetTableRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-    minHeight: 54
-  },
-  guidedSupersetTableHeader: {
-    minHeight: 44
-  },
-  guidedSupersetPrefillRow: {
-    minHeight: 48
-  },
-  guidedSupersetStatusCell: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 44
-  },
-  guidedSupersetValueCell: {
-    alignItems: "stretch",
-    justifyContent: "center",
-    paddingVertical: 4
-  },
-  guidedSupersetWeightCell: {
-    width: 148
-  },
-  guidedSupersetRepsCell: {
-    width: 88
-  },
-  guidedSupersetHeaderText: {
-    fontSize: 11,
-    fontWeight: "900",
-    lineHeight: 15,
-    textAlign: "center"
-  },
-  guidedSupersetPrefillButton: {
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 40,
-    paddingHorizontal: 5
-  },
-  guidedSupersetPrefillEmpty: {
-    minHeight: 40
-  },
-  guidedSupersetPrefillText: {
-    fontSize: 11,
-    fontWeight: "900",
-    textAlign: "center"
-  },
-  guidedSupersetInputDisabled: {
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 44
   },
   guidedSupersetRestTimer: {
     gap: 8

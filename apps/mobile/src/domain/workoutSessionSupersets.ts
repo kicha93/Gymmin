@@ -52,7 +52,14 @@ function isEligibleGroup(group?: WorkoutSessionExerciseGroup) {
   return Boolean(
     entry &&
     entry.type !== "rest" &&
+    entry.type !== "warmup" &&
     (entry.exerciseId?.trim() || entry.exerciseName?.trim() || entry.sourceElementId?.trim())
+  );
+}
+
+function isWarmupGroup(group?: WorkoutSessionExerciseGroup) {
+  return Boolean(
+    group?.entries.length && group.entries.every((entry) => entry.type === "warmup")
   );
 }
 
@@ -307,6 +314,32 @@ export function getWorkoutSessionGuidedSteps(session: WorkoutSession): WorkoutSe
 
   for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
     const group = groups[groupIndex];
+
+    if (isWarmupGroup(group)) {
+      const sourceStageId = group.entries[0]?.sourceStageId ?? "";
+      const warmupGroups = [group];
+      let nextGroupIndex = groupIndex + 1;
+
+      while (
+        nextGroupIndex < groups.length &&
+        isWarmupGroup(groups[nextGroupIndex]) &&
+        (groups[nextGroupIndex].entries[0]?.sourceStageId ?? "") === sourceStageId
+      ) {
+        warmupGroups.push(groups[nextGroupIndex]);
+        nextGroupIndex += 1;
+      }
+
+      steps.push({
+        firstGroupIndex: groupIndex,
+        firstIndex: group.firstIndex,
+        groups: warmupGroups,
+        key: `warmup:${sourceStageId || group.key}`,
+        lastGroupIndex: nextGroupIndex - 1
+      });
+      groupIndex = nextGroupIndex - 1;
+      continue;
+    }
+
     const superset = supersetByFirstEntryId.get(getGroupAnchorId(group));
     const secondGroup = superset ? groups[groupIndex + 1] : undefined;
 

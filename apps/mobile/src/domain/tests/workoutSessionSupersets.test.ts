@@ -149,6 +149,38 @@ describe("workout session supersets", () => {
     expect(createWorkoutSessionSuperset(restSession, "rest-1", timestamp)).toBe(restSession);
   });
 
+  it("shows one warm-up stage as one guided step and never allows warm-up supersets", () => {
+    const session = createSession({
+      entries: [
+        exerciseEntry("a", 1, {
+          id: "warmup-a",
+          sourceElementId: "warmup-element-a",
+          sourceStageId: "warmup-stage",
+          type: "warmup"
+        }),
+        exerciseEntry("b", 1, {
+          id: "warmup-b",
+          sourceElementId: "warmup-element-b",
+          sourceStageId: "warmup-stage",
+          type: "warmup"
+        }),
+        exerciseEntry("c", 1, {
+          id: "main-c",
+          sourceStageId: "main-stage"
+        })
+      ]
+    });
+
+    const steps = getWorkoutSessionGuidedSteps(session);
+
+    expect(steps).toHaveLength(2);
+    expect(steps[0].groups.map((group) => group.entries[0].id)).toEqual(["warmup-a", "warmup-b"]);
+    expect(getGuidedStepRangeForEntry(session, "warmup-b")).toEqual({ end: 2, start: 1, total: 3 });
+    expect(getNextGuidedEntryId(session, "warmup-a")).toBe("main-c");
+    expect(getWorkoutSessionSupersetCandidate(session, "warmup-a").status).toBe("ineligible");
+    expect(createWorkoutSessionSuperset(session, "warmup-a", timestamp)).toBe(session);
+  });
+
   it("prevents one exercise from overlapping two supersets", () => {
     const withSuperset = createWorkoutSessionSuperset(createSession(), "a-1", timestamp);
 

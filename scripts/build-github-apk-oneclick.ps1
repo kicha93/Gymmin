@@ -3,7 +3,9 @@ param(
   [string]$GitHubRepo = "kicha93/gymmin-apk",
   [string]$ReleaseTag = "",
   [string]$ReleaseTitle = "",
+  [string]$CommitMessage = "",
   [string]$SigningEnvFile = "C:\secure\gymmin-upload-key-codex-20260701.env.ps1",
+  [switch]$SkipGitSync,
   [switch]$SkipPublish
 )
 
@@ -40,6 +42,7 @@ if (-not $appVersion -or $versionCode -le 0 -or -not $applicationId) {
 }
 if (-not $ReleaseTag) { $ReleaseTag = "v$appVersion" }
 if (-not $ReleaseTitle) { $ReleaseTitle = "Gymmin $appVersion" }
+if (-not $CommitMessage) { $CommitMessage = "chore: publish Gymmin $appVersion build" }
 
 Write-Step "Preparing Gymmin $appVersion (versionCode $versionCode, $applicationId)."
 Push-Location $repoRoot
@@ -102,6 +105,38 @@ if (-not $packageLine -or
 $apksigner = Get-AndroidBuildTool "apksigner.bat"
 & $apksigner verify --verbose --print-certs $versionedApkPath
 Assert-LastExitCode "APK signature validation"
+
+if (-not $SkipGitSync) {
+  Write-Step "Committing and pushing the verified source state..."
+  Push-Location $repoRoot
+  try {
+    $branch = (git branch --show-current).Trim()
+    Assert-LastExitCode "Current Git branch detection"
+    if (-not $branch) { throw "One-click Git sync requires a checked-out branch." }
+
+    git rev-parse --abbrev-ref --symbolic-full-name "@{upstream}" | Out-Null
+    Assert-LastExitCode "Git upstream validation"
+
+    $pendingChanges = git status --porcelain --untracked-files=all
+    Assert-LastExitCode "Git status"
+    if ($pendingChanges) {
+      git add --all
+      Assert-LastExitCode "Git staging"
+      git diff --cached --quiet
+      if ($LASTEXITCODE -eq 1) {
+        git commit -m $CommitMessage
+        Assert-LastExitCode "Git commit"
+      } elseif ($LASTEXITCODE -ne 0) {
+        throw "Staged Git diff check failed with exit code $LASTEXITCODE."
+      }
+    } else {
+      Write-Step "No source changes require a new commit."
+    }
+
+    git push
+    Assert-LastExitCode "Git push"
+  } finally { Pop-Location }
+}
 
 if (-not $SkipPublish) {
   Write-Step "Publishing the verified APK to GitHub Release $ReleaseTag..."

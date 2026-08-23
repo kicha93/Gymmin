@@ -8,7 +8,11 @@ import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { ExerciseSummaryRow, WorkoutMuscleOverviewContent } from "../components/WorkoutPresentation";
 import { WorkoutExportSheet } from "../components/WorkoutExportSheet";
 import { addDiagnosticEvent } from "../domain/appDiagnostics";
-import { groupWorkoutBuilderSteps } from "../domain/workoutEditor";
+import {
+  getWorkoutStageExerciseNumber,
+  groupWorkoutBuilderSteps,
+  isSimpleWarmupStageGroup
+} from "../domain/workoutEditor";
 import {
   exportWorkoutToFile,
   openWorkoutExportFile,
@@ -76,7 +80,7 @@ export function WorkoutDetailScreen({
   const stageGroups = useMemo(
     () => workout
       ? groupWorkoutBuilderSteps(workout.draft.steps)
-          .filter(({ stage }) => stage.stageType !== "warmup")
+          .filter((group) => !isSimpleWarmupStageGroup(group))
       : [],
     [workout?.draft.steps]
   );
@@ -288,7 +292,7 @@ export function WorkoutDetailScreen({
                         ]}
                       >
                         <View style={styles.workoutInfo}>
-                          {elements.map((element) => (
+                          {elements.map((element, elementIndex) => (
                             <View key={element.id} style={styles.workoutDetailElementRow}>
                               <ExerciseSummaryRow
                                 language={language}
@@ -307,7 +311,9 @@ export function WorkoutDetailScreen({
                                     })()
                                     : undefined
                                 }
-                                seriesIndex={headerElement?.id === element.id ? setIndex + 1 : undefined}
+                                seriesIndex={stage.stageType === "warmup"
+                                  ? getWorkoutStageExerciseNumber(series, setIndex, elementIndex)
+                                  : headerElement?.id === element.id ? setIndex + 1 : undefined}
                                 step={element}
                                 targetText={formatExerciseSetTarget({ ...element, setCount: set.setCount || "1" })}
                                 theme={theme}

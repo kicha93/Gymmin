@@ -1,9 +1,32 @@
 import { describe, expect, it } from "vitest";
 
-import { addWorkoutStep, groupWorkoutBuilderSteps, moveWorkoutStep, removeWorkoutStep } from "../workoutEditor";
+import {
+  addWorkoutStep,
+  getWorkoutStageExerciseNumber,
+  groupWorkoutBuilderSteps,
+  isSimpleWarmupStageGroup,
+  moveWorkoutStep,
+  removeWorkoutStep
+} from "../workoutEditor";
 import { createDefaultWorkout, createStep } from "../workouts";
 
 describe("workout editor mutations", () => {
+  it("hides only a simple warm-up placeholder", () => {
+    const stage = createStep({ id: "warmup", kind: "stage", label: "Warm-up", stageType: "warmup" });
+    const set = createStep({ id: "warmup-set", kind: "set", parentStageId: stage.id, setCount: "1" });
+    const placeholder = createStep({ id: "placeholder", goalType: "buttonPress", kind: "exercise", parentSetId: set.id, stageType: "warmup" });
+    const [simpleGroup] = groupWorkoutBuilderSteps([stage, set, placeholder]);
+
+    expect(isSimpleWarmupStageGroup(simpleGroup)).toBe(true);
+    expect(isSimpleWarmupStageGroup({ ...simpleGroup, stage: { ...stage, targetValue: "00:05:00" } })).toBe(false);
+
+    const movement = { ...placeholder, exerciseName: "Jumping jacks", stageType: "exercise" as const };
+    const [detailedGroup] = groupWorkoutBuilderSteps([stage, set, movement]);
+
+    expect(isSimpleWarmupStageGroup(detailedGroup)).toBe(false);
+    expect(isSimpleWarmupStageGroup({ ...detailedGroup, stage: { ...stage, stageType: "exercise" } })).toBe(false);
+  });
+
   it("groups stages, sets and exercises in their original order", () => {
     const firstStage = createStep({ kind: "stage" });
     const firstSet = createStep({ kind: "set", parentStageId: firstStage.id });
@@ -25,6 +48,30 @@ describe("workout editor mutations", () => {
     expect(groups[0]?.series.map((series) => series.set.id)).toEqual([firstSet.id, secondSet.id]);
     expect(groups[0]?.series.map((series) => series.elements.map((element) => element.id)))
       .toEqual([[firstExercise.id], [secondExercise.id]]);
+  });
+
+  it("numbers every exercise in a stage while excluding rest targets", () => {
+    const stage = createStep({ kind: "stage", stageType: "warmup" });
+    const firstSet = createStep({ kind: "set", parentStageId: stage.id });
+    const firstExercise = createStep({ kind: "exercise", parentSetId: firstSet.id, stageType: "warmup" });
+    const rest = createStep({ kind: "exercise", parentSetId: firstSet.id, stageType: "rest" });
+    const secondExercise = createStep({ kind: "exercise", parentSetId: firstSet.id, stageType: "warmup" });
+    const secondSet = createStep({ kind: "set", parentStageId: stage.id });
+    const thirdExercise = createStep({ kind: "exercise", parentSetId: secondSet.id, stageType: "warmup" });
+    const [group] = groupWorkoutBuilderSteps([
+      stage,
+      firstSet,
+      firstExercise,
+      rest,
+      secondExercise,
+      secondSet,
+      thirdExercise
+    ]);
+
+    expect(getWorkoutStageExerciseNumber(group.series, 0, 0)).toBe(1);
+    expect(getWorkoutStageExerciseNumber(group.series, 0, 1)).toBeUndefined();
+    expect(getWorkoutStageExerciseNumber(group.series, 0, 2)).toBe(2);
+    expect(getWorkoutStageExerciseNumber(group.series, 1, 0)).toBe(3);
   });
 
   it("removes a stage together with nested sets and exercises", () => {

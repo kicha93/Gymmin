@@ -73,6 +73,10 @@ try {
 if (-not $releaseExists) {
   Write-Step "Creating GitHub release $ReleaseTag in $GitHubRepo..."
   & $gh release create $ReleaseTag $resolvedApkPath --repo $GitHubRepo --title $ReleaseTitle --notes "Gymmin Android APK build."
+  if ($LASTEXITCODE -ne 0) {
+    Write-Step "Release creation did not succeed; retrying as an update of existing release $ReleaseTag..."
+    & $gh release upload $ReleaseTag $resolvedApkPath --repo $GitHubRepo --clobber
+  }
 } else {
   Write-Step "Uploading APK to existing GitHub release $ReleaseTag in $GitHubRepo..."
   & $gh release upload $ReleaseTag $resolvedApkPath --repo $GitHubRepo --clobber

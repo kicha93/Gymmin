@@ -47,46 +47,78 @@ New-Item -ItemType Directory -Path $artifactsRoot -Force | Out-Null
 $resolvedApkPath = (Resolve-Path $ApkPath).Path
 $gh = Get-GitHubCliPath
 
-& $gh auth status *> $null
-if ($LASTEXITCODE -ne 0) {
+function Invoke-GitHubCliWithRetry {
+  param(
+    [Parameter(Mandatory = $true)][string[]]$Arguments,
+    [int]$MaxAttempts = 4,
+    [switch]$Silent
+  )
+
+  for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+      if ($Silent) {
+        & $gh @Arguments *> $null
+      } else {
+        & $gh @Arguments | Out-Host
+      }
+      $exitCode = $LASTEXITCODE
+    } finally {
+      $ErrorActionPreference = $previousErrorActionPreference
+    }
+
+    if ($exitCode -eq 0) { return $true }
+    if ($attempt -lt $MaxAttempts) {
+      $delaySeconds = [Math]::Min(15, $attempt * 5)
+      Write-Step "GitHub CLI attempt $attempt/$MaxAttempts failed; retrying in $delaySeconds seconds..."
+      Start-Sleep -Seconds $delaySeconds
+    }
+  }
+
+  return $false
+}
+
+if (-not (Invoke-GitHubCliWithRetry -Arguments @("auth", "status") -Silent)) {
   throw "GitHub CLI is not authenticated. Run: $gh auth login --hostname github.com --git-protocol https --web --scopes repo"
 }
 
-& $gh repo view $GitHubRepo *> $null
-if ($LASTEXITCODE -ne 0) {
-  Write-Step "Creating private GitHub repository: $GitHubRepo"
-  & $gh repo create $GitHubRepo --private --description "Gymmin Android APK builds" --add-readme
-  if ($LASTEXITCODE -ne 0) {
-    throw "Could not create GitHub repository: $GitHubRepo"
-  }
-}
-
-$previousErrorActionPreference = $ErrorActionPreference
-$ErrorActionPreference = "SilentlyContinue"
-try {
-  & $gh release view $ReleaseTag --repo $GitHubRepo *> $null
-  $releaseExists = $LASTEXITCODE -eq 0
-} finally {
-  $ErrorActionPreference = $previousErrorActionPreference
-}
+$releaseExists = Invoke-GitHubCliWithRetry -Arguments @("release", "view", $ReleaseTag, "--repo", $GitHubRepo) -MaxAttempts 2 -Silent
 
 if (-not $releaseExists) {
   Write-Step "Creating GitHub release $ReleaseTag in $GitHubRepo..."
-  & $gh release create $ReleaseTag $resolvedApkPath --repo $GitHubRepo --title $ReleaseTitle --notes "Gymmin Android APK build."
-  if ($LASTEXITCODE -ne 0) {
+  $releaseCreated = Invoke-GitHubCliWithRetry -Arguments @("release", "create", $ReleaseTag, $resolvedApkPath, "--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", "Gymmin Android APK build.")
+  if (-not $releaseCreated) {
     Write-Step "Release creation did not succeed; retrying as an update of existing release $ReleaseTag..."
-    & $gh release upload $ReleaseTag $resolvedApkPath --repo $GitHubRepo --clobber
+    $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments @("release", "upload", $ReleaseTag, $resolvedApkPath, "--repo", $GitHubRepo, "--clobber")
   }
 } else {
   Write-Step "Uploading APK to existing GitHub release $ReleaseTag in $GitHubRepo..."
-  & $gh release upload $ReleaseTag $resolvedApkPath --repo $GitHubRepo --clobber
+  $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments @("release", "upload", $ReleaseTag, $resolvedApkPath, "--repo", $GitHubRepo, "--clobber")
 }
 
-if ($LASTEXITCODE -ne 0) {
+if (-not $releaseCreated -and -not $releaseUploaded) {
   throw "Could not upload APK to GitHub release $ReleaseTag."
 }
 
-$releaseUrl = (& $gh release view $ReleaseTag --repo $GitHubRepo --json url --jq ".url").Trim()
+$releaseUrl = ""
+for ($attempt = 1; $attempt -le 4 -and -not $releaseUrl; $attempt++) {
+  $previousErrorActionPreference = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  try {
+    $releaseUrlOutput = & $gh release view $ReleaseTag --repo $GitHubRepo --json url --jq ".url" 2>$null
+    $releaseUrlExitCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+  }
+  if ($releaseUrlExitCode -eq 0) {
+    $releaseUrl = ([string]$releaseUrlOutput).Trim()
+  } elseif ($attempt -lt 4) {
+    $delaySeconds = [Math]::Min(15, $attempt * 5)
+    Write-Step "Could not resolve release URL; retrying in $delaySeconds seconds..."
+    Start-Sleep -Seconds $delaySeconds
+  }
+}
 if (-not $releaseUrl) {
   throw "GitHub release was uploaded, but release URL could not be resolved."
 }

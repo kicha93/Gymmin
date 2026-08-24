@@ -25,13 +25,17 @@ npm run mobile:github:apk:oneclick
 The command:
 
 1. reads version, Android `versionCode`, and package from `apps/mobile/app.json`;
-2. runs the dependency audit, the locally pinned Expo Doctor, `git diff --check`, mobile tests, typecheck, catalog/media/security and local-only guards;
-3. builds a signed `arm64-v8a` release APK by default;
-4. validates the final merged manifest, package/version metadata, and APK signature;
-5. writes both the `latest` build output and a versioned artifact such as `.artifacts/Gymmin-1.0-vc2-arm64-v8a-release.apk`;
-6. uploads the verified versioned artifact to the matching private GitHub Release (`v1.0` for app version `1.0`).
+2. fails early if signing, Java, Android tools, Git upstream, GitHub authentication, or release-repository access is unavailable;
+3. runs the dependency audit, the locally pinned Expo Doctor, `git diff --check`, mobile tests, typecheck, catalog/media/security and local-only guards;
+4. builds a signed `arm64-v8a` release APK by default;
+5. validates the final merged manifest, package/version metadata, and APK signature;
+6. writes both the `latest` build output and a versioned artifact such as `.artifacts/Gymmin-1.0-vc2-arm64-v8a-release.apk`;
+7. commits and pushes the verified source state, retrying transient Git network failures without opening an interactive credential prompt;
+8. creates or updates the matching private GitHub Release (`v1.0` for app version `1.0`) with `--clobber`, then verifies the remote asset name and byte size.
 
 It takes no URL, performs no health/tunnel check, and does not inspect account or internet availability. `-ReleaseTag` and `-ReleaseTitle` remain optional explicit overrides. Use `-SkipPublish` to perform the complete preparation and verification without GitHub upload.
+
+Git and GitHub operations retry automatically with bounded backoff. A temporary outage therefore does not immediately discard a successful build. If GitHub remains unavailable after all retries, the signed and verified APK stays in `.artifacts`; rerunning the one-click command is safe, and the publication-only recovery command is `npm run mobile:apk:publish-github`. Existing tags are updated rather than recreated, so publishing version `1.0` repeatedly does not fail merely because release `v1.0` already exists.
 
 ## Google Play AAB
 

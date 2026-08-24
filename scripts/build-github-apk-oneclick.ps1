@@ -5,11 +5,14 @@ param(
   [string]$ReleaseTitle = "",
   [string]$CommitMessage = "",
   [string]$SigningEnvFile = "C:\secure\gymmin-upload-key-codex-20260701.env.ps1",
+  [ValidateRange(1, 20)][int]$NetworkMaxAttempts = 6,
   [switch]$SkipGitSync,
   [switch]$SkipPublish
 )
 
 $ErrorActionPreference = "Stop"
+$env:GIT_TERMINAL_PROMPT = "0"
+$env:GH_PROMPT_DISABLED = "1"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $mobileRoot = Join-Path $repoRoot "apps\mobile"
 $appConfigPath = Join-Path $mobileRoot "app.json"
@@ -21,6 +24,37 @@ $manifestGuard = Join-Path $PSScriptRoot "validate-android-exported-components.m
 function Write-Step([string]$Message) { Write-Host "[github-apk-oneclick] $Message" }
 function Assert-LastExitCode([string]$Step) {
   if ($LASTEXITCODE -ne 0) { throw "$Step failed with exit code $LASTEXITCODE." }
+}
+function Invoke-GitNetworkCommandWithRetry {
+  param(
+    [Parameter(Mandatory = $true)][ValidateSet("preflight", "push")][string]$Operation,
+    [string]$Remote = "origin",
+    [int]$MaxAttempts = $NetworkMaxAttempts
+  )
+
+  for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+      if ($Operation -eq "preflight") {
+        git ls-remote --exit-code $Remote HEAD | Out-Null
+      } else {
+        git push
+      }
+      $exitCode = $LASTEXITCODE
+    } finally {
+      $ErrorActionPreference = $previousErrorActionPreference
+    }
+
+    if ($exitCode -eq 0) { return }
+    if ($attempt -lt $MaxAttempts) {
+      $delaySeconds = [Math]::Min(15, $attempt * 5)
+      Write-Step "Git $Operation attempt $attempt/$MaxAttempts failed; retrying in $delaySeconds seconds..."
+      Start-Sleep -Seconds $delaySeconds
+    }
+  }
+
+  throw "Git $Operation failed after $MaxAttempts attempts."
 }
 function Get-AndroidBuildTool([string]$FileName) {
   $sdkRoot = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { $env:ANDROID_SDK_ROOT }
@@ -45,6 +79,39 @@ if (-not $ReleaseTitle) { $ReleaseTitle = "Gymmin $appVersion" }
 if (-not $CommitMessage) { $CommitMessage = "chore: publish Gymmin $appVersion build" }
 
 Write-Step "Preparing Gymmin $appVersion (versionCode $versionCode, $applicationId)."
+if (-not (Test-Path -LiteralPath $SigningEnvFile)) {
+  throw "Release signing environment file was not found: $SigningEnvFile"
+}
+if (-not (Get-Command java -ErrorAction SilentlyContinue)) { throw "JDK 17 is required." }
+if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) {
+  throw "ANDROID_HOME or ANDROID_SDK_ROOT is required."
+}
+Get-AndroidBuildTool "aapt.exe" | Out-Null
+Get-AndroidBuildTool "apksigner.bat" | Out-Null
+
+$gitRemote = "origin"
+if (-not $SkipGitSync) {
+  Write-Step "Checking Git branch, upstream, and remote connectivity before the build..."
+  Push-Location $repoRoot
+  try {
+    $branch = (git branch --show-current).Trim()
+    Assert-LastExitCode "Current Git branch detection"
+    if (-not $branch) { throw "One-click Git sync requires a checked-out branch." }
+    $upstreamRef = (git rev-parse --abbrev-ref --symbolic-full-name "@{upstream}").Trim()
+    Assert-LastExitCode "Git upstream validation"
+    if (-not $upstreamRef -or $upstreamRef -notmatch "^([^/]+)/") {
+      throw "Could not determine the Git remote from upstream: $upstreamRef"
+    }
+    $gitRemote = $Matches[1]
+    Invoke-GitNetworkCommandWithRetry -Operation preflight -Remote $gitRemote
+  } finally { Pop-Location }
+}
+
+if (-not $SkipPublish) {
+  Write-Step "Checking GitHub authentication and release repository connectivity before the build..."
+  & $publishScript -GitHubRepo $GitHubRepo -ReleaseTag $ReleaseTag -ReleaseTitle $ReleaseTitle -GitHubMaxAttempts $NetworkMaxAttempts -CheckOnly
+}
+
 Push-Location $repoRoot
 try {
   Write-Step "Checking dependency advisories..."
@@ -133,14 +200,19 @@ if (-not $SkipGitSync) {
       Write-Step "No source changes require a new commit."
     }
 
-    git push
-    Assert-LastExitCode "Git push"
+    Invoke-GitNetworkCommandWithRetry -Operation push -Remote $gitRemote
   } finally { Pop-Location }
 }
 
 if (-not $SkipPublish) {
   Write-Step "Publishing the verified APK to GitHub Release $ReleaseTag..."
-  & $publishScript -ApkPath $versionedApkPath -GitHubRepo $GitHubRepo -ReleaseTag $ReleaseTag -ReleaseTitle $ReleaseTitle
+  try {
+    & $publishScript -ApkPath $versionedApkPath -GitHubRepo $GitHubRepo -ReleaseTag $ReleaseTag -ReleaseTitle $ReleaseTitle -GitHubMaxAttempts $NetworkMaxAttempts
+  } catch {
+    Write-Step "The verified APK remains available at: $versionedApkPath"
+    Write-Step "After connectivity returns, resume only publication with: npm run mobile:apk:publish-github -- -ApkPath `"$versionedApkPath`" -GitHubRepo $GitHubRepo -ReleaseTag $ReleaseTag -ReleaseTitle `"$ReleaseTitle`""
+    throw
+  }
 }
 
 Write-Output "APK_PATH=$versionedApkPath"

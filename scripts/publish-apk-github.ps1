@@ -2,7 +2,9 @@ param(
   [string]$ApkPath = "",
   [string]$GitHubRepo = "kicha93/gymmin-apk",
   [string]$ReleaseTag = "",
-  [string]$ReleaseTitle = ""
+  [string]$ReleaseTitle = "",
+  [ValidateRange(1, 20)][int]$GitHubMaxAttempts = 6,
+  [switch]$CheckOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -38,19 +40,14 @@ function Get-GitHubCliPath {
   throw "GitHub CLI was not found. Install gh or download the portable CLI to .tools\gh\bin\gh.exe."
 }
 
-if (-not (Test-Path $ApkPath)) {
-  throw "APK was not found: $ApkPath"
-}
-
 New-Item -ItemType Directory -Path $artifactsRoot -Force | Out-Null
 
-$resolvedApkPath = (Resolve-Path $ApkPath).Path
 $gh = Get-GitHubCliPath
 
 function Invoke-GitHubCliWithRetry {
   param(
     [Parameter(Mandatory = $true)][string[]]$Arguments,
-    [int]$MaxAttempts = 4,
+    [int]$MaxAttempts = $GitHubMaxAttempts,
     [switch]$Silent
   )
 
@@ -79,18 +76,65 @@ function Invoke-GitHubCliWithRetry {
   return $false
 }
 
+function Invoke-GitHubCliCaptureWithRetry {
+  param(
+    [Parameter(Mandatory = $true)][string[]]$Arguments,
+    [int]$MaxAttempts = $GitHubMaxAttempts
+  )
+
+  for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+      $commandOutput = & $gh @Arguments 2>$null
+      $exitCode = $LASTEXITCODE
+    } finally {
+      $ErrorActionPreference = $previousErrorActionPreference
+    }
+
+    if ($exitCode -eq 0) { return ($commandOutput | Out-String).Trim() }
+    if ($attempt -lt $MaxAttempts) {
+      $delaySeconds = [Math]::Min(15, $attempt * 5)
+      Write-Step "GitHub CLI attempt $attempt/$MaxAttempts failed; retrying in $delaySeconds seconds..."
+      Start-Sleep -Seconds $delaySeconds
+    }
+  }
+
+  return ""
+}
+
 if (-not (Invoke-GitHubCliWithRetry -Arguments @("auth", "status") -Silent)) {
   throw "GitHub CLI is not authenticated. Run: $gh auth login --hostname github.com --git-protocol https --web --scopes repo"
 }
 
-$releaseExists = Invoke-GitHubCliWithRetry -Arguments @("release", "view", $ReleaseTag, "--repo", $GitHubRepo) -MaxAttempts 2 -Silent
+if (-not (Invoke-GitHubCliWithRetry -Arguments @("repo", "view", $GitHubRepo) -Silent)) {
+  throw "GitHub repository could not be reached after $GitHubMaxAttempts attempts: $GitHubRepo"
+}
+
+if ($CheckOnly) {
+  Write-Output "GITHUB_PREFLIGHT=OK"
+  Write-Output "GITHUB_REPO=$GitHubRepo"
+  return
+}
+
+if (-not (Test-Path $ApkPath)) {
+  throw "APK was not found: $ApkPath"
+}
+$resolvedApkPath = (Resolve-Path $ApkPath).Path
+
+$releaseCreated = $false
+$releaseUploaded = $false
+$releaseExists = Invoke-GitHubCliWithRetry -Arguments @("release", "view", $ReleaseTag, "--repo", $GitHubRepo) -MaxAttempts 3 -Silent
 
 if (-not $releaseExists) {
-  Write-Step "Creating GitHub release $ReleaseTag in $GitHubRepo..."
-  $releaseCreated = Invoke-GitHubCliWithRetry -Arguments @("release", "create", $ReleaseTag, $resolvedApkPath, "--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", "Gymmin Android APK build.")
-  if (-not $releaseCreated) {
-    Write-Step "Release creation did not succeed; retrying as an update of existing release $ReleaseTag..."
-    $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments @("release", "upload", $ReleaseTag, $resolvedApkPath, "--repo", $GitHubRepo, "--clobber")
+  # A failed release lookup may mean either "not found" or a temporary API
+  # timeout. Updating first makes reruns idempotent and avoids a duplicate-tag
+  # failure for an existing release. Only then do we try to create a new tag.
+  Write-Step "Release lookup was inconclusive; trying an idempotent update of $ReleaseTag first..."
+  $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments @("release", "upload", $ReleaseTag, $resolvedApkPath, "--repo", $GitHubRepo, "--clobber") -MaxAttempts 2
+  if (-not $releaseUploaded) {
+    Write-Step "Creating GitHub release $ReleaseTag in $GitHubRepo..."
+    $releaseCreated = Invoke-GitHubCliWithRetry -Arguments @("release", "create", $ReleaseTag, $resolvedApkPath, "--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", "Gymmin Android APK build.")
   }
 } else {
   Write-Step "Uploading APK to existing GitHub release $ReleaseTag in $GitHubRepo..."
@@ -101,26 +145,20 @@ if (-not $releaseCreated -and -not $releaseUploaded) {
   throw "Could not upload APK to GitHub release $ReleaseTag."
 }
 
-$releaseUrl = ""
-for ($attempt = 1; $attempt -le 4 -and -not $releaseUrl; $attempt++) {
-  $previousErrorActionPreference = $ErrorActionPreference
-  $ErrorActionPreference = "Continue"
-  try {
-    $releaseUrlOutput = & $gh release view $ReleaseTag --repo $GitHubRepo --json url --jq ".url" 2>$null
-    $releaseUrlExitCode = $LASTEXITCODE
-  } finally {
-    $ErrorActionPreference = $previousErrorActionPreference
-  }
-  if ($releaseUrlExitCode -eq 0) {
-    $releaseUrl = ([string]$releaseUrlOutput).Trim()
-  } elseif ($attempt -lt 4) {
-    $delaySeconds = [Math]::Min(15, $attempt * 5)
-    Write-Step "Could not resolve release URL; retrying in $delaySeconds seconds..."
-    Start-Sleep -Seconds $delaySeconds
-  }
+$releaseJson = Invoke-GitHubCliCaptureWithRetry -Arguments @("release", "view", $ReleaseTag, "--repo", $GitHubRepo, "--json", "url,assets")
+if (-not $releaseJson) {
+  throw "GitHub release was uploaded, but its metadata could not be verified."
 }
-if (-not $releaseUrl) {
-  throw "GitHub release was uploaded, but release URL could not be resolved."
+$releaseMetadata = $releaseJson | ConvertFrom-Json
+$releaseUrl = ([string]$releaseMetadata.url).Trim()
+$assetName = [System.IO.Path]::GetFileName($resolvedApkPath)
+$localAssetSize = (Get-Item -LiteralPath $resolvedApkPath).Length
+$publishedAsset = $releaseMetadata.assets | Where-Object { $_.name -eq $assetName } | Select-Object -First 1
+if (-not $releaseUrl -or -not $publishedAsset) {
+  throw "GitHub release verification did not find the uploaded asset: $assetName"
+}
+if ([long]$publishedAsset.size -ne [long]$localAssetSize) {
+  throw "Published APK size mismatch for ${assetName}: local=$localAssetSize remote=$($publishedAsset.size)"
 }
 
 Set-Content -LiteralPath $downloadUrlFile -Value $releaseUrl
@@ -129,3 +167,5 @@ Write-Output ""
 Write-Output "APK_PATH=$resolvedApkPath"
 Write-Output "APK_DOWNLOAD_URL=$releaseUrl"
 Write-Output "APK_DOWNLOAD_URL_FILE=$downloadUrlFile"
+Write-Output "APK_REMOTE_ASSET=$assetName"
+Write-Output "APK_REMOTE_SIZE=$localAssetSize"

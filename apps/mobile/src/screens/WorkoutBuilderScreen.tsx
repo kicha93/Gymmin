@@ -2,19 +2,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { Input, InputField } from "@gluestack-ui/themed";
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { InteractionManager, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { AppButton, AppInput, AppTextarea, SelectControl, SuffixedInput } from "../components/AppControls";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
-import { ExercisePicker } from "../components/ExercisePicker";
 import { ExercisePickerV2 } from "../features/exercisePickerV2/ExercisePickerV2";
 import { WorkoutMuscleOverviewContent } from "../components/WorkoutPresentation";
 import {
   activeExerciseLibraryTiers,
   findCatalogExerciseBestEffort,
-  getCachedExerciseOptionsForStageType,
   getExerciseDisplayName,
-  getExerciseSectionsForStageType,
   isExerciseAvailableForStageType
 } from "../domain/exercises";
 import { groupWorkoutBuilderSteps } from "../domain/workoutEditor";
@@ -68,7 +65,6 @@ type StepConfigurationProps = {
   updateStep: (stepId: string, nextStep: WorkoutStep) => void;
 };
 
-const USE_EXERCISE_PICKER_V2 = true;
 const emptyExerciseUsageById: ExerciseUsageById = new Map();
 
 type StageConfigurationProps = {
@@ -343,7 +339,7 @@ export function StepConfiguration({
         {shouldShowExerciseFields ? (
           <View style={styles.fieldGroup}>
             <Text style={[styles.label, { color: theme.muted }]}>{t("exercise")}</Text>
-            {USE_EXERCISE_PICKER_V2 ? <ExercisePickerV2
+            <ExercisePickerV2
               disabled={!hasSelectedType || !canSelectExercise}
               favoriteExerciseIds={favoriteExerciseIds}
               language={language}
@@ -363,41 +359,7 @@ export function StepConfiguration({
               theme={theme}
               usageById={exerciseUsageById}
               value={step.exerciseName}
-            /> : <ExercisePicker
-              disabled={!hasSelectedType || !canSelectExercise}
-              emptyText={t("exercisePickerEmpty")}
-              favoriteExerciseIds={favoriteExerciseIds}
-              favoriteFilterAllLabel={t("favoriteExercisesAllFilter")}
-              favoriteFilterOnlyLabel={t("favoriteExercisesOnlyFilter")}
-              hideAdditionalExercisesLabel={t("exercisePickerHideMore")}
-              showMoreExercisesLabel={t("exercisePickerShowMore")}
-              tierLabels={{
-                variation: t("exercisePickerTierVariation"),
-                advanced: t("exercisePickerTierAdvanced"),
-                sportSpecific: t("exercisePickerTierSportSpecific"),
-                rehab: t("exercisePickerTierRehab")
-              }}
-              language={language}
-              loadingText={t("exercisePickerLoading")}
-              muscleFilterAllLabel={t("exerciseMuscleFilterAll")}
-              muscleFilterLabel={t("exerciseMuscleFilter")}
-              onChange={(exerciseName) => {
-                const catalogExercise = findCatalogExerciseBestEffort(exerciseName);
-                updateStep(step.id, {
-                  ...step,
-                  exerciseId: catalogExercise?.id ?? "",
-                  exerciseName: catalogExercise?.name ?? exerciseName,
-                  loadKg: step.loadKg
-                });
-              }}
-              onToggleFavorite={onToggleFavoriteExercise}
-              placeholder={t("select")}
-              searchPlaceholder={t("searchExercise")}
-              stageType={exerciseCatalogStageType}
-              theme={theme}
-              title={t("exercisePickerTitle")}
-              value={step.exerciseName}
-            />}
+            />
           </View>
         ) : null}
       </View>
@@ -485,23 +447,6 @@ export function WorkoutBuilderScreen({
   );
   const overviewCollapsed = collapsedPanels["builder-overview"] ?? true;
   const stageGroups = useMemo(() => groupWorkoutBuilderSteps(workout.steps), [workout.steps]);
-
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const task = InteractionManager.runAfterInteractions(() => {
-      timeoutId = setTimeout(() => {
-        getExerciseSectionsForStageType(language, "exercise", "all");
-        getCachedExerciseOptionsForStageType(language, "exercise", activeExerciseLibraryTiers);
-      }, 600);
-    });
-
-    return () => {
-      task.cancel();
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [language]);
 
   function addSeriesToStage(stageId: string) {
     setWorkout((current) => {

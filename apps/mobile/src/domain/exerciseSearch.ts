@@ -99,7 +99,10 @@ export const exerciseSearchIndex: readonly ExerciseSearchRecord[] = exercises.ma
     normalizedPolish,
     normalizedAliases,
     normalizedMetadata,
-    tokens: [...new Set([normalizedEnglish, normalizedPolish, ...normalizedAliases, ...normalizedMetadata].flatMap((value) => value.split(" ")))],
+    // Typo tolerance is deliberately limited to displayed PL/EN names. Alias
+    // and metadata tokens would make a broad query such as "wyciskanie"
+    // surface unrelated canonical exercises through a long historical alias.
+    tokens: [...new Set([normalizedEnglish, normalizedPolish].flatMap((value) => value.split(" ")))],
     muscles,
     equipment,
     category: exercise.category,
@@ -112,11 +115,10 @@ function tokenPrefixMatch(text: string, queryTokens: readonly string[]) {
   return queryTokens.every((queryToken) => tokens.some((token) => token.startsWith(queryToken)));
 }
 
-function textualScore(record: ExerciseSearchRecord, query: string, language: "pl" | "en") {
+function textualScore(record: ExerciseSearchRecord, query: string, language: "pl" | "en", allowPartialAliases = false) {
   if (!query) return 0;
   const primary = language === "pl" ? record.normalizedPolish : record.normalizedEnglish;
   const secondary = language === "pl" ? record.normalizedEnglish : record.normalizedPolish;
-  const fields = [primary, secondary, ...record.normalizedAliases];
   if (primary === query) return 10_000;
   if (secondary === query) return 9_500;
   if (record.normalizedAliases.includes(query)) return 9_000;
@@ -125,7 +127,9 @@ function textualScore(record: ExerciseSearchRecord, query: string, language: "pl
   const queryTokens = query.split(" ");
   if (tokenPrefixMatch(primary, queryTokens)) return 7_000;
   if (tokenPrefixMatch(secondary, queryTokens)) return 6_500;
-  if (fields.some((field) => field.includes(query))) return 5_000;
+  if (primary.includes(query) || secondary.includes(query)) return 5_000;
+  if (allowPartialAliases && record.normalizedAliases.some((alias) => alias.startsWith(query))) return 4_500;
+  if (allowPartialAliases && record.normalizedAliases.some((alias) => tokenPrefixMatch(alias, queryTokens))) return 4_000;
   if (record.normalizedMetadata.some((field) => field.includes(query))) return 2_000;
   return -1;
 }
@@ -171,6 +175,14 @@ export function searchExercises(options: ExerciseSearchOptions): ExerciseSearchR
   let scored = candidates
     .map((record) => ({ record, score: textualScore(record, query, options.language) }))
     .filter(({ score }) => !query || score >= 0);
+
+  // Partial historical aliases are a fallback, not an additional bucket mixed
+  // into a healthy name search. Exact aliases remain searchable above.
+  if (query && scored.length === 0) {
+    scored = candidates
+      .map((record) => ({ record, score: textualScore(record, query, options.language, true) }))
+      .filter(({ score }) => score >= 0);
+  }
 
   // Fuzzy matching is deliberately a fallback and only compares query to the
   // pre-tokenized candidate terms when ordinary matching found very little.

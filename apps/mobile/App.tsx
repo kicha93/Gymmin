@@ -15,7 +15,6 @@ import {
   AppState,
   BackHandler,
   Image,
-  InteractionManager,
   Keyboard,
   KeyboardAvoidingView,
   Linking,
@@ -101,13 +100,9 @@ import {
   type WorkoutSessionSupersetValueField
 } from "./src/domain/workoutSessionSupersets";
 import {
-  activeExerciseLibraryTiers,
   findExerciseById,
   findCatalogExerciseBestEffort,
-  getCachedExerciseOptions,
-  getCachedExerciseOptionsForStageType,
   getExerciseDisplayName,
-  getExerciseSectionsForStageType,
 } from "./src/domain/exercises";
 import {
   resolveWorkoutStartExecutionMode
@@ -935,28 +930,6 @@ function GymminApp() {
 
     return () => clearTimeout(timeoutId);
   }, [areIconFontsLoaded, iconFontError, splashOpacity, splashStartedAt]);
-
-  useEffect(() => {
-    if (isAppLoading || activeScreen !== "home") {
-      return;
-    }
-
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const task = InteractionManager.runAfterInteractions(() => {
-      timeoutId = setTimeout(() => {
-        getCachedExerciseOptions(language);
-        getCachedExerciseOptionsForStageType(language, "exercise", activeExerciseLibraryTiers);
-        getExerciseSectionsForStageType(language, "exercise", "all");
-      }, 600);
-    });
-
-    return () => {
-      task.cancel();
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [activeScreen, isAppLoading, language]);
 
   useEffect(() => {
     requestAnimationFrame(() => {

@@ -72,6 +72,17 @@ describe("exercise picker V2 search index", () => {
   it("uses conservative fuzzy matching only as a fallback", () => {
     expect(search("wycisknaie").some((record) => record.exercise.polishName.toLocaleLowerCase("pl").includes("wyciskanie"))).toBe(true);
   });
+
+  it("does not append unrelated fuzzy results when a valid query already has matches", () => {
+    const names = search("wyciskanie").map((record) => record.exercise.polishName);
+    expect(names).not.toContain("Spięcia brzucha");
+    expect(names).not.toContain("Wypychanie nóg na suwnicy");
+    expect(names).not.toContain("Prostowanie ramion na wyciągu podchwytem");
+  });
+
+  it("still resolves a complete historical alias to its canonical exercise", () => {
+    expect(search("wyciskanie nóg na suwnicy")[0]?.exercise.polishName).toBe("Wypychanie nóg na suwnicy");
+  });
 });
 
 describe("exercise picker V2 usage", () => {
@@ -90,4 +101,3 @@ describe("exercise picker V2 usage", () => {
     expect(buildExerciseUsageById([{ ...base, status: "active" }, { ...base, id: "a", status: "abandoned" }, { ...base, id: "d", status: "completed", deletedAt: "2026-08-21T00:00:00Z" }] as WorkoutSession[]).size).toBe(0);
   });
 });
-

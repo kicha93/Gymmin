@@ -1,17 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  exercises,
   exercisesByCategory,
   findCatalogExerciseBestEffort,
   findExerciseById,
   findExerciseByName,
-  filterExerciseOptionsForPicker,
-  getExerciseOptionTierBadge,
-  getExerciseOptions,
-  getExerciseOptionsForStageType,
   getMuscleImpactGroups,
   getPrimaryMuscles,
-  getExerciseSectionsForStageType,
   getRequiredEquipment,
   getSecondaryMuscles,
   isExerciseAvailableForStageType,
@@ -28,7 +24,7 @@ describe("exercise catalog cleanup", () => {
   });
 
   it("does not expose removed duplicate names in exercise options", () => {
-    const optionLabels = getExerciseOptions("en").map((option) => option.label);
+    const optionLabels = exercises.filter((exercise) => (exercise.libraryTier ?? "main") === "main").map((exercise) => exercise.name);
 
     expect(optionLabels).not.toContain("Back squat");
     expect(optionLabels).toContain("Barbell Back Squat");
@@ -81,7 +77,6 @@ describe("exercise catalog cleanup", () => {
     expect(facePull && getPrimaryMuscles(facePull)).not.toContain("lats");
     expect(facePull && getSecondaryMuscles(facePull)).not.toContain("lats");
     expect(facePull && getMuscleImpactGroups(facePull.muscleImpact).stabilizing).toContain("lats");
-    expect(getExerciseSectionsForStageType("en", "exercise", "lats").flatMap((section) => section.data.map((entry) => entry.exerciseId))).not.toContain("row-face-pull-1044");
   });
 
   it("uses general names for canonical equipment exercises", () => {
@@ -147,7 +142,7 @@ describe("exercise catalog cleanup", () => {
 
   it("adds grouped Stage 2 targets instead of exposing individual letter raise variants", () => {
     const groupedRaise = findExerciseByName("Prone I-Y-T Raise");
-    const optionLabels = getExerciseOptions("en").map((option) => option.label);
+    const optionLabels = exercises.filter((exercise) => (exercise.libraryTier ?? "main") === "main").map((exercise) => exercise.name);
 
     expect(groupedRaise?.polishName).toBe("Wznosy I-Y-T w leżeniu przodem");
     expect(groupedRaise?.category).toBe("SHOULDER_STABILITY");
@@ -199,7 +194,7 @@ describe("exercise catalog cleanup", () => {
   });
 
   it("keeps specialist variants out of the default library", () => {
-    const labels = getExerciseOptions("en").map((option) => option.label);
+    const labels = exercises.filter((exercise) => (exercise.libraryTier ?? "main") === "main").map((exercise) => exercise.name);
 
     expect(labels).not.toContain("Triple-stop Barbell Bench Press");
     expect(labels).not.toContain("Banded Pull-ups (Progression)");
@@ -207,47 +202,22 @@ describe("exercise catalog cleanup", () => {
   });
 
   it("reveals additional active tiers only when explicitly requested", () => {
-    const main = getExerciseOptions("en").map((option) => option.libraryTier);
-    expect(main.every((tier) => tier === "main")).toBe(true);
+    const main = exercises.filter((exercise) => (exercise.libraryTier ?? "main") === "main");
+    expect(main.every((exercise) => (exercise.libraryTier ?? "main") === "main")).toBe(true);
 
-    const variation = getExerciseOptions("en", ["main", "variation"]);
-    expect(variation.some((option) => option.libraryTier === "variation")).toBe(true);
-    expect(variation.some((option) => option.libraryTier === "progression")).toBe(false);
+    const variation = exercises.filter((exercise) => ["main", "variation"].includes(exercise.libraryTier ?? "main"));
+    expect(variation.some((exercise) => exercise.libraryTier === "variation")).toBe(true);
+    expect(variation.some((exercise) => exercise.libraryTier === "progression")).toBe(false);
 
-    const advanced = getExerciseOptionsForStageType("en", "exercise", ["main", "advanced"]);
-    expect(advanced.some((option) => option.libraryTier === "advanced")).toBe(true);
-    expect(advanced.every((option) => option.libraryTier === "main" || option.libraryTier === "advanced")).toBe(true);
+    const advanced = exercises.filter((exercise) => isExerciseAvailableForStageType(exercise, "exercise", ["main", "advanced"]));
+    expect(advanced.some((exercise) => exercise.libraryTier === "advanced")).toBe(true);
+    expect(advanced.every((exercise) => (exercise.libraryTier ?? "main") === "main" || exercise.libraryTier === "advanced")).toBe(true);
   });
 
   it("keeps selected non-main exercises addressable by their canonical id", () => {
-    const options = getExerciseOptions("en", ["main", "variation"]);
-    const option = options.find((item) => item.libraryTier === "variation");
-    expect(option?.exerciseId).toBeTruthy();
-    expect(findExerciseById(option?.exerciseId ?? "")?.id).toBe(option?.exerciseId);
-  });
-
-  it.each(["variation", "advanced", "sportSpecific", "rehab"] as const)("supports the %s picker filter", (tier) => {
-    const options = getExerciseOptions("en", ["main", tier]);
-    expect(options.some((option) => option.libraryTier === tier)).toBe(true);
-    expect(filterExerciseOptionsForPicker(options, "", new Set([tier])).some((option) => option.libraryTier === tier)).toBe(true);
-    expect(filterExerciseOptionsForPicker(options, "", new Set()).some((option) => option.libraryTier === tier)).toBe(false);
-  });
-
-  it("searches all active tiers and ranks main results first", () => {
-    const options = getExerciseOptions("en", ["main", "variation", "advanced", "sportSpecific", "rehab"]);
-    const results = filterExerciseOptionsForPicker(options, "press", new Set());
-
-    expect(results.length).toBeGreaterThan(1);
-    expect(results[0]?.libraryTier).toBe("main");
-    expect(results.every((option) => option.libraryTier !== "progression")).toBe(true);
-  });
-
-  it("reuses prebuilt default picker sections for an immediate first open", () => {
-    const first = getExerciseSectionsForStageType("pl", "exercise", "all");
-    const second = getExerciseSectionsForStageType("pl", "exercise", "all");
-
-    expect(first.length).toBeGreaterThan(0);
-    expect(second).toBe(first);
+    const exercise = exercises.find((item) => item.libraryTier === "variation");
+    expect(exercise?.id).toBeTruthy();
+    expect(findExerciseById(exercise?.id ?? "")?.id).toBe(exercise?.id);
   });
 
   it("checks stage availability without building picker option arrays", () => {
@@ -258,12 +228,4 @@ describe("exercise catalog cleanup", () => {
     expect(frontSquat && isExerciseAvailableForStageType(frontSquat, "warmup", ["main"])).toBe(false);
   });
 
-  it("returns tier badges only for active non-main results", () => {
-    const options = getExerciseOptions("en", ["main", "variation", "advanced", "sportSpecific", "rehab"]);
-    const main = options.find((option) => option.libraryTier === "main");
-    const additional = options.find((option) => option.libraryTier !== "main");
-
-    expect(main && getExerciseOptionTierBadge(main)).toBeNull();
-    expect(additional && getExerciseOptionTierBadge(additional)).toBe(additional?.libraryTier);
-  });
 });

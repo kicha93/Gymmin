@@ -219,173 +219,17 @@ export const styles = StyleSheet.create({
   gluestackSelectBackdrop: {
     opacity: 0.5
   },
-  exercisePickerTrigger: {
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 10,
-    justifyContent: "space-between",
-    minHeight: 46,
-    paddingHorizontal: 12
+  favoriteExerciseList: {
+    gap: 10
   },
-  exercisePickerTriggerText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "400",
-    minWidth: 0
-  },
-  exercisePickerScreen: {
-    flex: 1
-  },
-  exercisePickerContent: {
-    flex: 1
-  },
-  exercisePickerHeader: {
-    alignItems: "center",
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    gap: 14,
-    minHeight: 78,
-    paddingHorizontal: 18
-  },
-  exercisePickerHeaderButton: {
-    alignItems: "center",
-    height: 44,
-    justifyContent: "center",
-    width: 44
-  },
-  exercisePickerHeaderActions: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8
-  },
-  exercisePickerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: "800"
-  },
-  exercisePickerSearchInput: {
+  favoriteExerciseSearchInput: {
     borderRadius: 8,
     borderWidth: 1,
     minHeight: 48
   },
-  exercisePickerFilters: {
-    gap: 10,
-    marginBottom: 18,
-    marginHorizontal: 22,
-    marginTop: 12
-  },
-  exercisePickerMuscleFilter: {
-    gap: 6
-  },
-  exerciseFavoriteFilterRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 10,
-    marginHorizontal: 22,
-    marginTop: 12
-  },
-  exerciseFavoriteFilterButton: {
-    alignItems: "center",
-    borderRadius: 8,
-    flex: 1,
-    justifyContent: "center",
-    minHeight: 38,
-    paddingHorizontal: 10
-  },
-  exerciseFavoriteFilterText: {
-    fontSize: 13,
-    fontWeight: "800",
-    textAlign: "center"
-  },
-  exerciseTierFilterPanel: {
-    gap: 8,
-    marginBottom: 8,
-    marginHorizontal: 22
-  },
-  exerciseTierFilterToggle: {
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    minHeight: 40,
-    paddingHorizontal: 12
-  },
-  exerciseTierFilterToggleText: {
-    fontSize: 14,
-    fontWeight: "800"
-  },
-  exerciseTierFilterOptions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8
-  },
-  exerciseTierFilterChip: {
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 5,
-    minHeight: 36,
-    paddingHorizontal: 10
-  },
-  exerciseTierFilterChipText: {
-    fontSize: 13,
-    fontWeight: "700"
-  },
-  exercisePickerSearchText: {
+  favoriteExerciseSearchText: {
     fontSize: 16,
     paddingHorizontal: 14
-  },
-  exercisePickerList: {
-    flex: 1
-  },
-  exercisePickerListContent: {
-    paddingBottom: 220
-  },
-  exercisePickerLetter: {
-    fontSize: 12,
-    fontWeight: "600",
-    paddingHorizontal: 22,
-    paddingVertical: 6
-  },
-  exercisePickerRow: {
-    alignItems: "center",
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: 34
-  },
-  exercisePickerRowText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "400",
-    minWidth: 0
-  },
-  exercisePickerTierBadge: {
-    borderRadius: 6,
-    fontSize: 10,
-    fontWeight: "800",
-    overflow: "hidden",
-    paddingHorizontal: 6,
-    paddingVertical: 3
-  },
-  exercisePickerFavoriteButton: {
-    alignItems: "center",
-    height: 42,
-    justifyContent: "center",
-    width: 42
-  },
-  exercisePickerEmpty: {
-    fontSize: 17,
-    padding: 24
-  },
-  favoriteExerciseList: {
-    gap: 10
   },
   favoriteExerciseRow: {
     alignItems: "center",

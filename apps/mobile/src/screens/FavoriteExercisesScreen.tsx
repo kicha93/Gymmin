@@ -60,14 +60,14 @@ export function FavoriteExercisesScreen({
           </Text>
           <Input
             style={[
-              styles.exercisePickerSearchInput,
+              styles.favoriteExerciseSearchInput,
               { backgroundColor: theme.control, borderColor: theme.border }
             ]}
           >
             <InputField
               placeholder={t("searchExercise")}
               placeholderTextColor={theme.muted}
-              style={[styles.exercisePickerSearchText, { color: theme.inputText }]}
+              style={[styles.favoriteExerciseSearchText, { color: theme.inputText }]}
               value={search}
               onChangeText={onChangeSearch}
             />

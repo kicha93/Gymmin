@@ -61,7 +61,7 @@ export const olympicLift = [
   {
     "id": "olympic-lift-barbell-hang-power-clean-699",
     "name": "Barbell Hang Power Clean",
-    "polishName": "Energiczny zarzut sztangi z utrzymaniem chwytu",
+    "polishName": "Hang power clean ze sztangą",
     "category": "OLYMPIC_LIFT",
     "muscleImpact": {
       "abductors": 0,
@@ -118,7 +118,7 @@ export const olympicLift = [
   {
     "id": "olympic-lift-barbell-hang-power-snatch-700",
     "name": "Barbell Hang Power Snatch",
-    "polishName": "Energiczne rwanie sztangi z utrzymaniem chwytu",
+    "polishName": "Hang power snatch ze sztangą",
     "category": "OLYMPIC_LIFT",
     "muscleImpact": {
       "abductors": 0,
@@ -403,7 +403,7 @@ export const olympicLift = [
   {
     "id": "olympic-lift-barbell-power-clean-704",
     "name": "Barbell Power Clean",
-    "polishName": "Energiczny zarzut sztangi",
+    "polishName": "Power clean ze sztangą",
     "category": "OLYMPIC_LIFT",
     "muscleImpact": {
       "abductors": 0,
@@ -460,7 +460,7 @@ export const olympicLift = [
   {
     "id": "olympic-lift-barbell-power-snatch-705",
     "name": "Barbell Power Snatch",
-    "polishName": "Energiczne rwanie sztangi",
+    "polishName": "Power snatch ze sztangą",
     "category": "OLYMPIC_LIFT",
     "muscleImpact": {
       "abductors": 0,
@@ -1030,7 +1030,7 @@ export const olympicLift = [
   {
     "id": "olympic-lift-dumbbell-power-clean-and-jerk-715",
     "name": "Dumbbell Power Clean and Jerk",
-    "polishName": "Energiczny zarzut hantli z wybiciem",
+    "polishName": "Power clean and jerk z hantlami",
     "category": "OLYMPIC_LIFT",
     "muscleImpact": {
       "abductors": 0,
@@ -1087,7 +1087,7 @@ export const olympicLift = [
   {
     "id": "olympic-lift-dumbbell-power-clean-and-push-press-716",
     "name": "Dumbbell Power Clean and Push Press",
-    "polishName": "Energiczny zarzut hantli z wyciskaniem",
+    "polishName": "Power clean i push press z hantlami",
     "category": "OLYMPIC_LIFT",
     "muscleImpact": {
       "abductors": 0,
@@ -1144,7 +1144,7 @@ export const olympicLift = [
   {
     "id": "olympic-lift-dumbbell-power-clean-and-strict-press-717",
     "name": "Dumbbell Power Clean and Strict Press",
-    "polishName": "Energiczny zarzut hantli i wyciskanie bez pomocy nóg",
+    "polishName": "Power clean i strict press z hantlami",
     "category": "OLYMPIC_LIFT",
     "muscleImpact": {
       "abductors": 0,

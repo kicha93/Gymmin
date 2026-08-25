@@ -3,8 +3,8 @@ import type { Exercise } from "../exercises";
 export const lateralRaise = [
   {
     "id": "lateral-raise-alternating-lateral-raise-with-static-hold-537",
-    "name": "Alternating Lateral Raise with Static Hold",
-    "polishName": "Naprzemienne unoszenie hantli z przytrzymaniem",
+    "name": "Lateral Raise with Static Hold",
+    "polishName": "Unoszenie hantli bokiem z przytrzymaniem",
     "category": "LATERAL_RAISE",
     "muscleImpact": {
       "abductors": 0,

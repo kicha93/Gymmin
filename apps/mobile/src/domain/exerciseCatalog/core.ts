@@ -3,8 +3,8 @@ import type { Exercise } from "../exercises";
 export const core = [
   {
     "id": "core-alternating-plate-reach-182",
-    "name": "Alternating Plate Reach",
-    "polishName": "Naprzemienne wyciąganie ramion z talerzem",
+    "name": "Plate Reach",
+    "polishName": "Wyciąganie ramion z talerzem",
     "category": "CORE",
     "muscleImpact": {
       "abductors": 0,
@@ -60,7 +60,7 @@ export const core = [
   },
   {
     "id": "core-alternating-slide-out-183",
-    "name": "Alternating Slide-out",
+    "name": "Slide-out",
     "polishName": "Deska z dyskami ślizgowymi",
     "category": "CORE",
     "muscleImpact": {
@@ -631,7 +631,7 @@ export const core = [
   {
     "id": "core-inchworm-195",
     "name": "Inchworm",
-    "polishName": "Chód gąsienicy",
+    "polishName": "Inchworm — marsz rękami do podporu",
     "category": "CORE",
     "muscleImpact": {
       "abductors": 0,
@@ -745,7 +745,7 @@ export const core = [
   {
     "id": "core-kneeling-ab-wheel-197",
     "name": "Kneeling Ab Wheel",
-    "polishName": "Toczenie koła do ćwiczeń w klęku podpartym",
+    "polishName": "Rollout z kółkiem w klęku",
     "category": "CORE",
     "muscleImpact": {
       "abductors": 0,
@@ -1429,7 +1429,7 @@ export const core = [
   {
     "id": "core-windmill-switches-236",
     "name": "Windmill Switches",
-    "polishName": "Wiatrak naprzemienny",
+    "polishName": "Wiatraki ze zmianą stron",
     "category": "CORE",
     "muscleImpact": {
       "abductors": 0,

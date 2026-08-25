@@ -20,9 +20,9 @@ import {
   isSimpleWarmupEntry
 } from "../domain/workoutSessionPresentation";
 import {
-  getWorkoutSessionExerciseGroups,
   getWorkoutSessionGuidedStepIndex,
   getWorkoutSessionGuidedSteps,
+  getMainExerciseProgressForEntry,
   type WorkoutSessionExerciseGroup,
   type WorkoutSessionSupersetSide,
   type WorkoutSessionSupersetValueField
@@ -529,7 +529,12 @@ export function WorkoutSessionScreen({
     );
   }
 
-  function renderWorkoutSessionProgressCard(current: number, total: number, rangeEnd = current) {
+  function renderWorkoutSessionProgressCard(
+    current: number,
+    total: number,
+    rangeEnd = current,
+    label?: string
+  ) {
     const progress = getWorkoutProgress(current, total);
     const progressLabel = rangeEnd > current ? `${progress.current}–${rangeEnd}` : String(progress.current);
 
@@ -539,7 +544,7 @@ export function WorkoutSessionScreen({
           <Ionicons name="barbell-outline" size={20} color={theme.primary} />
         </View>
         <Text style={[styles.sessionProgressCardText, { color: theme.text }]} numberOfLines={1}>
-          {t("exercisePlural")} {progressLabel}/{progress.total}
+          {label ?? `${t("exercisePlural")} ${progressLabel}/${progress.total}`}
         </Text>
         <View style={[styles.sessionProgressTrack, { backgroundColor: theme.secondaryBand }]}>
           <View style={[styles.sessionProgressFill, { backgroundColor: theme.primary, width: `${progress.percent}%` }]} />
@@ -823,7 +828,17 @@ export function WorkoutSessionScreen({
                         >
                           <View style={styles.workoutInfo}>
                             {elements.map((element, elementIndex) => (
-                              <View key={element.id} style={styles.workoutDetailElementRow}>
+                              <View
+                                key={element.id}
+                                style={[
+                                  styles.workoutDetailElementRow,
+                                  stage.stageType === "warmup"
+                                    && !isRestTargetStep(element)
+                                    && elements.slice(elementIndex + 1).some((item) => !isRestTargetStep(item))
+                                    ? [styles.workoutDetailElementRowDivider, { borderBottomColor: theme.border }]
+                                    : null
+                                ]}
+                              >
                                 <ExerciseSummaryRow
                                   language={language}
                                   pairedTargetText={
@@ -892,7 +907,6 @@ export function WorkoutSessionScreen({
     const currentEntry = session.entries[Math.min(sessionEntryIndex, session.entries.length - 1)];
 
     if (session.executionMode === "guided") {
-      const exerciseGroups = getWorkoutSessionExerciseGroups(session);
       const guidedSteps = getWorkoutSessionGuidedSteps(session);
       const guidedStepIndex = getWorkoutSessionGuidedStepIndex(guidedSteps, sessionEntryIndex, currentEntry);
       const currentStep = guidedSteps[guidedStepIndex];
@@ -904,8 +918,9 @@ export function WorkoutSessionScreen({
       const canGoBack = guidedStepIndex > 0;
       const canGoNext = guidedStepIndex < guidedSteps.length - 1;
       const shouldShowGuidedEntryTable = currentGroup.entries.some(isWorkoutSessionEntryFillRequired);
-      const firstExerciseNumber = (currentStep?.firstGroupIndex ?? 0) + 1;
-      const lastExerciseNumber = (currentStep?.lastGroupIndex ?? currentStep?.firstGroupIndex ?? 0) + 1;
+      const mainExerciseProgress = getMainExerciseProgressForEntry(session, currentEntry.id);
+      const firstExerciseNumber = Math.max(1, mainExerciseProgress.start);
+      const lastExerciseNumber = Math.max(firstExerciseNumber, mainExerciseProgress.end);
       const isSuperset = Boolean(currentStep?.superset && currentStep.groups.length === 2);
       const isWarmupStep = Boolean(
         currentStep?.groups.length &&
@@ -916,7 +931,12 @@ export function WorkoutSessionScreen({
 
       return (
         <View style={styles.sessionScreen}>
-          {renderWorkoutSessionProgressCard(firstExerciseNumber, exerciseGroups.length, lastExerciseNumber)}
+          {renderWorkoutSessionProgressCard(
+            mainExerciseProgress.start,
+            mainExerciseProgress.total,
+            mainExerciseProgress.end,
+            mainExerciseProgress.isWarmup ? t("stageWarmup") : undefined
+          )}
           {isSuperset && currentStep?.superset ? renderGuidedSuperset(
             session,
             currentStep.superset.id,
@@ -925,7 +945,7 @@ export function WorkoutSessionScreen({
           ) : isWarmupStep && currentStep ? renderGuidedWarmup(
             session,
             currentStep.groups,
-            firstExerciseNumber
+            1
           ) : (
             <>
               {renderGuidedPlanPreview(session, currentGroup, firstExerciseNumber)}

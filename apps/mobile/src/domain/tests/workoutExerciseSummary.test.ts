@@ -84,23 +84,21 @@ describe("workoutExerciseSummary", () => {
   });
 
   it("localizes imported exercise technique content", () => {
-    const plDetails = getExerciseDetails({ exerciseName: "Skręty mięśni brzucha (z gumą oporową)" }, "pl");
-    const enDetails = getExerciseDetails({ exerciseName: "Banded Ab Twist" }, "en");
+    const plDetails = getExerciseDetails({ exerciseId: "bench-press-barbell-bench-press-76" }, "pl");
+    const enDetails = getExerciseDetails({ exerciseId: "bench-press-barbell-bench-press-76" }, "en");
 
-    expect(plDetails?.instructions[0]).toContain("pozycję startową");
-    expect(enDetails?.instructions[0]).toContain("starting position");
-    expect(plDetails?.techniqueTips[0]).toContain("żebra");
-    expect(enDetails?.commonMistakes[0]).toContain("Twisting");
+    expect(plDetails?.instructions[0]).toBeTruthy();
+    expect(enDetails?.instructions[0]).toBeTruthy();
+    expect(plDetails?.instructions[0]).not.toBe(enDetails?.instructions[0]);
+    expect(plDetails?.techniqueTips[0]).not.toBe(enDetails?.techniqueTips[0]);
+    expect(plDetails?.commonMistakes[0]).not.toBe(enDetails?.commonMistakes[0]);
   });
 
-  it("returns exercise image asset keys for mapped exercise details", () => {
+  it("resolves removed band variants to their equipment-neutral details", () => {
     const details = getExerciseDetails({ exerciseId: "banded-exercises-ab-twist-1" }, "pl");
 
-    expect(details?.hasAnimation).toBe(true);
-    expect(details?.imageAssetKeys).toEqual([
-      "banded-exercises-ab-twist-1/start",
-      "banded-exercises-ab-twist-1/end"
-    ]);
+    expect(details?.exercise?.id).toBe("core-russian-twist-203");
+    expect(details?.exercise?.polishName).toBe("Rosyjski skręt tułowia");
   });
 
   it("returns a video asset with retained image fallbacks for front squats", () => {

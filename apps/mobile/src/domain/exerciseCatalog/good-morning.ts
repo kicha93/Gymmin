@@ -2,66 +2,9 @@ import type { Exercise } from "../exercises";
 
 export const goodMorning = [
   {
-    "id": "leg-curl-band-good-morning-571",
-    "name": "Band Good Morning",
-    "polishName": "Ćwiczenie „dzień dobry” (z gumą oporową)",
-    "category": "GOOD_MORNING",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 2,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 4,
-      "hamstrings": 5,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 4,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 1,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    },
-    "libraryTier": "main"
-  },
-  {
     "id": "leg-curl-bar-good-morning-572",
     "name": "Bar Good Morning",
-    "polishName": "Ćwiczenie „dzień dobry” z drążkiem",
+    "polishName": "Good morning z drążkiem",
     "category": "GOOD_MORNING",
     "muscleImpact": {
       "abductors": 0,
@@ -118,7 +61,7 @@ export const goodMorning = [
   {
     "id": "leg-curl-good-morning-573",
     "name": "Good Morning",
-    "polishName": "Ćwiczenie „dzień dobry”",
+    "polishName": "Good morning",
     "category": "GOOD_MORNING",
     "muscleImpact": {
       "abductors": 0,
@@ -175,7 +118,7 @@ export const goodMorning = [
   {
     "id": "leg-curl-seated-barbell-good-morning-575",
     "name": "Seated Barbell Good Morning",
-    "polishName": "Dzień dobry ze sztangą siedząc",
+    "polishName": "Good morning ze sztangą siedząc",
     "category": "GOOD_MORNING",
     "muscleImpact": {
       "abductors": 0,
@@ -232,7 +175,7 @@ export const goodMorning = [
   {
     "id": "leg-curl-split-barbell-good-morning-579",
     "name": "Split Barbell Good Morning",
-    "polishName": "Dzień dobry ze sztangą ze stopą na podwyższeniu",
+    "polishName": "Good morning ze sztangą w pozycji wykrocznej",
     "category": "GOOD_MORNING",
     "muscleImpact": {
       "abductors": 2,
@@ -289,7 +232,7 @@ export const goodMorning = [
   {
     "id": "leg-curl-staggered-stance-good-morning-581",
     "name": "Staggered-stance Good Morning",
-    "polishName": "Dzień dobry ze sztangą w wykroku",
+    "polishName": "Good morning ze sztangą w pozycji staggered",
     "category": "GOOD_MORNING",
     "muscleImpact": {
       "abductors": 2,
@@ -346,7 +289,7 @@ export const goodMorning = [
   {
     "id": "leg-curl-zercher-good-morning-584",
     "name": "Zercher Good Morning",
-    "polishName": "Ćwiczenie „dzień dobry” Zerchera",
+    "polishName": "Good morning Zerchera",
     "category": "GOOD_MORNING",
     "muscleImpact": {
       "abductors": 0,

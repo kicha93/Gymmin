@@ -1,406 +1,5 @@
 [
   {
-    "id": "banded-exercises-ab-twist-1",
-    "polishName": "Skręty mięśni brzucha (z gumą oporową)",
-    "englishName": "Banded Ab Twist",
-    "category": "CORE",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-back-extension-2",
-    "polishName": "Wyprost pleców (z gumą oporową)",
-    "englishName": "Banded Back Extension",
-    "category": "HYPEREXTENSION",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-bicycle-crunch-3",
-    "polishName": "Rowerek ze spięciem brzucha (z gumą oporową)",
-    "englishName": "Banded Bicycle Crunch",
-    "category": "CRUNCH",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-calf-raises-4",
-    "polishName": "Wznosy łydek (z gumą oporową)",
-    "englishName": "Banded Calf Raises",
-    "category": "CALF_RAISE",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-clam-shells-5",
-    "polishName": "Muszla (z gumą oporową)",
-    "englishName": "Banded Clam Shells",
-    "category": "HIP_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-curl-6",
-    "polishName": "Uginanie ramion (z gumą oporową)",
-    "englishName": "Banded Curl",
-    "category": "CURL",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-deadbug-7",
-    "polishName": "Martwy robak (z gumą oporową)",
-    "englishName": "Banded Deadbug",
-    "category": "HIP_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-deadlift-8",
-    "polishName": "Martwy ciąg (z gumą oporową)",
-    "englishName": "Banded Deadlift",
-    "category": "DEADLIFT",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-donkey-kick-9",
-    "polishName": "Kopnięcia osła (z gumą oporową)",
-    "englishName": "Banded Donkey Kick",
-    "category": "HIP_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-external-rotation-at-90-degree-abduction-11",
-    "polishName": "Rotacja zewnętrzna ramienia z gumą przy odwiedzeniu do 90 stopni",
-    "englishName": "Banded External Rotation at 90-Degree Abduction",
-    "category": "SHOULDER_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "rehab"
-  },
-  {
-    "id": "banded-exercises-fire-hydrant-12",
-    "polishName": "Odwodzenie nogi w bok w klęku podpartym (z gumą oporową)",
-    "englishName": "Banded Fire Hydrant",
-    "category": "HIP_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-fly-13",
-    "polishName": "Rozpiętki (z gumą oporową)",
-    "englishName": "Banded Fly",
-    "category": "FLYE",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-glute-bridge-15",
-    "polishName": "Mostek biodrowy (z gumą oporową)",
-    "englishName": "Banded Glute Bridge",
-    "category": "HIP_RAISE",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-hamstring-curls-16",
-    "polishName": "Uginanie nóg leżąc (z gumą oporową)",
-    "englishName": "Banded Hamstring Curls",
-    "category": "LEG_CURL",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-high-plank-leg-lifts-17",
-    "polishName": "Deska z wysokim unoszeniem nogi (z gumą oporową)",
-    "englishName": "Banded High Plank Leg Lifts",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-hip-extension-18",
-    "polishName": "Wyprost biodra (z gumą oporową)",
-    "englishName": "Banded Hip Extension",
-    "category": "HIP_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-jumping-jack-20",
-    "polishName": "Pajacyki (z gumą oporową)",
-    "englishName": "Banded Jumping Jack",
-    "category": "CARDIO",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-kneeling-crunch-21",
-    "polishName": "Spięcia brzucha w klęku z gumą oporową",
-    "englishName": "Banded Kneeling Crunch",
-    "category": "CRUNCH",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-lateral-band-walks-22",
-    "polishName": "Chód bokiem (z gumą oporową)",
-    "englishName": "Banded Lateral Band Walks",
-    "category": "HIP_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-lateral-raise-23",
-    "polishName": "Wznosy wyprostowanych ramion bokiem (z gumą oporową)",
-    "englishName": "Banded Lateral Raise",
-    "category": "LATERAL_RAISE",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-latpull-24",
-    "polishName": "Przyciąganie w dół (z gumą oporową)",
-    "englishName": "Banded Latpull",
-    "category": "PULL_UP",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-leg-abduction-25",
-    "polishName": "Odwodzenie nogi (z gumą oporową)",
-    "englishName": "Banded Leg Abduction",
-    "category": "HIP_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-leg-adduction-26",
-    "polishName": "Przywodzenie nogi (z gumą oporową)",
-    "englishName": "Banded Leg Adduction",
-    "category": "HIP_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-leg-extension-27",
-    "polishName": "Wyprost nogi (z gumą oporową)",
-    "englishName": "Banded Leg Extension",
-    "category": "LEG_EXTENSION",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-lunge-28",
-    "polishName": "Wykroki (z gumą oporową)",
-    "englishName": "Banded Lunge",
-    "category": "LUNGE",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-plank-29",
-    "polishName": "Deska (z gumą oporową)",
-    "englishName": "Banded Plank",
-    "category": "PLANK",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-pull-apart-30",
-    "polishName": "Rozciąganie gumy oporowej przed sobą",
-    "englishName": "Banded Pull Apart",
-    "category": "FLYE",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-push-ups-31",
-    "polishName": "Pompki (z gumą oporową)",
-    "englishName": "Banded Push-ups",
-    "category": "PUSH_UP",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-reverse-crunch-32",
-    "polishName": "Odwrócone spięcia brzucha (z gumą oporową)",
-    "englishName": "Banded Reverse Crunch",
-    "category": "CRUNCH",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-row-33",
-    "polishName": "Wiosłowanie (z gumą oporową)",
-    "englishName": "Banded Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-shoulder-abduction-34",
-    "polishName": "Odwodzenie ramienia (z gumą oporową)",
-    "englishName": "Banded Shoulder Abduction",
-    "category": "LATERAL_RAISE",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-shoulder-extension-35",
-    "polishName": "Wyprost ramion (z gumą oporową)",
-    "englishName": "Banded Shoulder Extension",
-    "category": "PULLOVER",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-shoulder-external-rotation-36",
-    "polishName": "Rotacja zewnętrzna barku (z gumą oporową)",
-    "englishName": "Banded Shoulder External Rotation",
-    "category": "SHOULDER_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "rehab"
-  },
-  {
-    "id": "banded-exercises-shoulder-flexion-to-90-degrees-37",
-    "polishName": "Wyprost ramion do kąta 90 stopni (z gumą oporową)",
-    "englishName": "Banded Shoulder Flexion to 90-Degrees",
-    "category": "FRONT_RAISE",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-squat-to-press-40",
-    "polishName": "Przysiady z wyciskaniem (z gumą oporową)",
-    "englishName": "Banded Squat to Press",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-tricep-extension-41",
-    "polishName": "Wyprost tricepsa nad głową (z gumą oporową)",
-    "englishName": "Banded Tricep Extension",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-tricep-kickback-42",
-    "polishName": "Prostowanie tricepsa w opadzie tułowia (z gumą oporową)",
-    "englishName": "Banded Tricep Kick-back",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-upright-row-43",
-    "polishName": "Wiosłowanie wzdłuż tułowia (z gumą oporową)",
-    "englishName": "Banded Upright Row",
-    "category": "SHRUG",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "banded-exercises-wall-crawl-with-external-rotation-44",
-    "polishName": "Chód po ścianie z rotacją zewnątrzną (z gumą oporową)",
-    "englishName": "Banded Wall Crawl with External Rotation",
-    "category": "SHOULDER_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "rehab"
-  },
-  {
-    "id": "bench-press-alternating-dumbbell-chest-press-74",
-    "polishName": "Naprzemienne wyciskanie hantli na ławce płaskiej",
-    "englishName": "Alternating Dumbbell Chest Press",
-    "category": "BENCH_PRESS",
-    "requiredEquipment": [
-      "bench",
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "bench-press-barbell-bench-press-76",
     "polishName": "Wyciskanie sztangi na ławce",
     "englishName": "Barbell Bench Press",
@@ -641,25 +240,15 @@
   },
   {
     "id": "calf-raise-3-way-calf-raise-103",
-    "polishName": "Wznosy łydek — trójpozycyjne",
+    "polishName": "Wspięcia na palce w trzech ustawieniach stóp",
     "englishName": "3-way Calf Raise",
     "category": "CALF_RAISE",
     "requiredEquipment": [],
     "libraryTier": "main"
   },
   {
-    "id": "calf-raise-3-way-weighted-calf-raise-105",
-    "polishName": "Wznosy łydek — trójpozycyjne (z obciążeniem)",
-    "englishName": "3-way Weighted Calf Raise",
-    "category": "CALF_RAISE",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "calf-raise-donkey-calf-raise-108",
-    "polishName": "Wznosy łydek — osiołek",
+    "polishName": "Donkey calf raise — wspięcia w skłonie",
     "englishName": "Donkey Calf Raise",
     "category": "CALF_RAISE",
     "requiredEquipment": [
@@ -669,7 +258,7 @@
   },
   {
     "id": "calf-raise-seated-calf-raise-109",
-    "polishName": "Wznosy łydek siedząc",
+    "polishName": "Wspięcia na palce siedząc",
     "englishName": "Seated Calf Raise",
     "category": "CALF_RAISE",
     "requiredEquipment": [
@@ -680,7 +269,7 @@
   },
   {
     "id": "calf-raise-standing-barbell-calf-raise-117",
-    "polishName": "Wznosy łydek ze sztangą stojąc",
+    "polishName": "Wspięcia na palce ze sztangą stojąc",
     "englishName": "Standing Barbell Calf Raise",
     "category": "CALF_RAISE",
     "requiredEquipment": [
@@ -698,7 +287,7 @@
   },
   {
     "id": "calf-raise-standing-dumbbell-calf-raise-119",
-    "polishName": "Wznosy łydek z hantlem stojąc",
+    "polishName": "Wspięcia na palce z hantlem stojąc",
     "englishName": "Standing Dumbbell Calf Raise",
     "category": "CALF_RAISE",
     "requiredEquipment": [
@@ -764,7 +353,7 @@
   },
   {
     "id": "cardio-jump-rope-jog-130",
-    "polishName": "Skakanie na skakance z naprzemiennym unoszeniem kolan",
+    "polishName": "Bieg w miejscu ze skakanką",
     "englishName": "Jump Rope Jog",
     "category": "CARDIO",
     "requiredEquipment": [
@@ -896,7 +485,7 @@
   },
   {
     "id": "chop-cable-pull-through-157",
-    "polishName": "Wyprost tułowia w wykroku i linką wyciągu dolnego między nogami",
+    "polishName": "Pull-through na wyciągu dolnym",
     "englishName": "Cable Pull-through",
     "category": "DEADLIFT",
     "requiredEquipment": [
@@ -916,7 +505,7 @@
   },
   {
     "id": "chop-cable-woodchop-159",
-    "polishName": "Rąbanie drewna z linką wyciągu górnego",
+    "polishName": "Wood chop na wyciągu",
     "englishName": "Cable Woodchop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -926,7 +515,7 @@
   },
   {
     "id": "chop-cross-chop-to-knee-161",
-    "polishName": "Rąbanie drewna po przekątnej z uniesieniem kolana",
+    "polishName": "Wood chop po przekątnej z uniesieniem kolana",
     "englishName": "Cross Chop to Knee",
     "category": "CHOP",
     "requiredEquipment": [
@@ -936,7 +525,7 @@
   },
   {
     "id": "chop-dumbbell-chop-162",
-    "polishName": "Rąbanie drewna z hantlem",
+    "polishName": "Wood chop z hantlem",
     "englishName": "Dumbbell Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -956,7 +545,7 @@
   },
   {
     "id": "chop-half-kneeling-rotational-chop-164",
-    "polishName": "Rąbanie drewna ze skrętem tułowia w klęku jednonóż z linką wyciągu górnego",
+    "polishName": "Rotacyjny wood chop na wyciągu w klęku jednonóż",
     "englishName": "Half-kneeling Rotational Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -966,7 +555,7 @@
   },
   {
     "id": "chop-half-kneeling-rotational-reverse-chop-165",
-    "polishName": "Odwrócone rąbanie drewna ze skrętem tułowia w klęku jednonóż z linką wyciągu górnego",
+    "polishName": "Odwrotny rotacyjny wood chop na wyciągu w klęku jednonóż",
     "englishName": "Half-kneeling Rotational Reverse Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -976,7 +565,7 @@
   },
   {
     "id": "chop-half-kneeling-stability-chop-166",
-    "polishName": "Rąbanie drewna w klęku jednonóż z linką wyciągu górnego",
+    "polishName": "Wood chop na wyciągu w klęku jednonóż",
     "englishName": "Half-kneeling Stability Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -986,7 +575,7 @@
   },
   {
     "id": "chop-half-kneeling-stability-reverse-chop-167",
-    "polishName": "Odwrócone rąbanie drewna w klęku jednonóż z linką wyciągu górnego",
+    "polishName": "Odwrotny wood chop na wyciągu w klęku jednonóż",
     "englishName": "Half-kneeling Stability Reverse Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -996,7 +585,7 @@
   },
   {
     "id": "chop-kneeling-rotational-chop-168",
-    "polishName": "Rąbanie drewna ze skrętem tułowia w klęku obunóż z linką wyciągu górnego",
+    "polishName": "Rotacyjny wood chop na wyciągu w klęku obunóż",
     "englishName": "Kneeling Rotational Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -1006,7 +595,7 @@
   },
   {
     "id": "chop-kneeling-rotational-reverse-chop-169",
-    "polishName": "Odwrócone rąbanie drewna ze skrętem tułowia w klęku obunóż z linką wyciągu dolnego",
+    "polishName": "Odwrotny rotacyjny wood chop na wyciągu w klęku obunóż",
     "englishName": "Kneeling Rotational Reverse Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -1016,7 +605,7 @@
   },
   {
     "id": "chop-kneeling-stability-chop-170",
-    "polishName": "Rąbanie drewna w klęku obunóż z linką wyciągu górnego",
+    "polishName": "Wood chop na wyciągu w klęku obunóż",
     "englishName": "Kneeling Stability Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -1026,7 +615,7 @@
   },
   {
     "id": "chop-kneeling-woodchopper-171",
-    "polishName": "Rąbanie drewna w klęku jednonóż",
+    "polishName": "Wood chop w klęku jednonóż",
     "englishName": "Kneeling Woodchopper",
     "category": "CHOP",
     "requiredEquipment": [
@@ -1036,7 +625,7 @@
   },
   {
     "id": "chop-medicine-ball-wood-chops-172",
-    "polishName": "Rąbanie drewna z piłką lekarską",
+    "polishName": "Wood chop z piłką lekarską",
     "englishName": "Medicine Ball Wood Chops",
     "category": "CHOP",
     "requiredEquipment": [
@@ -1046,7 +635,7 @@
   },
   {
     "id": "chop-power-squat-chops-173",
-    "polishName": "Dynamiczne przysiady z rąbaniem drewna",
+    "polishName": "Dynamiczne przysiady z wood chopem",
     "englishName": "Power Squat Chops",
     "category": "CHOP",
     "requiredEquipment": [],
@@ -1054,7 +643,7 @@
   },
   {
     "id": "chop-standing-rotational-chop-174",
-    "polishName": "Rąbanie drewna ze skrętem tułowia z linką wyciągu górnego stojąc",
+    "polishName": "Rotacyjny wood chop na wyciągu stojąc",
     "englishName": "Standing Rotational Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -1064,7 +653,7 @@
   },
   {
     "id": "chop-standing-split-rotational-chop-175",
-    "polishName": "Rąbanie drewna ze skrętem tułowia w wykroku z linką wyciągu górnego",
+    "polishName": "Rotacyjny wood chop na wyciągu w wykroku",
     "englishName": "Standing Split Rotational Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -1074,7 +663,7 @@
   },
   {
     "id": "chop-standing-split-rotational-reverse-chop-176",
-    "polishName": "Odwrócone rąbanie drewna ze skrętem tułowia w wykroku stojąc",
+    "polishName": "Odwrotny rotacyjny wood chop na wyciągu w wykroku",
     "englishName": "Standing Split Rotational Reverse Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -1084,7 +673,7 @@
   },
   {
     "id": "chop-standing-stability-reverse-chop-177",
-    "polishName": "Odwrócone rąbanie drewna stojąc",
+    "polishName": "Odwrotny wood chop na wyciągu stojąc",
     "englishName": "Standing Stability Reverse Chop",
     "category": "CHOP",
     "requiredEquipment": [
@@ -1094,8 +683,8 @@
   },
   {
     "id": "core-alternating-plate-reach-182",
-    "polishName": "Naprzemienne wyciąganie ramion z talerzem",
-    "englishName": "Alternating Plate Reach",
+    "polishName": "Wyciąganie ramion z talerzem",
+    "englishName": "Plate Reach",
     "category": "CORE",
     "requiredEquipment": [
       "plate"
@@ -1105,7 +694,7 @@
   {
     "id": "core-alternating-slide-out-183",
     "polishName": "Deska z dyskami ślizgowymi",
-    "englishName": "Alternating Slide-out",
+    "englishName": "Slide-out",
     "category": "CORE",
     "requiredEquipment": [],
     "libraryTier": "variation"
@@ -1196,7 +785,7 @@
   },
   {
     "id": "core-inchworm-195",
-    "polishName": "Chód gąsienicy",
+    "polishName": "Inchworm — marsz rękami do podporu",
     "englishName": "Inchworm",
     "category": "CORE",
     "requiredEquipment": [],
@@ -1214,7 +803,7 @@
   },
   {
     "id": "core-kneeling-ab-wheel-197",
-    "polishName": "Toczenie koła do ćwiczeń w klęku podpartym",
+    "polishName": "Rollout z kółkiem w klęku",
     "englishName": "Kneeling Ab Wheel",
     "category": "CORE",
     "requiredEquipment": [
@@ -1322,7 +911,7 @@
   },
   {
     "id": "core-windmill-switches-236",
-    "polishName": "Wiatrak naprzemienny",
+    "polishName": "Wiatraki ze zmianą stron",
     "englishName": "Windmill Switches",
     "category": "CORE",
     "requiredEquipment": [],
@@ -1372,7 +961,7 @@
   },
   {
     "id": "crunch-crunch-chop-243",
-    "polishName": "Spięcia brzucha z rąbaniem drewna",
+    "polishName": "Spięcia brzucha z wood chopem",
     "englishName": "Crunch Chop",
     "category": "CRUNCH",
     "requiredEquipment": [],
@@ -1528,8 +1117,8 @@
   },
   {
     "id": "crunch-seated-alternating-reverse-crunch-271",
-    "polishName": "Naprzemienne odwrócone spięcia brzucha siedząc",
-    "englishName": "Seated Alternating Reverse Crunch",
+    "polishName": "Odwrócone spięcia brzucha siedząc",
+    "englishName": "Seated Reverse Crunch",
     "category": "CRUNCH",
     "requiredEquipment": [],
     "libraryTier": "variation"
@@ -1561,27 +1150,6 @@
       "pullupBar"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "curl-alternating-dumbbell-biceps-curl-323",
-    "polishName": "Naprzemienne uginanie ramion z hantlami",
-    "englishName": "Alternating Dumbbell Biceps Curl",
-    "category": "CURL",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "curl-alternating-incline-dumbbell-biceps-curl-325",
-    "polishName": "Naprzemienne uginanie ramion z hantlami na ławce dodatniej",
-    "englishName": "Alternating Incline Dumbbell Biceps Curl",
-    "category": "CURL",
-    "requiredEquipment": [
-      "bench",
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "curl-barbell-biceps-curl-326",
@@ -1859,17 +1427,6 @@
     "libraryTier": "variation"
   },
   {
-    "id": "curl-seated-alternating-dumbbell-biceps-curl-358",
-    "polishName": "Naprzemienne uginanie ramion z hantlami siedząc",
-    "englishName": "Seated Alternating Dumbbell Biceps Curl",
-    "category": "CURL",
-    "requiredEquipment": [
-      "bench",
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "curl-seated-dumbbell-biceps-curl-359",
     "polishName": "Uginanie ramion z hantlami siedząc",
     "englishName": "Seated Dumbbell Biceps Curl",
@@ -2023,7 +1580,7 @@
   },
   {
     "id": "deadlift-rack-pull-382",
-    "polishName": "Przyciąganie ciężaru ze stojaka",
+    "polishName": "Rack pull ze sztangą",
     "englishName": "Rack Pull",
     "category": "DEADLIFT",
     "requiredEquipment": [
@@ -2133,7 +1690,7 @@
   },
   {
     "id": "flye-decline-dumbbell-flye-399",
-    "polishName": "Rozpiętki z hantlami w opadzie tułowia na ławce ujemnej",
+    "polishName": "Rozpiętki z hantlami na ławce ujemnej",
     "englishName": "Decline Dumbbell Fly",
     "category": "FLYE",
     "requiredEquipment": [
@@ -2154,7 +1711,7 @@
   },
   {
     "id": "flye-incline-dumbbell-flye-401",
-    "polishName": "Rozpiętki z hantlami w opadzie tułowia na ławce dodatniej",
+    "polishName": "Odwrotne rozpiętki z hantlami na ławce dodatniej",
     "englishName": "Incline Dumbbell Fly",
     "category": "FLYE",
     "requiredEquipment": [
@@ -2216,16 +1773,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "banded-exercises-front-raise-14",
-    "polishName": "Wznosy ramion przodem (z gumą oporową)",
-    "englishName": "Banded Front Raise",
-    "category": "FRONT_RAISE",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "lateral-raise-cable-front-raise-541",
     "polishName": "Wznosy ramion przodem z linką wyciągu dolnego",
     "englishName": "Cable Front Raise",
@@ -2266,18 +1813,8 @@
     "libraryTier": "main"
   },
   {
-    "id": "leg-curl-band-good-morning-571",
-    "polishName": "Ćwiczenie „dzień dobry” (z gumą oporową)",
-    "englishName": "Band Good Morning",
-    "category": "GOOD_MORNING",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "leg-curl-bar-good-morning-572",
-    "polishName": "Ćwiczenie „dzień dobry” z drążkiem",
+    "polishName": "Good morning z drążkiem",
     "englishName": "Bar Good Morning",
     "category": "GOOD_MORNING",
     "requiredEquipment": [
@@ -2287,7 +1824,7 @@
   },
   {
     "id": "leg-curl-good-morning-573",
-    "polishName": "Ćwiczenie „dzień dobry”",
+    "polishName": "Good morning",
     "englishName": "Good Morning",
     "category": "GOOD_MORNING",
     "requiredEquipment": [
@@ -2297,7 +1834,7 @@
   },
   {
     "id": "leg-curl-seated-barbell-good-morning-575",
-    "polishName": "Dzień dobry ze sztangą siedząc",
+    "polishName": "Good morning ze sztangą siedząc",
     "englishName": "Seated Barbell Good Morning",
     "category": "GOOD_MORNING",
     "requiredEquipment": [
@@ -2308,7 +1845,7 @@
   },
   {
     "id": "leg-curl-split-barbell-good-morning-579",
-    "polishName": "Dzień dobry ze sztangą ze stopą na podwyższeniu",
+    "polishName": "Good morning ze sztangą w pozycji wykrocznej",
     "englishName": "Split Barbell Good Morning",
     "category": "GOOD_MORNING",
     "requiredEquipment": [
@@ -2318,7 +1855,7 @@
   },
   {
     "id": "leg-curl-staggered-stance-good-morning-581",
-    "polishName": "Dzień dobry ze sztangą w wykroku",
+    "polishName": "Good morning ze sztangą w pozycji staggered",
     "englishName": "Staggered-stance Good Morning",
     "category": "GOOD_MORNING",
     "requiredEquipment": [
@@ -2328,7 +1865,7 @@
   },
   {
     "id": "leg-curl-zercher-good-morning-584",
-    "polishName": "Ćwiczenie „dzień dobry” Zerchera",
+    "polishName": "Good morning Zerchera",
     "englishName": "Zercher Good Morning",
     "category": "GOOD_MORNING",
     "requiredEquipment": [
@@ -2462,18 +1999,8 @@
     "libraryTier": "main"
   },
   {
-    "id": "hip-stability-band-side-lying-leg-raise-451",
-    "polishName": "Wznosy wyprostowanej nogi w leżeniu bokiem (z gumą oporową)",
-    "englishName": "Band Side-lying Leg Raise",
-    "category": "HIP_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "hip-stability-dead-bug-452",
-    "polishName": "Martwy robak",
+    "polishName": "Dead bug",
     "englishName": "Dead Bug",
     "category": "HIP_STABILITY",
     "requiredEquipment": [],
@@ -2509,16 +2036,6 @@
     "englishName": "Inner-thigh Lift",
     "category": "HIP_STABILITY",
     "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "hip-stability-lateral-walks-with-band-at-ankles-458",
-    "polishName": "Chód bokiem (z gumą oporową na kostkach)",
-    "englishName": "Lateral Walks with Band at Ankles",
-    "category": "HIP_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
     "libraryTier": "main"
   },
   {
@@ -2779,8 +2296,8 @@
   },
   {
     "id": "lateral-raise-alternating-lateral-raise-with-static-hold-537",
-    "polishName": "Naprzemienne unoszenie hantli z przytrzymaniem",
-    "englishName": "Alternating Lateral Raise with Static Hold",
+    "polishName": "Unoszenie hantli bokiem z przytrzymaniem",
+    "englishName": "Lateral Raise with Static Hold",
     "category": "LATERAL_RAISE",
     "requiredEquipment": [
       "dumbbell"
@@ -3096,47 +2613,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "lunge-alternating-barbell-forward-lunge-608",
-    "polishName": "Naprzemienne wykroki w przód ze sztangą",
-    "englishName": "Alternating Barbell Forward Lunge",
-    "category": "LUNGE",
-    "requiredEquipment": [
-      "barbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "squat-alternating-box-dumbbell-step-ups-1247",
-    "polishName": "Naprzemienne wchodzenie z hantlami na skrzynię",
-    "englishName": "Alternating Box Dumbbell Step-ups",
-    "category": "STEP_UP",
-    "requiredEquipment": [
-      "box",
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "lunge-alternating-dumbbell-lunge-609",
-    "polishName": "Naprzemienne wykroki z hantlami",
-    "englishName": "Alternating Dumbbell Lunge",
-    "category": "LUNGE",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "lunge-alternating-dumbbell-lunge-with-reach-610",
-    "polishName": "Naprzemienne wykroki z hantlami i wyciąganiem ramion",
-    "englishName": "Alternating Dumbbell Lunge with Reach",
-    "category": "LUNGE",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "lunge-back-foot-elevated-dumbbell-split-squat-611",
     "polishName": "Przysiady wykroczne z hantlami z uniesioną nogą zakroczną",
     "englishName": "Back-foot Elevated Dumbbell Split Squat",
@@ -3387,7 +2863,7 @@
   },
   {
     "id": "lunge-low-side-to-side-lunge-640",
-    "polishName": "Naprzemienne wypady boczne (niskie)",
+    "polishName": "Niskie wypady boczne ze zmianą stron",
     "englishName": "Low Side-to-Side Lunge",
     "category": "LUNGE",
     "requiredEquipment": [],
@@ -3667,7 +3143,7 @@
   },
   {
     "id": "lunge-siff-jump-lunge-673",
-    "polishName": "Wykroki naprzemianstronne z wyskokiem",
+    "polishName": "Wykroki z wyskokiem na palcach",
     "englishName": "Siff Jump Lunge",
     "category": "LUNGE",
     "requiredEquipment": [],
@@ -3733,7 +3209,7 @@
   },
   {
     "id": "olympic-lift-barbell-hang-power-clean-699",
-    "polishName": "Energiczny zarzut sztangi z utrzymaniem chwytu",
+    "polishName": "Hang power clean ze sztangą",
     "englishName": "Barbell Hang Power Clean",
     "category": "OLYMPIC_LIFT",
     "requiredEquipment": [
@@ -3743,7 +3219,7 @@
   },
   {
     "id": "olympic-lift-barbell-hang-power-snatch-700",
-    "polishName": "Energiczne rwanie sztangi z utrzymaniem chwytu",
+    "polishName": "Hang power snatch ze sztangą",
     "englishName": "Barbell Hang Power Snatch",
     "category": "OLYMPIC_LIFT",
     "requiredEquipment": [
@@ -3793,7 +3269,7 @@
   },
   {
     "id": "olympic-lift-barbell-power-clean-704",
-    "polishName": "Energiczny zarzut sztangi",
+    "polishName": "Power clean ze sztangą",
     "englishName": "Barbell Power Clean",
     "category": "OLYMPIC_LIFT",
     "requiredEquipment": [
@@ -3803,7 +3279,7 @@
   },
   {
     "id": "olympic-lift-barbell-power-snatch-705",
-    "polishName": "Energiczne rwanie sztangi",
+    "polishName": "Power snatch ze sztangą",
     "englishName": "Barbell Power Snatch",
     "category": "OLYMPIC_LIFT",
     "requiredEquipment": [
@@ -3903,7 +3379,7 @@
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-jerk-715",
-    "polishName": "Energiczny zarzut hantli z wybiciem",
+    "polishName": "Power clean and jerk z hantlami",
     "englishName": "Dumbbell Power Clean and Jerk",
     "category": "OLYMPIC_LIFT",
     "requiredEquipment": [
@@ -3913,7 +3389,7 @@
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-push-press-716",
-    "polishName": "Energiczny zarzut hantli z wyciskaniem",
+    "polishName": "Power clean i push press z hantlami",
     "englishName": "Dumbbell Power Clean and Push Press",
     "category": "OLYMPIC_LIFT",
     "requiredEquipment": [
@@ -3923,7 +3399,7 @@
   },
   {
     "id": "olympic-lift-dumbbell-power-clean-and-strict-press-717",
-    "polishName": "Energiczny zarzut hantli i wyciskanie bez pomocy nóg",
+    "polishName": "Power clean i strict press z hantlami",
     "englishName": "Dumbbell Power Clean and Strict Press",
     "category": "OLYMPIC_LIFT",
     "requiredEquipment": [
@@ -4019,7 +3495,7 @@
   },
   {
     "id": "plank-90-degree-static-hold-729",
-    "polishName": "Odpychanie nóg zgiętych pod kątem 90 stopni w leżeniu na plecach",
+    "polishName": "Izometryczne utrzymanie nóg pod kątem 90°",
     "englishName": "90-degree Static Hold",
     "category": "PLANK",
     "requiredEquipment": [],
@@ -4035,7 +3511,7 @@
   },
   {
     "id": "plank-cross-body-mountain-climber-731",
-    "polishName": "Uginanie nóg po przekątnej w podporze",
+    "polishName": "Mountain climbers po przekątnej",
     "englishName": "Cross-body Mountain Climber",
     "category": "PLANK",
     "requiredEquipment": [],
@@ -4117,7 +3593,7 @@
   },
   {
     "id": "plank-medicine-ball-mountain-climber-743",
-    "polishName": "Uginanie nóg w podporze z piłką lekarską",
+    "polishName": "Mountain climbers z rękami na piłce lekarskiej",
     "englishName": "Medicine Ball Mountain Climber",
     "category": "PLANK",
     "requiredEquipment": [
@@ -4127,7 +3603,7 @@
   },
   {
     "id": "plank-modified-mountain-climber-and-extension-744",
-    "polishName": "Zmodyfikowane uginanie i prostowanie nóg w podporze",
+    "polishName": "Zmodyfikowane mountain climbers z wyprostem nogi",
     "englishName": "Modified Mountain Climber and Extension",
     "category": "PLANK",
     "requiredEquipment": [],
@@ -4135,7 +3611,7 @@
   },
   {
     "id": "plank-mountain-climber-745",
-    "polishName": "Uginanie nóg w podporze",
+    "polishName": "Mountain climbers",
     "englishName": "Mountain Climber",
     "category": "PLANK",
     "requiredEquipment": [],
@@ -4143,7 +3619,7 @@
   },
   {
     "id": "plank-mountain-climber-on-sliding-discs-746",
-    "polishName": "Uginanie nóg na dyskach ślizgowych w podporze",
+    "polishName": "Mountain climbers na dyskach ślizgowych",
     "englishName": "Mountain Climber on Sliding Discs",
     "category": "PLANK",
     "requiredEquipment": [
@@ -4153,7 +3629,7 @@
   },
   {
     "id": "plank-mountain-climber-with-hands-on-bench-748",
-    "polishName": "Uginanie nóg z rękoma na ławce w podporze",
+    "polishName": "Mountain climbers z rękami na ławce",
     "englishName": "Mountain Climber with Hands on Bench",
     "category": "PLANK",
     "requiredEquipment": [
@@ -4359,8 +3835,8 @@
   },
   {
     "id": "plyo-alternating-jump-lunge-859",
-    "polishName": "Naprzemienne wykroki z wyskokiem",
-    "englishName": "Alternating Jump Lunge",
+    "polishName": "Wykroki z wyskokiem",
+    "englishName": "Jump Lunge",
     "category": "PLYO",
     "requiredEquipment": [],
     "libraryTier": "variation"
@@ -4498,39 +3974,6 @@
       "machine"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "pull-up-band-assisted-chin-up-898",
-    "polishName": "Podciąganie na drążku podchwytem z pomocą gumy",
-    "englishName": "Band-assisted Chin-up",
-    "category": "PULL_UP",
-    "requiredEquipment": [
-      "band",
-      "pullupBar"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "pull-up-band-assisted-pull-up-899",
-    "polishName": "Podciąganie na drążku nachwytem z pomocą gumy",
-    "englishName": "Band-assisted Pull-up",
-    "category": "PULL_UP",
-    "requiredEquipment": [
-      "band",
-      "pullupBar"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "pull-up-banded-pull-ups-900",
-    "polishName": "Podciąganie na drążku — progresywne (z gumą oporową)",
-    "englishName": "Banded Pull-ups (Progression)",
-    "category": "PULL_UP",
-    "requiredEquipment": [
-      "band",
-      "pullupBar"
-    ],
-    "libraryTier": "progression"
   },
   {
     "id": "lateral-raise-bar-muscle-up-538",
@@ -4764,39 +4207,11 @@
     "libraryTier": "main"
   },
   {
-    "id": "push-up-alternating-staggered-push-up-944",
-    "polishName": "Naprzemienne pompki dostawne",
-    "englishName": "Alternating Staggered Push-up",
-    "category": "PUSH_UP",
-    "requiredEquipment": [],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "push-up-alternating-hands-medicine-ball-push-up-943",
-    "polishName": "Naprzemienne pompki na piłce lekarskiej",
-    "englishName": "Alternating-hands Medicine Ball Push-up",
-    "category": "PUSH_UP",
-    "requiredEquipment": [
-      "medicineBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "push-up-biceps-push-up-945",
     "polishName": "Pompki na biceps",
     "englishName": "Biceps Push-up",
     "category": "PUSH_UP",
     "requiredEquipment": [],
-    "libraryTier": "main"
-  },
-  {
-    "id": "push-up-chest-press-with-band-947",
-    "polishName": "Wyciskanie (z gumą oporową)",
-    "englishName": "Chest Press with Band",
-    "category": "PUSH_UP",
-    "requiredEquipment": [
-      "band"
-    ],
     "libraryTier": "main"
   },
   {
@@ -4964,16 +4379,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "push-up-medicine-ball-push-up-967",
-    "polishName": "Pompki na piłce lekarskiej",
-    "englishName": "Medicine Ball Push-up",
-    "category": "PUSH_UP",
-    "requiredEquipment": [
-      "medicineBall"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "push-up-parallette-handstand-push-up-969",
     "polishName": "Pompki w staniu na rękach na poręczach",
     "englishName": "Parallette Handstand Push-up",
@@ -5110,26 +4515,6 @@
     "libraryTier": "variation"
   },
   {
-    "id": "row-alternating-dumbbell-row-1032",
-    "polishName": "Naprzemienne wiosłowanie hantlami",
-    "englishName": "Alternating Dumbbell Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "row-banded-face-pulls-1033",
-    "polishName": "Przyciągania do twarzy (z gumą oporową)",
-    "englishName": "Banded Face Pulls",
-    "category": "ROW",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "row-barbell-row-1034",
     "polishName": "Wiosłowanie sztangą",
     "englishName": "Barbell Row",
@@ -5254,7 +4639,7 @@
   },
   {
     "id": "row-face-pull-with-external-rotation-1045",
-    "polishName": "Przyciąganie do twarzy z rotacją zewnętrzną",
+    "polishName": "Face pull na wyciągu z rotacją zewnętrzną",
     "englishName": "Face Pull with External Rotation",
     "category": "ROW",
     "requiredEquipment": [
@@ -5313,16 +4698,6 @@
       "squatRack"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "row-neutral-grip-alternating-dumbbell-row-1051",
-    "polishName": "Naprzemienne podciąganie hantli w chwycie neutralnym",
-    "englishName": "Neutral-grip Alternating Dumbbell Row",
-    "category": "ROW",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "row-renegade-row-1054",
@@ -5487,18 +4862,8 @@
     "libraryTier": "main"
   },
   {
-    "id": "shoulder-press-alternating-dumbbell-shoulder-press-1110",
-    "polishName": "Naprzemienne wyciskanie hantli (żołnierskie)",
-    "englishName": "Alternating Dumbbell Shoulder Press",
-    "category": "SHOULDER_PRESS",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
-  },
-  {
     "id": "shoulder-press-arnold-press-1111",
-    "polishName": "Wyciskanie hantli — „arnoldki”",
+    "polishName": "Wyciskanie Arnolda",
     "englishName": "Arnold Press",
     "category": "SHOULDER_PRESS",
     "requiredEquipment": [
@@ -5535,16 +4900,6 @@
       "barbell"
     ],
     "libraryTier": "main"
-  },
-  {
-    "id": "shoulder-press-dumbbell-alternating-shoulder-press-and-twist-1116",
-    "polishName": "Naprzemienne wyciskanie hantli ze skrętem (żołnierskie)",
-    "englishName": "Dumbbell Alternating Shoulder Press and Twist",
-    "category": "SHOULDER_PRESS",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "shoulder-press-dumbbell-push-press-1119",
@@ -5636,7 +4991,7 @@
   },
   {
     "id": "lateral-raise-45-degree-cable-external-rotation-536",
-    "polishName": "Rotacja zewnętrzna ramienia z linką wyciągu pod kątem 45 Stopni",
+    "polishName": "Rotacja zewnętrzna ramienia na wyciągu pod kątem 45°",
     "englishName": "45-degree Cable External Rotation",
     "category": "SHOULDER_STABILITY",
     "requiredEquipment": [
@@ -5646,7 +5001,7 @@
   },
   {
     "id": "shoulder-stability-90-degree-cable-external-rotation-1138",
-    "polishName": "Rotacja zewnętrzna ramienia z linką wyciągu pod kątem 90 Stopni",
+    "polishName": "Rotacja zewnętrzna ramienia na wyciągu pod kątem 90°",
     "englishName": "90-degree Cable External Rotation",
     "category": "SHOULDER_STABILITY",
     "requiredEquipment": [
@@ -5655,28 +5010,8 @@
     "libraryTier": "rehab"
   },
   {
-    "id": "shoulder-stability-band-external-rotation-1139",
-    "polishName": "Rotacja zewnętrzna (z gumą oporową)",
-    "englishName": "Band External Rotation",
-    "category": "SHOULDER_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "rehab"
-  },
-  {
-    "id": "shoulder-stability-band-internal-rotation-1140",
-    "polishName": "Rotacja wewnętrzna ugiętym ramieniem (z gumą oporową)",
-    "englishName": "Band Internal Rotation",
-    "category": "SHOULDER_STABILITY",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "rehab"
-  },
-  {
     "id": "shoulder-stability-bent-arm-lateral-raise-and-external-rotation-1141",
-    "polishName": "Wznosy ugiętych ramion bokiem i z rotacją zewnątrzną",
+    "polishName": "Unoszenie ugiętych ramion bokiem z rotacją zewnętrzną",
     "englishName": "Bent-arm Lateral Raise and External Rotation",
     "category": "SHOULDER_STABILITY",
     "requiredEquipment": [
@@ -5706,7 +5041,7 @@
   },
   {
     "id": "shoulder-stability-dumbbell-face-pull-with-external-rotation-1144",
-    "polishName": "Wiosłowanie hantlami w oparciu o ławkę dodatnią z zewnętrzną rotacją ramion",
+    "polishName": "Face pull z hantlami i rotacją zewnętrzną",
     "englishName": "Dumbbell Face Pull with External Rotation",
     "category": "SHOULDER_STABILITY",
     "requiredEquipment": [
@@ -5780,7 +5115,7 @@
   },
   {
     "id": "shrug-barbell-jump-shrug-1175",
-    "polishName": "Wznosy barków ze sztangą z wybiciem",
+    "polishName": "Szrugsy ze sztangą z wybiciem",
     "englishName": "Barbell Jump Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5790,7 +5125,7 @@
   },
   {
     "id": "shrug-barbell-shrug-1176",
-    "polishName": "Wznosy barków ze sztangą",
+    "polishName": "Szrugsy ze sztangą",
     "englishName": "Barbell Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5810,7 +5145,7 @@
   },
   {
     "id": "shrug-behind-the-back-shrug-1178",
-    "polishName": "Wznosy barków ze sztangą za plecami",
+    "polishName": "Szrugsy ze sztangą za plecami",
     "englishName": "Behind-the-Back Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5820,7 +5155,7 @@
   },
   {
     "id": "shrug-behind-the-back-smith-machine-shrug-1179",
-    "polishName": "Wznosy barków ze sztangą za plecami na maszynie Smitha",
+    "polishName": "Szrugsy na maszynie Smitha ze sztangą za plecami",
     "englishName": "Behind-the-Back Smith Machine Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5830,7 +5165,7 @@
   },
   {
     "id": "shrug-dumbbell-jump-shrug-1180",
-    "polishName": "Wznosy barków z hantlami z wybiciem",
+    "polishName": "Szrugsy z hantlami z wybiciem",
     "englishName": "Dumbbell Jump Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5840,7 +5175,7 @@
   },
   {
     "id": "shrug-dumbbell-shrug-1181",
-    "polishName": "Wznosy barków z hantlami",
+    "polishName": "Szrugsy z hantlami",
     "englishName": "Dumbbell Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5860,7 +5195,7 @@
   },
   {
     "id": "shrug-incline-dumbbell-shrug-1183",
-    "polishName": "Wznosy barków na ławce dodatniej",
+    "polishName": "Szrugsy z hantlami na ławce dodatniej",
     "englishName": "Incline Dumbbell Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5871,7 +5206,7 @@
   },
   {
     "id": "shrug-overhead-barbell-shrug-1184",
-    "polishName": "Wznosy barków ze sztangą nad głową",
+    "polishName": "Szrugsy ze sztangą nad głową",
     "englishName": "Overhead Barbell Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5881,7 +5216,7 @@
   },
   {
     "id": "shrug-overhead-dumbbell-shrug-1185",
-    "polishName": "Wznosy barków z hantlami nad głową",
+    "polishName": "Szrugsy z hantlami nad głową",
     "englishName": "Overhead Dumbbell Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5891,7 +5226,7 @@
   },
   {
     "id": "shrug-scaption-and-shrug-1186",
-    "polishName": "Wznosy barków i unoszenie ramion",
+    "polishName": "Szrugsy z unoszeniem ramion w płaszczyźnie łopatki",
     "englishName": "Scaption and Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5912,7 +5247,7 @@
   },
   {
     "id": "shrug-serratus-chair-shrug-1188",
-    "polishName": "Wznosy barków na mięsień zębaty przedni na ławce płaskiej",
+    "polishName": "Szrugsy na ławce na mięsień zębaty przedni",
     "englishName": "Serratus Chair Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5922,7 +5257,7 @@
   },
   {
     "id": "shrug-serratus-shrug-1189",
-    "polishName": "Wznosy barków na mięsień zębaty przedni",
+    "polishName": "Szrugsy na mięsień zębaty przedni",
     "englishName": "Serratus Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5940,7 +5275,7 @@
   },
   {
     "id": "shrug-wide-grip-barbell-shrug-1193",
-    "polishName": "Wznosy barków ze sztangą w chwycie szerokim",
+    "polishName": "Szrugsy ze sztangą w chwycie szerokim",
     "englishName": "Wide-grip Barbell Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
@@ -5950,20 +5285,12 @@
   },
   {
     "id": "shrug-wide-grip-jump-shrug-1194",
-    "polishName": "Wznosy barków ze sztangą z podskokiem w chwycie szerokim",
+    "polishName": "Szrugsy ze sztangą z wybiciem w chwycie szerokim",
     "englishName": "Wide-grip Jump Shrug",
     "category": "SHRUG",
     "requiredEquipment": [
       "barbell"
     ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "sit-up-alternating-sit-up-1196",
-    "polishName": "Naprzemienne brzuszki",
-    "englishName": "Alternating Sit-up",
-    "category": "SIT_UP",
-    "requiredEquipment": [],
     "libraryTier": "variation"
   },
   {
@@ -6031,26 +5358,6 @@
     "category": "SIT_UP",
     "requiredEquipment": [
       "kettlebell"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "sit-up-medicine-ball-alternating-v-up-1205",
-    "polishName": "Naprzemienne V-upy z piłką lekarską",
-    "englishName": "Medicine Ball Alternating V-up",
-    "category": "SIT_UP",
-    "requiredEquipment": [
-      "medicineBall"
-    ],
-    "libraryTier": "variation"
-  },
-  {
-    "id": "sit-up-medicine-ball-sit-up-1206",
-    "polishName": "Brzuszki z piłką lekarską",
-    "englishName": "Medicine Ball Sit-up",
-    "category": "SIT_UP",
-    "requiredEquipment": [
-      "medicineBall"
     ],
     "libraryTier": "main"
   },
@@ -6219,7 +5526,7 @@
   },
   {
     "id": "squat-barbell-hack-squat-1254",
-    "polishName": "Przysiady „hack” ze sztangą",
+    "polishName": "Hack squat ze sztangą",
     "englishName": "Barbell Hack Squat",
     "category": "SQUAT",
     "requiredEquipment": [
@@ -6260,7 +5567,7 @@
   },
   {
     "id": "squat-bench-squat-with-rotational-chop-1263",
-    "polishName": "Przysiady do ławki ze skrętem tułowia i rąbaniem drewna",
+    "polishName": "Przysiad do ławki z rotacyjnym wood chopem",
     "englishName": "Bench Squat with Rotational Chop",
     "category": "SQUAT",
     "requiredEquipment": [
@@ -6270,8 +5577,8 @@
   },
   {
     "id": "squat-body-weight-wall-squat-1264",
-    "polishName": "Przysiady przy ścianie (bez obciążenia)",
-    "englishName": "Body-weight Wall Squat",
+    "polishName": "Przysiad przy ścianie",
+    "englishName": "Wall Squat",
     "category": "SQUAT",
     "requiredEquipment": [],
     "libraryTier": "main"
@@ -6346,7 +5653,7 @@
   },
   {
     "id": "squat-dumbbell-thrusters-1277",
-    "polishName": "Przysiady z wyrzutem hantli",
+    "polishName": "Thruster z hantlami",
     "englishName": "Dumbbell Thrusters",
     "category": "SQUAT",
     "requiredEquipment": [
@@ -6399,16 +5706,6 @@
     "category": "SQUAT",
     "requiredEquipment": [
       "machine"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "squat-medicine-ball-squat-1286",
-    "polishName": "Przysiady z piłką lekarską",
-    "englishName": "Medicine Ball Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "medicineBall"
     ],
     "libraryTier": "main"
   },
@@ -6494,16 +5791,6 @@
     "libraryTier": "main"
   },
   {
-    "id": "squat-squats-with-band-1303",
-    "polishName": "Przysiady (z gumą oporową)",
-    "englishName": "Squats with Band",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "squat-staggered-squat-1304",
     "polishName": "Przysiady ze stopami w wykroku",
     "englishName": "Staggered Squat",
@@ -6565,7 +5852,7 @@
   },
   {
     "id": "squat-thrusters-1313",
-    "polishName": "Przysiady z wyrzutem ramion",
+    "polishName": "Thruster",
     "englishName": "Thrusters",
     "category": "SQUAT",
     "requiredEquipment": [
@@ -6600,16 +5887,6 @@
       "medicineBall"
     ],
     "libraryTier": "sportSpecific"
-  },
-  {
-    "id": "squat-weighted-wall-squat-1340",
-    "polishName": "Przysiady przy ścianie (z obciążeniem)",
-    "englishName": "Weighted Wall Squat",
-    "category": "SQUAT",
-    "requiredEquipment": [
-      "plate"
-    ],
-    "libraryTier": "main"
   },
   {
     "id": "squat-wide-stance-barbell-squat-1341",
@@ -6768,21 +6045,11 @@
   },
   {
     "id": "total-body-squat-thrusts-1390",
-    "polishName": "Przysiady z wyrzutem nóg do tyłu",
+    "polishName": "Squat thrust — wyrzut nóg do podporu",
     "englishName": "Squat Thrusts (Up-downs)",
     "category": "TOTAL_BODY",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "triceps-extension-alternating-dumbbell-lying-triceps-extension-1398",
-    "polishName": "Naprzemienne prostowanie tricepsów nad głową z hantlami leżąc",
-    "englishName": "Alternating Dumbbell Lying Triceps Extension",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "dumbbell"
-    ],
-    "libraryTier": "variation"
   },
   {
     "id": "triceps-extension-bench-dip-1399",
@@ -6796,8 +6063,8 @@
   },
   {
     "id": "triceps-extension-body-weight-dip-1400",
-    "polishName": "Dipy (bez obciążenia)",
-    "englishName": "Body-weight Dip",
+    "polishName": "Dipy na poręczach",
+    "englishName": "Dip",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
       "machine"
@@ -6806,7 +6073,7 @@
   },
   {
     "id": "triceps-extension-cable-lying-triceps-extension-1402",
-    "polishName": "Wyprost tricepsów nad głową na wyciągu leżąc",
+    "polishName": "Francuskie wyciskanie na wyciągu leżąc",
     "englishName": "Cable Lying Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6817,7 +6084,7 @@
   },
   {
     "id": "triceps-extension-cable-overhead-triceps-extension-1403",
-    "polishName": "Wyprost tricepsów na wyciągu nad głowę",
+    "polishName": "Prostowanie ramion nad głową na wyciągu",
     "englishName": "Cable Overhead Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6827,7 +6094,7 @@
   },
   {
     "id": "triceps-extension-cable-kickback-1401",
-    "polishName": "Prostowanie tricepsa na wyciągu",
+    "polishName": "Kickback tricepsa na wyciągu",
     "englishName": "Cable Tricep Kick-back",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6837,7 +6104,7 @@
   },
   {
     "id": "triceps-extension-dumbbell-lying-triceps-extension-1405",
-    "polishName": "Wyprost tricepsów z hantlami nad głową leżąc",
+    "polishName": "Francuskie wyciskanie hantli leżąc",
     "englishName": "Dumbbell Lying Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6858,7 +6125,7 @@
   },
   {
     "id": "triceps-extension-ez-bar-overhead-triceps-extension-1406",
-    "polishName": "Wyprost tricepsów ze sztangą łamaną nad głowę",
+    "polishName": "Francuskie wyciskanie sztangi łamanej nad głowę",
     "englishName": "EZ-Bar Overhead Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6867,18 +6134,8 @@
     "libraryTier": "main"
   },
   {
-    "id": "triceps-extension-incline-dip-1407",
-    "polishName": "Dipy na poręczach",
-    "englishName": "Incline Dip",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "machine"
-    ],
-    "libraryTier": "main"
-  },
-  {
     "id": "triceps-extension-incline-ez-bar-lying-triceps-extension-1408",
-    "polishName": "Wyprost tricepsów ze sztangą łamaną nad głową na ławce dodatniej",
+    "polishName": "Francuskie wyciskanie sztangi łamanej na ławce dodatniej",
     "englishName": "Incline EZ-Bar Lying Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6910,7 +6167,7 @@
   },
   {
     "id": "triceps-extension-lying-ez-bar-triceps-extension-1410",
-    "polishName": "Wyprost tricepsów ze sztangą łamaną nad głową leżąc",
+    "polishName": "Francuskie wyciskanie sztangi łamanej leżąc",
     "englishName": "Lying EZ-Bar Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6921,7 +6178,7 @@
   },
   {
     "id": "triceps-extension-lying-triceps-extension-to-close-grip-bench-press-1411",
-    "polishName": "Wyprost tricepsów z przejściem do wyciskania sztangi w chwycie wąskim na ławce",
+    "polishName": "Francuskie wyciskanie z przejściem do wyciskania wąsko",
     "englishName": "Lying Triceps Extension to Close-grip Bench Press",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6932,7 +6189,7 @@
   },
   {
     "id": "triceps-extension-overhead-dumbbell-triceps-extension-1412",
-    "polishName": "Wyprost tricepsów z hantlem nad głowę",
+    "polishName": "Francuskie wyciskanie hantla nad głowę",
     "englishName": "Overhead Dumbbell Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6973,7 +6230,7 @@
   },
   {
     "id": "triceps-extension-rope-pressdown-1416",
-    "polishName": "Wyciskanie z linką wyciągu górnego nachwytem",
+    "polishName": "Prostowanie ramion na wyciągu z liną",
     "englishName": "Rope Press-down",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6983,7 +6240,7 @@
   },
   {
     "id": "triceps-extension-seated-barbell-overhead-triceps-extension-1417",
-    "polishName": "Wyprost tricepsów ze sztangą nad głowę siedząc",
+    "polishName": "Francuskie wyciskanie sztangi siedząc",
     "englishName": "Seated Barbell Overhead Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -6994,7 +6251,7 @@
   },
   {
     "id": "triceps-extension-seated-dumbbell-overhead-triceps-extension-1418",
-    "polishName": "Wyprost tricepsów z hantlem nad głowę siedząc",
+    "polishName": "Francuskie wyciskanie hantla siedząc",
     "englishName": "Seated Dumbbell Overhead Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -7005,7 +6262,7 @@
   },
   {
     "id": "triceps-extension-seated-ez-bar-overhead-triceps-extension-1419",
-    "polishName": "Wyprost tricepsów ze sztangą łamaną nad głowę siedząc",
+    "polishName": "Francuskie wyciskanie sztangi łamanej siedząc",
     "englishName": "Seated EZ-Bar Overhead Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -7016,7 +6273,7 @@
   },
   {
     "id": "triceps-extension-single-dumbbell-seated-overhead-triceps-extension-1422",
-    "polishName": "Wyprost tricepsów z jednym hantlem nad głowę siedząc",
+    "polishName": "Francuskie wyciskanie jednego hantla siedząc",
     "englishName": "Single-dumbbell Seated Overhead Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -7027,7 +6284,7 @@
   },
   {
     "id": "triceps-extension-static-lying-triceps-extension-1425",
-    "polishName": "Wyprost tricepsów ze sztangą nad głową z przytrzymaniem leżąc",
+    "polishName": "Izometryczne francuskie wyciskanie sztangi leżąc",
     "englishName": "Static Lying Triceps Extension",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -7048,7 +6305,7 @@
   },
   {
     "id": "triceps-extension-triceps-extension-on-floor-1431",
-    "polishName": "Wyprost tricepsów nad głową na podłodze",
+    "polishName": "Francuskie wyciskanie na podłodze",
     "englishName": "Triceps Extension on Floor",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
@@ -7066,22 +6323,11 @@
   },
   {
     "id": "triceps-extension-triceps-pressdown-1433",
-    "polishName": "Wyciskanie tricepsów z linką wyciągu górnego nachwytem",
+    "polishName": "Prostowanie ramion na wyciągu nachwytem",
     "englishName": "Triceps Press-down",
     "category": "TRICEPS_EXTENSION",
     "requiredEquipment": [
       "cableMachine"
-    ],
-    "libraryTier": "main"
-  },
-  {
-    "id": "triceps-extension-weighted-dip-1435",
-    "polishName": "Dipy (z obciążeniem)",
-    "englishName": "Weighted Dip",
-    "category": "TRICEPS_EXTENSION",
-    "requiredEquipment": [
-      "machine",
-      "plate"
     ],
     "libraryTier": "main"
   },
@@ -7108,16 +6354,6 @@
     "category": "WARM_UP",
     "requiredEquipment": [],
     "libraryTier": "main"
-  },
-  {
-    "id": "warm-up-ankle-dorsiflexion-with-band-1481",
-    "polishName": "Zgięcie grzbietowe stopy (z gumą oporową)",
-    "englishName": "Ankle Dorsiflexion with Band",
-    "category": "WARM_UP",
-    "requiredEquipment": [
-      "band"
-    ],
-    "libraryTier": "rehab"
   },
   {
     "id": "warm-up-ankle-internal-rotation-1482",
@@ -7385,7 +6621,7 @@
   },
   {
     "id": "warm-up-opposite-arm-and-leg-balance-1494",
-    "polishName": "Naprzemienne wznosy ręki i nogi w klęku podpartym",
+    "polishName": "Bird dog",
     "englishName": "Opposite Arm and Leg Balance",
     "category": "WARM_UP",
     "requiredEquipment": [],

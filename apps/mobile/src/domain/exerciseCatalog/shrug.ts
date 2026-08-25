@@ -4,7 +4,7 @@ export const shrug = [
   {
     "id": "shrug-barbell-jump-shrug-1175",
     "name": "Barbell Jump Shrug",
-    "polishName": "Wznosy barków ze sztangą z wybiciem",
+    "polishName": "Szrugsy ze sztangą z wybiciem",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -61,7 +61,7 @@ export const shrug = [
   {
     "id": "shrug-barbell-shrug-1176",
     "name": "Barbell Shrug",
-    "polishName": "Wznosy barków ze sztangą",
+    "polishName": "Szrugsy ze sztangą",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -175,7 +175,7 @@ export const shrug = [
   {
     "id": "shrug-behind-the-back-shrug-1178",
     "name": "Behind-the-Back Shrug",
-    "polishName": "Wznosy barków ze sztangą za plecami",
+    "polishName": "Szrugsy ze sztangą za plecami",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -232,7 +232,7 @@ export const shrug = [
   {
     "id": "shrug-behind-the-back-smith-machine-shrug-1179",
     "name": "Behind-the-Back Smith Machine Shrug",
-    "polishName": "Wznosy barków ze sztangą za plecami na maszynie Smitha",
+    "polishName": "Szrugsy na maszynie Smitha ze sztangą za plecami",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -289,7 +289,7 @@ export const shrug = [
   {
     "id": "shrug-dumbbell-jump-shrug-1180",
     "name": "Dumbbell Jump Shrug",
-    "polishName": "Wznosy barków z hantlami z wybiciem",
+    "polishName": "Szrugsy z hantlami z wybiciem",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -346,7 +346,7 @@ export const shrug = [
   {
     "id": "shrug-dumbbell-shrug-1181",
     "name": "Dumbbell Shrug",
-    "polishName": "Wznosy barków z hantlami",
+    "polishName": "Szrugsy z hantlami",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -460,7 +460,7 @@ export const shrug = [
   {
     "id": "shrug-incline-dumbbell-shrug-1183",
     "name": "Incline Dumbbell Shrug",
-    "polishName": "Wznosy barków na ławce dodatniej",
+    "polishName": "Szrugsy z hantlami na ławce dodatniej",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -517,7 +517,7 @@ export const shrug = [
   {
     "id": "shrug-overhead-barbell-shrug-1184",
     "name": "Overhead Barbell Shrug",
-    "polishName": "Wznosy barków ze sztangą nad głową",
+    "polishName": "Szrugsy ze sztangą nad głową",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -574,7 +574,7 @@ export const shrug = [
   {
     "id": "shrug-overhead-dumbbell-shrug-1185",
     "name": "Overhead Dumbbell Shrug",
-    "polishName": "Wznosy barków z hantlami nad głową",
+    "polishName": "Szrugsy z hantlami nad głową",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -631,7 +631,7 @@ export const shrug = [
   {
     "id": "shrug-scaption-and-shrug-1186",
     "name": "Scaption and Shrug",
-    "polishName": "Wznosy barków i unoszenie ramion",
+    "polishName": "Szrugsy z unoszeniem ramion w płaszczyźnie łopatki",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -745,7 +745,7 @@ export const shrug = [
   {
     "id": "shrug-serratus-chair-shrug-1188",
     "name": "Serratus Chair Shrug",
-    "polishName": "Wznosy barków na mięsień zębaty przedni na ławce płaskiej",
+    "polishName": "Szrugsy na ławce na mięsień zębaty przedni",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -802,7 +802,7 @@ export const shrug = [
   {
     "id": "shrug-serratus-shrug-1189",
     "name": "Serratus Shrug",
-    "polishName": "Wznosy barków na mięsień zębaty przedni",
+    "polishName": "Szrugsy na mięsień zębaty przedni",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -916,7 +916,7 @@ export const shrug = [
   {
     "id": "shrug-wide-grip-barbell-shrug-1193",
     "name": "Wide-grip Barbell Shrug",
-    "polishName": "Wznosy barków ze sztangą w chwycie szerokim",
+    "polishName": "Szrugsy ze sztangą w chwycie szerokim",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,
@@ -973,7 +973,7 @@ export const shrug = [
   {
     "id": "shrug-wide-grip-jump-shrug-1194",
     "name": "Wide-grip Jump Shrug",
-    "polishName": "Wznosy barków ze sztangą z podskokiem w chwycie szerokim",
+    "polishName": "Szrugsy ze sztangą z wybiciem w chwycie szerokim",
     "category": "SHRUG",
     "muscleImpact": {
       "abductors": 0,

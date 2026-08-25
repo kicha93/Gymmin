@@ -61,7 +61,7 @@ export const flye = [
   {
     "id": "flye-decline-dumbbell-flye-399",
     "name": "Decline Dumbbell Fly",
-    "polishName": "Rozpiętki z hantlami w opadzie tułowia na ławce ujemnej",
+    "polishName": "Rozpiętki z hantlami na ławce ujemnej",
     "category": "FLYE",
     "muscleImpact": {
       "abductors": 0,
@@ -175,7 +175,7 @@ export const flye = [
   {
     "id": "flye-incline-dumbbell-flye-401",
     "name": "Incline Dumbbell Fly",
-    "polishName": "Rozpiętki z hantlami w opadzie tułowia na ławce dodatniej",
+    "polishName": "Odwrotne rozpiętki z hantlami na ławce dodatniej",
     "category": "FLYE",
     "muscleImpact": {
       "abductors": 0,

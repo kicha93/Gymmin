@@ -403,7 +403,7 @@ export const deadlift = [
   {
     "id": "deadlift-rack-pull-382",
     "name": "Rack Pull",
-    "polishName": "Przyciąganie ciężaru ze stojaka",
+    "polishName": "Rack pull ze sztangą",
     "category": "DEADLIFT",
     "muscleImpact": {
       "abductors": 0,

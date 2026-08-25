@@ -289,7 +289,7 @@ export const crunch = [
   {
     "id": "crunch-crunch-chop-243",
     "name": "Crunch Chop",
-    "polishName": "Spięcia brzucha z rąbaniem drewna",
+    "polishName": "Spięcia brzucha z wood chopem",
     "category": "CRUNCH",
     "muscleImpact": {
       "abductors": 0,
@@ -1314,8 +1314,8 @@ export const crunch = [
   },
   {
     "id": "crunch-seated-alternating-reverse-crunch-271",
-    "name": "Seated Alternating Reverse Crunch",
-    "polishName": "Naprzemienne odwrócone spięcia brzucha siedząc",
+    "name": "Seated Reverse Crunch",
+    "polishName": "Odwrócone spięcia brzucha siedząc",
     "category": "CRUNCH",
     "muscleImpact": {
       "abductors": 0,

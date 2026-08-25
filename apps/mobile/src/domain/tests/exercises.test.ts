@@ -56,11 +56,11 @@ describe("exercise catalog cleanup", () => {
   });
 
   it("uses movement categories while retaining equipment discovery", () => {
-    const bandedCurl = findExerciseById("banded-exercises-curl-6");
+    const dumbbellCurl = findExerciseById("curl-dumbbell-biceps-curl-339");
 
-    expect(bandedCurl?.category).toBe("CURL");
-    expect(bandedCurl && getRequiredEquipment(bandedCurl)).toContain("band");
-    expect(exercisesByCategory.CURL).toContain(bandedCurl);
+    expect(dumbbellCurl?.category).toBe("CURL");
+    expect(dumbbellCurl && getRequiredEquipment(dumbbellCurl)).toContain("dumbbell");
+    expect(exercisesByCategory.CURL).toContain(dumbbellCurl);
   });
 
   it("applies the final targeted catalog corrections", () => {
@@ -160,6 +160,36 @@ describe("exercise catalog cleanup", () => {
     expect(resolveExerciseId("squat-back-squats-1249")).toBe("squat-barbell-back-squat-1251");
     expect(findExerciseById("squat-back-squats-1249")?.name).toBe("Barbell Back Squat");
     expect(findExerciseById("shoulder-press-strict-press-1133")?.name).toBe("Barbell Overhead Press");
+    expect(resolveExerciseId("banded-exercises-squat-to-press-40")).toBe("squat-thrusters-1313");
+    expect(findExerciseById("banded-exercises-front-raise-14")?.name).toBe("Front Raise");
+  });
+
+  it("does not expose explicit resistance-band variants in the active catalog", () => {
+    expect(exercises.some((exercise) => /\bbanded\b|\bband-assisted\b|\bwith (?:a )?(?:resistance )?band\b/i.test(exercise.name))).toBe(false);
+    expect(exercises.some((exercise) => /\bgum(?:a|ą|y|ie|ę)\b/i.test(exercise.polishName))).toBe(false);
+  });
+
+  it("consolidates alternating and duplicate weighted variants into base exercises", () => {
+    expect(exercises.some((exercise) => /\balternating(?:-hands)?\b/i.test(exercise.name))).toBe(false);
+    expect(exercises.some((exercise) => /\bnaprzemien|\bnaprzemian/i.test(exercise.polishName))).toBe(false);
+    expect(findExerciseById("curl-alternating-dumbbell-biceps-curl-323")?.id).toBe("curl-dumbbell-biceps-curl-339");
+    expect(findExerciseById("triceps-extension-weighted-dip-1435")?.name).toBe("Dip");
+    expect(findExerciseById("squat-weighted-wall-squat-1340")?.name).toBe("Wall Squat");
+    expect(findExerciseById("calf-raise-3-way-weighted-calf-raise-105")?.name).toBe("3-way Calf Raise");
+    expect(findExerciseById("push-up-medicine-ball-push-up-967")?.name).toBe("Push-up");
+  });
+
+  it("keeps Smith-machine and sliding-disc movements as distinct catalog exercises", () => {
+    expect(exercises.some((exercise) => exercise.equipment.smithMachine === 1)).toBe(true);
+    expect(exercises.some((exercise) => exercise.equipment.slidingDisc === 1)).toBe(true);
+    expect(findExerciseById("core-alternating-slide-out-183")?.name).toBe("Slide-out");
+  });
+
+  it("retains exercise media after alternating curl variants are consolidated", () => {
+    expect(getExerciseImageAssetKeys("curl-dumbbell-biceps-curl-339")).toHaveLength(2);
+    expect(getExerciseImageAssetKeys("curl-alternating-dumbbell-biceps-curl-323")).toEqual(
+      getExerciseImageAssetKeys("curl-dumbbell-biceps-curl-339")
+    );
   });
 
   it("keeps the reviewed dead-hang curl separate from the preacher curl", () => {
@@ -198,7 +228,7 @@ describe("exercise catalog cleanup", () => {
 
     expect(labels).not.toContain("Triple-stop Barbell Bench Press");
     expect(labels).not.toContain("Banded Pull-ups (Progression)");
-    expect(findExerciseById("pull-up-banded-pull-ups-900")?.libraryTier).toBe("progression");
+    expect(findExerciseById("pull-up-banded-pull-ups-900")?.id).toBe("pull-up-pull-up-918");
   });
 
   it("reveals additional active tiers only when explicitly requested", () => {

@@ -346,7 +346,7 @@ export const cardio = [
   {
     "id": "cardio-jump-rope-jog-130",
     "name": "Jump Rope Jog",
-    "polishName": "Skakanie na skakance z naprzemiennym unoszeniem kolan",
+    "polishName": "Bieg w miejscu ze skakanką",
     "category": "CARDIO",
     "muscleImpact": {
       "abductors": 0,

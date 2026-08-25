@@ -29,7 +29,7 @@ function search(query: string, language: "pl" | "en" = "pl") {
 
 describe("exercise picker V2 search index", () => {
   it("contains every canonical exercise exactly once", () => {
-    expect(exerciseSearchIndex).toHaveLength(805);
+    expect(exerciseSearchIndex).toHaveLength(729);
     expect(new Set(exerciseSearchIndex.map((record) => record.exercise.id)).size).toBe(exercises.length);
   });
 

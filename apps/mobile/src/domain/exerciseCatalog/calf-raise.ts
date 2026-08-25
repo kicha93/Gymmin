@@ -4,7 +4,7 @@ export const calfRaise = [
   {
     "id": "calf-raise-3-way-calf-raise-103",
     "name": "3-way Calf Raise",
-    "polishName": "Wznosy łydek — trójpozycyjne",
+    "polishName": "Wspięcia na palce w trzech ustawieniach stóp",
     "category": "CALF_RAISE",
     "muscleImpact": {
       "abductors": 0,
@@ -59,66 +59,9 @@ export const calfRaise = [
     "libraryTier": "main"
   },
   {
-    "id": "calf-raise-3-way-weighted-calf-raise-105",
-    "name": "3-way Weighted Calf Raise",
-    "polishName": "Wznosy łydek — trójpozycyjne (z obciążeniem)",
-    "category": "CALF_RAISE",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 5,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 0,
-      "traps": 0,
-      "triceps": 0
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    },
-    "libraryTier": "main"
-  },
-  {
     "id": "calf-raise-donkey-calf-raise-108",
     "name": "Donkey Calf Raise",
-    "polishName": "Wznosy łydek — osiołek",
+    "polishName": "Donkey calf raise — wspięcia w skłonie",
     "category": "CALF_RAISE",
     "muscleImpact": {
       "abductors": 0,
@@ -175,7 +118,7 @@ export const calfRaise = [
   {
     "id": "calf-raise-seated-calf-raise-109",
     "name": "Seated Calf Raise",
-    "polishName": "Wznosy łydek siedząc",
+    "polishName": "Wspięcia na palce siedząc",
     "category": "CALF_RAISE",
     "muscleImpact": {
       "abductors": 0,
@@ -232,7 +175,7 @@ export const calfRaise = [
   {
     "id": "calf-raise-standing-barbell-calf-raise-117",
     "name": "Standing Barbell Calf Raise",
-    "polishName": "Wznosy łydek ze sztangą stojąc",
+    "polishName": "Wspięcia na palce ze sztangą stojąc",
     "category": "CALF_RAISE",
     "muscleImpact": {
       "abductors": 0,
@@ -346,7 +289,7 @@ export const calfRaise = [
   {
     "id": "calf-raise-standing-dumbbell-calf-raise-119",
     "name": "Standing Dumbbell Calf Raise",
-    "polishName": "Wznosy łydek z hantlem stojąc",
+    "polishName": "Wspięcia na palce z hantlem stojąc",
     "category": "CALF_RAISE",
     "muscleImpact": {
       "abductors": 0,

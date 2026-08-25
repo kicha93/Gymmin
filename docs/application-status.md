@@ -19,7 +19,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 - local Contact and safe bug-report email flows: both open the system email app, never submit HTTP forms, and provide clipboard fallback;
 - PL/EN About, author attribution, privacy and voluntary Buy Me a Coffee link; the support card is the final standalone section below all Settings panels.
 - optimized offline exercise media: 58 static START/END pairs use WebP Q90 runtime assets generated reproducibly from non-bundled PNG sources; the supplied MP4 remains unchanged.
-- a validated catalog of 805 exercises with localized presentation and richer muscle-involvement data; the reviewed Towel, Swiss Ball, Suspension/TRX, Single-leg, Single-arm/One-hand/One-legged, Side Plank, Sandbag, One-arm, Battle Rope and Rope Climb variants are absent.
+- a validated catalog of 729 exercises with localized presentation and richer muscle-involvement data; reviewed redundant variants, including explicit resistance-band, alternating, and duplicate weighted/unweighted exercises, are merged into canonical movements through compatibility aliases. Smith-machine and sliding-disc variants remain distinct where the equipment changes the movement.
 - an opt-in Advanced Muscle Mode in Preferences; Exercise Detail can show 38 localized anatomical subdivisions generated for canonical exercise IDs, while the default standard view and weekly muscle-volume calculations remain unchanged.
 - detailed warm-up stages remain visible as their actual exercises during guided execution; only a truly empty/simple warm-up placeholder receives the compact representation.
 

@@ -17,6 +17,30 @@ const equipmentHintExceptions = new Set(["bench-press-dumbbell-floor-press-83"])
 const removedCatalogFields = ["garminCategory", "garminName", "foundInGarmin", "url", "image", "difficulty", "description"];
 const muscles = new Set(["abductors","abs","adductors","biceps","calves","chest","forearm","glutes","hamstrings","hips","lats","lowerBack","obliques","quads","shoulders","traps","triceps"]);
 const catalogFields = new Set(["id","name","polishName","category","muscleImpact","equipment","libraryTier"]);
+const unnaturalPolishNamePatterns = [
+  /toczenie koła do ćwiczeń/i,
+  /rąbanie drewna/i,
+  /martwy robak/i,
+  /kopnięcia osła/i,
+  /chód gąsienicy/i,
+  /ćwiczenie [„"]?dzień dobry/i,
+  /przyciąganie ciężaru ze stojaka/i,
+  /energiczn(?:y|e) (?:zarzut|rwanie)/i,
+  /zewnątrzną/i,
+  /\d+ Stopni/,
+];
+const explicitBandVariantPatterns = [
+  /\bbanded\b/i,
+  /\bband-assisted\b/i,
+  /\bwith (?:a )?(?:resistance )?band\b/i,
+  /\bband (?:good morning|external rotation|internal rotation)\b/i,
+];
+const redundantVariantPatterns = [
+  /\balternating(?:-hands)?\b/i,
+  /\bnaprzemien|\bnaprzemian/i,
+  /\bbody-weight (?:dip|wall squat)\b/i,
+  /\bweighted (?:dip|wall squat)\b/i,
+];
 
 function parseObject(source, marker) { return JSON.parse(source.slice(source.indexOf("{"), source.lastIndexOf(marker) + 1)); }
 function normalize(value) { return String(value ?? "").trim().toLocaleLowerCase("en").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,"'").replace(/[-_]+/g," ").replace(/\s+/g," "); }
@@ -34,6 +58,9 @@ for(const exercise of exercises){
   for(const field of removedCatalogFields){if(Object.hasOwn(exercise,field))errors.push({code:"removed_catalog_field",id:exercise.id,field});}
   if(!exercise.id?.trim())errors.push({code:"empty_id",exercise}); else if(byId.has(exercise.id))errors.push({code:"duplicate_id",id:exercise.id}); else byId.set(exercise.id,exercise);
   for(const [field,index,code] of [["name",english,"duplicate_english_name"],["polishName",polish,"duplicate_polish_name"]]){const value=exercise[field];if(!value?.trim())errors.push({code:`empty_${field}`,id:exercise.id});else{const key=normalize(value);if(index.has(key))errors.push({code,ids:[index.get(key).id,exercise.id],value});else index.set(key,exercise);}}
+  if(unnaturalPolishNamePatterns.some((pattern)=>pattern.test(exercise.polishName)))errors.push({code:"unnatural_polish_name",id:exercise.id,value:exercise.polishName});
+  if(explicitBandVariantPatterns.some((pattern)=>pattern.test(exercise.name))||/\bgum(?:a|ą|y|ie|ę)\b/i.test(exercise.polishName))errors.push({code:"explicit_band_variant",id:exercise.id,name:exercise.name,polishName:exercise.polishName});
+  if(redundantVariantPatterns.some((pattern)=>pattern.test(exercise.name)||pattern.test(exercise.polishName)))errors.push({code:"redundant_exercise_variant",id:exercise.id,name:exercise.name,polishName:exercise.polishName});
   if(!categories.has(exercise.category))errors.push({code:"invalid_category",id:exercise.id,value:exercise.category});
   if(!tiers.has(exercise.libraryTier))errors.push({code:"invalid_library_tier",id:exercise.id,value:exercise.libraryTier});
   const impactEntries=Object.entries(exercise.muscleImpact??{});
@@ -60,7 +87,7 @@ for(const [source,target] of Object.entries(aliases)){
 }
 
 const reportData={exerciseCount:exercises.length,idMappingCount:Object.keys(idAliases).length,errors,warnings};
-if(exercises.length!==805)errors.push({code:"unexpected_exercise_count",expected:805,actual:exercises.length});
+if(exercises.length!==729)errors.push({code:"unexpected_exercise_count",expected:729,actual:exercises.length});
 let previousReport;
 try { previousReport=JSON.parse(await readFile(reportPath,"utf8")); } catch { previousReport=undefined; }
 const previousData=previousReport?{exerciseCount:previousReport.exerciseCount,idMappingCount:previousReport.idMappingCount,errors:previousReport.errors,warnings:previousReport.warnings}:undefined;

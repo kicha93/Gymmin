@@ -80,7 +80,7 @@ for (const exerciseId of Object.keys(profiles)) {
 
 const report = JSON.parse(await readFile(reportPath, "utf8"));
 if (report.silentMissing !== 0) errors.push({ code: "report_silent_missing", count: report.silentMissing });
-if (report.catalogExerciseCount !== 805) errors.push({ code: "unexpected_exercise_count", actual: report.catalogExerciseCount, expected: 805 });
+if (report.catalogExerciseCount !== 729) errors.push({ code: "unexpected_exercise_count", actual: report.catalogExerciseCount, expected: 729 });
 
 console.log(`Exercises: ${exercises.length}`);
 console.log(`Advanced taxonomy: subdivisions ${subdivisionIds.size}, invalid ${errors.length}`);

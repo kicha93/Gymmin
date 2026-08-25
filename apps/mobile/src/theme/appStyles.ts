@@ -1559,6 +1559,10 @@ export const styles = StyleSheet.create({
     gap: 3,
     paddingTop: 8
   },
+  workoutDetailElementRowDivider: {
+    borderBottomWidth: 1,
+    paddingBottom: 12
+  },
   workoutDetailExerciseName: {
     fontSize: 15,
     fontWeight: "800"

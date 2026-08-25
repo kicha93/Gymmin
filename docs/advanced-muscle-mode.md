@@ -40,7 +40,7 @@ Evidence-supported są podział anatomiczny, funkcje stawowe i istnienie regiona
 
 Raport znajduje się w `docs/reports/advanced-muscle-coverage.json`. `npm run exercise:muscles:validate` blokuje nieznane ID, duplikaty, błędne poziomy, profile należące do aliasów oraz ciche braki.
 
-Baseline to 805 canonical exercises. Dla 2331 kwalifikujących się relacji parent 3–5 generator tworzy 1904 `mapped`, 427 `intentionallyNotDetailed`, 0 `needsReview` i 0 silent missing. Pokrycie oznacza klasyfikację każdej relacji, a nie laboratoryjną dokładność profili. Większość `intentionallyNotDetailed` dotyczy najszerszego grzbietu, zbiorczego klucza bioder, odwodzicieli, przywodzicieli lub ruchów bez wystarczająco określonej geometrii.
+Aktywny katalog zawiera 729 canonical exercises. Dla 2165 kwalifikujących się relacji parent 3–5 generator tworzy 1766 `mapped`, 399 `intentionallyNotDetailed`, 0 `needsReview` i 0 silent missing. Pokrycie oznacza klasyfikację każdej relacji, a nie laboratoryjną dokładność profili. Większość `intentionallyNotDetailed` dotyczy najszerszego grzbietu, zbiorczego klucza bioder, odwodzicieli, przywodzicieli lub ruchów bez wystarczająco określonej geometrii.
 
 Jawne wyjątki po researchu: Bar Muscle-up, Muscle-up (progression) i Ring Muscle-up zachowują standardowy wpływ na klatkę, ale nie otrzymują podziału jej regionów, ponieważ ruch łączy fazy pull/transition/dip, a dostępne badania mierzą mięsień piersiowy jako całość. Biceps Push-up zachowuje standardowy wpływ na biceps, ale bez podziału głów i brachialis, ponieważ brak wystarczająco specyficznych danych dla tej nietypowej zamkniętej pozycji łańcucha kinematycznego.
 

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createWorkoutSessionSuperset,
   getGuidedStepRangeForEntry,
+  getMainExerciseProgressForEntry,
   getNextGuidedEntryId,
   getPreviousGuidedEntryId,
   getSupersetRoundRows,
@@ -179,6 +180,18 @@ describe("workout session supersets", () => {
     expect(getNextGuidedEntryId(session, "warmup-a")).toBe("main-c");
     expect(getWorkoutSessionSupersetCandidate(session, "warmup-a").status).toBe("ineligible");
     expect(createWorkoutSessionSuperset(session, "warmup-a", timestamp)).toBe(session);
+    expect(getMainExerciseProgressForEntry(session, "warmup-a")).toEqual({
+      end: 0,
+      isWarmup: true,
+      start: 0,
+      total: 1
+    });
+    expect(getMainExerciseProgressForEntry(session, "main-c")).toEqual({
+      end: 1,
+      isWarmup: false,
+      start: 1,
+      total: 1
+    });
   });
 
   it("prevents one exercise from overlapping two supersets", () => {

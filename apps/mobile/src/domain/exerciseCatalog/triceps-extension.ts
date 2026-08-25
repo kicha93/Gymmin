@@ -2,63 +2,6 @@ import type { Exercise } from "../exercises";
 
 export const tricepsExtension = [
   {
-    "id": "triceps-extension-alternating-dumbbell-lying-triceps-extension-1398",
-    "name": "Alternating Dumbbell Lying Triceps Extension",
-    "polishName": "Naprzemienne prostowanie tricepsów nad głową z hantlami leżąc",
-    "category": "TRICEPS_EXTENSION",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 0,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 0,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 1,
-      "traps": 0,
-      "triceps": 5
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 1,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 0,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    },
-    "libraryTier": "variation"
-  },
-  {
     "id": "triceps-extension-bench-dip-1399",
     "name": "Bench Dip",
     "polishName": "Dipy na ławce",
@@ -117,8 +60,8 @@ export const tricepsExtension = [
   },
   {
     "id": "triceps-extension-body-weight-dip-1400",
-    "name": "Body-weight Dip",
-    "polishName": "Dipy (bez obciążenia)",
+    "name": "Dip",
+    "polishName": "Dipy na poręczach",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -175,7 +118,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-cable-lying-triceps-extension-1402",
     "name": "Cable Lying Triceps Extension",
-    "polishName": "Wyprost tricepsów nad głową na wyciągu leżąc",
+    "polishName": "Francuskie wyciskanie na wyciągu leżąc",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -232,7 +175,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-cable-overhead-triceps-extension-1403",
     "name": "Cable Overhead Triceps Extension",
-    "polishName": "Wyprost tricepsów na wyciągu nad głowę",
+    "polishName": "Prostowanie ramion nad głową na wyciągu",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -289,7 +232,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-cable-kickback-1401",
     "name": "Cable Tricep Kick-back",
-    "polishName": "Prostowanie tricepsa na wyciągu",
+    "polishName": "Kickback tricepsa na wyciągu",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -346,7 +289,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-dumbbell-lying-triceps-extension-1405",
     "name": "Dumbbell Lying Triceps Extension",
-    "polishName": "Wyprost tricepsów z hantlami nad głową leżąc",
+    "polishName": "Francuskie wyciskanie hantli leżąc",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -460,7 +403,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-ez-bar-overhead-triceps-extension-1406",
     "name": "EZ-Bar Overhead Triceps Extension",
-    "polishName": "Wyprost tricepsów ze sztangą łamaną nad głowę",
+    "polishName": "Francuskie wyciskanie sztangi łamanej nad głowę",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -515,66 +458,9 @@ export const tricepsExtension = [
     "libraryTier": "main"
   },
   {
-    "id": "triceps-extension-incline-dip-1407",
-    "name": "Incline Dip",
-    "polishName": "Dipy na poręczach",
-    "category": "TRICEPS_EXTENSION",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 1,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 4,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 3,
-      "traps": 0,
-      "triceps": 5
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 1,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    },
-    "libraryTier": "main"
-  },
-  {
     "id": "triceps-extension-incline-ez-bar-lying-triceps-extension-1408",
     "name": "Incline EZ-Bar Lying Triceps Extension",
-    "polishName": "Wyprost tricepsów ze sztangą łamaną nad głową na ławce dodatniej",
+    "polishName": "Francuskie wyciskanie sztangi łamanej na ławce dodatniej",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -745,7 +631,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-lying-ez-bar-triceps-extension-1410",
     "name": "Lying EZ-Bar Triceps Extension",
-    "polishName": "Wyprost tricepsów ze sztangą łamaną nad głową leżąc",
+    "polishName": "Francuskie wyciskanie sztangi łamanej leżąc",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -802,7 +688,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-lying-triceps-extension-to-close-grip-bench-press-1411",
     "name": "Lying Triceps Extension to Close-grip Bench Press",
-    "polishName": "Wyprost tricepsów z przejściem do wyciskania sztangi w chwycie wąskim na ławce",
+    "polishName": "Francuskie wyciskanie z przejściem do wyciskania wąsko",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -859,7 +745,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-overhead-dumbbell-triceps-extension-1412",
     "name": "Overhead Dumbbell Triceps Extension",
-    "polishName": "Wyprost tricepsów z hantlem nad głowę",
+    "polishName": "Francuskie wyciskanie hantla nad głowę",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -1087,7 +973,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-rope-pressdown-1416",
     "name": "Rope Press-down",
-    "polishName": "Wyciskanie z linką wyciągu górnego nachwytem",
+    "polishName": "Prostowanie ramion na wyciągu z liną",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -1144,7 +1030,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-seated-barbell-overhead-triceps-extension-1417",
     "name": "Seated Barbell Overhead Triceps Extension",
-    "polishName": "Wyprost tricepsów ze sztangą nad głowę siedząc",
+    "polishName": "Francuskie wyciskanie sztangi siedząc",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -1201,7 +1087,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-seated-dumbbell-overhead-triceps-extension-1418",
     "name": "Seated Dumbbell Overhead Triceps Extension",
-    "polishName": "Wyprost tricepsów z hantlem nad głowę siedząc",
+    "polishName": "Francuskie wyciskanie hantla siedząc",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -1258,7 +1144,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-seated-ez-bar-overhead-triceps-extension-1419",
     "name": "Seated EZ-Bar Overhead Triceps Extension",
-    "polishName": "Wyprost tricepsów ze sztangą łamaną nad głowę siedząc",
+    "polishName": "Francuskie wyciskanie sztangi łamanej siedząc",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -1315,7 +1201,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-single-dumbbell-seated-overhead-triceps-extension-1422",
     "name": "Single-dumbbell Seated Overhead Triceps Extension",
-    "polishName": "Wyprost tricepsów z jednym hantlem nad głowę siedząc",
+    "polishName": "Francuskie wyciskanie jednego hantla siedząc",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -1372,7 +1258,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-static-lying-triceps-extension-1425",
     "name": "Static Lying Triceps Extension",
-    "polishName": "Wyprost tricepsów ze sztangą nad głową z przytrzymaniem leżąc",
+    "polishName": "Izometryczne francuskie wyciskanie sztangi leżąc",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -1486,7 +1372,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-triceps-extension-on-floor-1431",
     "name": "Triceps Extension on Floor",
-    "polishName": "Wyprost tricepsów nad głową na podłodze",
+    "polishName": "Francuskie wyciskanie na podłodze",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -1600,7 +1486,7 @@ export const tricepsExtension = [
   {
     "id": "triceps-extension-triceps-pressdown-1433",
     "name": "Triceps Press-down",
-    "polishName": "Wyciskanie tricepsów z linką wyciągu górnego nachwytem",
+    "polishName": "Prostowanie ramion na wyciągu nachwytem",
     "category": "TRICEPS_EXTENSION",
     "muscleImpact": {
       "abductors": 0,
@@ -1640,63 +1526,6 @@ export const tricepsExtension = [
       "medicineBall": 0,
       "other": 0,
       "plate": 0,
-      "pullupBar": 0,
-      "rings": 0,
-      "rope": 0,
-      "sandbag": 0,
-      "sled": 0,
-      "slidingDisc": 0,
-      "smithMachine": 0,
-      "squatRack": 0,
-      "swissBall": 0,
-      "trx": 0,
-      "weightVest": 0
-    },
-    "libraryTier": "main"
-  },
-  {
-    "id": "triceps-extension-weighted-dip-1435",
-    "name": "Weighted Dip",
-    "polishName": "Dipy (z obciążeniem)",
-    "category": "TRICEPS_EXTENSION",
-    "muscleImpact": {
-      "abductors": 0,
-      "abs": 1,
-      "adductors": 0,
-      "biceps": 0,
-      "calves": 0,
-      "chest": 4,
-      "forearm": 0,
-      "glutes": 0,
-      "hamstrings": 0,
-      "hips": 0,
-      "lats": 0,
-      "lowerBack": 0,
-      "obliques": 0,
-      "quads": 0,
-      "shoulders": 3,
-      "traps": 0,
-      "triceps": 5
-    },
-    "equipment": {
-      "ankleWeight": 0,
-      "band": 0,
-      "barbell": 0,
-      "battleRope": 0,
-      "bench": 0,
-      "bike": 0,
-      "bosuBall": 0,
-      "box": 0,
-      "cableMachine": 0,
-      "dumbbell": 0,
-      "ezBar": 0,
-      "foamRoller": 0,
-      "jumpRope": 0,
-      "kettlebell": 0,
-      "machine": 1,
-      "medicineBall": 0,
-      "other": 0,
-      "plate": 1,
       "pullupBar": 0,
       "rings": 0,
       "rope": 0,

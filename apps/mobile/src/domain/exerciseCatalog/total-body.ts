@@ -118,7 +118,7 @@ export const totalBody = [
   {
     "id": "total-body-squat-thrusts-1390",
     "name": "Squat Thrusts (Up-downs)",
-    "polishName": "Przysiady z wyrzutem nóg do tyłu",
+    "polishName": "Squat thrust — wyrzut nóg do podporu",
     "category": "TOTAL_BODY",
     "muscleImpact": {
       "abductors": 0,

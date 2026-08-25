@@ -22,6 +22,13 @@ export type WorkoutSessionGuidedStep = {
   superset?: WorkoutSessionSuperset;
 };
 
+export type WorkoutSessionMainExerciseProgress = {
+  end: number;
+  isWarmup: boolean;
+  start: number;
+  total: number;
+};
+
 export type WorkoutSessionSupersetCandidate =
   | { entryIds: [string, string]; status: "ready" }
   | { status: "ineligible" | "no-next" | "overlap" };
@@ -396,6 +403,38 @@ export function getGuidedStepRangeForEntry(session: WorkoutSession, entryId: str
   return step
     ? { end: step.lastGroupIndex + 1, start: step.firstGroupIndex + 1, total: groups.length }
     : null;
+}
+
+export function getMainExerciseProgressForEntry(
+  session: WorkoutSession,
+  entryId: string
+): WorkoutSessionMainExerciseProgress {
+  const groups = getWorkoutSessionExerciseGroups(session);
+  const steps = getWorkoutSessionGuidedSteps(session);
+  const step = steps.find((item) =>
+    item.groups.some((group) => group.entries.some((entry) => entry.id === entryId))
+  );
+  const mainGroups = groups.filter((group) => !isWarmupGroup(group));
+
+  if (!step) {
+    return { end: 0, isWarmup: false, start: 0, total: mainGroups.length };
+  }
+
+  if (step.groups.every(isWarmupGroup)) {
+    return { end: 0, isWarmup: true, start: 0, total: mainGroups.length };
+  }
+
+  const stepGroupKeys = new Set(step.groups.map((group) => group.key));
+  const positions = mainGroups.flatMap((group, index) =>
+    stepGroupKeys.has(group.key) ? [index + 1] : []
+  );
+
+  return {
+    end: positions.at(-1) ?? 0,
+    isWarmup: false,
+    start: positions[0] ?? 0,
+    total: mainGroups.length
+  };
 }
 
 export function getNextGuidedEntryId(session: WorkoutSession, currentEntryId: string) {

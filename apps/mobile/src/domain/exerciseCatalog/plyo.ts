@@ -3,8 +3,8 @@ import type { Exercise } from "../exercises";
 export const plyo = [
   {
     "id": "plyo-alternating-jump-lunge-859",
-    "name": "Alternating Jump Lunge",
-    "polishName": "Naprzemienne wykroki z wyskokiem",
+    "name": "Jump Lunge",
+    "polishName": "Wykroki z wyskokiem",
     "category": "PLYO",
     "muscleImpact": {
       "abductors": 2,

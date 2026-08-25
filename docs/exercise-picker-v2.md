@@ -4,7 +4,7 @@ Exercise Picker V2 is the production picker used by the workout builder. The leg
 
 ## Data and privacy
 
-The picker is fully local-only. It searches the 805 canonical catalog exercises, reads existing local favorites, and derives recent/frequent use from completed `WorkoutSession` records. It does not add storage, telemetry, network calls, or custom exercises.
+The picker is fully local-only. It searches the 729 canonical catalog exercises, reads existing local favorites, and derives recent/frequent use from completed `WorkoutSession` records. It does not add storage, telemetry, network calls, or custom exercises.
 
 ## Search pipeline
 

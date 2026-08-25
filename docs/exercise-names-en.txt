@@ -1,5 +1,4 @@
 3-way Calf Raise
-3-way Weighted Calf Raise
 30-degree Lat Pull-down
 45-degree Cable External Rotation
 45-degree Plank
@@ -8,26 +7,8 @@
 90/90 Stretch
 Abs Stretch
 Air Bike
-Alternating Barbell Forward Lunge
-Alternating Box Dumbbell Step-ups
-Alternating Dumbbell Biceps Curl
-Alternating Dumbbell Chest Press
-Alternating Dumbbell Lunge
-Alternating Dumbbell Lunge with Reach
-Alternating Dumbbell Lying Triceps Extension
-Alternating Dumbbell Row
-Alternating Dumbbell Shoulder Press
-Alternating Incline Dumbbell Biceps Curl
-Alternating Jump Lunge
-Alternating Lateral Raise with Static Hold
-Alternating Plate Reach
-Alternating Sit-up
-Alternating Slide-out
-Alternating Staggered Push-up
-Alternating-hands Medicine Ball Push-up
 American Swing
 Ankle Circles
-Ankle Dorsiflexion with Band
 Ankle Internal Rotation
 Arm Circles
 Arnold Press
@@ -37,54 +18,6 @@ Back Extension
 Back Extension with Opposite Arm and Leg Reach
 Back Squat with Body Bar
 Back-foot Elevated Dumbbell Split Squat
-Band External Rotation
-Band Good Morning
-Band Internal Rotation
-Band Side-lying Leg Raise
-Band-assisted Chin-up
-Band-assisted Pull-up
-Banded Ab Twist
-Banded Back Extension
-Banded Bicycle Crunch
-Banded Calf Raises
-Banded Clam Shells
-Banded Curl
-Banded Deadbug
-Banded Deadlift
-Banded Donkey Kick
-Banded External Rotation at 90-Degree Abduction
-Banded Face Pulls
-Banded Fire Hydrant
-Banded Fly
-Banded Front Raise
-Banded Glute Bridge
-Banded Hamstring Curls
-Banded High Plank Leg Lifts
-Banded Hip Extension
-Banded Jumping Jack
-Banded Kneeling Crunch
-Banded Lateral Band Walks
-Banded Lateral Raise
-Banded Latpull
-Banded Leg Abduction
-Banded Leg Adduction
-Banded Leg Extension
-Banded Lunge
-Banded Plank
-Banded Pull Apart
-Banded Pull-ups (Progression)
-Banded Push-ups
-Banded Reverse Crunch
-Banded Row
-Banded Shoulder Abduction
-Banded Shoulder Extension
-Banded Shoulder External Rotation
-Banded Shoulder Flexion to 90-Degrees
-Banded Squat to Press
-Banded Tricep Extension
-Banded Tricep Kick-back
-Banded Upright Row
-Banded Wall Crawl with External Rotation
 Bar Good Morning
 Bar Holds
 Bar Muscle-up
@@ -157,9 +90,7 @@ Bicycle Crunch
 Bike
 Bob and Weave Circle
 Body Bar Oblique Twist
-Body-weight Dip
 Body-weight Jump Squat
-Body-weight Wall Squat
 Bodyweight Squat
 Box Jump
 Box Step Squat
@@ -192,7 +123,6 @@ Cat Camel
 Cat Cow Stretch
 Cheating Barbell Biceps Curl
 Chest Press
-Chest Press with Band
 Chest Supported Dumbbell Row
 Chest Supported Machine Row
 Child's Pose Stretch
@@ -234,11 +164,11 @@ Decline Push-up
 Decline Ring Row
 Depth Jump
 Diamond Push-up
+Dip
 Donkey Calf Raise
 Double Crunch
 Double Under
 Drop Lunge
-Dumbbell Alternating Shoulder Press and Twist
 Dumbbell Bench Press
 Dumbbell Biceps Curl
 Dumbbell Biceps Curl with Static Hold
@@ -373,7 +303,6 @@ Inching Elbow Plank
 Inchworm
 Incline Barbell Bench Press
 Incline Bench I-Y-T-W Raise
-Incline Dip
 Incline Dumbbell Bench Press
 Incline Dumbbell Biceps Curl
 Incline Dumbbell Fly
@@ -393,6 +322,7 @@ Isometric Barbell Bench Press
 Isometric-explosive Push-up
 Jog
 Judo Push-up
+Jump Lunge
 Jump Rope
 Jump Rope Crossover
 Jump Rope Jog
@@ -438,9 +368,9 @@ Lat Pull-down with Row
 Lat Stretch
 Lateral Duck Under
 Lateral Dumbbell Step-up
+Lateral Raise with Static Hold
 Lateral Roll
 Lateral Step-over
-Lateral Walks with Band at Ankles
 Leaning Dumbbell Lateral Raise
 Leg Climb Crunch
 Leg Curl
@@ -473,18 +403,14 @@ Lying Triceps Extension to Close-grip Bench Press
 Machine Row
 Marching Hip Raise
 McGill Curl-up
-Medicine Ball Alternating V-up
 Medicine Ball Chest Pass
 Medicine Ball Clean
 Medicine Ball Deadlift-to-Reach
 Medicine Ball Leg Drops
 Medicine Ball Mountain Climber
 Medicine Ball Overhead Throws
-Medicine Ball Push-up
 Medicine Ball Side Throw
-Medicine Ball Sit-up
 Medicine Ball Slam
-Medicine Ball Squat
 Medicine Ball V-up
 Medicine Ball Wood Chops
 Mixed-grip Pull-up
@@ -500,7 +426,6 @@ Neck Rotations
 Neck Stretch
 Neck Tilts
 Negative Sit-up
-Neutral-grip Alternating Dumbbell Row
 Neutral-grip Dumbbell Bench Press
 Neutral-grip Dumbbell Incline Bench Press
 Neutral-grip Pull-up
@@ -547,6 +472,7 @@ Plank with Leg Lift
 Plank with Oblique Crunch
 Plate Pinch Curl
 Plate Raises
+Plate Reach
 Plié Slides
 Plié Squat
 Power Squat Chops
@@ -614,8 +540,6 @@ Scaption and Shrug
 Scapular Retraction
 Scissor Power Switch
 Scorpion Stretch
-Seated Alternating Dumbbell Biceps Curl
-Seated Alternating Reverse Crunch
 Seated Barbell Good Morning
 Seated Barbell Overhead Triceps Extension
 Seated Barbell Shoulder Press
@@ -632,6 +556,7 @@ Seated EZ-Bar Overhead Triceps Extension
 Seated Lateral Raise
 Seated Leg Curl
 Seated Rear Lateral Raise
+Seated Reverse Crunch
 Seated Reverse Dumbbell Curl
 Seated Underhand-grip Cable Row
 Serratus Chair Shrug
@@ -670,6 +595,7 @@ Sled Low Push
 Sled Push
 Sled Row
 Sleeper Stretch
+Slide-out
 Sliding Hip Adduction
 Sliding Lateral Lunge
 Sliding Leg Curl
@@ -692,7 +618,6 @@ Squat Clean and Jerk
 Squat Jacks
 Squat Jump Onto Box
 Squat Thrusts (Up-downs)
-Squats with Band
 Stacked-feet Push-up
 Staggered Squat
 Staggered-hands Push-up
@@ -780,10 +705,9 @@ Wall Ball
 Wall Ball Squat and Press
 Wall Chest and Shoulder Stretch
 Wall Slide
+Wall Squat
 Wall Walk
 Weight-plate Front Raise
-Weighted Dip
-Weighted Wall Squat
 Wide-grip Barbell Bench Press
 Wide-grip Barbell Deadlift
 Wide-grip Barbell Shrug

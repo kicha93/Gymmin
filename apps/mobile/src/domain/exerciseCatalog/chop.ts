@@ -4,7 +4,7 @@ export const chop = [
   {
     "id": "chop-cable-pull-through-157",
     "name": "Cable Pull-through",
-    "polishName": "Wyprost tułowia w wykroku i linką wyciągu dolnego między nogami",
+    "polishName": "Pull-through na wyciągu dolnym",
     "category": "DEADLIFT",
     "muscleImpact": {
       "abductors": 0,
@@ -118,7 +118,7 @@ export const chop = [
   {
     "id": "chop-cable-woodchop-159",
     "name": "Cable Woodchop",
-    "polishName": "Rąbanie drewna z linką wyciągu górnego",
+    "polishName": "Wood chop na wyciągu",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -175,7 +175,7 @@ export const chop = [
   {
     "id": "chop-cross-chop-to-knee-161",
     "name": "Cross Chop to Knee",
-    "polishName": "Rąbanie drewna po przekątnej z uniesieniem kolana",
+    "polishName": "Wood chop po przekątnej z uniesieniem kolana",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -232,7 +232,7 @@ export const chop = [
   {
     "id": "chop-dumbbell-chop-162",
     "name": "Dumbbell Chop",
-    "polishName": "Rąbanie drewna z hantlem",
+    "polishName": "Wood chop z hantlem",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -346,7 +346,7 @@ export const chop = [
   {
     "id": "chop-half-kneeling-rotational-chop-164",
     "name": "Half-kneeling Rotational Chop",
-    "polishName": "Rąbanie drewna ze skrętem tułowia w klęku jednonóż z linką wyciągu górnego",
+    "polishName": "Rotacyjny wood chop na wyciągu w klęku jednonóż",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -403,7 +403,7 @@ export const chop = [
   {
     "id": "chop-half-kneeling-rotational-reverse-chop-165",
     "name": "Half-kneeling Rotational Reverse Chop",
-    "polishName": "Odwrócone rąbanie drewna ze skrętem tułowia w klęku jednonóż z linką wyciągu górnego",
+    "polishName": "Odwrotny rotacyjny wood chop na wyciągu w klęku jednonóż",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -460,7 +460,7 @@ export const chop = [
   {
     "id": "chop-half-kneeling-stability-chop-166",
     "name": "Half-kneeling Stability Chop",
-    "polishName": "Rąbanie drewna w klęku jednonóż z linką wyciągu górnego",
+    "polishName": "Wood chop na wyciągu w klęku jednonóż",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -517,7 +517,7 @@ export const chop = [
   {
     "id": "chop-half-kneeling-stability-reverse-chop-167",
     "name": "Half-kneeling Stability Reverse Chop",
-    "polishName": "Odwrócone rąbanie drewna w klęku jednonóż z linką wyciągu górnego",
+    "polishName": "Odwrotny wood chop na wyciągu w klęku jednonóż",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -574,7 +574,7 @@ export const chop = [
   {
     "id": "chop-kneeling-rotational-chop-168",
     "name": "Kneeling Rotational Chop",
-    "polishName": "Rąbanie drewna ze skrętem tułowia w klęku obunóż z linką wyciągu górnego",
+    "polishName": "Rotacyjny wood chop na wyciągu w klęku obunóż",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -631,7 +631,7 @@ export const chop = [
   {
     "id": "chop-kneeling-rotational-reverse-chop-169",
     "name": "Kneeling Rotational Reverse Chop",
-    "polishName": "Odwrócone rąbanie drewna ze skrętem tułowia w klęku obunóż z linką wyciągu dolnego",
+    "polishName": "Odwrotny rotacyjny wood chop na wyciągu w klęku obunóż",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -688,7 +688,7 @@ export const chop = [
   {
     "id": "chop-kneeling-stability-chop-170",
     "name": "Kneeling Stability Chop",
-    "polishName": "Rąbanie drewna w klęku obunóż z linką wyciągu górnego",
+    "polishName": "Wood chop na wyciągu w klęku obunóż",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -745,7 +745,7 @@ export const chop = [
   {
     "id": "chop-kneeling-woodchopper-171",
     "name": "Kneeling Woodchopper",
-    "polishName": "Rąbanie drewna w klęku jednonóż",
+    "polishName": "Wood chop w klęku jednonóż",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -802,7 +802,7 @@ export const chop = [
   {
     "id": "chop-medicine-ball-wood-chops-172",
     "name": "Medicine Ball Wood Chops",
-    "polishName": "Rąbanie drewna z piłką lekarską",
+    "polishName": "Wood chop z piłką lekarską",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -859,7 +859,7 @@ export const chop = [
   {
     "id": "chop-power-squat-chops-173",
     "name": "Power Squat Chops",
-    "polishName": "Dynamiczne przysiady z rąbaniem drewna",
+    "polishName": "Dynamiczne przysiady z wood chopem",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -916,7 +916,7 @@ export const chop = [
   {
     "id": "chop-standing-rotational-chop-174",
     "name": "Standing Rotational Chop",
-    "polishName": "Rąbanie drewna ze skrętem tułowia z linką wyciągu górnego stojąc",
+    "polishName": "Rotacyjny wood chop na wyciągu stojąc",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -973,7 +973,7 @@ export const chop = [
   {
     "id": "chop-standing-split-rotational-chop-175",
     "name": "Standing Split Rotational Chop",
-    "polishName": "Rąbanie drewna ze skrętem tułowia w wykroku z linką wyciągu górnego",
+    "polishName": "Rotacyjny wood chop na wyciągu w wykroku",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -1030,7 +1030,7 @@ export const chop = [
   {
     "id": "chop-standing-split-rotational-reverse-chop-176",
     "name": "Standing Split Rotational Reverse Chop",
-    "polishName": "Odwrócone rąbanie drewna ze skrętem tułowia w wykroku stojąc",
+    "polishName": "Odwrotny rotacyjny wood chop na wyciągu w wykroku",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,
@@ -1087,7 +1087,7 @@ export const chop = [
   {
     "id": "chop-standing-stability-reverse-chop-177",
     "name": "Standing Stability Reverse Chop",
-    "polishName": "Odwrócone rąbanie drewna stojąc",
+    "polishName": "Odwrotny wood chop na wyciągu stojąc",
     "category": "CHOP",
     "muscleImpact": {
       "abductors": 0,

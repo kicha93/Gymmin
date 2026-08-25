@@ -293,7 +293,17 @@ export function WorkoutDetailScreen({
                       >
                         <View style={styles.workoutInfo}>
                           {elements.map((element, elementIndex) => (
-                            <View key={element.id} style={styles.workoutDetailElementRow}>
+                            <View
+                              key={element.id}
+                              style={[
+                                styles.workoutDetailElementRow,
+                                stage.stageType === "warmup"
+                                  && !isRestTargetStep(element)
+                                  && elements.slice(elementIndex + 1).some((item) => !isRestTargetStep(item))
+                                  ? [styles.workoutDetailElementRowDivider, { borderBottomColor: theme.border }]
+                                  : null
+                              ]}
+                            >
                               <ExerciseSummaryRow
                                 language={language}
                                 pairedTargetText={

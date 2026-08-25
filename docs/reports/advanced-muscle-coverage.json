@@ -1,114 +1,114 @@
 {
-  "catalogExerciseCount": 805,
-  "eligibleExerciseCount": 739,
-  "eligibleParentEngagementCount": 2331,
-  "eligible": 2331,
-  "intentionallyNotDetailed": 427,
-  "mapped": 1904,
+  "catalogExerciseCount": 729,
+  "eligibleExerciseCount": 664,
+  "eligibleParentEngagementCount": 2165,
+  "eligible": 2165,
+  "intentionallyNotDetailed": 399,
+  "mapped": 1766,
   "needsReview": [],
   "silentMissing": 0,
-  "coveragePercent": 81.68,
+  "coveragePercent": 81.57,
   "perParent": {
     "biceps": {
-      "eligible": 94,
+      "eligible": 83,
       "intentionallyNotDetailed": 1,
-      "mapped": 93,
+      "mapped": 82,
       "needsReview": 0
     },
     "forearm": {
-      "eligible": 101,
+      "eligible": 98,
       "intentionallyNotDetailed": 5,
-      "mapped": 96,
+      "mapped": 93,
       "needsReview": 0
     },
     "lats": {
-      "eligible": 73,
-      "intentionallyNotDetailed": 73,
+      "eligible": 65,
+      "intentionallyNotDetailed": 65,
       "mapped": 0,
       "needsReview": 0
     },
     "traps": {
-      "eligible": 171,
-      "intentionallyNotDetailed": 13,
-      "mapped": 158,
-      "needsReview": 0
-    },
-    "abs": {
-      "eligible": 279,
-      "intentionallyNotDetailed": 0,
-      "mapped": 279,
-      "needsReview": 0
-    },
-    "obliques": {
-      "eligible": 129,
-      "intentionallyNotDetailed": 0,
-      "mapped": 129,
-      "needsReview": 0
-    },
-    "glutes": {
-      "eligible": 278,
-      "intentionallyNotDetailed": 38,
-      "mapped": 240,
-      "needsReview": 0
-    },
-    "hamstrings": {
-      "eligible": 132,
-      "intentionallyNotDetailed": 25,
-      "mapped": 107,
-      "needsReview": 0
-    },
-    "lowerBack": {
-      "eligible": 75,
-      "intentionallyNotDetailed": 0,
-      "mapped": 75,
-      "needsReview": 0
-    },
-    "hips": {
-      "eligible": 91,
-      "intentionallyNotDetailed": 91,
-      "mapped": 0,
-      "needsReview": 0
-    },
-    "calves": {
-      "eligible": 77,
-      "intentionallyNotDetailed": 11,
-      "mapped": 66,
-      "needsReview": 0
-    },
-    "abductors": {
-      "eligible": 47,
-      "intentionallyNotDetailed": 47,
-      "mapped": 0,
-      "needsReview": 0
-    },
-    "shoulders": {
-      "eligible": 303,
-      "intentionallyNotDetailed": 41,
-      "mapped": 262,
+      "eligible": 158,
+      "intentionallyNotDetailed": 12,
+      "mapped": 146,
       "needsReview": 0
     },
     "chest": {
-      "eligible": 83,
+      "eligible": 74,
       "intentionallyNotDetailed": 3,
-      "mapped": 80,
+      "mapped": 71,
       "needsReview": 0
     },
-    "quads": {
-      "eligible": 216,
-      "intentionallyNotDetailed": 23,
-      "mapped": 193,
-      "needsReview": 0
-    },
-    "adductors": {
-      "eligible": 34,
-      "intentionallyNotDetailed": 34,
-      "mapped": 0,
+    "shoulders": {
+      "eligible": 274,
+      "intentionallyNotDetailed": 38,
+      "mapped": 236,
       "needsReview": 0
     },
     "triceps": {
-      "eligible": 148,
+      "eligible": 134,
       "intentionallyNotDetailed": 22,
-      "mapped": 126,
+      "mapped": 112,
+      "needsReview": 0
+    },
+    "glutes": {
+      "eligible": 255,
+      "intentionallyNotDetailed": 37,
+      "mapped": 218,
+      "needsReview": 0
+    },
+    "quads": {
+      "eligible": 205,
+      "intentionallyNotDetailed": 23,
+      "mapped": 182,
+      "needsReview": 0
+    },
+    "hamstrings": {
+      "eligible": 126,
+      "intentionallyNotDetailed": 25,
+      "mapped": 101,
+      "needsReview": 0
+    },
+    "calves": {
+      "eligible": 74,
+      "intentionallyNotDetailed": 11,
+      "mapped": 63,
+      "needsReview": 0
+    },
+    "hips": {
+      "eligible": 85,
+      "intentionallyNotDetailed": 85,
+      "mapped": 0,
+      "needsReview": 0
+    },
+    "abs": {
+      "eligible": 265,
+      "intentionallyNotDetailed": 0,
+      "mapped": 265,
+      "needsReview": 0
+    },
+    "abductors": {
+      "eligible": 39,
+      "intentionallyNotDetailed": 39,
+      "mapped": 0,
+      "needsReview": 0
+    },
+    "obliques": {
+      "eligible": 125,
+      "intentionallyNotDetailed": 0,
+      "mapped": 125,
+      "needsReview": 0
+    },
+    "lowerBack": {
+      "eligible": 72,
+      "intentionallyNotDetailed": 0,
+      "mapped": 72,
+      "needsReview": 0
+    },
+    "adductors": {
+      "eligible": 33,
+      "intentionallyNotDetailed": 33,
+      "mapped": 0,
       "needsReview": 0
     }
   }

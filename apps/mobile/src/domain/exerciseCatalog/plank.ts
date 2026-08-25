@@ -61,7 +61,7 @@ export const plank = [
   {
     "id": "plank-90-degree-static-hold-729",
     "name": "90-degree Static Hold",
-    "polishName": "Odpychanie nóg zgiętych pod kątem 90 stopni w leżeniu na plecach",
+    "polishName": "Izometryczne utrzymanie nóg pod kątem 90°",
     "category": "PLANK",
     "muscleImpact": {
       "abductors": 0,
@@ -175,7 +175,7 @@ export const plank = [
   {
     "id": "plank-cross-body-mountain-climber-731",
     "name": "Cross-body Mountain Climber",
-    "polishName": "Uginanie nóg po przekątnej w podporze",
+    "polishName": "Mountain climbers po przekątnej",
     "category": "PLANK",
     "muscleImpact": {
       "abductors": 0,
@@ -745,7 +745,7 @@ export const plank = [
   {
     "id": "plank-medicine-ball-mountain-climber-743",
     "name": "Medicine Ball Mountain Climber",
-    "polishName": "Uginanie nóg w podporze z piłką lekarską",
+    "polishName": "Mountain climbers z rękami na piłce lekarskiej",
     "category": "PLANK",
     "muscleImpact": {
       "abductors": 0,
@@ -802,7 +802,7 @@ export const plank = [
   {
     "id": "plank-modified-mountain-climber-and-extension-744",
     "name": "Modified Mountain Climber and Extension",
-    "polishName": "Zmodyfikowane uginanie i prostowanie nóg w podporze",
+    "polishName": "Zmodyfikowane mountain climbers z wyprostem nogi",
     "category": "PLANK",
     "muscleImpact": {
       "abductors": 0,
@@ -859,7 +859,7 @@ export const plank = [
   {
     "id": "plank-mountain-climber-745",
     "name": "Mountain Climber",
-    "polishName": "Uginanie nóg w podporze",
+    "polishName": "Mountain climbers",
     "category": "PLANK",
     "muscleImpact": {
       "abductors": 0,
@@ -916,7 +916,7 @@ export const plank = [
   {
     "id": "plank-mountain-climber-on-sliding-discs-746",
     "name": "Mountain Climber on Sliding Discs",
-    "polishName": "Uginanie nóg na dyskach ślizgowych w podporze",
+    "polishName": "Mountain climbers na dyskach ślizgowych",
     "category": "PLANK",
     "muscleImpact": {
       "abductors": 0,
@@ -973,7 +973,7 @@ export const plank = [
   {
     "id": "plank-mountain-climber-with-hands-on-bench-748",
     "name": "Mountain Climber with Hands on Bench",
-    "polishName": "Uginanie nóg z rękoma na ławce w podporze",
+    "polishName": "Mountain climbers z rękami na ławce",
     "category": "PLANK",
     "muscleImpact": {
       "abductors": 0,

@@ -11,8 +11,10 @@ import {
   getRequiredEquipment,
   getSecondaryMuscles,
   isExerciseAvailableForStageType,
+  normalizeExerciseReference,
   resolveExerciseId
 } from "../exercises";
+import { exerciseIdAliasMap } from "../exerciseIdAliases";
 import { getExerciseAnimationAssetKey, getExerciseImageAssetKeys } from "../exerciseImageAssets";
 
 describe("exercise catalog cleanup", () => {
@@ -162,6 +164,15 @@ describe("exercise catalog cleanup", () => {
     expect(findExerciseById("shoulder-press-strict-press-1133")?.name).toBe("Barbell Overhead Press");
     expect(resolveExerciseId("banded-exercises-squat-to-press-40")).toBe("squat-thrusters-1313");
     expect(findExerciseById("banded-exercises-front-raise-14")?.name).toBe("Front Raise");
+  });
+
+  it("rewrites every temporary id alias to a complete canonical reference", () => {
+    for (const legacyId of Object.keys(exerciseIdAliasMap)) {
+      const canonical = findExerciseById(legacyId);
+      expect(canonical, legacyId).toBeDefined();
+      expect(normalizeExerciseReference({ exerciseId: legacyId, exerciseName: `Legacy ${legacyId}` }), legacyId)
+        .toEqual({ exerciseId: canonical?.id, exerciseName: canonical?.name });
+    }
   });
 
   it("does not expose explicit resistance-band variants in the active catalog", () => {

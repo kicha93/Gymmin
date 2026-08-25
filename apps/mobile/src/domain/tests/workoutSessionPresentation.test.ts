@@ -160,4 +160,55 @@ describe("workoutSessionPresentation", () => {
 
     expect(getPreviousExerciseValues([currentEntry], [previous])).toEqual({ reps: "8", weight: "90" });
   });
+
+  it("uses the planned exercise values when no history exists", () => {
+    const currentEntries = [
+      entry({
+        exerciseId: "calf-raise-standing-barbell-calf-raise-117",
+        exerciseName: "Standing Barbell Calf Raise",
+        id: "set-1",
+        plannedTarget: "10",
+        plannedTargetType: "repetitions",
+        plannedWeight: undefined
+      }),
+      entry({
+        exerciseId: "calf-raise-standing-barbell-calf-raise-117",
+        exerciseName: "Standing Barbell Calf Raise",
+        id: "set-2",
+        plannedTarget: "10",
+        plannedTargetType: "repetitions",
+        plannedWeight: undefined,
+        setIteration: 2
+      })
+    ];
+
+    expect(getPreviousExerciseValues(currentEntries, [])).toEqual({ reps: "10", weight: "" });
+  });
+
+  it("keeps recorded history ahead of current plan defaults", () => {
+    const currentEntry = entry({
+      exerciseId: "front-squat",
+      exerciseName: "Front squat",
+      id: "current",
+      plannedTarget: "10",
+      plannedTargetType: "repetitions"
+    });
+    const previous = session([
+      entry({
+        actualReps: "6",
+        actualWeight: "100",
+        exerciseId: "front-squat",
+        exerciseName: "Front squat",
+        id: "previous",
+        isCompleted: true
+      })
+    ], {
+      finishedAt: "2026-01-02T11:00:00.000Z",
+      id: "previous-session",
+      startedAt: "2026-01-02T10:00:00.000Z",
+      status: "completed"
+    });
+
+    expect(getPreviousExerciseValues([currentEntry], [previous])).toEqual({ reps: "6", weight: "100" });
+  });
 });

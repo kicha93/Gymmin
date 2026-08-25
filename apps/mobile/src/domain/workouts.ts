@@ -158,10 +158,7 @@ export function normalizeWorkoutRestBetweenSets(draft: WorkoutDraft): WorkoutDra
 export function normalizeWorkoutDraftExerciseIds(draft: WorkoutDraft): WorkoutDraft {
   return {
     ...draft,
-    steps: draft.steps.map((step) => ({
-      ...step,
-      exerciseId: step.exerciseId?.trim() ? resolveExerciseId(step.exerciseId.trim()) : step.exerciseId
-    }))
+    steps: draft.steps.map((step) => normalizeExerciseReference(step))
   };
 }
-import { resolveExerciseId } from "./exercises";
+import { normalizeExerciseReference } from "./exercises";

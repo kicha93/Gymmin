@@ -190,6 +190,39 @@ export function resolveExerciseId(exerciseId: string) {
   return current;
 }
 
+export type ExerciseReference = {
+  exerciseId?: string;
+  exerciseName?: string;
+};
+
+/**
+ * Converts a persisted exercise reference to the current canonical catalog
+ * entry. Stored workouts and sessions keep the canonical English name; UI
+ * localization is applied by getExerciseDisplayName(). This deliberately
+ * rewrites removed variants (for example banded exercises) instead of merely
+ * resolving them at render time, so the compatibility aliases can be retired
+ * after the migration release has rewritten local data.
+ */
+export function normalizeExerciseReference<T extends ExerciseReference>(reference: T): T {
+  const rawId = reference.exerciseId?.trim();
+  const rawName = reference.exerciseName?.trim();
+  const exercise = rawId
+    ? findExerciseById(rawId)
+    : rawName
+      ? findCatalogExerciseBestEffort(rawName)
+      : undefined;
+
+  if (!exercise) {
+    return reference;
+  }
+
+  return {
+    ...reference,
+    exerciseId: exercise.id,
+    exerciseName: exercise.name
+  };
+}
+
 export function isExerciseVisibleInDefaultLibrary(exercise: Exercise) {
   return (exercise.libraryTier ?? "main") === "main";
 }

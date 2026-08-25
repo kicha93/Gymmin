@@ -127,6 +127,20 @@ export function getPreviousExerciseValues(
   const summary = progressKey ? getExerciseProgressSummary(workoutSessions, progressKey) : null;
   const previousEntry = summary?.lastResult.entry;
 
+  if (!previousEntry) {
+    const plannedReps = entries.find(
+      (entry) => entry.plannedTargetType === "repetitions" && entry.plannedTarget?.trim()
+    )?.plannedTarget?.trim() || "";
+    const plannedWeight = entries.find(
+      (entry) => entry.plannedWeight?.trim()
+    )?.plannedWeight?.trim() || "";
+
+    return {
+      reps: plannedReps,
+      weight: plannedWeight
+    };
+  }
+
   return {
     reps: previousEntry?.actualReps?.trim() || "",
     weight: previousEntry?.actualWeight?.trim() || ""

@@ -115,6 +115,53 @@ describe("workoutSessions", () => {
     expect(normalized[0]?.entries[0]?.exerciseId).toBe("squat-barbell-back-squat-1251");
   });
 
+  it("rewrites removed variants in active/history entries and their plan snapshots", () => {
+    const legacyStep = {
+      exerciseId: "banded-exercises-deadlift-8",
+      exerciseName: "Banded Deadlift",
+      goalType: "repetitions" as const,
+      id: "exercise-1",
+      intensity: "moderate" as const,
+      kind: "exercise" as const,
+      label: "",
+      loadKg: "80",
+      notes: "",
+      restSeconds: "180",
+      setCount: "4",
+      stageType: "exercise" as const,
+      targetValue: "6"
+    };
+    const [normalized] = normalizeWorkoutSessions([session({
+      planSnapshot: { name: "Pull", notes: "", sport: "strength", steps: [legacyStep] },
+      entries: [{
+        id: "entry-banded",
+        stageIndex: 0,
+        seriesIndex: 0,
+        setIteration: 1,
+        elementIndex: 0,
+        type: "exercise",
+        exerciseId: legacyStep.exerciseId,
+        exerciseName: legacyStep.exerciseName,
+        actualWeight: "80",
+        actualReps: "6",
+        isCompleted: true
+      }]
+    })]);
+
+    expect(normalized.planSnapshot.steps[0]).toMatchObject({
+      exerciseId: "deadlift-barbell-deadlift-371",
+      exerciseName: "Barbell Deadlift",
+      loadKg: "80",
+      targetValue: "6"
+    });
+    expect(normalized.entries[0]).toMatchObject({
+      exerciseId: "deadlift-barbell-deadlift-371",
+      exerciseName: "Barbell Deadlift",
+      actualWeight: "80",
+      actualReps: "6"
+    });
+  });
+
   it("marks a workout history entry as a tombstone and excludes it from UI/progress", () => {
     const completedSession = session({
       id: "completed",

@@ -5,7 +5,7 @@ import {
   type WorkoutDraft,
   type WorkoutStep
 } from "./workouts";
-import { resolveExerciseId } from "./exercises";
+import { normalizeExerciseReference, resolveExerciseId } from "./exercises";
 import { groupWorkoutBuilderSteps } from "./workoutEditor";
 import {
   createWorkoutSessionSupersetsFromPlan,
@@ -185,7 +185,9 @@ function cloneWorkoutDraft(value: unknown, fallbackName: string): WorkoutDraft {
     name: typeof draft?.name === "string" ? draft.name : fallbackName,
     notes: typeof draft?.notes === "string" ? draft.notes : "",
     sport: draft?.sport === "strength" ? draft.sport : "strength",
-    steps: Array.isArray(draft?.steps) ? draft.steps.map((step) => ({ ...step })) as WorkoutStep[] : []
+    steps: Array.isArray(draft?.steps)
+      ? draft.steps.map((step) => normalizeExerciseReference({ ...step })) as WorkoutStep[]
+      : []
   };
 }
 
@@ -237,10 +239,7 @@ export function normalizeWorkoutSessions(value: unknown): WorkoutSession[] {
         : "Workout";
     const entries = Array.isArray(raw.entries) ? raw.entries
       .filter((entry): entry is WorkoutSessionEntry => Boolean(entry && typeof entry === "object" && typeof entry.id === "string"))
-      .map((entry) => ({
-        ...entry,
-        exerciseId: entry.exerciseId?.trim() ? resolveExerciseId(entry.exerciseId.trim()) : entry.exerciseId
-      })) : [];
+      .map((entry) => normalizeExerciseReference({ ...entry })) : [];
     const supersets = normalizeWorkoutSessionSupersets(raw.supersets, entries, startedAt);
     const session: WorkoutSession = {
       id,

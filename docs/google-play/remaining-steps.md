@@ -12,13 +12,18 @@ Wymóg 12 testerów przez 14 dni jest warunkowy — rozstrzygający jest komunik
 
 ## 2. Publiczna polityka prywatności
 
-- [ ] W repozytorium GitHub otwórz `Settings → Pages`.
-- [ ] W `Build and deployment` wybierz `GitHub Actions`.
-- [ ] Uruchom ręcznie workflow `Publish privacy pages`.
-- [ ] Po publikacji skopiuj rzeczywisty publiczny adres polityki prywatności i sprawdź wariant PL oraz EN.
+- [x] Opublikowano wyłącznie statyczne dokumenty w publicznym repozytorium `kicha93/gymmin-privacy`.
+- [x] Zweryfikowano odpowiedzi HTTPS `200` dla wariantów PL, EN oraz obu instrukcji usunięcia danych.
 - [ ] Wklej publiczny URL polityki do Play Console.
 
-Nie wpisuj przewidywanego adresu przed pierwszym poprawnym wdrożeniem GitHub Pages.
+Zweryfikowane adresy:
+
+- PL: `https://kicha93.github.io/gymmin-privacy/`
+- EN: `https://kicha93.github.io/gymmin-privacy/en/`
+- usunięcie danych PL: `https://kicha93.github.io/gymmin-privacy/delete-data/`
+- usunięcie danych EN: `https://kicha93.github.io/gymmin-privacy/en/delete-data/`
+
+Główne repozytorium pozostaje prywatne. Publiczne repozytorium Pages zawiera tylko dokumenty przeznaczone do publikacji.
 
 ## 3. Karta aplikacji
 

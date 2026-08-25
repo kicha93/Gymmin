@@ -87,7 +87,12 @@ See [Android builds](docs/build-android-apk.md), the [release checklist](docs/re
 
 ## Privacy and support
 
-Gymmin has an in-app PL/EN privacy policy and a static site under `docs/privacy/`. The manual `Publish privacy pages` workflow deploys exactly that directory after GitHub Pages is configured to use GitHub Actions. Use the URL reported by the successful deployment rather than assuming a repository Pages address.
+Gymmin has an in-app PL/EN privacy policy and canonical static sources under `docs/privacy/`. Because the application repository is private and its current GitHub plan does not support Pages for private repositories, the same static files are published from the dedicated public repository `kicha93/gymmin-privacy`.
+
+- Privacy policy PL: <https://kicha93.github.io/gymmin-privacy/>
+- Privacy policy EN: <https://kicha93.github.io/gymmin-privacy/en/>
+- Local data deletion PL: <https://kicha93.github.io/gymmin-privacy/delete-data/>
+- Local data deletion EN: <https://kicha93.github.io/gymmin-privacy/en/delete-data/>
 
 - Author: **Paweł Kaliszewski**
 - Contact: `kontakt@gymmin.app`

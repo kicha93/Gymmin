@@ -174,10 +174,10 @@ P0 execution order: C → E → G → M. P1 follows after P0 or in parallel on a
 - [ ] verify package/application ID is `com.gymmin.app`
 - [ ] increment and verify `versionCode`
 - [ ] verify user-facing `versionName`
-- [ ] manually run the `Publish privacy pages` workflow after enabling GitHub Actions as the Pages source
-- [ ] copy the actual URL from the successful Pages deployment; do not infer it beforehand
-- [ ] verify PL policy at the deployment root and EN policy under `/en/`
-- [ ] verify optional deletion instructions under `/delete-data/` and `/en/delete-data/`
+- [x] publish the canonical `docs/privacy/` files through the dedicated public `kicha93/gymmin-privacy` repository
+- [x] verify the deployed privacy URL: `https://kicha93.github.io/gymmin-privacy/`
+- [x] verify PL policy at the deployment root and EN policy under `/en/`
+- [x] verify deletion instructions under `/delete-data/` and `/en/delete-data/`
 - [ ] enter the verified public privacy URL in Play Console
 - [ ] complete Data safety using the actual local-only behavior
 - [ ] prepare phone/tablet screenshots and final icon/feature graphic

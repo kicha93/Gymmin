@@ -10,4 +10,5 @@
 - Buy Me a Coffee opens `https://buymeacoffee.com/atomicjumpr` externally without identifiers or tracking parameters and grants no benefits.
 - “Delete all data” cancels local notifications and removes local records/avatar after migration safety checks.
 - Android cloud backup/device transfer is disabled for private data; `INTERNET` and Billing are removed from the merged manifest.
-- Static PL/EN public policies are in `docs/privacy/` and identify the author as Paweł Kaliszewski.
+- Canonical static PL/EN policies are in `docs/privacy/` and identify the author as Paweł Kaliszewski.
+- Their public mirror contains only these publishable files and is available at `https://kicha93.github.io/gymmin-privacy/` from `kicha93/gymmin-privacy`; PL/EN deletion instructions are published below `/delete-data/` and `/en/delete-data/`.

@@ -14,7 +14,7 @@ Wymóg 12 testerów przez 14 dni jest warunkowy — rozstrzygający jest komunik
 
 - [x] Opublikowano wyłącznie statyczne dokumenty w publicznym repozytorium `kicha93/gymmin-privacy`.
 - [x] Zweryfikowano odpowiedzi HTTPS `200` dla wariantów PL, EN oraz obu instrukcji usunięcia danych.
-- [ ] Wklej publiczny URL polityki do Play Console.
+- [x] Wklejono publiczny URL polityki do Play Console.
 
 Zweryfikowane adresy:
 
@@ -27,8 +27,8 @@ Główne repozytorium pozostaje prywatne. Publiczne repozytorium Pages zawiera t
 
 ## 3. Karta aplikacji
 
-- [ ] Wklej polski opis z `docs/google-play/listing-pl.md`.
-- [ ] Wklej angielski opis z `docs/google-play/listing-en.md`.
+- [x] Wklejono polski opis z `docs/google-play/listing-pl.md` i zapisano wersję roboczą.
+- [x] Wklejono angielski opis z `docs/google-play/listing-en.md` i zapisano wersję roboczą.
 - [ ] Dodaj ikonę `docs/google-play/assets/app-icon-512.png`.
 - [ ] Dodaj grafikę wyróżniającą `docs/google-play/assets/feature-graphic-1024x500.png`.
 - [ ] Wykonaj i dodaj zrzuty ekranu zgodnie z `docs/google-play/screenshot-plan.md`.
@@ -38,19 +38,19 @@ Główne repozytorium pozostaje prywatne. Publiczne repozytorium Pages zawiera t
 
 Wypełnij je zgodnie z faktycznym zachowaniem wersji local-only i wskazówkami w `docs/google-play/console-declarations.md`:
 
-- [ ] Dostęp do aplikacji.
-- [ ] Reklamy.
-- [ ] Data Safety.
-- [ ] Aplikacje zdrowotne / funkcje zdrowotne.
-- [ ] Klasyfikacja treści IARC.
-- [ ] Grupa docelowa i treści.
-- [ ] Pozostałe deklaracje wyświetlane przez Play Console dla tego konta i typu aplikacji.
+- [x] Dostęp do aplikacji.
+- [x] Reklamy.
+- [x] Data Safety.
+- [x] Aplikacje zdrowotne / funkcje zdrowotne.
+- [x] Klasyfikacja treści IARC.
+- [x] Grupa docelowa i treści.
+- [x] Pozostałe deklaracje wyświetlane przez Play Console dla tego konta i typu aplikacji.
 
 ## 5. Wersja i artefakt
 
 - [ ] Przed wysłaniem sprawdź najwyższy `versionCode`, jaki kiedykolwiek trafił do Play Console; nowy AAB musi mieć wartość większą.
-- [ ] Uruchom pełne release gates oraz walidację Google Play.
-- [ ] Zbuduj świeży, podpisany AAB skryptem produkcyjnym.
+- [x] Uruchomiono pełne release gates oraz walidację Google Play dla bieżącego kandydata.
+- [x] Zbudowano świeży, podpisany AAB skryptem produkcyjnym.
 - [ ] Prześlij AAB najpierw do testu wewnętrznego albo zamkniętego.
 - [ ] Wykonaj końcowy smoke test wersji pobranej przez Google Play.
 - [ ] Dopiero potem utwórz wdrożenie produkcyjne.
@@ -61,7 +61,8 @@ Ostatni lokalnie zweryfikowany kandydat miał:
 - versionName: `1.0`,
 - versionCode: `2`,
 - AAB: `.artifacts/Gymmin-release-latest.aab`,
-- SHA-256: `FD142CA04E948C5D814FEF4307DC4F4B953E94AC1CEB873C197E0C2BFB8B529A`.
+- rozmiar: `43 846 492 B` (`41,82 MiB`),
+- SHA-256: `D06DF82AA54A273EEAD431B85D89BAD17B5060D75311AF50A5ED1B1163966C68`.
 
 Plik w `.artifacts` jest lokalnym artefaktem roboczym i nie jest częścią repozytorium.
 
@@ -79,7 +80,7 @@ Plik w `.artifacts` jest lokalnym artefaktem roboczym i nie jest częścią repo
 
 - [x] Architektura mobile-only i local-only.
 - [x] Brak własnego backendu, kont, synchronizacji, kredytów i Billing.
-- [x] Statyczne dokumenty polityki prywatności PL/EN oraz workflow GitHub Pages.
+- [x] Statyczne dokumenty polityki prywatności PL/EN opublikowane z publicznego repozytorium `kicha93/gymmin-privacy`.
 - [x] Materiały i teksty karty Google Play PL/EN.
 - [x] Walidator materiałów i podstawowych parametrów wydania: `npm run google-play:validate`.
 - [x] Podpisany AAB oraz automatyczne gates przeszły lokalnie dla bieżącego kandydata.

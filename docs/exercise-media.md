@@ -4,9 +4,9 @@ Gymmin keeps editable exercise image sources separate from production runtime as
 
 ## Layout
 
-- `media-source/exercises/<exercise-id>/start.png` and `end.png` are non-bundled editable sources.
-- `apps/mobile/assets/exercises/<exercise-id>/start.webp` and `end.webp` are production runtime assets.
-- `animation.mp4` remains in the mobile asset directory and is outside image optimization.
+- `media-source/exercises/<exercise-id>/start.png` and/or `end.png` are non-bundled editable sources.
+- `apps/mobile/assets/exercises/<exercise-id>/start.webp` and/or `end.webp` are production runtime assets.
+- exercise media is static-only; video and animated image formats are not supported.
 - achievement media is a separate asset family and is not handled by this pipeline.
 
 The logical keys remain `<exercise-id>/start` and `<exercise-id>/end`. `exerciseImageAssets.ts` therefore remains independent of the physical image format. Metro receives a generated, static `require()` map in `exerciseImageSources.ts`; dynamic requires are not used.
@@ -19,7 +19,7 @@ The logical keys remain `<exercise-id>/start` and `<exercise-id>/end`. `exercise
 - no crop;
 - no upscale;
 - metadata stripped;
-- identical algorithm for both members of every START/END pair.
+- identical algorithm for every image, whether an exercise has one image or a START/END pair.
 
 ## Commands
 
@@ -35,12 +35,12 @@ The optimizer performs a complete preflight before writing output, converts into
 The validation command is also part of the mobile pretest gate. It rejects:
 
 - runtime exercise PNG files;
-- missing or incomplete START/END pairs;
+- image sets without either a START or END image;
 - mismatched pair dimensions;
 - missing static require targets;
 - orphan production images;
 - dimensions above 900 x 1140;
 - WebP files above 192 KiB;
-- removal or loss of the registered exercise MP4.
+- animated exercise media (`gif`, `m4v`, `mov`, `mp4`, `webm`).
 
-Do not run `sync-exercise-image-assets.mjs` as a substitute for optimization after adding PNG sources. Synchronization only reflects already optimized runtime WebP and MP4 files; the mandatory source-to-runtime step is `exercise:media:optimize`.
+Do not run `sync-exercise-image-assets.mjs` as a substitute for optimization after adding PNG sources. Synchronization only reflects already optimized runtime WebP files; the mandatory source-to-runtime step is `exercise:media:optimize`.

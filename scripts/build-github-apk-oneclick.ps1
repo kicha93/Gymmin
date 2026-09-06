@@ -103,6 +103,12 @@ if (-not $SkipGitSync) {
       throw "Could not determine the Git remote from upstream: $upstreamRef"
     }
     $gitRemote = $Matches[1]
+    # Verify that the Git object database is writable before spending several
+    # minutes on tests and Gradle. The probe is an unreachable tiny blob and is
+    # safe for Git to prune later.
+    $gitWriteProbe = [Guid]::NewGuid().ToString("N") | git hash-object -w --stdin
+    Assert-LastExitCode "Git object database write preflight"
+    if (-not $gitWriteProbe) { throw "Git object database write preflight returned no object id." }
     Invoke-GitNetworkCommandWithRetry -Operation preflight -Remote $gitRemote
   } finally { Pop-Location }
 }

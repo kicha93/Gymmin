@@ -8,11 +8,7 @@ import {
   type ExerciseLanguage,
   type MuscleKey
 } from "./exercises";
-import {
-  getExerciseAnimationAssetKey,
-  getExerciseImageAssetKeys,
-  type ExerciseImageAssetKey
-} from "./exerciseImageAssets";
+import { getExerciseImageAssetKeys, type ExerciseImageAssetKey } from "./exerciseImageAssets";
 import { getExerciseTechniqueContent } from "./exerciseTechniqueContent";
 import type { WorkoutExecutionMode } from "./workoutSessions";
 import type { WorkoutStep } from "./workouts";
@@ -24,16 +20,13 @@ export type ExerciseMuscleGroups = {
 };
 
 export type ExerciseDetails = ExerciseMuscleGroups & {
-  animationUrl: string | null;
   category: string;
   displayName: string;
   equipment: string[];
-  hasAnimation: boolean;
   imageAssetKeys: ExerciseImageAssetKey[];
   commonMistakes: string[];
   instructions: string[];
   techniqueTips: string[];
-  videoAssetKey: ExerciseImageAssetKey | null;
 };
 
 function safeTrim(value: unknown): string {
@@ -147,7 +140,6 @@ export function getExerciseDetails(
   }
 
   const techniqueContent = getExerciseTechniqueContent(exercise.id);
-  const videoAssetKey = getExerciseAnimationAssetKey(exercise.id);
   const imageAssetKeys = getExerciseImageAssetKeys(exercise.id);
   const localizeList = (items: readonly { en: string; pl: string }[] | undefined) =>
     (items ?? [])
@@ -156,16 +148,13 @@ export function getExerciseDetails(
 
   return {
     ...muscleGroups,
-    animationUrl: null,
     category: formatCodeLabel(exercise.category),
     commonMistakes: localizeList(techniqueContent?.commonMistakes),
     displayName: language === "pl" ? exercise.polishName : exercise.name,
     equipment: getRequiredEquipment(exercise).map(formatCodeLabel),
-    hasAnimation: Boolean(videoAssetKey) || imageAssetKeys.length > 0,
     imageAssetKeys,
     instructions: localizeList(techniqueContent?.instructions),
-    techniqueTips: localizeList(techniqueContent?.techniqueTips),
-    videoAssetKey
+    techniqueTips: localizeList(techniqueContent?.techniqueTips)
   };
 }
 

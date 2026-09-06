@@ -45,11 +45,16 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`
-Import exercise images from folders named by Polish exercise names.
+Import exercise images from folders named by Polish exercise names or flat files named by English exercise names.
 
 Expected source structure:
   <source-root>/<Polish exercise name>/start.png
   <source-root>/<Polish exercise name>/end.png
+or:
+  <source-root>/<English exercise name>-start.png
+  <source-root>/<English exercise name>-end.png
+
+One available start/end image is sufficient; complete pairs are preferred.
 
 Example:
   node scripts/import-exercise-images-from-folder.mjs --source-root "C:\\Users\\Administrator\\Downloads\\cwiczenia" --dry-run
@@ -89,12 +94,12 @@ function normalizeName(value) {
     .replace(/\s+/g, " ");
 }
 
-function buildPolishNameLookup(exercises) {
+function buildNameLookup(exercises, field) {
   const lookup = new Map();
   const duplicates = new Map();
 
   for (const exercise of exercises) {
-    const key = normalizeName(exercise.polishName);
+    const key = normalizeName(exercise[field]);
     if (lookup.has(key)) {
       duplicates.set(key, [...(duplicates.get(key) ?? [lookup.get(key)]), exercise]);
       lookup.delete(key);
@@ -108,14 +113,6 @@ function buildPolishNameLookup(exercises) {
   return { duplicates, lookup };
 }
 
-async function isDirectory(filePath) {
-  try {
-    return (await stat(filePath)).isDirectory();
-  } catch {
-    return false;
-  }
-}
-
 async function fileExists(filePath) {
   try {
     return (await stat(filePath)).isFile();
@@ -127,14 +124,27 @@ async function fileExists(filePath) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const catalogExercises = await loadCatalogExercises();
-  const { duplicates, lookup } = buildPolishNameLookup(catalogExercises);
-  const sourceEntries = await readdir(args.sourceRoot);
+  const polishNames = buildNameLookup(catalogExercises, "polishName");
+  const englishNames = buildNameLookup(catalogExercises, "name");
+  const sourceEntries = await readdir(args.sourceRoot, { withFileTypes: true });
   const sourceFolders = [];
+  const flatImageSets = new Map();
 
   for (const entry of sourceEntries) {
-    const sourcePath = path.join(args.sourceRoot, entry);
-    if (await isDirectory(sourcePath)) {
-      sourceFolders.push({ name: entry, sourcePath });
+    const sourcePath = path.join(args.sourceRoot, entry.name);
+    if (entry.isDirectory()) {
+      sourceFolders.push({ name: entry.name, sourcePath });
+      continue;
+    }
+    if (entry.isFile()) {
+      const match = /^(?<name>.+)-(?<role>start|end)\.png$/i.exec(entry.name);
+      if (!match?.groups) continue;
+      const key = normalizeName(match.groups.name);
+      const imageSet = flatImageSets.get(key) ?? { name: match.groups.name, roles: {} };
+      const role = match.groups.role.toLowerCase();
+      if (imageSet.roles[role]) throw new Error(`Duplicate ${role} image for ${match.groups.name}`);
+      imageSet.roles[role] = sourcePath;
+      flatImageSets.set(key, imageSet);
     }
   }
 
@@ -145,13 +155,13 @@ async function main() {
 
   for (const folder of sourceFolders) {
     const key = normalizeName(folder.name);
-    const duplicateMatches = duplicates.get(key);
+    const duplicateMatches = polishNames.duplicates.get(key);
     if (duplicateMatches) {
       ambiguous.push({ folder: folder.name, ids: duplicateMatches.map((item) => item.id) });
       continue;
     }
 
-    const exercise = lookup.get(key);
+    const exercise = polishNames.lookup.get(key);
     if (!exercise) {
       unmatched.push(folder.name);
       continue;
@@ -159,23 +169,44 @@ async function main() {
 
     const startPath = path.join(folder.sourcePath, "start.png");
     const endPath = path.join(folder.sourcePath, "end.png");
-    if (!(await fileExists(startPath)) || !(await fileExists(endPath))) {
+    const roles = {};
+    if (await fileExists(startPath)) roles.start = startPath;
+    if (await fileExists(endPath)) roles.end = endPath;
+    if (!roles.start && !roles.end) {
       missingImages.push(folder.name);
       continue;
     }
 
     matched.push({
-      endPath,
       exercise,
       folderName: folder.name,
       outputDir: path.join(args.outputRoot, exercise.id),
-      startPath
+      roles
+    });
+  }
+
+  for (const [key, imageSet] of flatImageSets) {
+    const duplicateMatches = englishNames.duplicates.get(key);
+    if (duplicateMatches) {
+      ambiguous.push({ folder: imageSet.name, ids: duplicateMatches.map((item) => item.id) });
+      continue;
+    }
+    const exercise = englishNames.lookup.get(key);
+    if (!exercise) {
+      unmatched.push(imageSet.name);
+      continue;
+    }
+    matched.push({
+      exercise,
+      folderName: imageSet.name,
+      outputDir: path.join(args.outputRoot, exercise.id),
+      roles: imageSet.roles
     });
   }
 
   console.log(`Catalog exercises: ${catalogExercises.length}`);
-  console.log(`Source folders: ${sourceFolders.length}`);
-  console.log(`Matched folders: ${matched.length}`);
+  console.log(`Source image sets: ${sourceFolders.length + flatImageSets.size}`);
+  console.log(`Matched image sets: ${matched.length}`);
   console.log(`Unmatched folders: ${unmatched.length}`);
   console.log(`Ambiguous folders: ${ambiguous.length}`);
   console.log(`Missing image folders: ${missingImages.length}`);
@@ -197,8 +228,9 @@ async function main() {
     }
 
     await mkdir(item.outputDir, { recursive: true });
-    await copyFile(item.startPath, path.join(item.outputDir, "start.png"));
-    await copyFile(item.endPath, path.join(item.outputDir, "end.png"));
+    for (const role of ["start", "end"]) {
+      if (item.roles[role]) await copyFile(item.roles[role], path.join(item.outputDir, `${role}.png`));
+    }
   }
 }
 

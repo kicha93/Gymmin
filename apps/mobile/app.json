@@ -21,7 +21,6 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-video",
       "expo-asset"
     ]
   }

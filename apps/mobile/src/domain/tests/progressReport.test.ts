@@ -187,6 +187,19 @@ describe("progress report aggregation", () => {
     expect(report.biggestProgress?.exerciseKey).toBe("id:bench");
   });
 
+  it("compares the first and last six weeks for the 12-week progress trend", () => {
+    const report = buildProgressReport({
+      period: "12weeks",
+      referenceDate: new Date(2026, 2, 18),
+      sessions: [
+        session(new Date(2026, 0, 5, 10), [entry("bench", "80", "10")]),
+        session(new Date(2026, 2, 9, 10), [entry("bench", "100", "10")])
+      ]
+    });
+    expect(report.biggestProgress?.exerciseKey).toBe("id:bench");
+    expect(report.biggestProgress?.percent).toBeCloseTo(25);
+  });
+
   it("provides a safe empty report", () => {
     const report = buildProgressReport({
       period: "month",

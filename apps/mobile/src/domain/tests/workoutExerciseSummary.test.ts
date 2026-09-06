@@ -75,8 +75,6 @@ describe("workoutExerciseSummary", () => {
     expect(details?.exercise?.id).toBeTruthy();
     expect(details?.primary).toEqual(muscleGroups.primary);
     expect(details?.secondary).toEqual(muscleGroups.secondary);
-    expect(details?.hasAnimation).toBe(true);
-    expect(details?.animationUrl).toBeNull();
     expect(details?.instructions.length).toBeGreaterThan(0);
     expect(details?.techniqueTips.length).toBeGreaterThan(0);
     expect(details?.commonMistakes.length).toBeGreaterThan(0);
@@ -101,11 +99,9 @@ describe("workoutExerciseSummary", () => {
     expect(details?.exercise?.polishName).toBe("Rosyjski skręt tułowia");
   });
 
-  it("returns a video asset with retained image fallbacks for front squats", () => {
+  it("returns image assets for front squats", () => {
     const details = getExerciseDetails({ exerciseId: "squat-barbell-front-squat-1253" }, "pl");
 
-    expect(details?.hasAnimation).toBe(true);
-    expect(details?.videoAssetKey).toBe("squat-barbell-front-squat-1253/animation");
     expect(details?.imageAssetKeys).toEqual([
       "squat-barbell-front-squat-1253/start",
       "squat-barbell-front-squat-1253/end"

@@ -1715,15 +1715,6 @@ export const styles = StyleSheet.create({
     gap: 10,
     minWidth: 0
   },
-  exerciseAnimationPlaceholder: {
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 8,
-    justifyContent: "center",
-    minHeight: 104,
-    padding: 16
-  },
   exerciseImageStrip: {
     gap: 12,
     paddingVertical: 2
@@ -3768,6 +3759,11 @@ export const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "900"
   },
+  weeklyPlanHomeRange: {
+    fontSize: 17,
+    fontWeight: "900",
+    marginTop: 1
+  },
   weeklyPlanHomeMeta: {
     fontSize: 13,
     fontWeight: "700",
@@ -3775,11 +3771,10 @@ export const styles = StyleSheet.create({
   },
   weeklyPlanProgressCopy: {
     alignItems: "center",
-    flexDirection: "row",
-    gap: 7
+    gap: 3
   },
   weeklyPlanProgressText: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: "900"
   },
   weeklyPlanProgressRing: {
@@ -4754,41 +4749,6 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     lineHeight: 19
-  },
-  progressReportTrendTabs: {
-    flexDirection: "row",
-    gap: 8
-  },
-  progressReportTrendTab: {
-    borderRadius: 999,
-    borderWidth: 1,
-    minHeight: 34,
-    paddingHorizontal: 14,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  progressReportTrendTabText: {
-    fontSize: 12,
-    fontWeight: "800"
-  },
-  progressReportChart: {
-    gap: 6,
-    minHeight: 174
-  },
-  progressReportChartLegend: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 6,
-    minHeight: 20
-  },
-  progressReportChartLegendDot: {
-    borderRadius: 999,
-    height: 9,
-    width: 9
-  },
-  progressReportChartLegendText: {
-    fontSize: 11,
-    fontWeight: "700"
   },
   progressReportWeeklyList: {
     gap: 7

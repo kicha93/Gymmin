@@ -105,21 +105,19 @@ This note tracks the current workout-view UX decisions.
 - The page is backed by the catalog exercise id when available, with best-effort fallback by exercise name.
 - The page uses a compact panel layout: hero, media, worked muscles, technique steps, tips, common mistakes and exercise history/progress.
 - The hero panel shows the exercise name, category/equipment tags and primary muscle summary with an icon.
-- The animation/media panel is hidden when an exercise has no mapped local images yet.
+- The exercise-images panel is hidden when an exercise has no mapped local images yet.
 - The worked-muscles panel reuses the same SVG anatomy map as the workout overview and muscle modal, shows one body side at a time with a Front/Back segmented toggle below the panel title, and defaults to Front.
 - Technique instructions are rendered as numbered steps. Tips, common mistakes and exercise history are collapsible panels.
 - Exercise history is collapsed by default when no data exists and shows a clear empty state.
 - Unknown or unmapped exercises show a safe empty state instead of crashing.
-- TODO: add broader local image/video coverage for catalog exercises and define the licensed animation source.
+- TODO: add broader local image coverage for catalog exercises.
 
 ## Progress Report
 
-- The main Progress entry opens Progress Report, not the full exercise list. It offers local calendar periods: Monday-Sunday week, calendar month and the current block of 12 Monday-Sunday weeks. Each period is compared with the immediately preceding equivalent period.
+- The main Progress entry opens Progress Report, not the full exercise list. It offers local calendar periods: Monday-Sunday week, calendar month and the current block of 12 Monday-Sunday weeks. Week and month compare with the preceding equivalent period; the 12-week view compares its first six weeks with its last six weeks.
 - Summary values are derived in memory from completed, non-deleted WorkoutSession records. Training duration uses the existing session start/finish calculation and volume keeps the existing weight × repetitions definition. Active, abandoned and deleted sessions are excluded.
 - Strength comparisons use Epley estimated 1RM (weight × (1 + repetitions / 30)) only as a comparative indicator. Only exercises present in both periods participate, and the overall result is the median of their percentage changes; missing comparison data is never rendered as 0%.
 - A record is a chronological improvement over an exercise's established best estimated 1RM. The first result establishes the baseline and is not presented as a new record. A heavier load with sufficiently fewer repetitions therefore does not automatically become a record. Recent records and biggest progress link to the existing per-exercise history.
-- The trend chart uses react-native-svg without another chart dependency and displays one unit at a time: session volume or completed-workout count. Week uses daily buckets; month uses seven-day buckets; 12 weeks uses weekly buckets.
-- Consistency is the count of consecutive local Monday-Sunday weeks with at least one completed workout. An unfinished current week with no session yet does not erase a streak ending in the previous week.
 - The current weekly plan reuses the existing weekly-plan summary. Completed, upcoming and already missed scheduled items are descriptive report rows; the report creates no second planner or persistence model.
 - Postęp ćwiczeń / Exercise progress opens the preserved searchable list with filters, sparklines, latest result, best weight and best volume. Selecting an exercise opens the unchanged detailed exercise-progress screen.
 - A new user receives one report empty state instead of zero percentages, zero-filled charts or invented records. The entire report remains derived data and is not written to AsyncStorage or added to backup.

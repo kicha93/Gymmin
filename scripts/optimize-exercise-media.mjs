@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   collectImagePairs,
   EXPECTED_EXERCISE_IMAGE_COUNT,
-  EXPECTED_EXERCISE_PAIR_COUNT,
+  EXPECTED_EXERCISE_SET_COUNT,
   logicalAssetKey,
   MAX_RUNTIME_HEIGHT,
   MAX_RUNTIME_WIDTH,
@@ -33,22 +33,25 @@ function run(command, args, options = {}) {
 
 const source = await collectImagePairs(sourceRoot, ".png");
 const mapEntries = await parseExerciseImageSourceMap(sourceMapPath);
-if (source.files.length !== EXPECTED_EXERCISE_IMAGE_COUNT || source.byExercise.size !== EXPECTED_EXERCISE_PAIR_COUNT) {
-  throw new Error(`Expected ${EXPECTED_EXERCISE_IMAGE_COUNT} source PNG / ${EXPECTED_EXERCISE_PAIR_COUNT} pairs, found ${source.files.length} / ${source.byExercise.size}`);
+if (source.files.length !== EXPECTED_EXERCISE_IMAGE_COUNT || source.byExercise.size !== EXPECTED_EXERCISE_SET_COUNT) {
+  throw new Error(`Expected ${EXPECTED_EXERCISE_IMAGE_COUNT} source PNG in ${EXPECTED_EXERCISE_SET_COUNT} sets, found ${source.files.length} / ${source.byExercise.size}`);
 }
-if (mapEntries.length !== EXPECTED_EXERCISE_IMAGE_COUNT) throw new Error(`Expected ${EXPECTED_EXERCISE_IMAGE_COUNT} static map entries, found ${mapEntries.length}`);
 const sourceKeys = new Set(source.files.map((filePath) => logicalAssetKey(sourceRoot, filePath)));
 const mapKeys = new Set(mapEntries.map((entry) => entry.key));
-for (const key of sourceKeys) if (!mapKeys.has(key)) throw new Error(`Source PNG is not used by the static asset map: ${key}`);
 for (const key of mapKeys) if (!sourceKeys.has(key)) throw new Error(`Static asset map has no source PNG: ${key}`);
 
 for (const [exerciseId, pair] of source.byExercise) {
-  const start = await readPngDimensions(pair.start);
-  const end = await readPngDimensions(pair.end);
-  if (start.width !== end.width || start.height !== end.height) throw new Error(`Source pair dimensions differ: ${exerciseId}`);
+  if (pair.start && pair.end) {
+    const start = await readPngDimensions(pair.start);
+    const end = await readPngDimensions(pair.end);
+    if (start.width !== end.width || start.height !== end.height) throw new Error(`Source pair dimensions differ: ${exerciseId}`);
+  } else {
+    await readPngDimensions(pair.start ?? pair.end);
+  }
 }
 
-console.log(`Preflight passed: ${source.files.length} source PNG, ${source.byExercise.size} complete pairs, 0 orphan/missing map entries.`);
+const pendingMapEntries = [...sourceKeys].filter((key) => !mapKeys.has(key)).length;
+console.log(`Preflight passed: ${source.files.length} source PNG in ${source.byExercise.size} image sets, ${pendingMapEntries} new map entries to generate.`);
 if (!shouldWrite) {
   console.log(`Dry run only. Re-run with --write to generate WebP Q${quality}, max ${MAX_RUNTIME_WIDTH}x${MAX_RUNTIME_HEIGHT}, preserve aspect ratio, no crop.`);
   process.exit(0);
@@ -60,7 +63,7 @@ await mkdir(stagingRoot, { recursive: true });
 const rows = [];
 
 for (const [exerciseId, pair] of [...source.byExercise.entries()].sort(([left], [right]) => left.localeCompare(right))) {
-  for (const role of ["start", "end"]) {
+  for (const role of ["start", "end"].filter((candidate) => pair[candidate])) {
     const input = pair[role];
     const outputDirectory = path.join(stagingRoot, exerciseId);
     const output = path.join(outputDirectory, `${role}.webp`);
@@ -88,7 +91,7 @@ for (const [exerciseId, pair] of [...source.byExercise.entries()].sort(([left], 
 for (const exerciseId of source.byExercise.keys()) {
   const start = rows.find((row) => row.exerciseId === exerciseId && row.role === "start");
   const end = rows.find((row) => row.exerciseId === exerciseId && row.role === "end");
-  if (!start || !end || start.targetWidth !== end.targetWidth || start.targetHeight !== end.targetHeight) throw new Error(`Converted pair dimensions differ: ${exerciseId}`);
+  if (start && end && (start.targetWidth !== end.targetWidth || start.targetHeight !== end.targetHeight)) throw new Error(`Converted pair dimensions differ: ${exerciseId}`);
 }
 
 for (const row of rows) {
@@ -107,8 +110,8 @@ const largest = [...rows].sort((left, right) => right.targetBytes - left.targetB
 const smallest = [...rows].sort((left, right) => left.targetBytes - right.targetBytes)[0];
 const report = {
   settings: { format: "WebP", quality, maxWidth: MAX_RUNTIME_WIDTH, maxHeight: MAX_RUNTIME_HEIGHT, preserveAspectRatio: true, crop: false, upscale: false, imageMagick: magickVersion },
-  source: { files: rows.length, pairs: source.byExercise.size, bytes: sourceBytes },
-  runtime: { files: rows.length, pairs: source.byExercise.size, bytes: targetBytes, averageBytes: targetBytes / rows.length, medianBytes: median(targetSizes), largest, smallest },
+  source: { files: rows.length, sets: source.byExercise.size, bytes: sourceBytes },
+  runtime: { files: rows.length, sets: source.byExercise.size, bytes: targetBytes, averageBytes: targetBytes / rows.length, medianBytes: median(targetSizes), largest, smallest },
   reductionPercent: (1 - targetBytes / sourceBytes) * 100
 };
 await writeFile(path.join(reportRoot, "before-after.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");

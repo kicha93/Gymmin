@@ -329,8 +329,30 @@ export function buildProgressReport({
   const currentSessions = sessionsInRange(completedSessions, currentRange);
   const previousSessions = sessionsInRange(completedSessions, previousRange);
   const currentVolume = currentSessions.reduce((sum, session) => sum + calculateSessionVolume(session), 0);
-  const previousVolume = previousSessions.reduce((sum, session) => sum + calculateSessionVolume(session), 0);
-  const strengthChanges = calculateStrengthChanges(currentSessions, previousSessions);
+  const comparisonPreviousSessions = period === "12weeks"
+    ? sessionsInRange(completedSessions, {
+        start: currentRange.start,
+        end: endOfLocalDay(addLocalDays(currentRange.start, 41))
+      })
+    : previousSessions;
+  const comparisonCurrentSessions = period === "12weeks"
+    ? sessionsInRange(completedSessions, {
+        start: addLocalDays(currentRange.start, 42),
+        end: currentRange.end
+      })
+    : currentSessions;
+  const comparisonPreviousVolume = comparisonPreviousSessions.reduce(
+    (sum, session) => sum + calculateSessionVolume(session),
+    0
+  );
+  const comparisonCurrentVolume = comparisonCurrentSessions.reduce(
+    (sum, session) => sum + calculateSessionVolume(session),
+    0
+  );
+  const strengthChanges = calculateStrengthChanges(
+    comparisonCurrentSessions,
+    comparisonPreviousSessions
+  );
   const records = getProgressReportRecords(completedSessions);
   const buckets = createTrendBuckets(period, currentRange);
 
@@ -342,8 +364,8 @@ export function buildProgressReport({
     bucket.totalVolumeKg += calculateSessionVolume(session);
   }
 
-  const volumePercent = previousVolume > 0
-    ? ((currentVolume - previousVolume) / previousVolume) * 100
+  const volumePercent = comparisonPreviousVolume > 0
+    ? ((comparisonCurrentVolume - comparisonPreviousVolume) / comparisonPreviousVolume) * 100
     : null;
   const biggestProgress = strengthChanges
     .filter((change) => change.percent > 0)
@@ -358,7 +380,7 @@ export function buildProgressReport({
         ? calculateOverallStrengthChange(strengthChanges.map((change) => change.percent))
         : null,
       volumePercent,
-      workoutCountChange: currentSessions.length - previousSessions.length
+      workoutCountChange: comparisonCurrentSessions.length - comparisonPreviousSessions.length
     },
     consistency: { weekStreak: calculateTrainingWeekStreak(completedSessions, referenceDate) },
     currentRange,

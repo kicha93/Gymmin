@@ -15,7 +15,7 @@ import {
   resolveExerciseId
 } from "../exercises";
 import { exerciseIdAliasMap } from "../exerciseIdAliases";
-import { getExerciseAnimationAssetKey, getExerciseImageAssetKeys } from "../exerciseImageAssets";
+import { getExerciseImageAssetKeys } from "../exerciseImageAssets";
 
 describe("exercise catalog cleanup", () => {
   it("maps removed duplicate exercise names to their canonical target", () => {
@@ -103,12 +103,12 @@ describe("exercise catalog cleanup", () => {
 
   });
 
-  it("registers supplied exercise image pairs while allowing image-less exercises", () => {
+  it("registers supplied exercise image sets while allowing image-less exercises", () => {
     expect(getExerciseImageAssetKeys("hip-thrust")).toHaveLength(2);
     expect(getExerciseImageAssetKeys("lying-leg-curl")).toHaveLength(0);
   });
 
-  it("uses supplied exercise image pairs when no animation is registered", () => {
+  it("uses supplied exercise image sets", () => {
     const exerciseIds = [
       "curl-cable-biceps-curl-331",
       "lateral-raise-dumbbell-lateral-raise-545",
@@ -126,10 +126,16 @@ describe("exercise catalog cleanup", () => {
     }
   });
 
-  it("registers an exercise animation while retaining start and end fallback images", () => {
-    expect(getExerciseAnimationAssetKey("squat-barbell-front-squat-1253")).toBe(
-      "squat-barbell-front-squat-1253/animation"
-    );
+  it("keeps a single available start or end image", () => {
+    expect(getExerciseImageAssetKeys("plank-45-degree-plank-728")).toEqual([
+      "plank-45-degree-plank-728/start"
+    ]);
+    expect(getExerciseImageAssetKeys("total-body-burpee-1381")).toEqual([
+      "total-body-burpee-1381/end"
+    ]);
+  });
+
+  it("retains the front squat start and end images", () => {
     expect(getExerciseImageAssetKeys("squat-barbell-front-squat-1253")).toEqual([
       "squat-barbell-front-squat-1253/start",
       "squat-barbell-front-squat-1253/end"

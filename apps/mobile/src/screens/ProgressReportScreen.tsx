@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
-import { ProgressLineChart } from "../components/ProgressLineChart";
 import { getExerciseDisplayName } from "../domain/exercises";
 import {
   buildProgressReport,
@@ -10,8 +9,7 @@ import {
   formatReportDateRange,
   formatReportVolume,
   formatTrainingDuration,
-  type ProgressReportPeriod,
-  type ProgressReportTrendMetric
+  type ProgressReportPeriod
 } from "../domain/progressReport";
 import { weeklyPlanDays, type WeeklyPlanSummary } from "../domain/weeklyPlan";
 import type { WorkoutSession } from "../domain/workoutSessions";
@@ -97,19 +95,6 @@ function formatRecordDate(date: Date, language: LanguageCode) {
   });
 }
 
-function getTrendLabels(period: ProgressReportPeriod, starts: Date[], language: LanguageCode) {
-  if (period === "12weeks") {
-    return starts.map((_, index) => (language === "pl" ? "T" : "W") + String(index + 1));
-  }
-  if (period === "month") {
-    return starts.map((date) => String(date.getDate()));
-  }
-  const pl = ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "So"];
-  const en = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const labels = language === "pl" ? pl : en;
-  return starts.map((date) => labels[date.getDay()]);
-}
-
 export function ProgressReportScreen({
   language,
   onOpenExercise,
@@ -124,7 +109,6 @@ export function ProgressReportScreen({
   weeklyPlanSummary
 }: ProgressReportScreenProps) {
   const [period, setPeriod] = useState<ProgressReportPeriod>("month");
-  const [trendMetric, setTrendMetric] = useState<ProgressReportTrendMetric>("volume");
   const [referenceDate] = useState(() => new Date());
   const report = useMemo(
     () => buildProgressReport({ period, referenceDate, sessions }),
@@ -254,42 +238,6 @@ export function ProgressReportScreen({
             )}
           </View>
 
-          {report.summary.workoutCount > 0 ? (
-            <View style={[styles.progressReportCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <ReportCardTitle theme={theme} title={t("progressOverallTrend")} />
-              <View style={styles.progressReportTrendTabs}>
-                {(["volume", "workouts"] as ProgressReportTrendMetric[]).map((metric) => {
-                  const selected = metric === trendMetric;
-                  return (
-                    <Pressable
-                      key={metric}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      style={[
-                        styles.progressReportTrendTab,
-                        { borderColor: selected ? theme.primary : theme.border },
-                        selected ? { backgroundColor: theme.secondaryBand } : null
-                      ]}
-                      onPress={() => setTrendMetric(metric)}
-                    >
-                      <Text style={[styles.progressReportTrendTabText, { color: selected ? theme.primary : theme.muted }]}>
-                        {metric === "volume" ? t("volume") : t("workouts")}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <ProgressLineChart
-                buckets={report.trend.buckets}
-                labels={getTrendLabels(period, report.trend.buckets.map((bucket) => bucket.start), language)}
-                language={language}
-                legendLabel={trendMetric === "volume" ? t("volume") : t("workouts")}
-                metric={trendMetric}
-                theme={theme}
-              />
-            </View>
-          ) : null}
-
           <View style={[styles.progressReportCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <ReportCardTitle
               action={sortedWeeklyItems.length ? undefined : t("progressOpenWeeklyPlan")}
@@ -370,21 +318,19 @@ export function ProgressReportScreen({
                     + " → " + Math.round(report.biggestProgress.currentEstimatedOneRepMaxKg) + " kg"}
                 </Text>
               </Pressable>
-            ) : null}
-            <View style={[styles.progressReportCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <View style={styles.progressReportCompactHeader}>
-                <Ionicons name="calendar-outline" size={22} color={theme.primary} />
-                <Text adjustsFontSizeToFit minimumFontScale={0.75} numberOfLines={1} style={[styles.progressReportCompactTitle, { color: theme.text }]}>
-                  {t("progressConsistency")}
+            ) : (
+              <View style={[styles.progressReportCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <View style={styles.progressReportCompactHeader}>
+                  <Ionicons name="stats-chart-outline" size={22} color={theme.primary} />
+                  <Text adjustsFontSizeToFit minimumFontScale={0.75} numberOfLines={1} style={[styles.progressReportCompactTitle, { color: theme.text }]}>
+                    {t("progressBiggestProgress")}
+                  </Text>
+                </View>
+                <Text style={[styles.progressReportCompactMeta, { color: theme.muted }]}>
+                  {t("progressNeedsMoreData")}
                 </Text>
               </View>
-              <Text style={[styles.progressReportCompactValue, { color: theme.primary }]}>
-                {String(report.consistency.weekStreak)}
-              </Text>
-              <Text style={[styles.progressReportCompactMeta, { color: theme.muted }]}>
-                {report.consistency.weekStreak === 1 ? t("progressWeekStreak") : t("progressWeeksStreak")}
-              </Text>
-            </View>
+            )}
           </View>
 
           {report.recentRecords.length ? (

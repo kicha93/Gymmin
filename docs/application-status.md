@@ -7,7 +7,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 ## Available locally
 
 - workout library/editor, archive, guided execution, active-session recovery and session-only/planned two-exercise supersets;
-- history, a derived Progress Report, weekly plan, favorites, achievements and local reminders; the report supports week, month and 12-week periods, summarizes completed sessions, shows volume/workout trends, compares shared exercises with Epley e1RM, detects e1RM records and keeps the existing exercise-level progress list as a drill-down;
+- history, a derived Progress Report, weekly plan, favorites, achievements and local reminders; the report supports week, month and 12-week periods, summarizes completed sessions, compares shared exercises with Epley e1RM, detects e1RM records and keeps the existing exercise-level progress list as a drill-down;
 - an expandable Home analysis of current-week muscle volume, with completed/projected fractional working sets, front/back anatomy and one shared approximate hypertrophy reference range; its responsive dashboard places the muscle list beside a full-height figure and lets the user temporarily gray individual groups without changing stored data;
 - local settings, creator profiles and private avatar; every setting persists in local storage and participates in `.gymmin.json` backup/import rather than sync;
 - an always-visible header action for the local profile, with no login/account panel; the Profile dashboard combines the avatar, derived completed-session and active-plan counts, achievements and bug reporting, while intentionally storing no display name;
@@ -18,7 +18,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 - full local data deletion;
 - local Contact and safe bug-report email flows: both open the system email app, never submit HTTP forms, and provide clipboard fallback;
 - PL/EN About, author attribution, privacy and voluntary Buy Me a Coffee link; the support card is the final standalone section below all Settings panels.
-- optimized offline exercise media: 58 static START/END pairs use WebP Q90 runtime assets generated reproducibly from non-bundled PNG sources; the supplied MP4 remains unchanged.
+- optimized offline exercise media: 103 exercises use 182 static WebP Q90 runtime images generated reproducibly from non-bundled PNG sources; 79 have START/END pairs and 24 have one available image. Video and animated exercise media are excluded.
 - a validated catalog of 729 exercises with localized presentation and richer muscle-involvement data; reviewed redundant variants, including explicit resistance-band, alternating, and duplicate weighted/unweighted exercises, are merged into canonical movements through compatibility aliases. Smith-machine and sliding-disc variants remain distinct where the equipment changes the movement.
 - an opt-in Advanced Muscle Mode in Preferences; Exercise Detail can show 38 localized anatomical subdivisions generated for canonical exercise IDs, while the default standard view and weekly muscle-volume calculations remain unchanged.
 - detailed warm-up stages remain visible as their actual exercises during guided execution; only a truly empty/simple warm-up placeholder receives the compact representation.

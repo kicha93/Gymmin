@@ -1,5 +1,3 @@
-import { useEvent } from "expo";
-import { useVideoPlayer, VideoView, type VideoSource } from "expo-video";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
@@ -12,7 +10,6 @@ import {
 } from "../components/MuscleImpactPresentation";
 import { HumanMuscleFigure } from "../components/WorkoutPresentation";
 import { exerciseImageSources } from "../exerciseImageSources";
-import { exerciseVideoSources } from "../exerciseVideoSources";
 import { getExerciseDisplayName, muscleKeys, type MuscleKey } from "../domain/exercises";
 import { getAdvancedAnatomyRegionLevels } from "../domain/advancedMuscles";
 import { getExerciseProgressSummary, type WorkoutSession, type WorkoutSessionEntry } from "../domain/workoutSessions";
@@ -37,44 +34,6 @@ type ExerciseDetailScreenProps = {
   visibleWorkoutSessions: WorkoutSession[];
 };
 
-function ExerciseLoopVideo({
-  onPlaybackError,
-  source
-}: {
-  onPlaybackError: () => void;
-  source: VideoSource;
-}) {
-  const player = useVideoPlayer(source, (videoPlayer) => {
-    videoPlayer.keepScreenOnWhilePlaying = false;
-    videoPlayer.loop = true;
-    videoPlayer.muted = true;
-    videoPlayer.play();
-  });
-  const { status } = useEvent(player, "statusChange", { status: player.status });
-
-  useEffect(() => {
-    if (status === "error") {
-      onPlaybackError();
-    }
-  }, [onPlaybackError, status]);
-
-  return (
-    <VideoView
-      allowsPictureInPicture={false}
-      allowsVideoFrameAnalysis={false}
-      contentFit="contain"
-      fullscreenOptions={{ enable: false }}
-      nativeControls={false}
-      player={player}
-      playsInline
-      pointerEvents="none"
-      style={styles.exerciseDetailImage}
-      surfaceType="textureView"
-      useExoShutter={false}
-    />
-  );
-}
-
 export function ExerciseDetailScreen({
   advancedMuscleMode,
   collapsedPanels,
@@ -90,14 +49,16 @@ export function ExerciseDetailScreen({
   visibleWorkoutSessions
 }: ExerciseDetailScreenProps) {
     const details = step ? getExerciseDetails(step, language) : null;
-    const [hasVideoPlaybackFailed, setHasVideoPlaybackFailed] = useState(false);
-    const videoSource = details?.videoAssetKey
-      ? exerciseVideoSources[details.videoAssetKey]
-      : null;
     const progressKey = getExerciseProgressKeyForDetails(details);
     const progressSummary = progressKey ? getExerciseProgressSummary(visibleWorkoutSessions, progressKey) : null;
     const fallbackName = step?.exerciseName ? getExerciseDisplayName(step.exerciseName, language) : t("exerciseDetails");
     const displayName = details?.displayName ?? fallbackName;
+    const imageAssetKeys = details?.imageAssetKeys ?? [];
+    const imageSequenceKey = imageAssetKeys.join("|");
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const normalizedActiveImageIndex = activeImageIndex % Math.max(imageAssetKeys.length, 1);
+    const activeImageKey = imageAssetKeys[normalizedActiveImageIndex];
+    const activeImageSource = activeImageKey ? exerciseImageSources[activeImageKey] : undefined;
     const muscleImpact = details?.exercise?.muscleImpact;
     const hasMuscleData = Boolean(muscleImpact && muscleKeys.some((muscle) => muscleImpact[muscle] > 0));
     const advancedRegionFills = advancedMuscleMode && details?.exercise?.id
@@ -106,8 +67,18 @@ export function ExerciseDetailScreen({
       : undefined;
 
     useEffect(() => {
-      setHasVideoPlaybackFailed(false);
-    }, [details?.videoAssetKey]);
+      setActiveImageIndex(0);
+
+      if (imageAssetKeys.length < 2) {
+        return undefined;
+      }
+
+      const interval = setInterval(() => {
+        setActiveImageIndex((current) => (current + 1) % imageAssetKeys.length);
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }, [imageSequenceKey, imageAssetKeys.length]);
 
     function fill(muscle: MuscleKey) {
       return getMuscleImpactColor(muscleImpact?.[muscle]);
@@ -230,38 +201,19 @@ export function ExerciseDetailScreen({
           )}
         </View>
 
-        {videoSource && !hasVideoPlaybackFailed ? (
+        {activeImageSource ? (
           <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseAnimation")}</Text>
+            <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseImages")}</Text>
             <View style={styles.exerciseImageStrip}>
               <View style={[styles.exerciseImageFrame, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
-                <ExerciseLoopVideo
-                  source={videoSource}
-                  onPlaybackError={() => setHasVideoPlaybackFailed(true)}
+                <Image
+                  accessibilityLabel={`${displayName} ${normalizedActiveImageIndex + 1}/${imageAssetKeys.length}`}
+                  source={activeImageSource}
+                  style={styles.exerciseDetailImage}
+                  resizeMode="contain"
                 />
               </View>
             </View>
-          </View>
-        ) : details?.imageAssetKeys.length ? (
-          <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseAnimation")}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.exerciseImageStrip}>
-              {details.imageAssetKeys.map((imageKey) => {
-                const imageSource = exerciseImageSources[imageKey];
-                if (!imageSource) {
-                  return null;
-                }
-
-                return (
-                  <View
-                    key={imageKey}
-                    style={[styles.exerciseImageFrame, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}
-                  >
-                    <Image source={imageSource} style={styles.exerciseDetailImage} resizeMode="contain" />
-                  </View>
-                );
-              })}
-            </ScrollView>
           </View>
         ) : null}
 

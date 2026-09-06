@@ -530,7 +530,8 @@ export function WeeklyPlanHomeCard({
           <Ionicons name="calendar-outline" size={22} color={theme.white} />
         </View>
         <View style={styles.weeklyPlanHomeCopy}>
-          <Text style={[styles.weeklyPlanHomeTitle, { color: theme.text }]}>{`${t("week")}: ${range}`}</Text>
+          <Text style={[styles.weeklyPlanHomeTitle, { color: theme.text }]}>{t("week")}</Text>
+          <Text style={[styles.weeklyPlanHomeRange, { color: theme.text }]}>{range}</Text>
           <Text style={[styles.weeklyPlanHomeMeta, { color: theme.muted }]}>{completion}</Text>
         </View>
         <View style={styles.weeklyPlanProgressCopy}>

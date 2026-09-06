@@ -1,8 +1,8 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
-export const EXPECTED_EXERCISE_IMAGE_COUNT = 116;
-export const EXPECTED_EXERCISE_PAIR_COUNT = 58;
+export const EXPECTED_EXERCISE_IMAGE_COUNT = 182;
+export const EXPECTED_EXERCISE_SET_COUNT = 103;
 export const MAX_RUNTIME_WIDTH = 900;
 export const MAX_RUNTIME_HEIGHT = 1140;
 export const MAX_RUNTIME_WEBP_BYTES = 192 * 1024;
@@ -91,9 +91,6 @@ export async function collectImagePairs(root, extension) {
     if (pair[role]) throw new Error(`Duplicate ${role} image: ${exerciseId}`);
     pair[role] = filePath;
     byExercise.set(exerciseId, pair);
-  }
-  for (const [exerciseId, pair] of byExercise) {
-    if (!pair.start || !pair.end) throw new Error(`Incomplete START/END pair: ${exerciseId}`);
   }
   return { files, byExercise };
 }

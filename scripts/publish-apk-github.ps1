@@ -121,6 +121,15 @@ if (-not (Test-Path $ApkPath)) {
   throw "APK was not found: $ApkPath"
 }
 $resolvedApkPath = (Resolve-Path $ApkPath).Path
+$latestAliasPath = Join-Path $artifactsRoot "Gymmin-arm64-v8a-release-latest.apk"
+if (-not [string]::Equals(
+  [System.IO.Path]::GetFullPath($resolvedApkPath),
+  [System.IO.Path]::GetFullPath($latestAliasPath),
+  [System.StringComparison]::OrdinalIgnoreCase
+)) {
+  Copy-Item -LiteralPath $resolvedApkPath -Destination $latestAliasPath -Force
+}
+$publishAssetPaths = @($resolvedApkPath, $latestAliasPath) | Select-Object -Unique
 
 $releaseCreated = $false
 $releaseUploaded = $false
@@ -131,14 +140,14 @@ if (-not $releaseExists) {
   # timeout. Updating first makes reruns idempotent and avoids a duplicate-tag
   # failure for an existing release. Only then do we try to create a new tag.
   Write-Step "Release lookup was inconclusive; trying an idempotent update of $ReleaseTag first..."
-  $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments @("release", "upload", $ReleaseTag, $resolvedApkPath, "--repo", $GitHubRepo, "--clobber") -MaxAttempts 2
+  $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments (@("release", "upload", $ReleaseTag) + $publishAssetPaths + @("--repo", $GitHubRepo, "--clobber")) -MaxAttempts 2
   if (-not $releaseUploaded) {
     Write-Step "Creating GitHub release $ReleaseTag in $GitHubRepo..."
-    $releaseCreated = Invoke-GitHubCliWithRetry -Arguments @("release", "create", $ReleaseTag, $resolvedApkPath, "--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", "Gymmin Android APK build.")
+    $releaseCreated = Invoke-GitHubCliWithRetry -Arguments (@("release", "create", $ReleaseTag) + $publishAssetPaths + @("--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", "Gymmin Android APK build."))
   }
 } else {
-  Write-Step "Uploading APK to existing GitHub release $ReleaseTag in $GitHubRepo..."
-  $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments @("release", "upload", $ReleaseTag, $resolvedApkPath, "--repo", $GitHubRepo, "--clobber")
+  Write-Step "Uploading versioned APK and latest alias to existing GitHub release $ReleaseTag in $GitHubRepo..."
+  $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments (@("release", "upload", $ReleaseTag) + $publishAssetPaths + @("--repo", $GitHubRepo, "--clobber"))
 }
 
 if (-not $releaseCreated -and -not $releaseUploaded) {
@@ -151,14 +160,17 @@ if (-not $releaseJson) {
 }
 $releaseMetadata = $releaseJson | ConvertFrom-Json
 $releaseUrl = ([string]$releaseMetadata.url).Trim()
-$assetName = [System.IO.Path]::GetFileName($resolvedApkPath)
 $localAssetSize = (Get-Item -LiteralPath $resolvedApkPath).Length
-$publishedAsset = $releaseMetadata.assets | Where-Object { $_.name -eq $assetName } | Select-Object -First 1
-if (-not $releaseUrl -or -not $publishedAsset) {
-  throw "GitHub release verification did not find the uploaded asset: $assetName"
-}
-if ([long]$publishedAsset.size -ne [long]$localAssetSize) {
-  throw "Published APK size mismatch for ${assetName}: local=$localAssetSize remote=$($publishedAsset.size)"
+if (-not $releaseUrl) { throw "GitHub release verification returned no release URL." }
+foreach ($publishedPath in $publishAssetPaths) {
+  $assetName = [System.IO.Path]::GetFileName($publishedPath)
+  $publishedAsset = $releaseMetadata.assets | Where-Object { $_.name -eq $assetName } | Select-Object -First 1
+  if (-not $publishedAsset) {
+    throw "GitHub release verification did not find the uploaded asset: $assetName"
+  }
+  if ([long]$publishedAsset.size -ne [long]$localAssetSize) {
+    throw "Published APK size mismatch for ${assetName}: local=$localAssetSize remote=$($publishedAsset.size)"
+  }
 }
 
 Set-Content -LiteralPath $downloadUrlFile -Value $releaseUrl
@@ -167,5 +179,6 @@ Write-Output ""
 Write-Output "APK_PATH=$resolvedApkPath"
 Write-Output "APK_DOWNLOAD_URL=$releaseUrl"
 Write-Output "APK_DOWNLOAD_URL_FILE=$downloadUrlFile"
-Write-Output "APK_REMOTE_ASSET=$assetName"
+Write-Output "APK_REMOTE_ASSET=$([System.IO.Path]::GetFileName($resolvedApkPath))"
+Write-Output "APK_REMOTE_LATEST_ASSET=$([System.IO.Path]::GetFileName($latestAliasPath))"
 Write-Output "APK_REMOTE_SIZE=$localAssetSize"

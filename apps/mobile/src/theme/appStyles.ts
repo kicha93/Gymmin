@@ -1006,16 +1006,14 @@ export const styles = StyleSheet.create({
     width: "48%"
   },
   muscleOverviewLegend: {
-    alignItems: "center",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    justifyContent: "center"
+    alignItems: "stretch",
+    gap: 6
   },
   muscleLegendItem: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 7
+    gap: 7,
+    minWidth: 0
   },
   muscleLegendDot: {
     borderRadius: 8,
@@ -1023,8 +1021,11 @@ export const styles = StyleSheet.create({
     width: 16
   },
   muscleLegendText: {
+    flex: 1,
     fontSize: 12,
-    fontWeight: "700"
+    fontWeight: "700",
+    lineHeight: 16,
+    minWidth: 0
   },
   sectionTitle: {
     fontSize: 20,
@@ -1716,19 +1717,55 @@ export const styles = StyleSheet.create({
     minWidth: 0
   },
   exerciseImageStrip: {
-    gap: 12,
+    alignItems: "center",
+    gap: 7,
     paddingVertical: 2
   },
   exerciseImageFrame: {
     alignItems: "center",
     borderRadius: 8,
     borderWidth: 1,
-    height: 190,
+    aspectRatio: 0.8,
     justifyContent: "center",
+    maxWidth: 300,
     overflow: "hidden",
-    width: 150
+    position: "relative",
+    width: "76%"
   },
   exerciseDetailImage: {
+    height: "100%",
+    width: "100%"
+  },
+  exerciseImageZoomIcon: {
+    alignItems: "center",
+    borderRadius: 15,
+    borderWidth: 1,
+    bottom: 8,
+    height: 30,
+    justifyContent: "center",
+    position: "absolute",
+    right: 8,
+    width: 30
+  },
+  exerciseImageHint: {
+    fontSize: 11,
+    fontWeight: "700",
+    lineHeight: 15,
+    textAlign: "center"
+  },
+  exerciseImagePreviewSurface: {
+    alignItems: "center",
+    borderRadius: 16,
+    borderWidth: 1,
+    height: "82%",
+    justifyContent: "center",
+    maxHeight: 720,
+    maxWidth: 480,
+    overflow: "hidden",
+    padding: 12,
+    width: "92%"
+  },
+  exerciseImagePreview: {
     height: "100%",
     width: "100%"
   },

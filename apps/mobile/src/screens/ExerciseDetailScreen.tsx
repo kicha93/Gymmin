@@ -1,5 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Modal, Pressable, ScrollView, Text, View } from "react-native";
 
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import {
@@ -56,6 +57,7 @@ export function ExerciseDetailScreen({
     const imageAssetKeys = details?.imageAssetKeys ?? [];
     const imageSequenceKey = imageAssetKeys.join("|");
     const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
     const normalizedActiveImageIndex = activeImageIndex % Math.max(imageAssetKeys.length, 1);
     const activeImageKey = imageAssetKeys[normalizedActiveImageIndex];
     const activeImageSource = activeImageKey ? exerciseImageSources[activeImageKey] : undefined;
@@ -68,6 +70,7 @@ export function ExerciseDetailScreen({
 
     useEffect(() => {
       setActiveImageIndex(0);
+      setIsImagePreviewOpen(false);
 
       if (imageAssetKeys.length < 2) {
         return undefined;
@@ -203,18 +206,42 @@ export function ExerciseDetailScreen({
 
         {activeImageSource ? (
           <View style={[styles.exerciseDetailCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseImages")}</Text>
+            <Text style={[styles.workoutName, { color: theme.text }]}>{t("exerciseExecution")}</Text>
             <View style={styles.exerciseImageStrip}>
-              <View style={[styles.exerciseImageFrame, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
+              <Pressable
+                accessibilityLabel={t("tapToEnlargeExerciseImage")}
+                accessibilityRole="button"
+                onPress={() => setIsImagePreviewOpen(true)}
+                style={[styles.exerciseImageFrame, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}
+              >
                 <Image
-                  accessibilityLabel={`${displayName} ${normalizedActiveImageIndex + 1}/${imageAssetKeys.length}`}
+                  accessibilityLabel={displayName}
                   source={activeImageSource}
                   style={styles.exerciseDetailImage}
                   resizeMode="contain"
                 />
-              </View>
+                <View style={[styles.exerciseImageZoomIcon, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                  <Ionicons name="expand-outline" size={17} color={theme.primary} />
+                </View>
+              </Pressable>
+              <Text style={[styles.exerciseImageHint, { color: theme.muted }]}>{t("tapToEnlargeExerciseImage")}</Text>
             </View>
           </View>
+        ) : null}
+
+        {activeImageSource ? (
+          <Modal animationType="fade" transparent visible={isImagePreviewOpen} onRequestClose={() => setIsImagePreviewOpen(false)}>
+            <Pressable
+              accessibilityLabel={t("close")}
+              accessibilityRole="button"
+              onPress={() => setIsImagePreviewOpen(false)}
+              style={styles.achievementPreviewBackdrop}
+            >
+              <View style={[styles.exerciseImagePreviewSurface, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <Image source={activeImageSource} style={styles.exerciseImagePreview} resizeMode="contain" />
+              </View>
+            </Pressable>
+          </Modal>
         ) : null}
 
         <CollapsiblePanel

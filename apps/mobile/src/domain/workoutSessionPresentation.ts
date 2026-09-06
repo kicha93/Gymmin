@@ -122,29 +122,34 @@ export function getPreviousExerciseValues(
   entries: WorkoutSessionEntry[],
   workoutSessions: WorkoutSession[]
 ) {
+  const plannedReps = entries.find(
+    (entry) => entry.plannedTargetType === "repetitions" && entry.plannedTarget?.trim()
+  )?.plannedTarget?.trim() || "";
+  const firstSetWeight = entries[0]?.actualWeight?.trim() || "";
   const referenceEntry = entries.find((entry) => entry.exerciseId?.trim() || entry.exerciseName?.trim());
   const progressKey = getWorkoutSessionEntryProgressKey(referenceEntry);
   const summary = progressKey ? getExerciseProgressSummary(workoutSessions, progressKey) : null;
-  const previousEntry = summary?.lastResult.entry;
-
-  if (!previousEntry) {
-    const plannedReps = entries.find(
-      (entry) => entry.plannedTargetType === "repetitions" && entry.plannedTarget?.trim()
-    )?.plannedTarget?.trim() || "";
-    const plannedWeight = entries.find(
-      (entry) => entry.plannedWeight?.trim()
-    )?.plannedWeight?.trim() || "";
-
-    return {
-      reps: plannedReps,
-      weight: plannedWeight
-    };
-  }
+  const matchingHistoricalWeight = plannedReps
+    ? summary?.results.find((result) =>
+        haveEqualRepetitionCounts(result.entry.actualReps, plannedReps)
+        && result.entry.actualWeight?.trim()
+      )?.entry.actualWeight?.trim() || ""
+    : "";
 
   return {
-    reps: previousEntry?.actualReps?.trim() || "",
-    weight: previousEntry?.actualWeight?.trim() || ""
+    reps: plannedReps,
+    weight: firstSetWeight || matchingHistoricalWeight
   };
+}
+
+function haveEqualRepetitionCounts(left: string | undefined, right: string) {
+  const normalizedLeft = left?.trim().replace(",", ".") ?? "";
+  const normalizedRight = right.trim().replace(",", ".");
+  if (!/^\d+(?:\.\d+)?$/.test(normalizedLeft) || !/^\d+(?:\.\d+)?$/.test(normalizedRight)) {
+    return false;
+  }
+
+  return Number(normalizedLeft) === Number(normalizedRight);
 }
 
 export function groupInlineWorkoutEntries(

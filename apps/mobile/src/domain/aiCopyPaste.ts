@@ -2,7 +2,7 @@ import { exerciseCatalogDataSource, type ExerciseCatalogDataSource } from "./exe
 import { findCatalogExerciseBestEffort, findExerciseById, resolveExerciseId } from "./exercises";
 import type { SavedWorkout } from "./savedWorkouts";
 import { createStep, type GoalType, type WorkoutDraft, type WorkoutStep } from "./workouts";
-import type { WorkoutCreatorDraft } from "./workoutCreator";
+import { cloneCreatorDraft, type WorkoutCreatorDraft } from "./workoutCreator";
 
 export const AI_RESPONSE_MAX_LENGTH = 1_000_000;
 export type AiWorkoutImportIssue = {
@@ -27,7 +27,7 @@ type PromptOptions = {
 
 export function buildAiWorkoutPrompt(options: PromptOptions) {
   const languageLabel = options.language === "pl" ? "Polish" : "English";
-  const userInput = JSON.stringify(options.creatorDraft ?? {}, null, 2);
+  const userInput = JSON.stringify(cloneCreatorDraft(options.creatorDraft ?? {}), null, 2);
   return [
     "You are preparing a workout for the offline Gymmin mobile app.",
     `Write user-facing text in ${languageLabel}.`,

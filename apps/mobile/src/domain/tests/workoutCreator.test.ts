@@ -22,6 +22,21 @@ describe("workout creator domain", () => {
     expect(clone.primaryGoal).toBe(source.primaryGoal);
   });
 
+  it("removes the retired ready warm-up answer from drafts and persisted profiles", () => {
+    expect(cloneCreatorDraft({ primaryGoal: "Strength", readyWarmupSet: "Yes" })).toEqual({
+      primaryGoal: "Strength"
+    });
+    expect(normalizeWorkoutCreatorProfiles([{
+      draft: { primaryGoal: "Strength", readyWarmupSet: "Yes" },
+      id: "profile-1",
+      name: "Profile"
+    }])).toEqual([{
+      draft: { primaryGoal: "Strength" },
+      id: "profile-1",
+      name: "Profile"
+    }]);
+  });
+
   it("compares every defined creator field and ignores unrelated metadata", () => {
     const left: WorkoutCreatorDraft = {
       primaryGoal: "Strength increase",
@@ -44,6 +59,7 @@ describe("workout creator domain", () => {
     );
 
     expect(new Set(fieldIds).size).toBe(fieldIds.length);
+    expect(fieldIds).not.toContain("readyWarmupSet");
   });
 
   it("normalizes persisted creator profiles and rejects unsafe values", () => {

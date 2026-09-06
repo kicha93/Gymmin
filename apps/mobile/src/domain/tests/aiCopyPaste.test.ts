@@ -52,6 +52,16 @@ describe("local AI copy/paste", () => {
     expect(en).toContain("English");
   });
 
+  it("does not send the retired ready warm-up answer to AI", () => {
+    const prompt = buildAiWorkoutPrompt({
+      creatorDraft: { primaryGoal: "Strength", readyWarmupSet: "Yes" },
+      language: "en"
+    });
+
+    expect(prompt).toContain('\"primaryGoal\": \"Strength\"');
+    expect(prompt).not.toContain("readyWarmupSet");
+  });
+
   it("builds the catalog section from the active exercise datasource", () => {
     const availableExercises = exerciseCatalogDataSource.getAvailableExercises();
     const compactCatalog = getCompactExerciseCatalog();

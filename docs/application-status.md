@@ -7,7 +7,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 ## Available locally
 
 - workout library/editor, archive, guided execution, active-session recovery and session-only/planned two-exercise supersets;
-- history, progress, weekly plan, favorites, achievements and local reminders;
+- history, a derived Progress Report, weekly plan, favorites, achievements and local reminders; the report supports week, month and 12-week periods, summarizes completed sessions, shows volume/workout trends, compares shared exercises with Epley e1RM, detects e1RM records and keeps the existing exercise-level progress list as a drill-down;
 - an expandable Home analysis of current-week muscle volume, with completed/projected fractional working sets, front/back anatomy and one shared approximate hypertrophy reference range; its responsive dashboard places the muscle list beside a full-height figure and lets the user temporarily gray individual groups without changing stored data;
 - local settings, creator profiles and private avatar; every setting persists in local storage and participates in `.gymmin.json` backup/import rather than sync;
 - an always-visible header action for the local profile, with no login/account panel; the Profile dashboard combines the avatar, derived completed-session and active-plan counts, achievements and bug reporting, while intentionally storing no display name;

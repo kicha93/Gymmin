@@ -137,8 +137,14 @@ describe("workoutSessionPresentation", () => {
     expect(groups[1].title).toBeTruthy();
   });
 
-  it("reads previous values from the most recent matching exercise result", () => {
-    const currentEntry = entry({ exerciseId: "front-squat", exerciseName: "Front squat", id: "current" });
+  it("uses planned repetitions but rejects history recorded for a different repetition count", () => {
+    const currentEntry = entry({
+      exerciseId: "front-squat",
+      exerciseName: "Front squat",
+      id: "current",
+      plannedTarget: "10",
+      plannedTargetType: "repetitions"
+    });
     const previous = session(
       [
         entry({
@@ -158,7 +164,7 @@ describe("workoutSessionPresentation", () => {
       }
     );
 
-    expect(getPreviousExerciseValues([currentEntry], [previous])).toEqual({ reps: "8", weight: "90" });
+    expect(getPreviousExerciseValues([currentEntry], [previous])).toEqual({ reps: "10", weight: "" });
   });
 
   it("uses the planned exercise values when no history exists", () => {
@@ -185,7 +191,7 @@ describe("workoutSessionPresentation", () => {
     expect(getPreviousExerciseValues(currentEntries, [])).toEqual({ reps: "10", weight: "" });
   });
 
-  it("keeps recorded history ahead of current plan defaults", () => {
+  it("uses a historical weight only when the exercise and repetition count match", () => {
     const currentEntry = entry({
       exerciseId: "front-squat",
       exerciseName: "Front squat",
@@ -195,7 +201,7 @@ describe("workoutSessionPresentation", () => {
     });
     const previous = session([
       entry({
-        actualReps: "6",
+        actualReps: "10",
         actualWeight: "100",
         exerciseId: "front-squat",
         exerciseName: "Front squat",
@@ -209,6 +215,84 @@ describe("workoutSessionPresentation", () => {
       status: "completed"
     });
 
-    expect(getPreviousExerciseValues([currentEntry], [previous])).toEqual({ reps: "6", weight: "100" });
+    expect(getPreviousExerciseValues([currentEntry], [previous])).toEqual({ reps: "10", weight: "100" });
+  });
+
+  it("finds the newest historical result with matching repetitions instead of using a newer mismatch", () => {
+    const currentEntry = entry({
+      exerciseId: "front-squat",
+      exerciseName: "Front squat",
+      id: "current",
+      plannedTarget: "10",
+      plannedTargetType: "repetitions"
+    });
+    const newestMismatch = session([entry({
+      actualReps: "8",
+      actualWeight: "100",
+      exerciseId: "front-squat",
+      exerciseName: "Front squat",
+      id: "newest-mismatch",
+      isCompleted: true
+    })], {
+      finishedAt: "2026-01-03T11:00:00.000Z",
+      id: "newest-session",
+      startedAt: "2026-01-03T10:00:00.000Z",
+      status: "completed"
+    });
+    const olderMatch = session([entry({
+      actualReps: "10",
+      actualWeight: "90",
+      exerciseId: "front-squat",
+      exerciseName: "Front squat",
+      id: "older-match",
+      isCompleted: true
+    })], {
+      finishedAt: "2026-01-02T11:00:00.000Z",
+      id: "older-session",
+      startedAt: "2026-01-02T10:00:00.000Z",
+      status: "completed"
+    });
+
+    expect(getPreviousExerciseValues([currentEntry], [olderMatch, newestMismatch])).toEqual({
+      reps: "10",
+      weight: "90"
+    });
+  });
+
+  it("prefers the first set weight over matching exercise history", () => {
+    const currentEntries = [
+      entry({
+        actualReps: "10",
+        actualWeight: "95",
+        exerciseId: "front-squat",
+        exerciseName: "Front squat",
+        id: "set-1",
+        plannedTarget: "10",
+        plannedTargetType: "repetitions"
+      }),
+      entry({
+        exerciseId: "front-squat",
+        exerciseName: "Front squat",
+        id: "set-2",
+        plannedTarget: "10",
+        plannedTargetType: "repetitions",
+        setIteration: 2
+      })
+    ];
+    const previous = session([entry({
+      actualReps: "10",
+      actualWeight: "90",
+      exerciseId: "front-squat",
+      exerciseName: "Front squat",
+      id: "previous",
+      isCompleted: true
+    })], {
+      finishedAt: "2026-01-02T11:00:00.000Z",
+      id: "previous-session",
+      startedAt: "2026-01-02T10:00:00.000Z",
+      status: "completed"
+    });
+
+    expect(getPreviousExerciseValues(currentEntries, [previous])).toEqual({ reps: "10", weight: "95" });
   });
 });

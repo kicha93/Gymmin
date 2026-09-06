@@ -20,7 +20,9 @@ export type ScreenKey =
   | "profile"
   | "progress"
   | "exerciseDetail"
+  | "exerciseProgressList"
   | "exerciseProgress"
+  | "progressRecords"
   | "workoutHistory"
   | "workoutSessionDetail"
   | "workoutCreator"
@@ -40,11 +42,13 @@ export function getScreenTitle(
     builder: editingWorkoutId ? t("editWorkout") : t("addNewWorkout"),
     contact: t("contact"),
     exerciseDetail: t("exerciseDetails"),
+    exerciseProgressList: t("progressExerciseList"),
     exerciseProgress: t("exerciseProgress"),
     favoriteExercises: t("favoriteExercises"),
     home: t("home"),
     profile: t("profile"),
-    progress: t("progress"),
+    progress: t("progressReportTitle"),
+    progressRecords: t("progressRecordsTitle"),
     privacy: t("privacyPolicy"),
     settings: t("settings"),
     terms: t("terms"),

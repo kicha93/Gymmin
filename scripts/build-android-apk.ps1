@@ -48,12 +48,26 @@ if (-not (Test-Path -LiteralPath $androidRoot)) {
 
 $task = if ($Variant -eq "release") { "assembleRelease" } else { "assembleDebug" }
 $env:NODE_ENV = if ($Variant -eq "release") { "production" } else { "development" }
+$gradleTempRoot = Join-Path ($(if ($env:SystemDrive) { $env:SystemDrive } else { "C:" })) "jtmp"
+New-Item -ItemType Directory -Path $gradleTempRoot -Force | Out-Null
+$previousTemp = $env:TEMP
+$previousTmp = $env:TMP
 Write-Step "Building $Variant APK from the normal repository path ($Architectures)..."
 Push-Location $androidRoot
 try {
+  # JDK 17+ uses a local AF_UNIX socket while creating its Windows NIO selector.
+  # Long or virtualized TEMP paths can make that socket fail with the misleading
+  # "Unable to establish loopback connection" error. Keep the child JVM's temp
+  # path short and restore the caller's environment immediately after Gradle.
+  $env:TEMP = $gradleTempRoot
+  $env:TMP = $gradleTempRoot
   .\gradlew.bat $task "-PreactNativeArchitectures=$Architectures" --no-daemon
   Assert-LastExitCode "Gradle $task"
-} finally { Pop-Location }
+} finally {
+  $env:TEMP = $previousTemp
+  $env:TMP = $previousTmp
+  Pop-Location
+}
 
 $source = Join-Path $androidRoot "app\build\outputs\apk\$Variant\app-$Variant.apk"
 if (-not (Test-Path -LiteralPath $source)) { throw "APK was not created: $source" }

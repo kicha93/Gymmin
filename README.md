@@ -6,6 +6,7 @@ Gymmin is a local-only Expo/React Native workout app created and maintained by *
 
 - one mobile application; there is no Gymmin backend, account, authentication, synchronization, credit system, billing, or remote AI job;
 - workouts, sessions, history, weekly plan, favorites, achievements, settings, reminders, creator profiles, and the optional local avatar stay in private device storage;
+- the Progress entry opens a derived Progress Report with week, month and 12-week periods, real session summary, volume/workout trends, e1RM-based comparisons, records, weekly consistency and drill-down to the existing per-exercise history;
 - Home can expand the current Monday-Sunday plan into a local weekly muscle-volume estimate, separating completed sets from projected end-of-week volume and reusing the exercise catalog's muscle-impact data; the responsive list and anatomy view share one status model, and individual muscle groups can be temporarily hidden or restored on the figure;
 - the local profile action is always visible in the top-right header and never opens login; the workout creator remains available from the Workouts screen regardless of saved workouts or connectivity, but is not duplicated on Home;
 - Profile is a local dashboard with a private avatar, derived completed-session and active-plan counts, achievements and bug reporting; Gymmin does not collect a display name, so the UI uses a localized local-profile label;

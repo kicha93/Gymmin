@@ -181,7 +181,9 @@ import { BugReportScreen } from "./src/screens/BugReportScreen";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { ExerciseProgressScreen } from "./src/screens/ExerciseProgressScreen";
-import { ProgressScreen } from "./src/screens/ProgressScreen";
+import { ProgressScreen as ExerciseProgressListScreen } from "./src/screens/ProgressScreen";
+import { ProgressRecordsScreen } from "./src/screens/ProgressRecordsScreen";
+import { ProgressReportScreen } from "./src/screens/ProgressReportScreen";
 import { TermsScreen } from "./src/screens/TermsScreen";
 import { PrivacyScreen } from "./src/screens/PrivacyScreen";
 import {
@@ -743,6 +745,7 @@ function GymminApp() {
   const [workoutHistorySearch, setWorkoutHistorySearch] = useState("");
   const [workoutHistoryWorkoutIdFilter, setWorkoutHistoryWorkoutIdFilter] = useState<string | null>(null);
   const [selectedExerciseProgressKey, setSelectedExerciseProgressKey] = useState<string | null>(null);
+  const [exerciseProgressReturnScreen, setExerciseProgressReturnScreen] = useState<ScreenKey>("progress");
   const [isPostWorkoutFillMode, setIsPostWorkoutFillMode] = useState(false);
   const [appDialog, setAppDialog] = useState<AppDialogState | null>(null);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -1016,7 +1019,7 @@ function GymminApp() {
     });
 
     return () => subscription.remove();
-  }, [activeScreen, activeSettingsSheet, creatorPhase, editingWorkoutId, exerciseDetailReturnScreen, selectedWorkoutId]);
+  }, [activeScreen, activeSettingsSheet, creatorPhase, editingWorkoutId, exerciseDetailReturnScreen, exerciseProgressReturnScreen, selectedWorkoutId]);
 
   useEffect(() => {
     if (creatorPhase !== "submitted") {
@@ -2030,13 +2033,18 @@ function GymminApp() {
       return true;
     }
 
+    if (activeScreen === "exerciseProgressList" || activeScreen === "progressRecords") {
+      setActiveScreen("progress");
+      return true;
+    }
+
     if (activeScreen === "favoriteExercises") {
       setActiveScreen("settings");
       return true;
     }
 
     if (activeScreen === "exerciseProgress") {
-      setActiveScreen("progress");
+      setActiveScreen(exerciseProgressReturnScreen);
       return true;
     }
 
@@ -2260,6 +2268,9 @@ function GymminApp() {
 
   function openExerciseProgress(exerciseKey: string) {
     setSelectedExerciseProgressKey(exerciseKey);
+    setExerciseProgressReturnScreen(
+      activeScreen === "exerciseProgressList" ? "exerciseProgressList" : "progress"
+    );
     setActiveScreen("exerciseProgress");
   }
 
@@ -2929,9 +2940,33 @@ function GymminApp() {
             )}
             {activeScreen === "workoutSessionDetail" && renderWorkoutSessionDetail()}
             {activeScreen === "progress" && (
-              <ProgressScreen
+              <ProgressReportScreen
+                language={language}
+                sessions={visibleWorkoutSessions}
+                t={t}
+                theme={theme}
+                weeklyPlanEnabled={weeklyPlan.enabled}
+                weeklyPlanSummary={weeklyPlanSummary}
+                onOpenExercise={openExerciseProgress}
+                onOpenExerciseList={() => setActiveScreen("exerciseProgressList")}
+                onOpenRecords={() => setActiveScreen("progressRecords")}
+                onOpenWeeklyPlan={() => setActiveScreen("weeklyPlan")}
+                onOpenWorkout={openWorkoutDetail}
+              />
+            )}
+            {activeScreen === "exerciseProgressList" && (
+              <ExerciseProgressListScreen
                 language={language}
                 progressItems={exerciseProgressItems}
+                sessions={visibleWorkoutSessions}
+                t={t}
+                theme={theme}
+                onOpenExercise={openExerciseProgress}
+              />
+            )}
+            {activeScreen === "progressRecords" && (
+              <ProgressRecordsScreen
+                language={language}
                 sessions={visibleWorkoutSessions}
                 t={t}
                 theme={theme}
@@ -2991,6 +3026,8 @@ function GymminApp() {
                   activeScreen === "workoutHistory" ||
                   activeScreen === "workoutSessionDetail" ||
                   activeScreen === "progress" ||
+                  activeScreen === "exerciseProgressList" ||
+                  activeScreen === "progressRecords" ||
                   activeScreen === "exerciseDetail" ||
                   activeScreen === "exerciseProgress")) ||
               (item.key === "settings" &&

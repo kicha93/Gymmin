@@ -40,6 +40,8 @@ export const workoutCreatorProfileLimits = {
   profileCount: 25
 } as const;
 
+const deprecatedWorkoutCreatorFieldIds = new Set(["readyWarmupSet"]);
+
 const yesNoOptions: LocalizedText[] = [
   { en: "Yes", pl: "Tak" },
   { en: "No", pl: "Nie" }
@@ -275,13 +277,6 @@ export const workoutCreatorSections: WorkoutCreatorSection[] = [
           { en: "Split", pl: "Split" },
           { en: "No preference", pl: "Bez preferencji" }
         ]
-      },
-      {
-        id: "readyWarmupSet",
-        kind: "singleChoice",
-        defaultValue: { en: "No", pl: "Nie" },
-        label: { en: "Do you want a ready warm-up set?", pl: "Czy chcesz gotowy zestaw rozgrzewki?" },
-        options: yesNoOptions
       }
     ]
   }
@@ -289,7 +284,9 @@ export const workoutCreatorSections: WorkoutCreatorSection[] = [
 
 export function cloneCreatorDraft(draft: WorkoutCreatorDraft): WorkoutCreatorDraft {
   return Object.fromEntries(
-    Object.entries(draft).map(([key, value]) => [key, Array.isArray(value) ? [...value] : value])
+    Object.entries(draft)
+      .filter(([key]) => !deprecatedWorkoutCreatorFieldIds.has(key))
+      .map(([key, value]) => [key, Array.isArray(value) ? [...value] : value])
   );
 }
 
@@ -317,7 +314,7 @@ export function normalizeWorkoutCreatorProfiles(value: unknown): WorkoutCreatorP
     for (const [rawKey, rawValue] of Object.entries(rawDraft)
       .slice(0, workoutCreatorProfileLimits.draftFieldCount)) {
       const key = rawKey.trim().slice(0, workoutCreatorProfileLimits.draftFieldKeyLength);
-      if (!key) continue;
+      if (!key || deprecatedWorkoutCreatorFieldIds.has(key)) continue;
       if (typeof rawValue === "string") {
         draftEntries.push([key, rawValue.slice(0, workoutCreatorProfileLimits.draftTextLength)]);
       } else if (Array.isArray(rawValue) && rawValue.every((item) => typeof item === "string")) {

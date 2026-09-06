@@ -587,16 +587,13 @@ export const styles = StyleSheet.create({
     marginBottom: 12
   },
   advancedMuscleParentHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-    justifyContent: "space-between"
+    alignItems: "flex-start",
+    gap: 2
   },
   advancedMuscleCategory: {
-    flexShrink: 1,
     fontSize: 11,
     fontWeight: "700",
-    textAlign: "right"
+    textAlign: "left"
   },
   advancedMuscleRow: {
     flexDirection: "row",
@@ -4623,6 +4620,317 @@ export const styles = StyleSheet.create({
   },
   bottomSheetButton: {
     minHeight: 56
+  },
+  progressReportScreen: {
+    gap: 14
+  },
+  progressReportPeriodControl: {
+    borderRadius: 8,
+    flexDirection: "row",
+    padding: 3
+  },
+  progressReportPeriodButton: {
+    alignItems: "center",
+    borderRadius: 7,
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 42,
+    paddingHorizontal: 8
+  },
+  progressReportPeriodText: {
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  progressReportCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 14,
+    padding: 14
+  },
+  progressReportCardHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between"
+  },
+  progressReportCardTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "900",
+    lineHeight: 23
+  },
+  progressReportDate: {
+    flexShrink: 1,
+    fontSize: 11,
+    fontWeight: "700",
+    textAlign: "right"
+  },
+  progressReportHeaderAction: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 0,
+    gap: 2,
+    minHeight: 32
+  },
+  progressReportHeaderActionText: {
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  progressReportSummaryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  progressReportSummaryMetric: {
+    alignItems: "center",
+    flex: 1,
+    flexBasis: 94,
+    flexDirection: "row",
+    gap: 8,
+    minWidth: 94
+  },
+  progressReportSummaryIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 42,
+    justifyContent: "center",
+    width: 42
+  },
+  progressReportSummaryCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  progressReportMetricLabel: {
+    fontSize: 11,
+    fontWeight: "700"
+  },
+  progressReportMetricValue: {
+    fontSize: 20,
+    fontWeight: "900",
+    lineHeight: 24
+  },
+  progressReportMetricCaption: {
+    fontSize: 10,
+    fontWeight: "600",
+    lineHeight: 13
+  },
+  progressReportInsights: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  progressReportInsight: {
+    alignItems: "center",
+    borderRadius: 8,
+    flex: 1,
+    flexBasis: 140,
+    flexDirection: "row",
+    gap: 10,
+    minHeight: 86,
+    padding: 12
+  },
+  progressReportInsightIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44
+  },
+  progressReportInsightCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  progressReportInsightValue: {
+    fontSize: 23,
+    fontWeight: "900",
+    lineHeight: 27
+  },
+  progressReportNoComparison: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 19
+  },
+  progressReportTrendTabs: {
+    flexDirection: "row",
+    gap: 8
+  },
+  progressReportTrendTab: {
+    borderRadius: 999,
+    borderWidth: 1,
+    minHeight: 34,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  progressReportTrendTabText: {
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  progressReportChart: {
+    minHeight: 150
+  },
+  progressReportChartLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  progressReportChartLabel: {
+    flex: 1,
+    fontSize: 9,
+    fontWeight: "700",
+    textAlign: "center"
+  },
+  progressReportWeeklyList: {
+    gap: 7
+  },
+  progressReportWeeklyRow: {
+    alignItems: "center",
+    borderRadius: 7,
+    flexDirection: "row",
+    gap: 9,
+    minHeight: 46,
+    paddingHorizontal: 10,
+    paddingVertical: 7
+  },
+  progressReportWeeklyName: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "800",
+    lineHeight: 17
+  },
+  progressReportWeeklyStatus: {
+    fontSize: 11,
+    fontWeight: "700"
+  },
+  progressReportCompactCards: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  progressReportCompactCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    flexBasis: 150,
+    gap: 5,
+    minHeight: 148,
+    minWidth: 145,
+    padding: 13
+  },
+  progressReportCompactTitle: {
+    fontSize: 14,
+    fontWeight: "900",
+    lineHeight: 18
+  },
+  progressReportCompactName: {
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 16
+  },
+  progressReportCompactValue: {
+    fontSize: 24,
+    fontWeight: "900",
+    lineHeight: 28
+  },
+  progressReportCompactMeta: {
+    fontSize: 10,
+    fontWeight: "600",
+    lineHeight: 14
+  },
+  progressReportRecords: {
+    gap: 0
+  },
+  progressReportRecordRow: {
+    alignItems: "center",
+    borderTopWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    minHeight: 49,
+    paddingVertical: 8
+  },
+  progressReportRecordIndex: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 26,
+    justifyContent: "center",
+    width: 26
+  },
+  progressReportRecordIndexText: {
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  progressReportRecordName: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 16
+  },
+  progressReportRecordValue: {
+    flexShrink: 0,
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  progressReportRecordDate: {
+    flexShrink: 0,
+    fontSize: 10,
+    fontWeight: "600"
+  },
+  progressReportRecordListCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  progressReportExerciseLink: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 11,
+    minHeight: 70,
+    padding: 13
+  },
+  progressReportExerciseLinkIcon: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 44,
+    justifyContent: "center",
+    width: 44
+  },
+  progressReportExerciseLinkCopy: {
+    flex: 1
+  },
+  progressReportExerciseLinkTitle: {
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  progressReportExerciseLinkMeta: {
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 2
+  },
+  progressReportEmpty: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 10,
+    paddingHorizontal: 22,
+    paddingVertical: 34
+  },
+  progressReportEmptyIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 58,
+    justifyContent: "center",
+    width: 58
+  },
+  progressReportEmptyTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    textAlign: "center"
+  },
+  progressReportEmptyCopy: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 19,
+    textAlign: "center"
   },
   navButton: {
     alignItems: "center",

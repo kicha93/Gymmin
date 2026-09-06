@@ -1,4 +1,6 @@
-import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
+import { Pressable, Text, View } from "react-native";
 
 import {
   getMuscleImpactGroups,
@@ -106,7 +108,13 @@ type AdvancedMuscleImpactGroupsProps = MuscleImpactTextGroupsProps & {
 };
 
 export function AdvancedMuscleImpactGroups({ exerciseId, impact, language, side, t, theme }: AdvancedMuscleImpactGroupsProps) {
+  const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
   const profile = getAdvancedExerciseProfile(exerciseId);
+
+  useEffect(() => {
+    setExpandedParents({});
+  }, [exerciseId, side]);
+
   if (!profile) return <MuscleImpactTextGroups impact={impact} language={language} t={t} theme={theme} />;
 
   const categoryLabel = (score: InfluenceScore) => {
@@ -140,16 +148,28 @@ export function AdvancedMuscleImpactGroups({ exerciseId, impact, language, side,
         });
         if (!subdivisions.length) return null;
         const family = getAdvancedDisplayFamily(subdivisions[0].subdivision.displayFamilyId);
+        const parentLabel = family?.names[language] ?? muscleLabels[language][parent.standardParentMuscle];
+        const expanded = expandedParents[parent.standardParentMuscle] === true;
 
         return (
           <View key={parent.standardParentMuscle} style={styles.advancedMuscleParent}>
-            <View style={styles.advancedMuscleParentHeader}>
-              <Text style={[styles.workoutMeta, { color: theme.text }]}>
-                {family?.names[language] ?? muscleLabels[language][parent.standardParentMuscle]}
-              </Text>
-              <Text style={[styles.advancedMuscleCategory, { color: theme.muted }]}>{categoryLabel(parentLevel)}</Text>
-            </View>
-            {subdivisions.map(({ level, subdivision }) => (
+            <Pressable
+              accessibilityLabel={parentLabel}
+              accessibilityRole="button"
+              accessibilityState={{ expanded }}
+              style={styles.advancedMuscleParentToggle}
+              onPress={() => setExpandedParents((current) => ({
+                ...current,
+                [parent.standardParentMuscle]: !expanded
+              }))}
+            >
+              <View style={styles.advancedMuscleParentHeader}>
+                <Text style={[styles.workoutMeta, { color: theme.text }]}>{parentLabel}</Text>
+                <Text style={[styles.advancedMuscleCategory, { color: theme.muted }]}>{categoryLabel(parentLevel)}</Text>
+              </View>
+              <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={18} color={theme.muted} />
+            </Pressable>
+            {expanded ? subdivisions.map(({ level, subdivision }) => (
               <View key={subdivision.id} style={styles.advancedMuscleRow}>
                 <View style={[styles.advancedMuscleBranch, { borderColor: theme.border }]} />
                 <View style={styles.advancedMuscleRowContent}>
@@ -159,7 +179,7 @@ export function AdvancedMuscleImpactGroups({ exerciseId, impact, language, side,
                   </View>
                 </View>
               </View>
-            ))}
+            )) : null}
           </View>
         );
       })}

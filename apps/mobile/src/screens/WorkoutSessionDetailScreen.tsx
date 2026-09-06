@@ -220,6 +220,7 @@ export function WorkoutSessionDetailScreen({
                         style={[
                           styles.workoutDetailTableValue,
                           styles.workoutSessionDetailSetCell,
+                          styles.workoutSessionDetailBodyCell,
                           { color: theme.text, borderRightColor: theme.border }
                         ]}
                         numberOfLines={1}
@@ -230,6 +231,7 @@ export function WorkoutSessionDetailScreen({
                         style={[
                           styles.workoutDetailTableValue,
                           styles.workoutSessionDetailRepsCell,
+                          styles.workoutSessionDetailBodyCell,
                           { color: theme.text, borderRightColor: theme.border }
                         ]}
                         numberOfLines={1}
@@ -240,6 +242,7 @@ export function WorkoutSessionDetailScreen({
                         style={[
                           styles.workoutDetailTableValue,
                           styles.workoutSessionDetailRepsCell,
+                          styles.workoutSessionDetailBodyCell,
                           { color: theme.text, borderRightColor: theme.border }
                         ]}
                         numberOfLines={1}
@@ -250,6 +253,7 @@ export function WorkoutSessionDetailScreen({
                         style={[
                           styles.workoutDetailTableValue,
                           styles.workoutSessionDetailWeightCell,
+                          styles.workoutSessionDetailBodyCell,
                           { color: theme.text, borderRightColor: theme.border }
                         ]}
                         numberOfLines={1}
@@ -260,6 +264,7 @@ export function WorkoutSessionDetailScreen({
                         style={[
                           styles.workoutDetailTableValue,
                           styles.workoutSessionDetailVolumeCell,
+                          styles.workoutSessionDetailBodyCell,
                           { color: theme.text }
                         ]}
                         numberOfLines={1}

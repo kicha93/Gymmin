@@ -184,6 +184,12 @@ export function formatWeekRange(range: WeeklyPlanWeekRange, language: "pl" | "en
     : `${startMonth} ${range.start.getDate()} - ${endMonth} ${range.end.getDate()}`;
 }
 
+export function formatCompactWeekRange(range: WeeklyPlanWeekRange): string {
+  const formatDate = (date: Date) =>
+    String(date.getDate()).padStart(2, "0") + "." + String(date.getMonth() + 1).padStart(2, "0");
+  return `${formatDate(range.start)} - ${formatDate(range.end)}`;
+}
+
 function sessionMatchesWorkout(session: WorkoutSession, workoutId: string): boolean {
   const fallback = session as WorkoutSession & { workoutId?: string; clientWorkoutId?: string };
   return session.sourceWorkoutId === workoutId || fallback.workoutId === workoutId || fallback.clientWorkoutId === workoutId;

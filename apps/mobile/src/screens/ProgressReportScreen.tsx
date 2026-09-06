@@ -282,6 +282,8 @@ export function ProgressReportScreen({
               <ProgressLineChart
                 buckets={report.trend.buckets}
                 labels={getTrendLabels(period, report.trend.buckets.map((bucket) => bucket.start), language)}
+                language={language}
+                legendLabel={trendMetric === "volume" ? t("volume") : t("workouts")}
                 metric={trendMetric}
                 theme={theme}
               />
@@ -351,8 +353,12 @@ export function ProgressReportScreen({
                 style={[styles.progressReportCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}
                 onPress={() => onOpenExercise(report.biggestProgress!.exerciseKey)}
               >
-                <Ionicons name="stats-chart-outline" size={24} color={theme.primary} />
-                <Text style={[styles.progressReportCompactTitle, { color: theme.text }]}>{t("progressBiggestProgress")}</Text>
+                <View style={styles.progressReportCompactHeader}>
+                  <Ionicons name="stats-chart-outline" size={22} color={theme.primary} />
+                  <Text adjustsFontSizeToFit minimumFontScale={0.75} numberOfLines={1} style={[styles.progressReportCompactTitle, { color: theme.text }]}>
+                    {t("progressBiggestProgress")}
+                  </Text>
+                </View>
                 <Text numberOfLines={2} style={[styles.progressReportCompactName, { color: theme.text }]}>
                   {getExerciseDisplayName(report.biggestProgress.exerciseName, language)}
                 </Text>
@@ -366,8 +372,12 @@ export function ProgressReportScreen({
               </Pressable>
             ) : null}
             <View style={[styles.progressReportCompactCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Ionicons name="calendar-outline" size={24} color={theme.primary} />
-              <Text style={[styles.progressReportCompactTitle, { color: theme.text }]}>{t("progressConsistency")}</Text>
+              <View style={styles.progressReportCompactHeader}>
+                <Ionicons name="calendar-outline" size={22} color={theme.primary} />
+                <Text adjustsFontSizeToFit minimumFontScale={0.75} numberOfLines={1} style={[styles.progressReportCompactTitle, { color: theme.text }]}>
+                  {t("progressConsistency")}
+                </Text>
+              </View>
               <Text style={[styles.progressReportCompactValue, { color: theme.primary }]}>
                 {String(report.consistency.weekStreak)}
               </Text>

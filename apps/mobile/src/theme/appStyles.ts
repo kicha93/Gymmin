@@ -588,7 +588,15 @@ export const styles = StyleSheet.create({
   },
   advancedMuscleParentHeader: {
     alignItems: "flex-start",
+    flex: 1,
     gap: 2
+  },
+  advancedMuscleParentToggle: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "space-between",
+    minHeight: 44
   },
   advancedMuscleCategory: {
     fontSize: 11,
@@ -1346,7 +1354,7 @@ export const styles = StyleSheet.create({
   workoutSessionDetailTable: {
     borderRadius: 8,
     borderWidth: 1,
-    minWidth: 552,
+    minWidth: 558,
     overflow: "hidden"
   },
   inlineWorkoutTable: {
@@ -1442,8 +1450,8 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 1,
     flexDirection: "row",
     minHeight: 46,
-    paddingHorizontal: 8,
-    paddingVertical: 6
+    paddingHorizontal: 0,
+    paddingVertical: 0
   },
   inlineWorkoutSetRow: {
     minHeight: 58,
@@ -1451,6 +1459,11 @@ export const styles = StyleSheet.create({
   },
   workoutSessionDetailSetRowLast: {
     borderBottomWidth: 0
+  },
+  workoutSessionDetailBodyCell: {
+    alignSelf: "stretch",
+    paddingVertical: 14,
+    textAlignVertical: "center"
   },
   workoutSessionDetailSetCell: {
     borderRightWidth: 1,
@@ -3842,14 +3855,6 @@ export const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     fontSize: 13
   },
-  weeklyMuscleVolumePlanHint: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 11,
-    lineHeight: 16,
-    marginHorizontal: 16,
-    marginTop: -3,
-    textAlign: "center"
-  },
   weeklyMuscleVolumeDashboard: {
     alignItems: "stretch",
     flexDirection: "row",
@@ -4767,17 +4772,23 @@ export const styles = StyleSheet.create({
     fontWeight: "800"
   },
   progressReportChart: {
-    minHeight: 150
+    gap: 6,
+    minHeight: 174
   },
-  progressReportChartLabels: {
+  progressReportChartLegend: {
+    alignItems: "center",
     flexDirection: "row",
-    justifyContent: "space-between"
+    gap: 6,
+    minHeight: 20
   },
-  progressReportChartLabel: {
-    flex: 1,
-    fontSize: 9,
-    fontWeight: "700",
-    textAlign: "center"
+  progressReportChartLegendDot: {
+    borderRadius: 999,
+    height: 9,
+    width: 9
+  },
+  progressReportChartLegendText: {
+    fontSize: 11,
+    fontWeight: "700"
   },
   progressReportWeeklyList: {
     gap: 7
@@ -4816,10 +4827,18 @@ export const styles = StyleSheet.create({
     minWidth: 145,
     padding: 13
   },
+  progressReportCompactHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 7,
+    minWidth: 0
+  },
   progressReportCompactTitle: {
-    fontSize: 14,
+    flex: 1,
+    fontSize: 13,
     fontWeight: "900",
-    lineHeight: 18
+    lineHeight: 17,
+    minWidth: 0
   },
   progressReportCompactName: {
     fontSize: 12,

@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
+  formatCompactWeekRange,
   formatWeekRange,
   getActiveWeeklyPlanWorkouts,
   getCurrentWeekRange,
@@ -50,6 +51,7 @@ describe("weeklyPlan", () => {
     const crossMonth = getCurrentWeekRange(new Date(2026, 5, 30, 12));
     expect(formatWeekRange(crossMonth, "pl")).toBe("29 czerwca - 5 lipca");
     expect(formatWeekRange(crossMonth, "en")).toBe("June 29 - July 5");
+    expect(formatCompactWeekRange(getCurrentWeekRange(new Date(2026, 8, 3, 12)))).toBe("31.08 - 06.09");
   });
 
   it("counts only completed, current-week, non-deleted plan workouts", () => {

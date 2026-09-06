@@ -12,7 +12,7 @@ import {
 import { getAdvancedMuscleSubdivision } from "../domain/advancedMuscles";
 import { muscleLabels, type MuscleKey } from "../domain/exercises";
 import {
-  formatWeekRange,
+  formatCompactWeekRange,
   getCurrentWeekRange,
   getWeeklyPlanDay,
   type WeeklyPlanSummary
@@ -507,7 +507,7 @@ export function WeeklyPlanHomeCard({
     );
   }
 
-  const range = formatWeekRange(getCurrentWeekRange(new Date()), language);
+  const range = formatCompactWeekRange(getCurrentWeekRange(new Date()));
   const todayItem = summary.todayItems[0];
   const completion = t("weeklyPlanCompleted")
     .replace("{completed}", String(summary.completed))
@@ -595,9 +595,6 @@ export function WeeklyPlanHomeCard({
               onModeChange={setVolumeMode}
               onSideChange={setVolumeSide}
             />
-            {volumeMode === "projected" ? (
-              <Text style={[styles.weeklyMuscleVolumePlanHint, { color: theme.muted }]}>{t("weeklyMuscleVolumePlanHint")}</Text>
-            ) : null}
             {!volumeSummary.hasActivity ? (
               <View style={styles.weeklyMuscleVolumeEmpty}>
                 <View style={styles.weeklyMuscleVolumeEmptyCopyWrap}>

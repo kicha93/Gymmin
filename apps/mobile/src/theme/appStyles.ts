@@ -578,7 +578,7 @@ export const styles = StyleSheet.create({
     fontWeight: "900"
   },
   exerciseDetailMuscleContent: {
-    alignItems: "center",
+    alignItems: "flex-start",
     flexDirection: "row",
     gap: 12
   },

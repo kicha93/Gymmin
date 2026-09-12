@@ -18,7 +18,7 @@ Gymmin is now a local-only mobile product. Backend source, auth, synchronization
 - full local data deletion;
 - local Contact and safe bug-report email flows: both open the system email app, never submit HTTP forms, and provide clipboard fallback;
 - PL/EN About, author attribution, privacy and voluntary Buy Me a Coffee link; the support card is the final standalone section below all Settings panels.
-- optimized offline exercise media: 332 exercises use 411 static WebP Q90 runtime images generated reproducibly from non-bundled PNG sources; 79 have START/END pairs and 253 have one available image. Video and animated exercise media are excluded.
+- optimized offline exercise media: 452 exercises use 531 static WebP Q90 runtime images generated reproducibly from non-bundled PNG sources; 79 have START/END pairs and 373 have one available image. Video and animated exercise media are excluded.
 - a validated catalog of 729 exercises with localized presentation and richer muscle-involvement data; reviewed redundant variants, including explicit resistance-band, alternating, and duplicate weighted/unweighted exercises, are merged into canonical movements through compatibility aliases. Smith-machine and sliding-disc variants remain distinct where the equipment changes the movement.
 - an opt-in Advanced Muscle Mode in Preferences; Exercise Detail can show 38 localized anatomical subdivisions generated for canonical exercise IDs, while the default standard view and weekly muscle-volume calculations remain unchanged.
 - detailed warm-up stages remain visible as their actual exercises during guided execution; only a truly empty/simple warm-up placeholder receives the compact representation.

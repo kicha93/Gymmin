@@ -91,6 +91,7 @@ function normalizeName(value) {
     .normalize("NFC")
     .trim()
     .toLocaleLowerCase("pl")
+    .replace(/[\/-]+/g, " ")
     .replace(/\s+/g, " ");
 }
 

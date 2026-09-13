@@ -103,9 +103,11 @@ describe("exercise catalog cleanup", () => {
 
   });
 
-  it("registers supplied exercise image sets while allowing image-less exercises", () => {
+  it("registers supplied exercise image sets for every canonical exercise", () => {
     expect(getExerciseImageAssetKeys("hip-thrust")).toHaveLength(2);
-    expect(getExerciseImageAssetKeys("crunch-circular-arm-crunch-239")).toHaveLength(0);
+    for (const exercise of exercises) {
+      expect(getExerciseImageAssetKeys(exercise.id), exercise.id).not.toHaveLength(0);
+    }
   });
 
   it("uses supplied exercise image sets", () => {

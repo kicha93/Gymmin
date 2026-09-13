@@ -105,7 +105,7 @@ describe("exercise catalog cleanup", () => {
 
   it("registers supplied exercise image sets while allowing image-less exercises", () => {
     expect(getExerciseImageAssetKeys("hip-thrust")).toHaveLength(2);
-    expect(getExerciseImageAssetKeys("lying-leg-curl")).toHaveLength(0);
+    expect(getExerciseImageAssetKeys("crunch-circular-arm-crunch-239")).toHaveLength(0);
   });
 
   it("uses supplied exercise image sets", () => {

@@ -1,6 +1,7 @@
 param(
   [string]$SourceRepo = "kicha93/Gymmin",
   [ValidateRange(1, 20)][int]$NetworkMaxAttempts = 6,
+  [string]$ExistingRunId = "",
   [switch]$SkipValidation,
   [switch]$SkipGitSync
 )
@@ -86,28 +87,40 @@ try {
     Assert-LastExitCode "Git push"
   }
 
-  $headSha = (git rev-parse HEAD).Trim()
-  Assert-LastExitCode "Git HEAD detection"
-  Write-Step "Starting the unsigned iOS build on GitHub macOS..."
-  Invoke-GhRetry -Arguments @("workflow", "run", $workflowName, "--repo", $SourceRepo, "--ref", $branch)
+  if ($ExistingRunId) {
+    $runId = $ExistingRunId
+    $runState = Invoke-GhRetry -Arguments @("run", "view", $runId, "--repo", $SourceRepo, "--json", "status,conclusion") -Capture | ConvertFrom-Json
+    if ($runState.status -ne "completed" -or $runState.conclusion -ne "success") {
+      throw "Existing workflow run $runId is not a successful completed build."
+    }
+    Write-Step "Resuming successful GitHub Actions run $runId..."
+  } else {
+    $headSha = (git rev-parse HEAD).Trim()
+    Assert-LastExitCode "Git HEAD detection"
+    Write-Step "Starting the unsigned iOS build on GitHub macOS..."
+    Invoke-GhRetry -Arguments @("workflow", "run", $workflowName, "--repo", $SourceRepo, "--ref", $branch)
 
-  $runId = ""
-  for ($attempt = 1; $attempt -le 30 -and -not $runId; $attempt++) {
-    Start-Sleep -Seconds 3
-    $runsJson = Invoke-GhRetry -Arguments @("run", "list", "--repo", $SourceRepo, "--workflow", $workflowName, "--event", "workflow_dispatch", "--limit", "10", "--json", "databaseId,headSha") -Capture
-    $matchingRun = ($runsJson | ConvertFrom-Json | Where-Object { $_.headSha -eq $headSha } | Select-Object -First 1)
-    if ($matchingRun) { $runId = [string]$matchingRun.databaseId }
+    $runId = ""
+    for ($attempt = 1; $attempt -le 30 -and -not $runId; $attempt++) {
+      Start-Sleep -Seconds 3
+      $runsJson = Invoke-GhRetry -Arguments @("run", "list", "--repo", $SourceRepo, "--workflow", $workflowName, "--event", "workflow_dispatch", "--limit", "10", "--json", "databaseId,headSha") -Capture
+      $matchingRun = ($runsJson | ConvertFrom-Json | Where-Object { $_.headSha -eq $headSha } | Select-Object -First 1)
+      if ($matchingRun) { $runId = [string]$matchingRun.databaseId }
+    }
+    if (-not $runId) { throw "Could not identify the dispatched iOS workflow run." }
+
+    Write-Step "Waiting for GitHub Actions run $runId..."
+    & $gh run watch $runId --repo $SourceRepo --exit-status
+    Assert-LastExitCode "Unsigned iOS GitHub Actions build"
   }
-  if (-not $runId) { throw "Could not identify the dispatched iOS workflow run." }
-
-  Write-Step "Waiting for GitHub Actions run $runId..."
-  & $gh run watch $runId --repo $SourceRepo --exit-status
-  Assert-LastExitCode "Unsigned iOS GitHub Actions build"
 
   $downloadRoot = Join-Path $artifactRoot "ios-unsigned-$runId"
   New-Item -ItemType Directory -Path $downloadRoot -Force | Out-Null
-  Invoke-GhRetry -Arguments @("run", "download", $runId, "--repo", $SourceRepo, "--name", "gymmin-ios-unsigned", "--dir", $downloadRoot)
   $downloadedIpa = Get-ChildItem -LiteralPath $downloadRoot -Filter "*.ipa" -File | Select-Object -First 1
+  if (-not $downloadedIpa) {
+    Invoke-GhRetry -Arguments @("run", "download", $runId, "--repo", $SourceRepo, "--name", "gymmin-ios-unsigned", "--dir", $downloadRoot)
+    $downloadedIpa = Get-ChildItem -LiteralPath $downloadRoot -Filter "*.ipa" -File | Select-Object -First 1
+  }
   if (-not $downloadedIpa) { throw "GitHub artifact did not contain an IPA." }
 
   Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -123,7 +136,14 @@ try {
   $latestIpa = Join-Path $artifactRoot "Gymmin-ios-unsigned-latest.ipa"
   Copy-Item -LiteralPath $downloadedIpa.FullName -Destination $versionedIpa -Force
   Copy-Item -LiteralPath $downloadedIpa.FullName -Destination $latestIpa -Force
-  $hash = (Get-FileHash -LiteralPath $versionedIpa -Algorithm SHA256).Hash.ToLowerInvariant()
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  $stream = [System.IO.File]::OpenRead($versionedIpa)
+  try {
+    $hash = ([System.BitConverter]::ToString($sha256.ComputeHash($stream)) -replace "-", "").ToLowerInvariant()
+  } finally {
+    $stream.Dispose()
+    $sha256.Dispose()
+  }
   $runUrl = Invoke-GhRetry -Arguments @("run", "view", $runId, "--repo", $SourceRepo, "--json", "url", "--jq", ".url") -Capture
 } finally { Pop-Location }
 

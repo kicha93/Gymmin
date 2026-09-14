@@ -1,0 +1,69 @@
+workflows:
+  gymmin-ios-unsigned:
+    name: Gymmin iOS unsigned IPA
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+      vars:
+        EXPO_NO_TELEMETRY: "1"
+    scripts:
+      - name: Install dependencies
+        script: |
+          cd "$CM_BUILD_DIR/apps/mobile"
+          npm ci
+      - name: Generate native iOS project
+        script: |
+          cd "$CM_BUILD_DIR/apps/mobile"
+          npx expo prebuild --platform ios --clean --no-install
+      - name: Install CocoaPods
+        script: |
+          cd "$CM_BUILD_DIR/apps/mobile/ios"
+          pod install
+      - name: Build iOS without Apple signing
+        script: |
+          set -euo pipefail
+          cd "$CM_BUILD_DIR/apps/mobile"
+
+          workspace="$(find ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
+          test -n "$workspace"
+          scheme="$(basename "$workspace" .xcworkspace)"
+
+          xcodebuild \
+            -workspace "$workspace" \
+            -scheme "$scheme" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$CM_BUILD_DIR/build/ios-derived-data" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY='' \
+            DEVELOPMENT_TEAM='' \
+            clean build
+      - name: Package and verify unsigned IPA
+        script: |
+          set -euo pipefail
+          cd "$CM_BUILD_DIR/apps/mobile"
+
+          app="$(find "$CM_BUILD_DIR/build/ios-derived-data/Build/Products/Release-iphoneos" -maxdepth 1 -name '*.app' -print -quit)"
+          test -n "$app"
+          test ! -e "$app/embedded.mobileprovision"
+          test ! -d "$app/_CodeSignature"
+
+          version="$(node -p "require('./app.json').expo.version")"
+          build_number="$(node -p "require('./app.json').expo.ios.buildNumber")"
+          package_root="$CM_BUILD_DIR/build/ios-unsigned-package"
+          ipa="$CM_BUILD_DIR/build/Gymmin-${version}-build${build_number}-unsigned.ipa"
+
+          mkdir -p "$package_root/Payload"
+          cp -R "$app" "$package_root/Payload/"
+          cd "$package_root"
+          /usr/bin/zip -qry "$ipa" Payload
+          shasum -a 256 "$ipa" > "$ipa.sha256"
+    artifacts:
+      - build/Gymmin-*-unsigned.ipa
+      - build/Gymmin-*-unsigned.ipa.sha256
+      - /tmp/xcodebuild_logs/*.log

@@ -1,0 +1,85 @@
+name: Unsigned iOS IPA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-unsigned-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate the native iOS project
+        env:
+          EXPO_NO_TELEMETRY: "1"
+        run: npx expo prebuild --platform ios --clean --no-install
+      - name: Install CocoaPods
+        run: cd ios && pod install
+      - name: Build without Apple signing
+        shell: bash
+        run: |
+          set -euo pipefail
+          workspace="$(find ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
+          test -n "$workspace"
+          scheme="$(basename "$workspace" .xcworkspace)"
+          xcodebuild \
+            -workspace "$workspace" \
+            -scheme "$scheme" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/gymmin-derived-data" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY='' \
+            DEVELOPMENT_TEAM='' \
+            clean build
+      - name: Package and verify the unsigned IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$(find "$RUNNER_TEMP/gymmin-derived-data/Build/Products/Release-iphoneos" -maxdepth 1 -name '*.app' -print -quit)"
+          test -n "$app"
+          test ! -e "$app/embedded.mobileprovision"
+          test ! -d "$app/_CodeSignature"
+
+          version="$(node -p "require('./app.json').expo.version")"
+          build_number="$(node -p "require('./app.json').expo.ios.buildNumber")"
+          ipa="$RUNNER_TEMP/Gymmin-${version}-build${build_number}-unsigned.ipa"
+          package_root="$RUNNER_TEMP/gymmin-unsigned-package"
+          mkdir -p "$package_root/Payload"
+          cp -R "$app" "$package_root/Payload/"
+          cd "$package_root"
+          /usr/bin/zip -qry "$ipa" Payload
+          shasum -a 256 "$ipa" > "$ipa.sha256"
+
+          echo "IPA_PATH=$ipa" >> "$GITHUB_ENV"
+          echo "IPA_SHA_PATH=$ipa.sha256" >> "$GITHUB_ENV"
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: gymmin-ios-unsigned
+          path: |
+            ${{ env.IPA_PATH }}
+            ${{ env.IPA_SHA_PATH }}
+          if-no-files-found: error
+          retention-days: 14

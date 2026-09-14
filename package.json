@@ -16,6 +16,8 @@
     "mobile:github:apk:oneclick": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-github-apk-oneclick.ps1",
     "mobile:apk:publish-github": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-apk-github.ps1",
     "mobile:store:aab": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-store-android-aab.ps1",
+    "mobile:ios:personal": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-ios-unsigned-oneclick.ps1",
+    "mobile:ios:unsigned:oneclick": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-ios-unsigned-oneclick.ps1",
     "exercise:images:dry-run": "node scripts/generate-exercise-images-openai.mjs --dry-run",
     "exercise:images:generate": "node scripts/generate-exercise-images-openai.mjs",
     "exercise:media:optimize": "node scripts/optimize-exercise-media.mjs --write",

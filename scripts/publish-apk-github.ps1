@@ -14,23 +14,7 @@ $artifactsRoot = Join-Path $repoRoot ".artifacts"
 $downloadUrlFile = Join-Path $artifactsRoot "latest-apk-download-url.txt"
 $appConfig = Get-Content -LiteralPath (Join-Path $repoRoot "apps\mobile\app.json") -Raw | ConvertFrom-Json
 $appVersion = [string]$appConfig.expo.version
-if (-not $ReleaseTag) { $ReleaseTag = "v$appVersion" }
-if (-not $ReleaseTitle) { $ReleaseTitle = "Gymmin $appVersion" }
-$releaseNotes = @"
-## Gymmin $appVersion for Android
-
-Download Gymmin-arm64-v8a-release-latest.apk for the latest signed Android build, or the versioned APK for an immutable filename.
-
-If Chrome reaches 100% but does not finish an APK download, use Gymmin-arm64-v8a-release-latest.zip, extract it in the Files app, and open the APK inside.
-
-### Installation
-
-1. Download the APK directly on an Android phone.
-2. Allow installation from the browser or file manager when Android asks.
-3. Open the downloaded APK and install it.
-
-The APK is built from this public source repository, targets arm64-v8a devices, and is verified by the one-click release pipeline before upload.
-"@
+$versionCode = [int]$appConfig.expo.android.versionCode
 
 if (-not $ApkPath) {
   $ApkPath = Join-Path $artifactsRoot "Gymmin-arm64-v8a-release-latest.apk"
@@ -136,7 +120,25 @@ if (-not (Test-Path $ApkPath)) {
   throw "APK was not found: $ApkPath"
 }
 $resolvedApkPath = (Resolve-Path $ApkPath).Path
-$latestAliasPath = Join-Path $artifactsRoot "Gymmin-arm64-v8a-release-latest.apk"
+$apkSha256 = (Get-FileHash -LiteralPath $resolvedApkPath -Algorithm SHA256).Hash.ToLowerInvariant()
+$apkDigestSuffix = $apkSha256.Substring(0, 12)
+if (-not $ReleaseTag) { $ReleaseTag = "android-v$appVersion-vc$versionCode-$apkDigestSuffix" }
+if (-not $ReleaseTitle) { $ReleaseTitle = "Gymmin $appVersion for Android ($apkDigestSuffix)" }
+$releaseNotes = @"
+## Gymmin $appVersion for Android
+
+Download Gymmin-arm64-v8a-release.apk to install the verified, signed Android build directly.
+
+### Installation
+
+1. Download the APK directly on an Android phone.
+2. Allow installation from the browser when Android asks.
+3. Open the downloaded APK and install it.
+
+This release is immutable and identified by APK SHA-256 `$apkSha256`. The one-click pipeline never replaces this asset in place, so an in-progress download cannot be invalidated by a later publication.
+"@
+
+$latestAliasPath = Join-Path $artifactsRoot "Gymmin-arm64-v8a-release.apk"
 if (-not [string]::Equals(
   [System.IO.Path]::GetFullPath($resolvedApkPath),
   [System.IO.Path]::GetFullPath($latestAliasPath),
@@ -144,37 +146,27 @@ if (-not [string]::Equals(
 )) {
   Copy-Item -LiteralPath $resolvedApkPath -Destination $latestAliasPath -Force
 }
-$zipFallbackPath = Join-Path $artifactsRoot "Gymmin-arm64-v8a-release-latest.zip"
-if (Test-Path -LiteralPath $zipFallbackPath) {
-  Remove-Item -LiteralPath $zipFallbackPath -Force
-}
-Compress-Archive -LiteralPath $latestAliasPath -DestinationPath $zipFallbackPath -CompressionLevel Optimal
-$publishAssetPaths = @($resolvedApkPath, $latestAliasPath, $zipFallbackPath) | Select-Object -Unique
+$publishAssetPaths = @($resolvedApkPath, $latestAliasPath) | Select-Object -Unique
 
 $releaseCreated = $false
-$releaseUploaded = $false
 $releaseExists = Invoke-GitHubCliWithRetry -Arguments @("release", "view", $ReleaseTag, "--repo", $GitHubRepo) -MaxAttempts 3 -Silent
 
 if (-not $releaseExists) {
-  # A failed release lookup may mean either "not found" or a temporary API
-  # timeout. Updating first makes reruns idempotent and avoids a duplicate-tag
-  # failure for an existing release. Only then do we try to create a new tag.
-  Write-Step "Release lookup was inconclusive; trying an idempotent update of $ReleaseTag first..."
-  $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments (@("release", "upload", $ReleaseTag) + $publishAssetPaths + @("--repo", $GitHubRepo, "--clobber")) -MaxAttempts 2
-  if (-not $releaseUploaded) {
-    Write-Step "Creating GitHub release $ReleaseTag in $GitHubRepo..."
-    $releaseCreated = Invoke-GitHubCliWithRetry -Arguments (@("release", "create", $ReleaseTag) + $publishAssetPaths + @("--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", $releaseNotes))
+  Write-Step "Creating immutable GitHub release $ReleaseTag in $GitHubRepo..."
+  $releaseCreated = Invoke-GitHubCliWithRetry -Arguments (@("release", "create", $ReleaseTag) + $publishAssetPaths + @("--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", $releaseNotes, "--latest")) -MaxAttempts 2
+  if (-not $releaseCreated) {
+    # Creation may race with a retry that succeeded after its response was lost.
+    $releaseExists = Invoke-GitHubCliWithRetry -Arguments @("release", "view", $ReleaseTag, "--repo", $GitHubRepo) -MaxAttempts 3 -Silent
   }
 } else {
-  Write-Step "Uploading versioned APK and latest alias to existing GitHub release $ReleaseTag in $GitHubRepo..."
-  $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments (@("release", "upload", $ReleaseTag) + $publishAssetPaths + @("--repo", $GitHubRepo, "--clobber"))
+  Write-Step "Immutable GitHub release $ReleaseTag already exists; verifying it without replacing assets."
 }
 
-if (-not $releaseCreated -and -not $releaseUploaded) {
-  throw "Could not upload APK to GitHub release $ReleaseTag."
+if (-not $releaseCreated -and -not $releaseExists) {
+  throw "Could not create or verify immutable GitHub release $ReleaseTag."
 }
 
-if (-not (Invoke-GitHubCliWithRetry -Arguments @("release", "edit", $ReleaseTag, "--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", $releaseNotes))) {
+if (-not (Invoke-GitHubCliWithRetry -Arguments @("release", "edit", $ReleaseTag, "--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", $releaseNotes, "--latest"))) {
   throw "APK was uploaded, but the public release description could not be updated."
 }
 
@@ -195,6 +187,10 @@ foreach ($publishedPath in $publishAssetPaths) {
   if ([long]$publishedAsset.size -ne [long]$localAssetSize) {
     throw "Published APK size mismatch for ${assetName}: local=$localAssetSize remote=$($publishedAsset.size)"
   }
+  $localDigest = "sha256:$((Get-FileHash -LiteralPath $publishedPath -Algorithm SHA256).Hash.ToLowerInvariant())"
+  if ($publishedAsset.digest -and -not [string]::Equals([string]$publishedAsset.digest, $localDigest, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "Published APK digest mismatch for ${assetName}: local=$localDigest remote=$($publishedAsset.digest)"
+  }
 }
 
 Set-Content -LiteralPath $downloadUrlFile -Value $releaseUrl
@@ -205,6 +201,6 @@ Write-Output "APK_DOWNLOAD_URL=$releaseUrl"
 Write-Output "APK_DOWNLOAD_URL_FILE=$downloadUrlFile"
 Write-Output "APK_REMOTE_ASSET=$([System.IO.Path]::GetFileName($resolvedApkPath))"
 Write-Output "APK_REMOTE_LATEST_ASSET=$([System.IO.Path]::GetFileName($latestAliasPath))"
-Write-Output "APK_REMOTE_ZIP_FALLBACK=$([System.IO.Path]::GetFileName($zipFallbackPath))"
 Write-Output "APK_REMOTE_SIZE=$((Get-Item -LiteralPath $resolvedApkPath).Length)"
-Write-Output "APK_ZIP_REMOTE_SIZE=$((Get-Item -LiteralPath $zipFallbackPath).Length)"
+Write-Output "APK_SHA256=$apkSha256"
+Write-Output "APK_DIRECT_URL=https://github.com/$GitHubRepo/releases/latest/download/$([System.IO.Path]::GetFileName($latestAliasPath))"

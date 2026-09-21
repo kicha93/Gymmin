@@ -74,7 +74,6 @@ $applicationId = [string]$appConfig.expo.android.package
 if (-not $appVersion -or $versionCode -le 0 -or -not $applicationId) {
   throw "Expo version, Android versionCode, or package is invalid."
 }
-if (-not $ReleaseTag) { $ReleaseTag = "v$appVersion" }
 if (-not $ReleaseTitle) { $ReleaseTitle = "Gymmin $appVersion" }
 if (-not $CommitMessage) { $CommitMessage = "chore: publish Gymmin $appVersion build" }
 
@@ -178,6 +177,11 @@ if (-not $packageLine -or
 $apksigner = Get-AndroidBuildTool "apksigner.bat"
 & $apksigner verify --verbose --print-certs $versionedApkPath
 Assert-LastExitCode "APK signature validation"
+
+if (-not $ReleaseTag) {
+  $apkDigestSuffix = ((Get-FileHash -LiteralPath $versionedApkPath -Algorithm SHA256).Hash.ToLowerInvariant()).Substring(0, 12)
+  $ReleaseTag = "android-v$appVersion-vc$versionCode-$apkDigestSuffix"
+}
 
 if (-not $SkipGitSync) {
   Write-Step "Committing and pushing the verified source state..."

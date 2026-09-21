@@ -1,10 +1,8 @@
 # Gymmin
 
-[![Download Android APK](https://img.shields.io/badge/Android-Download%20latest%20APK-138A87?logo=android&logoColor=white)](https://github.com/kicha93/Gymmin/releases/latest)
+[![Download Android APK](https://img.shields.io/badge/Android-Download%20latest%20APK-138A87?logo=android&logoColor=white)](https://github.com/kicha93/Gymmin/releases/latest/download/Gymmin-arm64-v8a-release.apk)
 
-**[Download the latest signed Android APK](https://github.com/kicha93/Gymmin/releases/latest)** — open the release and choose `Gymmin-arm64-v8a-release-latest.apk`. Source code and installable packages are published together in this repository.
-
-If Chrome reaches 100% but never finishes the APK download, use the fallback [`Gymmin-arm64-v8a-release-latest.zip`](https://github.com/kicha93/Gymmin/releases/download/v1.0/Gymmin-arm64-v8a-release-latest.zip), extract it in Android's Files app, then open the APK inside.
+**[Download the latest signed Android APK directly](https://github.com/kicha93/Gymmin/releases/latest/download/Gymmin-arm64-v8a-release.apk).** Source code and installable packages are published together in this repository. Every APK release is immutable, so a later one-click publication cannot interrupt or replace an in-progress download.
 
 Gymmin is a local-only Expo/React Native workout app created and maintained by **Paweł Kaliszewski**.
 

@@ -25,6 +25,19 @@ function Write-Step {
   Write-Host "[github-apk] $Message"
 }
 
+function Get-FileSha256 {
+  param([Parameter(Mandatory = $true)][string]$Path)
+
+  $stream = [System.IO.File]::OpenRead($Path)
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    return (($sha256.ComputeHash($stream) | ForEach-Object { $_.ToString("x2") }) -join "")
+  } finally {
+    $sha256.Dispose()
+    $stream.Dispose()
+  }
+}
+
 function Get-GitHubCliPath {
   $command = Get-Command gh -ErrorAction SilentlyContinue
   if ($command) {
@@ -120,7 +133,7 @@ if (-not (Test-Path $ApkPath)) {
   throw "APK was not found: $ApkPath"
 }
 $resolvedApkPath = (Resolve-Path $ApkPath).Path
-$apkSha256 = (Get-FileHash -LiteralPath $resolvedApkPath -Algorithm SHA256).Hash.ToLowerInvariant()
+$apkSha256 = Get-FileSha256 -Path $resolvedApkPath
 $apkDigestSuffix = $apkSha256.Substring(0, 12)
 if (-not $ReleaseTag) { $ReleaseTag = "android-v$appVersion-vc$versionCode-$apkDigestSuffix" }
 if (-not $ReleaseTitle) { $ReleaseTitle = "Gymmin $appVersion for Android ($apkDigestSuffix)" }
@@ -187,7 +200,7 @@ foreach ($publishedPath in $publishAssetPaths) {
   if ([long]$publishedAsset.size -ne [long]$localAssetSize) {
     throw "Published APK size mismatch for ${assetName}: local=$localAssetSize remote=$($publishedAsset.size)"
   }
-  $localDigest = "sha256:$((Get-FileHash -LiteralPath $publishedPath -Algorithm SHA256).Hash.ToLowerInvariant())"
+  $localDigest = "sha256:$(Get-FileSha256 -Path $publishedPath)"
   if ($publishedAsset.digest -and -not [string]::Equals([string]$publishedAsset.digest, $localDigest, [System.StringComparison]::OrdinalIgnoreCase)) {
     throw "Published APK digest mismatch for ${assetName}: local=$localDigest remote=$($publishedAsset.digest)"
   }

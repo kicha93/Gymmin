@@ -22,6 +22,16 @@ $publishScript = Join-Path $PSScriptRoot "publish-apk-github.ps1"
 $manifestGuard = Join-Path $PSScriptRoot "validate-android-exported-components.mjs"
 
 function Write-Step([string]$Message) { Write-Host "[github-apk-oneclick] $Message" }
+function Get-FileSha256([string]$Path) {
+  $stream = [System.IO.File]::OpenRead($Path)
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    return (($sha256.ComputeHash($stream) | ForEach-Object { $_.ToString("x2") }) -join "")
+  } finally {
+    $sha256.Dispose()
+    $stream.Dispose()
+  }
+}
 function Assert-LastExitCode([string]$Step) {
   if ($LASTEXITCODE -ne 0) { throw "$Step failed with exit code $LASTEXITCODE." }
 }
@@ -179,7 +189,7 @@ $apksigner = Get-AndroidBuildTool "apksigner.bat"
 Assert-LastExitCode "APK signature validation"
 
 if (-not $ReleaseTag) {
-  $apkDigestSuffix = ((Get-FileHash -LiteralPath $versionedApkPath -Algorithm SHA256).Hash.ToLowerInvariant()).Substring(0, 12)
+  $apkDigestSuffix = (Get-FileSha256 -Path $versionedApkPath).Substring(0, 12)
   $ReleaseTag = "android-v$appVersion-vc$versionCode-$apkDigestSuffix"
 }
 

@@ -15,7 +15,7 @@ import {
 import { cloneCreatorDraft, type WorkoutCreatorDraft } from "./workoutCreator";
 
 export const AI_RESPONSE_MAX_LENGTH = 1_000_000;
-export const AI_WORKOUT_PROMPT_VERSION = 3;
+export const AI_WORKOUT_PROMPT_VERSION = 4;
 const MAX_WORKOUTS = 7;
 const MAX_STAGES_PER_WORKOUT = 12;
 const MAX_SERIES_PER_STAGE = 20;
@@ -121,7 +121,10 @@ export function buildAiWorkoutPrompt(options: PromptOptions) {
     "The final answer is machine input, not a research report.",
     "",
     "RESEARCH STANDARD",
-    "Research internally before programming. Prefer current position stands and guidance from recognized professional or public-health bodies, systematic reviews, meta-analyses and peer-reviewed consensus statements. Reconcile conflicting findings conservatively.",
+    "Before selecting exercises, use Deep Research to search evidence available through today. Do not rely only on memorized training conventions.",
+    "Prioritize recent systematic reviews, meta-analyses, umbrella reviews, peer-reviewed consensus statements and current position stands from recognized professional or public-health bodies. Use individual trials only when higher-level evidence does not answer the profile-specific question.",
+    "Check whether the evidence applies to this person's goal, sex, age, training status, equipment, health constraints and realistic adherence. Reconcile conflicting findings conservatively and do not treat weak or indirect evidence as certainty.",
+    "Translate the evidence into the smallest effective program. Research must inform frequency, volume, intensity/repetition targets, proximity to failure, rest, exercise selection and progression—not add complexity for its own sake.",
     "Do not include citations, a bibliography, research notes or your reasoning in the final answer because Gymmin can import only JSON.",
     "",
     "SUCCESS CRITERIA",
@@ -136,15 +139,16 @@ export function buildAiWorkoutPrompt(options: PromptOptions) {
     "- Make exercise and workout notes concise and actionable. Where useful, describe RIR, technique constraints and a simple progression rule in notes.",
     "",
     "WEEKLY EXERCISE DIVERSITY AND STABILITY",
+    "- Apply systematic variation, not random novelty: this output is one stable weekly rotation to repeat for a training block. Vary exercises between days inside that week, not from week to week.",
     "- Design all workouts together as one coordinated week. Stable movement patterns and progression do not require copying the same exercise menu into every session.",
-    "- By default, use an exact exerciseId in the main exercise stages only once per week. Choose another suitable exerciseId for the same movement pattern or target muscle on another day.",
-    "- An exact main compound exercise may appear in at most two workouts only when repetition has a clear programming reason: strength-specific practice, beginner technique learning, explicitly preferred exercise, or genuinely limited equipment. Do not repeat it merely for convenience.",
+    "- HARD RULE: for muscleGain, recomposition, fatLoss, conditioning and health goals, every exact exerciseId in type=exercise stages must occur in exactly one workout only. If the same muscle or movement is trained again, select a different suitable exerciseId, angle or implement from CATALOG.",
+    "- STRENGTH-ONLY EXCEPTION: one goal-defining main compound exerciseId may appear in at most two workouts for specific practice. Use this exception only when primaryGoal=strength, and state the brief programming reason in workout.notes. All other exerciseIds remain unique across workouts.",
     "- Do not repeat an exact isolation or accessory exercise across workouts. Vary the accessory selection, angle or implement while preserving the intended weekly muscle coverage.",
     "- Give every workout a distinct emphasis, exercise order and accessory pool. Do not return several workouts that differ only in repetitions, set count or names.",
     "- Repeating a short general warm-up is allowed and does not count as monotony. Exercise-specific warm-up sets may use the upcoming main exercise.",
     "- Do not chase novelty by selecting obscure, advanced, rehabilitation or sport-specific variants without a profile-based reason. Prefer main exercises first and use variation-tier exercises intentionally.",
     "- likedExercises expresses preference, not permission to place the same exercise in every workout. dislikedExercises remains a constraint.",
-    "- Before producing JSON, privately build an exerciseId-by-workout occurrence table and replace every unjustified cross-workout duplicate.",
+    "- Before producing JSON, privately build an exerciseId-by-workout occurrence table. For every type=exercise exerciseId, count distinct workouts. Replace every count above 1 unless it is the single permitted strength-only exception. Recheck the table after replacements.",
     "",
     "SAFETY AND UNCERTAINTY",
     "- Treat doctorLimitations as binding. Never diagnose, contradict medical advice or claim that training treats a disease or injury.",

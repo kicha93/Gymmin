@@ -279,9 +279,11 @@ export function SelectControl<TValue extends string>({
   value
 }: SelectControlProps<TValue>) {
   const selectedOption = options.find((option) => option.value === value);
+  const selectionKey = `${value}:${selectedOption?.label ?? ""}`;
 
   return (
     <Select
+      key={selectionKey}
       isDisabled={disabled}
       selectedLabel={selectedOption?.label}
       selectedValue={value}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   auditAiWorkoutPlan,
+  formatAiWorkoutPlanQualityIssue,
   isBlockingAiWorkoutPlanQualityIssue
 } from "../aiWorkoutPlanQuality";
 import { exerciseCatalogDataSource } from "../exerciseCatalogDataSource";
@@ -66,7 +67,7 @@ describe("AI workout plan quality audit", () => {
     }).map((issue) => issue.code)).toContain("duplicate");
   });
 
-  it("reports an exact accessory repeated across weekly workouts as a non-blocking warning", () => {
+  it("blocks an exact accessory repeated across weekly workouts", () => {
     const issue = auditAiWorkoutPlan([
       workout([accessory.id], "Plan A"),
       workout([accessory.id], "Plan B")
@@ -78,10 +79,21 @@ describe("AI workout plan quality audit", () => {
     }).find((candidate) => candidate.code === "weeklyDuplicate");
 
     expect(issue).toBeDefined();
-    expect(isBlockingAiWorkoutPlanQualityIssue(issue!)).toBe(false);
+    expect(isBlockingAiWorkoutPlanQualityIssue(issue!)).toBe(true);
   });
 
-  it("allows one strength anchor in two workouts but warns when it appears in three", () => {
+  it("formats weekly workout names without leaking collection implementation details", () => {
+    const message = formatAiWorkoutPlanQualityIssue({
+      code: "weeklyDuplicate",
+      exerciseName: "Cable Pull-through",
+      workoutNames: new Set(["Dzień 1", "Dzień 3"]) as unknown as string[]
+    }, "pl");
+
+    expect(message).toContain("(Dzień 1, Dzień 3)");
+    expect(message).not.toContain("[object Set]");
+  });
+
+  it("allows one strength anchor in two workouts but blocks it when it appears in three", () => {
     const draft = {
       gymAccess: "yes",
       primaryGoal: "strength",
@@ -96,7 +108,9 @@ describe("AI workout plan quality audit", () => {
       workout([strengthAnchor.id], "Plan A"),
       workout([strengthAnchor.id], "Plan B"),
       workout([strengthAnchor.id], "Plan C")
-    ], draft).map((issue) => issue.code)).toContain("weeklyDuplicate");
+    ], draft).find((issue) => issue.code === "weeklyDuplicate")).toSatisfy((issue) =>
+      issue !== undefined && isBlockingAiWorkoutPlanQualityIssue(issue)
+    );
   });
 
   it("does not treat a repeated warm-up exercise as weekly monotony", () => {

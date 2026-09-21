@@ -121,22 +121,36 @@ export function auditAiWorkoutPlan(workouts: SavedWorkout[], draft: WorkoutCreat
 }
 
 export function isBlockingAiWorkoutPlanQualityIssue(issue: AiWorkoutPlanQualityIssue) {
-  return issue.code !== "weeklyDuplicate" && issue.code !== "categoryConcentration";
+  return issue.code !== "categoryConcentration";
+}
+
+function formatIssueList(value: unknown): string {
+  function collect(item: unknown): string[] {
+    if (typeof item === "string") return item.trim() ? [item.trim()] : [];
+    if (Array.isArray(item)) return item.flatMap(collect);
+    if (item instanceof Set) return [...item].flatMap(collect);
+    return [];
+  }
+
+  return [...new Set(collect(value))].join(", ");
 }
 
 export function formatAiWorkoutPlanQualityIssue(issue: AiWorkoutPlanQualityIssue, language: "pl" | "en") {
+  const workoutNames = "workoutNames" in issue ? formatIssueList(issue.workoutNames) : "";
+  const workoutNamesSuffix = workoutNames ? ` (${workoutNames})` : "";
+
   if (language === "pl") {
     if (issue.code === "workoutCount") return `Plan ma ${issue.actual} treningów zamiast wymaganych ${issue.expected}.`;
     if (issue.code === "duration") return `Trening „${issue.workoutName}” prawdopodobnie przekracza zadany czas sesji.`;
     if (issue.code === "equipment") return `Ćwiczenie „${issue.exerciseName}” w treningu „${issue.workoutName}” wymaga niezadeklarowanego sprzętu.`;
-    if (issue.code === "weeklyDuplicate") return `Ćwiczenie „${issue.exerciseName}” powtarza się w kilku treningach tygodnia (${issue.workoutNames.join(", ")}). Możesz zapisać plan, ale warto rozważyć inny wariant w jednym z dni.`;
-    if (issue.code === "categoryConcentration") return `Plan mocno koncentruje się na jednej grupie podobnych ruchów (${issue.exerciseNames.slice(0, 4).join(", ")}) w treningach: ${issue.workoutNames.join(", ")}.`;
+    if (issue.code === "weeklyDuplicate") return `Ćwiczenie „${issue.exerciseName}” powtarza się w kilku treningach tygodnia${workoutNamesSuffix}. Zastąp je innym odpowiednim wariantem w jednym z dni.`;
+    if (issue.code === "categoryConcentration") return `Plan mocno koncentruje się na jednej grupie podobnych ruchów (${issue.exerciseNames.slice(0, 4).join(", ")})${workoutNames ? ` w treningach: ${workoutNames}` : ""}.`;
     return `Ćwiczenie „${issue.exerciseName}” powtarza się w części głównej treningu „${issue.workoutName}”.`;
   }
   if (issue.code === "workoutCount") return `The plan has ${issue.actual} workouts instead of the requested ${issue.expected}.`;
   if (issue.code === "duration") return `Workout “${issue.workoutName}” is likely to exceed the requested session duration.`;
   if (issue.code === "equipment") return `Exercise “${issue.exerciseName}” in “${issue.workoutName}” requires equipment that was not declared.`;
-  if (issue.code === "weeklyDuplicate") return `Exercise “${issue.exerciseName}” appears in multiple weekly workouts (${issue.workoutNames.join(", ")}). You can save the plan, but consider a different variation on one day.`;
-  if (issue.code === "categoryConcentration") return `The plan is heavily concentrated on one group of similar movements (${issue.exerciseNames.slice(0, 4).join(", ")}) across: ${issue.workoutNames.join(", ")}.`;
+  if (issue.code === "weeklyDuplicate") return `Exercise “${issue.exerciseName}” appears in multiple weekly workouts${workoutNamesSuffix}. Replace it with another suitable variation on one of the days.`;
+  if (issue.code === "categoryConcentration") return `The plan is heavily concentrated on one group of similar movements (${issue.exerciseNames.slice(0, 4).join(", ")})${workoutNames ? ` across: ${workoutNames}` : ""}.`;
   return `Exercise “${issue.exerciseName}” is duplicated in the main part of “${issue.workoutName}”.`;
 }

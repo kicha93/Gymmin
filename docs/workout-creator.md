@@ -51,16 +51,17 @@ Draft formularza, etap, nazwa profilu, prompt oraz wklejona odpowiedź są autom
 
 ## Prompt
 
-`buildAiWorkoutPrompt` generuje wersjonowany Prompt V3 zoptymalizowany dla Deep Research i dołącza:
+`buildAiWorkoutPrompt` generuje wersjonowany Prompt V4 zoptymalizowany dla Deep Research i dołącza:
 
 - język tekstów użytkowych PL albo EN;
 - odpowiedzi formularza jako JSON;
 - rzeczywisty JSON Schema z limitami odpowiedzi;
 - zakaz tworzenia własnych `exerciseId`;
+- jawny protokół researchu: wyszukanie źródeł dostępnych w dniu wykonania, pierwszeństwo aktualnych przeglądów systematycznych, metaanaliz, umbrella reviews, konsensusów i position stands oraz sprawdzenie dopasowania populacji do profilu;
 - kryteria skutecznego, realistycznego planu i prywatną autoweryfikację;
 - zasady bezpieczeństwa dla bólu, urazów, chorób, leków i zaleceń lekarza;
 - politykę brakujących i sprzecznych danych oraz zakaz zgadywania ciężaru;
-- politykę kontrolowanej różnorodności całego tygodnia: stabilne wzorce ruchowe bez kopiowania identycznego zestawu ćwiczeń pomiędzy dniami, niepowtarzane akcesoria oraz ograniczone do dwóch dni powtórzenie ćwiczenia bazowego wyłącznie przy uzasadnieniu siłowym, technicznym, sprzętowym lub wynikającym z preferencji;
+- politykę kontrolowanej różnorodności całego tygodnia: stabilna rotacja na cały blok, lecz bez powtarzania tego samego `exerciseId` między dniami; jedyny wyjątek pozwala powtórzyć jeden główny bój w maksymalnie dwóch dniach przy celu stricte siłowym i wymaga uzasadnienia w notatce treningu;
 - oznaczenie formularza jako niezaufanych danych, a nie instrukcji;
 - zakaz samodzielnych elementów odpoczynku;
 - katalog wszystkich canonical exercises w formacie `id|English name|Polish name|category|library tier|required equipment|primary muscles`.
@@ -94,7 +95,7 @@ Parser przyjmuje czysty JSON, JSON w bloku Markdown oraz pojedynczy możliwy do 
 
 Rozwiązywane jest canonical ID, w tym historyczny alias, ale wynik musi należeć do aktywnego katalogu przekazanego w promptcie. Dopasowanie wyłącznie po nazwie nie omija kontraktu ID. Nierozpoznane ćwiczenie blokuje zapis i otrzymuje maksymalnie pięć propozycji z katalogu. Po ręcznym zastąpieniu wszystkich nieznanych pozycji i usunięciu błędów można zapisać wynik.
 
-Przed zapisem działa dodatkowy lokalny audyt jakości: liczba treningów musi odpowiadać deklarowanej liczbie dni, szacowany czas nie może rażąco przekraczać limitu, ćwiczenie nie może wymagać niezadeklarowanego sprzętu ani powtarzać się w części głównej tego samego treningu. Te błędy blokują zapis. Audyt analizuje również cały tydzień i pokazuje nieblokujące ostrzeżenia o identycznym ćwiczeniu użytym w zbyt wielu treningach oraz o nadmiernej koncentracji na jednej rodzinie podobnych ruchów. Dla celu siłowego jedno bazowe ćwiczenie może wystąpić w dwóch treningach bez ostrzeżenia; rozgrzewka nie jest liczona jako monotonia.
+Przed zapisem działa dodatkowy lokalny audyt jakości: liczba treningów musi odpowiadać deklarowanej liczbie dni, szacowany czas nie może rażąco przekraczać limitu, ćwiczenie nie może wymagać niezadeklarowanego sprzętu ani powtarzać się w części głównej tego samego treningu. Te błędy blokują zapis. Identyczne ćwiczenie użyte w częściach głównych kilku treningów również blokuje zapis, więc zignorowanie promptu przez model nie pozwala zapisać monotonnej rotacji. Dla celu siłowego jedno ćwiczenie bazowe może wystąpić w dwóch treningach; rozgrzewka nie jest liczona jako monotonia. Nadmierna koncentracja na jednej rodzinie podobnych ruchów pozostaje nieblokującym ostrzeżeniem.
 
 Podgląd przed zapisem pokazuje etapy, liczbę serii, ćwiczenia, cele, odpoczynek, obciążenie i uwagi. Zapis tworzy nowe lokalne definicje treningów. Prompt i odpowiedź istnieją tylko jako odzyskiwalna, lokalna sesja robocza i są usuwane po zapisie; nie tworzą historii AI i nie zmieniają istniejących treningów.
 

@@ -21,6 +21,8 @@ $releaseNotes = @"
 
 Download Gymmin-arm64-v8a-release-latest.apk for the latest signed Android build, or the versioned APK for an immutable filename.
 
+If Chrome reaches 100% but does not finish an APK download, use Gymmin-arm64-v8a-release-latest.zip, extract it in the Files app, and open the APK inside.
+
 ### Installation
 
 1. Download the APK directly on an Android phone.
@@ -142,7 +144,12 @@ if (-not [string]::Equals(
 )) {
   Copy-Item -LiteralPath $resolvedApkPath -Destination $latestAliasPath -Force
 }
-$publishAssetPaths = @($resolvedApkPath, $latestAliasPath) | Select-Object -Unique
+$zipFallbackPath = Join-Path $artifactsRoot "Gymmin-arm64-v8a-release-latest.zip"
+if (Test-Path -LiteralPath $zipFallbackPath) {
+  Remove-Item -LiteralPath $zipFallbackPath -Force
+}
+Compress-Archive -LiteralPath $latestAliasPath -DestinationPath $zipFallbackPath -CompressionLevel Optimal
+$publishAssetPaths = @($resolvedApkPath, $latestAliasPath, $zipFallbackPath) | Select-Object -Unique
 
 $releaseCreated = $false
 $releaseUploaded = $false
@@ -177,10 +184,10 @@ if (-not $releaseJson) {
 }
 $releaseMetadata = $releaseJson | ConvertFrom-Json
 $releaseUrl = ([string]$releaseMetadata.url).Trim()
-$localAssetSize = (Get-Item -LiteralPath $resolvedApkPath).Length
 if (-not $releaseUrl) { throw "GitHub release verification returned no release URL." }
 foreach ($publishedPath in $publishAssetPaths) {
   $assetName = [System.IO.Path]::GetFileName($publishedPath)
+  $localAssetSize = (Get-Item -LiteralPath $publishedPath).Length
   $publishedAsset = $releaseMetadata.assets | Where-Object { $_.name -eq $assetName } | Select-Object -First 1
   if (-not $publishedAsset) {
     throw "GitHub release verification did not find the uploaded asset: $assetName"
@@ -198,4 +205,6 @@ Write-Output "APK_DOWNLOAD_URL=$releaseUrl"
 Write-Output "APK_DOWNLOAD_URL_FILE=$downloadUrlFile"
 Write-Output "APK_REMOTE_ASSET=$([System.IO.Path]::GetFileName($resolvedApkPath))"
 Write-Output "APK_REMOTE_LATEST_ASSET=$([System.IO.Path]::GetFileName($latestAliasPath))"
-Write-Output "APK_REMOTE_SIZE=$localAssetSize"
+Write-Output "APK_REMOTE_ZIP_FALLBACK=$([System.IO.Path]::GetFileName($zipFallbackPath))"
+Write-Output "APK_REMOTE_SIZE=$((Get-Item -LiteralPath $resolvedApkPath).Length)"
+Write-Output "APK_ZIP_REMOTE_SIZE=$((Get-Item -LiteralPath $zipFallbackPath).Length)"

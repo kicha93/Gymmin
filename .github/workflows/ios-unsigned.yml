@@ -28,6 +28,20 @@ jobs:
           cache-dependency-path: apps/mobile/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Validate source and mobile runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ../..
+          npm run docs:validate
+          npm run security:dependencies
+          cd apps/mobile
+          npx --no-install expo install --check
+          npx --no-install expo-doctor
+          npm test
+          npm run typecheck
+          cd ../..
+          git diff --check
       - name: Generate the native iOS project
         env:
           EXPO_NO_TELEMETRY: "1"

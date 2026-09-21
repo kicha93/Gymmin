@@ -24,7 +24,7 @@ With Gymmin you can:
 • review estimated weekly muscle volume on an interactive anatomy view,
 • schedule local reminders,
 • export workouts and create local backups,
-• prepare plans with an external AI of your choice using a safe copy-and-paste workflow.
+• prepare plans through a manual copy-and-paste workflow with a prompt optimized for ChatGPT Deep Research.
 
 Private by design
 
@@ -32,7 +32,7 @@ Gymmin requires no registration and does not synchronize data with a server. Wor
 
 AI under your control
 
-The app sends no requests to OpenAI or any other model. Gymmin prepares a prompt locally, while you choose the external service and decide what to share with it.
+The app sends no requests to OpenAI or any other model. Gymmin prepares the prompt locally; you manually start ChatGPT Deep Research and decide whether to share the prompt there.
 
 Safe data backups
 

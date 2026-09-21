@@ -1,6 +1,6 @@
 # Google Play Console declarations — Gymmin 1.0
 
-This is a preparation sheet, not a substitute for reading the exact wording shown by Play Console. Answers must be rechecked whenever the product or dependencies change.
+Status basis: 2026-09-21. This records the submitted local-only basis, but is not a substitute for reading the exact wording shown by Play Console. Answers must be rechecked whenever the product or dependencies change.
 
 ## App setup
 
@@ -11,7 +11,7 @@ This is a preparation sheet, not a substitute for reading the exact wording show
 - App access: **All functionality is available without special access, an account, or login credentials**
 - Ads: **No, the app does not contain ads**
 
-## Data safety draft
+## Data safety basis
 
 Current architecture facts:
 

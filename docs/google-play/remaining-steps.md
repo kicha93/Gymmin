@@ -1,6 +1,6 @@
 # Google Play — pozostałe kroki
 
-Stan techniczny aplikacji i materiały sklepu są przygotowane. Ta lista obejmuje czynności, których nie da się wiarygodnie zakończyć wyłącznie w repozytorium.
+Status: 2026-09-21. Stan techniczny aplikacji i materiały sklepu są przygotowane. Ta lista obejmuje czynności, których nie da się wiarygodnie zakończyć wyłącznie w repozytorium. Status dotyczy bieżącego źródła; wcześniejsze wdrożenie `1.0` na tor wewnętrzny nie zastępuje świeżego AAB po kolejnych zmianach.
 
 ## 1. Dostęp do produkcji i test zamknięty
 
@@ -23,14 +23,15 @@ Zweryfikowane adresy:
 - usunięcie danych PL: `https://kicha93.github.io/gymmin-privacy/delete-data/`
 - usunięcie danych EN: `https://kicha93.github.io/gymmin-privacy/en/delete-data/`
 
-Główne repozytorium pozostaje prywatne. Publiczne repozytorium Pages zawiera tylko dokumenty przeznaczone do publikacji.
+Główne repozytorium `kicha93/Gymmin` jest publiczne. Osobne repozytorium Pages nadal utrzymuje stabilne adresy polityki niezależnie od workflow aplikacji.
 
 ## 3. Karta aplikacji
 
 - [x] Wklejono polski opis z `docs/google-play/listing-pl.md` i zapisano wersję roboczą.
 - [x] Wklejono angielski opis z `docs/google-play/listing-en.md` i zapisano wersję roboczą.
-- [ ] Dodaj ikonę `docs/google-play/assets/app-icon-512.png`.
-- [ ] Dodaj grafikę wyróżniającą `docs/google-play/assets/feature-graphic-1024x500.png`.
+- [x] Przygotowano ikonę `docs/google-play/assets/app-icon-512.png` w repozytorium.
+- [x] Przygotowano grafikę wyróżniającą `docs/google-play/assets/feature-graphic-1024x500.png` w repozytorium.
+- [ ] Potwierdź w Play Console, że bieżące wersje ikony i grafiki są przesłane.
 - [ ] Wykonaj i dodaj zrzuty ekranu zgodnie z `docs/google-play/screenshot-plan.md`.
 - [ ] Sprawdź podgląd karty aplikacji na telefonie przed wysłaniem do weryfikacji.
 
@@ -49,28 +50,20 @@ Wypełnij je zgodnie z faktycznym zachowaniem wersji local-only i wskazówkami w
 ## 5. Wersja i artefakt
 
 - [ ] Przed wysłaniem sprawdź najwyższy `versionCode`, jaki kiedykolwiek trafił do Play Console; nowy AAB musi mieć wartość większą.
-- [x] Uruchomiono pełne release gates oraz walidację Google Play dla bieżącego kandydata.
-- [x] Zbudowano świeży, podpisany AAB skryptem produkcyjnym.
-- [ ] Prześlij AAB najpierw do testu wewnętrznego albo zamkniętego.
+- [x] Uruchomiono pełne release gates oraz walidację Google Play dla historycznego kandydata 1.0 / versionCode 2.
+- [x] Zbudowano podpisany AAB historycznego kandydata 1.0 / versionCode 2.
+- [x] Wersja 1.0 / versionCode 2 została wcześniej udostępniona w teście wewnętrznym.
+- [ ] Po następnych zmianach zbuduj i prześlij świeży AAB z wyższym `versionCode`.
 - [ ] Wykonaj końcowy smoke test wersji pobranej przez Google Play.
 - [ ] Dopiero potem utwórz wdrożenie produkcyjne.
 
-Ostatni lokalnie zweryfikowany kandydat miał:
-
-- package: `com.gymmin.app`,
-- versionName: `1.0`,
-- versionCode: `2`,
-- AAB: `.artifacts/Gymmin-release-latest.aab`,
-- rozmiar: `43 846 492 B` (`41,82 MiB`),
-- SHA-256: `D06DF82AA54A273EEAD431B85D89BAD17B5060D75311AF50A5ED1B1163966C68`.
-
-Plik w `.artifacts` jest lokalnym artefaktem roboczym i nie jest częścią repozytorium.
+Historyczny kandydat 1.0 / versionCode 2 i zasady tworzenia kolejnego rekordu są opisane w [rejestrze kandydatów](../releases/README.md). Plik w `.artifacts` jest lokalnym artefaktem roboczym i nie jest częścią repozytorium.
 
 ## 6. Kontrole przed publikacją
 
 - [ ] Przejdź pozostałe scenariusze manualne z `docs/release-checklist.md` i zapisuj wyłącznie rzeczywiste wyniki z fizycznego urządzenia.
 - [ ] Potwierdź działanie backupu i odtworzenia po restarcie.
-- [ ] Potwierdź tworzenie i modyfikowanie treningu przez copy/paste z zewnętrznym AI.
+- [ ] Potwierdź tworzenie nowego treningu przez ręczny copy/paste z ChatGPT Deep Research. Gymmin nie uruchamia narzędzia ani API automatycznie. Modyfikowanie zapisanego treningu przez AI nie jest funkcją produktu.
 - [ ] Potwierdź przypomnienia po restarcie telefonu.
 - [ ] Potwierdź raport błędu przez klienta pocztowego i jego fallback kopiowania.
 - [ ] Potwierdź pełne usunięcie danych lokalnych i stan fresh install po restarcie.
@@ -83,4 +76,4 @@ Plik w `.artifacts` jest lokalnym artefaktem roboczym i nie jest częścią repo
 - [x] Statyczne dokumenty polityki prywatności PL/EN opublikowane z publicznego repozytorium `kicha93/gymmin-privacy`.
 - [x] Materiały i teksty karty Google Play PL/EN.
 - [x] Walidator materiałów i podstawowych parametrów wydania: `npm run google-play:validate`.
-- [x] Podpisany AAB oraz automatyczne gates przeszły lokalnie dla bieżącego kandydata.
+- [x] Podpisany AAB oraz automatyczne gates przeszły lokalnie dla historycznego kandydata opisanego wyżej.

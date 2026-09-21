@@ -190,11 +190,17 @@ if (-not $SkipGitSync) {
     git rev-parse --abbrev-ref --symbolic-full-name "@{upstream}" | Out-Null
     Assert-LastExitCode "Git upstream validation"
 
-    $pendingChanges = git status --porcelain --untracked-files=all
+    $pendingChanges = git status --porcelain --untracked-files=no
     Assert-LastExitCode "Git status"
-    if ($pendingChanges) {
-      git add --all
-      Assert-LastExitCode "Git staging"
+    $stagedChanges = git diff --cached --name-only
+    Assert-LastExitCode "Staged Git status"
+    if ($pendingChanges -or $stagedChanges) {
+      # Only stage modifications and deletions of already tracked files.
+      # New files must be reviewed and staged explicitly before one-click runs;
+      # this prevents unrelated local exports, credentials, or downloaded assets
+      # from being published merely because they exist in the repository folder.
+      git add --update
+      Assert-LastExitCode "Tracked Git staging"
       git diff --cached --quiet
       if ($LASTEXITCODE -eq 1) {
         git commit -m $CommitMessage
@@ -204,6 +210,11 @@ if (-not $SkipGitSync) {
       }
     } else {
       Write-Step "No source changes require a new commit."
+    }
+
+    $untrackedChanges = git status --porcelain --untracked-files=all | Where-Object { $_ -like "??*" }
+    if ($untrackedChanges) {
+      Write-Step "Untracked files were intentionally left out of the automatic commit."
     }
 
     Invoke-GitNetworkCommandWithRetry -Operation push -Remote $gitRemote

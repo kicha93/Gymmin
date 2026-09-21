@@ -12,6 +12,7 @@ export function useLocalCreatorProfiles(
   const [creatorProfiles, setCreatorProfiles] = useState<WorkoutCreatorProfile[]>([]);
   const [selectedCreatorProfileId, setSelectedCreatorProfileId] = useState<string | null>(null);
   const [hasLoadedLocalCreatorProfiles, setHasLoadedLocalCreatorProfiles] = useState(false);
+  const [creatorProfilesStorageError, setCreatorProfilesStorageError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -34,6 +35,7 @@ export function useLocalCreatorProfiles(
       setCreatorProfiles(storedData.profiles);
       setSelectedCreatorProfileId(selectedProfileId);
       setHasLoadedLocalCreatorProfiles(true);
+      setCreatorProfilesStorageError(false);
     }
 
     void loadProfiles();
@@ -50,7 +52,8 @@ export function useLocalCreatorProfiles(
     saveLocalCreatorProfiles(
       creatorProfiles,
       selectedCreatorProfileId
-    ).catch((error) => {
+    ).then(() => setCreatorProfilesStorageError(false)).catch((error) => {
+      setCreatorProfilesStorageError(true);
       console.error("Failed to save local creator profiles", error);
     });
   }, [
@@ -61,6 +64,7 @@ export function useLocalCreatorProfiles(
 
   return {
     creatorProfiles,
+    creatorProfilesStorageError,
     hasLoadedLocalCreatorProfiles,
     selectedCreatorProfileId,
     setCreatorProfiles,

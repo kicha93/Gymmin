@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   areCreatorDraftsEqual,
   cloneCreatorDraft,
+  validateWorkoutCreatorDraft,
   normalizeWorkoutCreatorProfiles,
   workoutCreatorSections,
   type WorkoutCreatorDraft
@@ -19,7 +20,33 @@ describe("workout creator domain", () => {
     (clone.secondaryGoals as string[]).push("Mobilność");
 
     expect(source.secondaryGoals).toEqual(["Siła", "Kondycja"]);
-    expect(clone.primaryGoal).toBe(source.primaryGoal);
+    expect(clone.primaryGoal).toBe("muscleGain");
+  });
+
+  it("migrates localized option labels to stable values", () => {
+    expect(cloneCreatorDraft({ primaryGoal: "Budowa masy mięśniowej", gymAccess: "Yes" })).toEqual({
+      primaryGoal: "muscleGain",
+      gymAccess: "yes"
+    });
+  });
+
+  it("requires planning essentials and validates realistic numeric ranges", () => {
+    expect(validateWorkoutCreatorDraft({})).toEqual(expect.arrayContaining([
+      { fieldId: "primaryGoal", messageKey: "required" },
+      { fieldId: "trainingDaysPerWeek", messageKey: "required" },
+      { fieldId: "sessionDuration", messageKey: "required" },
+      { fieldId: "availableEquipment", messageKey: "required" }
+    ]));
+    expect(validateWorkoutCreatorDraft({
+      availableEquipment: ["bodyweight"],
+      primaryGoal: "strength",
+      sessionDuration: "60",
+      sleepQuality: "11",
+      trainingDaysPerWeek: "8"
+    })).toEqual(expect.arrayContaining([
+      { fieldId: "sleepQuality", messageKey: "range" },
+      { fieldId: "trainingDaysPerWeek", messageKey: "range" }
+    ]));
   });
 
   it("removes the retired ready warm-up answer from drafts and persisted profiles", () => {

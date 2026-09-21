@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { Pressable, Text, View } from "react-native";
+import { useState } from "react";
 
 import { AppButton, AppTextarea } from "./AppControls";
 import type { AiWorkoutImportResult } from "../domain/aiCopyPaste";
@@ -13,6 +14,8 @@ type Props = {
   canApply: boolean;
   language: LanguageCode;
   onApply: () => void;
+  onClearResponse: () => void;
+  onEditForm: () => void;
   onParse: () => void;
   onReplaceExercise: (stepId: string, exerciseId: string) => void;
   onResponseChange: (value: string) => void;
@@ -27,6 +30,8 @@ export function AiCopyPasteFlow({
   canApply,
   language,
   onApply,
+  onClearResponse,
+  onEditForm,
   onParse,
   onReplaceExercise,
   onResponseChange,
@@ -36,20 +41,26 @@ export function AiCopyPasteFlow({
   t,
   theme
 }: Props) {
+  const [clipboardMessage, setClipboardMessage] = useState("");
+  const [showPrompt, setShowPrompt] = useState(false);
   async function copyPrompt() {
     try {
       await copyAiPrompt(Clipboard, prompt);
+      setClipboardMessage(t("aiLocalPromptCopied"));
     } catch {
-      // The prompt stays selectable so it can still be copied manually.
+      setClipboardMessage(t("aiLocalClipboardError"));
     }
   }
 
   async function pasteResponse() {
     try {
       const value = await pasteAiResponse(Clipboard);
-      if (value) onResponseChange(value);
+      if (value) {
+        onResponseChange(value);
+        setClipboardMessage(t("aiLocalResponsePasted"));
+      }
     } catch {
-      // Manual paste remains available when the native clipboard is unavailable.
+      setClipboardMessage(t("aiLocalClipboardError"));
     }
   }
 
@@ -58,10 +69,17 @@ export function AiCopyPasteFlow({
       <FlowStep number="1" title={t("aiLocalPreparePrompt")} theme={theme}>
         <Text style={[styles.creatorDescription, { color: theme.muted }]}>{t("aiLocalNoUpload")}</Text>
         <Text style={[styles.workoutMeta, { color: theme.muted }]}>{t("aiLocalPrivacyWarning")}</Text>
-        <AppTextarea editable={false} style={styles.creatorTextarea} theme={theme} value={prompt} />
         <AppButton icon="copy-outline" theme={theme} onPress={() => { void copyPrompt(); }}>
           {t("aiLocalCopyPrompt")}
         </AppButton>
+        <AppButton icon={showPrompt ? "eye-off-outline" : "eye-outline"} theme={theme} variant="outline" onPress={() => setShowPrompt((current) => !current)}>
+          {showPrompt ? t("aiLocalHidePrompt") : t("aiLocalShowPrompt")}
+        </AppButton>
+        {showPrompt ? <AppTextarea editable={false} style={styles.creatorTextarea} theme={theme} value={prompt} /> : null}
+        <AppButton icon="create-outline" theme={theme} variant="outline" onPress={onEditForm}>
+          {t("aiLocalEditAnswers")}
+        </AppButton>
+        {clipboardMessage ? <Text accessibilityLiveRegion="polite" style={[styles.workoutMeta, { color: theme.muted }]}>{clipboardMessage}</Text> : null}
       </FlowStep>
 
       <FlowStep number="2" title={t("aiLocalUseExternalAi")} theme={theme}>
@@ -83,6 +101,11 @@ export function AiCopyPasteFlow({
         <AppButton disabled={!response.trim()} icon="checkmark-circle-outline" theme={theme} onPress={onParse}>
           {t("aiLocalValidate")}
         </AppButton>
+        {response.trim() ? (
+          <AppButton icon="trash-outline" theme={theme} variant="outline" onPress={onClearResponse}>
+            {t("aiLocalClearResponse")}
+          </AppButton>
+        ) : null}
       </FlowStep>
 
       {result ? (
@@ -90,17 +113,32 @@ export function AiCopyPasteFlow({
           {result.errors.map((error) => (
             <Text key={error} style={[styles.inlineError, { color: theme.danger }]}>{error}</Text>
           ))}
+          {result.errors.length ? (
+            <Text style={[styles.creatorDescription, { color: theme.muted }]}>{t("aiLocalJsonOnlyHint")}</Text>
+          ) : null}
           {result.workouts.map((workout) => (
             <View key={workout.id} style={[styles.creatorPlanBox, { backgroundColor: theme.secondaryBand, borderColor: theme.border }]}>
               <Text style={[styles.workoutName, { color: theme.text }]}>{workout.name}</Text>
               <Text style={[styles.workoutMeta, { color: theme.muted }]}>
                 {workout.draft.steps.filter((step) => step.kind === "stage").length} {t("stages").toLowerCase()} · {workout.draft.steps.filter((step) => step.kind === "exercise").length} {t("exercise").toLowerCase()}
               </Text>
-              {workout.draft.steps.filter((step) => step.kind === "exercise").map((step) => (
-                <Text key={step.id} style={[styles.workoutMeta, { color: theme.text }]}>
-                  {step.exerciseName || t("aiLocalUnknownExercise")} · {step.targetValue} · {step.restSeconds || "0"}s
-                </Text>
-              ))}
+              {workout.draft.notes ? <Text style={[styles.workoutMeta, { color: theme.muted }]}>{workout.draft.notes}</Text> : null}
+              {workout.draft.steps.map((step) => {
+                if (step.kind === "stage") {
+                  return <Text key={step.id} style={[styles.creatorSectionTitle, { color: theme.text }]}>{step.label}</Text>;
+                }
+                if (step.kind === "set") {
+                  return <Text key={step.id} style={[styles.workoutMeta, { color: theme.muted }]}>{t("set")}: {step.setCount}</Text>;
+                }
+                return (
+                  <View key={step.id} style={{ gap: 2 }}>
+                    <Text style={[styles.workoutMeta, { color: theme.text }]}>
+                      {step.exerciseName || t("aiLocalUnknownExercise")} · {step.targetValue} · {step.restSeconds || "0"}s{step.loadKg ? ` · ${step.loadKg} kg` : ""}
+                    </Text>
+                    {step.notes ? <Text style={[styles.workoutMeta, { color: theme.muted }]}>{step.notes}</Text> : null}
+                  </View>
+                );
+              })}
             </View>
           ))}
           {result.issues.map((issue) => (

@@ -4,6 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { AppButton, AppInput, AppTextarea, SelectControl } from "../components/AppControls";
 import {
   workoutCreatorSections,
+  getCreatorOptionLabel,
   type WorkoutCreatorField,
   type WorkoutCreatorPhase,
   type WorkoutCreatorProfile,
@@ -16,6 +17,7 @@ import type { Theme } from "../theme/theme";
 type WorkoutCreatorScreenProps = {
   collapsedSections: Record<string, boolean>;
   draft: Record<string, WorkoutCreatorValue>;
+  fieldErrors: Record<string, string>;
   language: LanguageCode;
   phase: WorkoutCreatorPhase;
   profileName: string;
@@ -26,6 +28,8 @@ type WorkoutCreatorScreenProps = {
   theme: Theme;
   onDraftFieldChange: (fieldId: string, value: WorkoutCreatorValue) => void;
   onLoadProfile: (profile: WorkoutCreatorProfile) => void;
+  onDeleteProfile: (profile: WorkoutCreatorProfile) => void;
+  onStartNewProfile: () => void;
   onProfileNameChange: (value: string) => void;
   onSaveProfileAndSubmit: () => void;
   onSendWithoutSaving: () => void;
@@ -37,9 +41,12 @@ type WorkoutCreatorScreenProps = {
 export function WorkoutCreatorScreen({
   collapsedSections,
   draft,
+  fieldErrors,
   language,
   onDraftFieldChange,
   onLoadProfile,
+  onDeleteProfile,
+  onStartNewProfile,
   onProfileNameChange,
   onSaveProfileAndSubmit,
   onSendWithoutSaving,
@@ -73,7 +80,7 @@ export function WorkoutCreatorScreen({
   }
 
   function updateTextField(field: WorkoutCreatorField, value: string) {
-    if (field.keyboardType === "number-pad" && typeof field.maxValue === "number") {
+    if (field.keyboardType === "number-pad") {
       const numericValue = value.replace(/\D/g, "");
 
       if (!numericValue) {
@@ -81,7 +88,12 @@ export function WorkoutCreatorScreen({
         return;
       }
 
-      onDraftFieldChange(field.id, String(Math.min(Number(numericValue), field.maxValue)));
+      onDraftFieldChange(field.id, numericValue);
+      return;
+    }
+
+    if (field.keyboardType === "decimal-pad") {
+      onDraftFieldChange(field.id, value.replace(",", ".").replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1"));
       return;
     }
 
@@ -90,15 +102,20 @@ export function WorkoutCreatorScreen({
 
   function toggleMultiChoice(fieldId: string, option: string) {
     const currentValues = Array.isArray(draft[fieldId]) ? draft[fieldId] : [];
-    const nextValues = currentValues.includes(option)
+    let nextValues = currentValues.includes(option)
       ? currentValues.filter((item) => item !== option)
       : [...currentValues, option];
+    if (fieldId === "chronicDiseases") {
+      nextValues = option === "none" && !currentValues.includes(option)
+        ? ["none"]
+        : nextValues.filter((item) => item !== "none");
+    }
 
     onDraftFieldChange(fieldId, nextValues);
   }
 
   function renderField(field: WorkoutCreatorField) {
-    const label = getLabel(field.label);
+    const label = `${getLabel(field.label)}${field.required ? " *" : ""}`;
     const placeholder = field.placeholder ? getLabel(field.placeholder) : undefined;
 
     if (field.kind === "textarea") {
@@ -112,14 +129,14 @@ export function WorkoutCreatorScreen({
             value={getTextValue(field.id)}
             onChangeText={(value) => onDraftFieldChange(field.id, value)}
           />
+          {fieldErrors[field.id] ? <Text style={[styles.inlineError, { color: theme.danger }]}>{fieldErrors[field.id]}</Text> : null}
         </View>
       );
     }
 
     if (field.kind === "singleChoice") {
       const options = (field.options ?? []).map((option) => {
-        const optionLabel = getLabel(option);
-        return { label: optionLabel, value: optionLabel };
+        return { label: getLabel(option), value: option.id };
       });
 
       return (
@@ -132,6 +149,7 @@ export function WorkoutCreatorScreen({
             value={getFieldTextValue(field)}
             onChange={(value) => onDraftFieldChange(field.id, value)}
           />
+          {fieldErrors[field.id] ? <Text style={[styles.inlineError, { color: theme.danger }]}>{fieldErrors[field.id]}</Text> : null}
         </View>
       );
     }
@@ -145,11 +163,11 @@ export function WorkoutCreatorScreen({
           <View style={styles.creatorChoiceList}>
             {(field.options ?? []).map((option) => {
               const optionLabel = getLabel(option);
-              const isSelected = selectedValues.includes(optionLabel);
+              const isSelected = selectedValues.includes(option.id);
 
               return (
                 <Pressable
-                  key={optionLabel}
+                  key={option.id}
                   accessibilityRole="button"
                   accessibilityState={{ selected: isSelected }}
                   style={[
@@ -159,7 +177,7 @@ export function WorkoutCreatorScreen({
                       borderColor: isSelected ? theme.primary : theme.border
                     }
                   ]}
-                  onPress={() => toggleMultiChoice(field.id, optionLabel)}
+                  onPress={() => toggleMultiChoice(field.id, option.id)}
                 >
                   <Text
                     style={[
@@ -173,6 +191,7 @@ export function WorkoutCreatorScreen({
               );
             })}
           </View>
+          {fieldErrors[field.id] ? <Text style={[styles.inlineError, { color: theme.danger }]}>{fieldErrors[field.id]}</Text> : null}
         </View>
       );
     }
@@ -185,8 +204,9 @@ export function WorkoutCreatorScreen({
           placeholder={placeholder ?? t("aiCreatorQuestionPlaceholder")}
           theme={theme}
           value={getTextValue(field.id)}
-          onChangeText={(value) => updateTextField(field, value)}
-        />
+        onChangeText={(value) => updateTextField(field, value)}
+      />
+      {fieldErrors[field.id] ? <Text style={[styles.inlineError, { color: theme.danger }]}>{fieldErrors[field.id]}</Text> : null}
       </View>
     );
   }
@@ -206,11 +226,17 @@ export function WorkoutCreatorScreen({
               <Text style={[styles.creatorSectionTitle, { color: theme.text }]}>
                 {t("aiCreatorProfiles")}
               </Text>
+              <AppButton icon="add-outline" theme={theme} variant="outline" onPress={onStartNewProfile}>
+                {t("aiCreatorNewProfile")}
+              </AppButton>
               <View style={styles.creatorProfileGrid}>
                 {profiles.map((profile) => {
                   const isSelected = selectedProfileId === profile.id;
                   const goalValue = profile.draft.primaryGoal;
-                  const meta = typeof goalValue === "string" && goalValue ? goalValue : t("aiCreatorMeta");
+                  const goalField = workoutCreatorSections[0].fields.find((field) => field.id === "primaryGoal");
+                  const meta = typeof goalValue === "string" && goalValue && goalField
+                    ? getCreatorOptionLabel(goalField, goalValue, language)
+                    : t("aiCreatorMeta");
 
                   return (
                     <Pressable
@@ -235,6 +261,17 @@ export function WorkoutCreatorScreen({
                           {isSelected ? t("aiCreatorProfileLoaded") : meta}
                         </Text>
                       </View>
+                      <Pressable
+                        accessibilityLabel={t("aiCreatorDeleteProfile")}
+                        accessibilityRole="button"
+                        hitSlop={10}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          onDeleteProfile(profile);
+                        }}
+                      >
+                        <Ionicons name="trash-outline" size={20} color={theme.danger} />
+                      </Pressable>
                     </Pressable>
                   );
                 })}

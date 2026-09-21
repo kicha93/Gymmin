@@ -8,12 +8,16 @@ The profile/avatar action is permanently visible in the top-right application he
 
 ## Local AI creator
 
-- The creator uses four local steps: prepare a prompt, copy it to an external AI chosen by the user, paste JSON, then review and save.
+- The creator uses four local steps: prepare a prompt, manually run it with ChatGPT Deep Research, paste the resulting JSON, then review and save. Gymmin does not activate the ChatGPT tool or call an AI API.
+- The current form contains five collapsible sections and 30 optional questions. At least one answer is required before a prompt can be prepared.
+- A local creator profile can save the form for reuse. Preparing a prompt never sends the profile or creates a remote job.
 - Unknown exercises block Save and offer canonical catalog replacements. There is no saved-workout AI rewrite or Apply flow.
 - Prompts use the current validated exercise catalog, canonical IDs and `restSeconds` on exercises; no standalone rest elements are generated.
 - Plain JSON, fenced JSON and a recoverable text wrapper are supported. Malformed, oversized and schema-invalid responses are rejected.
+- The response contract accepts a finished workout JSON object only. Follow-up questions from the external assistant are not an application response type.
 - Auth, credits, billing, consent-to-upload, job status and polling are absent from the product flow.
 - Gymmin does not send creator-profile or workout data to an AI service.
+- The exact current contract, persistence rules, limits and known product constraints are documented in [workout-creator.md](workout-creator.md).
 
 ## Local profile dashboard
 
@@ -103,14 +107,14 @@ This note tracks the current workout-view UX decisions.
 - Tapping an exercise row opens a dedicated exercise detail page.
 - Opening the exercise detail page resets the screen scroll to the top.
 - The page is backed by the catalog exercise id when available, with best-effort fallback by exercise name.
-- The page uses a compact panel layout: hero, media, worked muscles, technique steps, tips, common mistakes and exercise history/progress.
-- The hero panel shows the exercise name, category/equipment tags and primary muscle summary with an icon.
-- The exercise-images panel is hidden when an exercise has no mapped local images yet.
-- The worked-muscles panel reuses the same SVG anatomy map as the workout overview and muscle modal, shows one body side at a time with a Front/Back segmented toggle below the panel title, and defaults to Front.
+- The page uses a compact panel layout: worked muscles, exercise execution image, technique steps, tips, common mistakes and exercise history/progress.
+- The first card shows the exercise name, a Front/Back segmented toggle, high-level or advanced muscle groups, the matching anatomy figure and the compact involvement legend.
+- The `Exercise execution` / `Wykonanie ćwiczenia` card is hidden only when an exercise has no mapped local image. It shows one contained image at a time with a zoom action and full-screen preview. A START/END pair alternates every second; a single image remains static.
+- The worked-muscles card reuses the same SVG anatomy map as the workout overview and muscle modal, shows one body side at a time and defaults to Front. Advanced subgroup children are collapsed by default and can be expanded independently.
 - Technique instructions are rendered as numbered steps. Tips, common mistakes and exercise history are collapsible panels.
 - Exercise history is collapsed by default when no data exists and shows a clear empty state.
 - Unknown or unmapped exercises show a safe empty state instead of crashing.
-- TODO: add broader local image coverage for catalog exercises.
+- The current 729-exercise catalog has at least one mapped image for every canonical exercise. Media counts are validated by `npm run exercise:media:validate` rather than maintained as a TODO here.
 
 ## Progress Report
 
@@ -118,9 +122,10 @@ This note tracks the current workout-view UX decisions.
 - Summary values are derived in memory from completed, non-deleted WorkoutSession records. Training duration uses the existing session start/finish calculation and volume keeps the existing weight × repetitions definition. Active, abandoned and deleted sessions are excluded.
 - Strength comparisons use Epley estimated 1RM (weight × (1 + repetitions / 30)) only as a comparative indicator. Only exercises present in both periods participate, and the overall result is the median of their percentage changes; missing comparison data is never rendered as 0%.
 - A record is a chronological improvement over an exercise's established best estimated 1RM. The first result establishes the baseline and is not presented as a new record. A heavier load with sufficiently fewer repetitions therefore does not automatically become a record. Recent records and biggest progress link to the existing per-exercise history.
+- The visible report contains Summary, Key changes, This week, Biggest progress, Recent records and the Exercise progress drill-down. The former Overall trend and Consistency cards are not part of the report.
 - The current weekly plan reuses the existing weekly-plan summary. Completed, upcoming and already missed scheduled items are descriptive report rows; the report creates no second planner or persistence model.
 - Postęp ćwiczeń / Exercise progress opens the preserved searchable list with filters, sparklines, latest result, best weight and best volume. Selecting an exercise opens the unchanged detailed exercise-progress screen.
-- A new user receives one report empty state instead of zero percentages, zero-filled charts or invented records. The entire report remains derived data and is not written to AsyncStorage or added to backup.
+- A new user receives one report empty state instead of zero percentages or invented records. The entire report remains derived data and is not written to AsyncStorage or added to backup.
 
 ## Exercise Progress History
 
@@ -178,7 +183,7 @@ Na stronie głównej plan tygodnia można rozwinąć o lokalną analizę objęto
 
 Metryką są orientacyjne fractional working sets: główny wpływ katalogowy liczy 1 serię, duży lub znaczący wpływ pomocniczy 0,5, a mniejsze role nie są sztucznie punktowane. Powtórzenia i ciężar nie są mnożnikiem tej metryki. Wszystkie grupy mają wspólny szeroki zakres referencyjny 10–20; nie jest to indywidualna recepta treningowa. Pełne założenia i źródła opisuje [weekly-muscle-volume.md](weekly-muscle-volume.md).
 
-Plan tygodnia jest lokalny i przypisany do aktualnego ownera storage. Każdy zapisany trening można dodać do wielu dni tygodnia, a homepage pokazuje zakres bieżącego tygodnia, wykonane/do wykonania oraz najbliższy trening na dziś. Każdy zaplanowany dzień jest osobnym wykonaniem; ukończona sesja zalicza jedno z nich nawet wtedy, gdy została wykonana w innym dniu niż zaplanowany.
+Plan tygodnia jest lokalny i zapisany w kanonicznej przestrzeni `gymmin.local.v1.*`. Każdy zapisany trening można dodać do wielu dni tygodnia, a homepage pokazuje zakres bieżącego tygodnia, wykonane/do wykonania oraz najbliższy trening na dziś. Każdy zaplanowany dzień jest osobnym wykonaniem; ukończona sesja zalicza jedno z nich nawet wtedy, gdy została wykonana w innym dniu niż zaplanowany.
 
 Panel `Treningi` na homepage pokazuje wszystkie unikalne treningi przypisane do
 aktywnego planu tygodnia, bez limitu i bez przycisku `Zobacz wszystkie`.

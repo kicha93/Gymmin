@@ -4,7 +4,6 @@ import {
   buildProgressReport,
   calculateExerciseStrengthChange,
   calculateOverallStrengthChange,
-  calculateTrainingWeekStreak,
   estimateOneRepMax,
   getPreviousComparisonPeriod,
   getProgressReportPeriod,
@@ -162,7 +161,7 @@ describe("progress report aggregation", () => {
     expect(report.biggestProgress?.percent).toBeCloseTo(20);
   });
 
-  it("returns no comparison percentage without previous data and buckets the trend", () => {
+  it("returns no comparison percentage without previous data", () => {
     const report = buildProgressReport({
       period: "week",
       referenceDate: new Date(2026, 0, 7),
@@ -170,8 +169,6 @@ describe("progress report aggregation", () => {
     });
     expect(report.changes.strengthPercent).toBeNull();
     expect(report.changes.volumePercent).toBeNull();
-    expect(report.trend.buckets).toHaveLength(7);
-    expect(report.trend.buckets.reduce((sum, bucket) => sum + bucket.workoutCount, 0)).toBe(1);
   });
 
   it("does not present one comparable exercise as overall strength progress", () => {
@@ -187,7 +184,7 @@ describe("progress report aggregation", () => {
     expect(report.biggestProgress?.exerciseKey).toBe("id:bench");
   });
 
-  it("compares the first and last six weeks for the 12-week progress trend", () => {
+  it("compares the first and last six weeks for 12-week changes", () => {
     const report = buildProgressReport({
       period: "12weeks",
       referenceDate: new Date(2026, 2, 18),
@@ -225,46 +222,4 @@ describe("progress report aggregation", () => {
     expect(report.recentRecords.map((record) => record.weightKg)).toEqual([88, 86, 84]);
   });
 
-  it("orders daily trend buckets and assigns each completed session once", () => {
-    const monday = new Date(2026, 0, 5, 10);
-    const sunday = new Date(2026, 0, 11, 10);
-    const report = buildProgressReport({
-      period: "week",
-      referenceDate: new Date(2026, 0, 7),
-      sessions: [
-        session(monday, [entry("bench", "50", "10")]),
-        session(sunday, [entry("row", "40", "10")])
-      ]
-    });
-    expect(report.trend.buckets.map((bucket) => bucket.start.getDate())).toEqual([5, 6, 7, 8, 9, 10, 11]);
-    expect(report.trend.buckets.map((bucket) => bucket.workoutCount)).toEqual([1, 0, 0, 0, 0, 0, 1]);
-    expect(report.trend.buckets.map((bucket) => bucket.totalVolumeKg)).toEqual([500, 0, 0, 0, 0, 0, 400]);
-  });
-});
-
-describe("progress report consistency", () => {
-  it("counts consecutive Monday-Sunday training weeks", () => {
-    const sessions = [
-      session(new Date(2026, 0, 5, 10), []),
-      session(new Date(2026, 0, 12, 10), []),
-      session(new Date(2026, 0, 19, 10), [])
-    ];
-    expect(calculateTrainingWeekStreak(sessions, new Date(2026, 0, 21))).toBe(3);
-  });
-
-  it("does not let an empty current partial week break the previous streak", () => {
-    const sessions = [
-      session(new Date(2026, 0, 5, 10), []),
-      session(new Date(2026, 0, 12, 10), [])
-    ];
-    expect(calculateTrainingWeekStreak(sessions, new Date(2026, 0, 21))).toBe(2);
-  });
-
-  it("stops at a missed week", () => {
-    const sessions = [
-      session(new Date(2025, 11, 29, 10), []),
-      session(new Date(2026, 0, 12, 10), [])
-    ];
-    expect(calculateTrainingWeekStreak(sessions, new Date(2026, 0, 14))).toBe(1);
-  });
 });

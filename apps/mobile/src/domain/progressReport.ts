@@ -9,17 +9,10 @@ import {
 } from "./workoutSessions";
 
 export type ProgressReportPeriod = "week" | "month" | "12weeks";
-export type ProgressReportTrendMetric = "volume" | "workouts";
 
 export type ProgressReportDateRange = {
   end: Date;
   start: Date;
-};
-
-export type ProgressReportTrendBucket = ProgressReportDateRange & {
-  index: number;
-  totalVolumeKg: number;
-  workoutCount: number;
 };
 
 export type ProgressReportRecord = {
@@ -49,7 +42,6 @@ export type ProgressReport = {
     volumePercent: number | null;
     workoutCountChange: number;
   };
-  consistency: { weekStreak: number };
   currentRange: ProgressReportDateRange;
   hasAnyHistory: boolean;
   period: ProgressReportPeriod;
@@ -60,7 +52,6 @@ export type ProgressReport = {
     totalVolumeKg: number;
     workoutCount: number;
   };
-  trend: { buckets: ProgressReportTrendBucket[] };
 };
 
 type BuildProgressReportOptions = {
@@ -282,42 +273,6 @@ export function getProgressReportRecords(sessions: WorkoutSession[]) {
   return records.sort((left, right) => right.achievedAt.getTime() - left.achievedAt.getTime());
 }
 
-export function calculateTrainingWeekStreak(sessions: WorkoutSession[], referenceDate: Date) {
-  const completedWeeks = new Set(
-    getCompletedWorkoutSessions(sessions).map((session) =>
-      startOfLocalWeek(new Date(getSessionStartedAtTime(session))).getTime()
-    )
-  );
-  let cursor = startOfLocalWeek(referenceDate);
-  if (!completedWeeks.has(cursor.getTime())) cursor = addLocalDays(cursor, -7);
-  let streak = 0;
-  while (completedWeeks.has(cursor.getTime())) {
-    streak += 1;
-    cursor = addLocalDays(cursor, -7);
-  }
-  return streak;
-}
-
-function createTrendBuckets(period: ProgressReportPeriod, range: ProgressReportDateRange) {
-  const buckets: ProgressReportTrendBucket[] = [];
-  const stepDays = period === "week" ? 1 : 7;
-  let start = new Date(range.start);
-  let index = 0;
-  while (start <= range.end) {
-    const end = endOfLocalDay(addLocalDays(start, stepDays - 1));
-    buckets.push({
-      start: new Date(start),
-      end: end > range.end ? new Date(range.end) : end,
-      index,
-      totalVolumeKg: 0,
-      workoutCount: 0
-    });
-    start = addLocalDays(start, stepDays);
-    index += 1;
-  }
-  return buckets;
-}
-
 export function buildProgressReport({
   period,
   referenceDate,
@@ -354,16 +309,6 @@ export function buildProgressReport({
     comparisonPreviousSessions
   );
   const records = getProgressReportRecords(completedSessions);
-  const buckets = createTrendBuckets(period, currentRange);
-
-  for (const session of currentSessions) {
-    const startedAt = getSessionStartedAtTime(session);
-    const bucket = buckets.find((item) => isInRange(startedAt, item));
-    if (!bucket) continue;
-    bucket.workoutCount += 1;
-    bucket.totalVolumeKg += calculateSessionVolume(session);
-  }
-
   const volumePercent = comparisonPreviousVolume > 0
     ? ((comparisonCurrentVolume - comparisonPreviousVolume) / comparisonPreviousVolume) * 100
     : null;
@@ -382,7 +327,6 @@ export function buildProgressReport({
       volumePercent,
       workoutCountChange: comparisonCurrentSessions.length - comparisonPreviousSessions.length
     },
-    consistency: { weekStreak: calculateTrainingWeekStreak(completedSessions, referenceDate) },
     currentRange,
     hasAnyHistory: completedSessions.length > 0,
     period,
@@ -394,8 +338,7 @@ export function buildProgressReport({
       ),
       totalVolumeKg: currentVolume,
       workoutCount: currentSessions.length
-    },
-    trend: { buckets }
+    }
   };
 }
 

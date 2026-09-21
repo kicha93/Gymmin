@@ -1,6 +1,6 @@
 # Application status
 
-Status date: 2026-08-14.
+Status date: 2026-09-21.
 
 Gymmin is now a local-only mobile product. Backend source, auth, synchronization, remote creator jobs, AI credits, billing, remote profile/avatar transport, system status, HTTP clients, and API URL build configuration have been removed.
 
@@ -38,4 +38,4 @@ Accounts, login, cloud sync, server storage, remote OpenAI calls, credits/premiu
 
 ## Release state
 
-APK/AAB commands are backend-free and release signing fails closed. The APK one-click path derives release metadata from `app.json`, validates dependencies, Expo, the local-only product, optimized exercise media, the merged Android manifest, package/version metadata, and the signing certificate before publishing. The legacy vc1 to local-only RC vc2 upgrade and the Balanced WebP sample both passed on a physical Android device. Static GitHub Pages privacy documents are published from the public `kicha93/gymmin-privacy` repository at `https://kicha93.github.io/gymmin-privacy/`; the URL is configured in Google Play Console. The remaining manual scenarios retain their explicit status in the release checklist.
+APK/AAB commands are backend-free and release signing fails closed. The APK one-click path derives release metadata from `app.json`, validates dependencies, Expo, the local-only product, optimized exercise media, the merged Android manifest, package/version metadata, and the signing certificate before publishing to the public GitHub repository. Unsigned iOS IPA builds are available through GitHub Actions and Codemagic; they still require user-side signing and are not App Store builds. Static GitHub Pages privacy documents are published from `kicha93/gymmin-privacy` at `https://kicha93.github.io/gymmin-privacy/`; the URL is configured in Google Play Console. Artifact-specific hashes and manual test evidence belong in a dated release record rather than this product-status document.

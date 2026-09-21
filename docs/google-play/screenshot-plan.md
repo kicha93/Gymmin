@@ -11,8 +11,8 @@ Prepare separate PL and EN sets. Recommended format: portrait 1080 × 1920 PNG o
 3. **Workout details** — notes, exercise overview, and workout actions.
 4. **Guided workout** — weight/repetition fields and rest information.
 5. **Superset** — two exercises and the round-entry layout.
-6. **Progress/history** — completed sessions and progress view.
-7. **Exercise details** — START/END movement media.
+6. **Progress/history** — Progress Report with real summary/records or the exercise-history drill-down.
+7. **Exercise details** — the `Exercise execution` image; choose an exercise with a START/END pair when the movement change is useful.
 8. **Local privacy** — Settings → Local data with backup and delete controls.
 
 ## Capture rules

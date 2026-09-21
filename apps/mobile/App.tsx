@@ -64,12 +64,18 @@ import {
 import {
   areCreatorDraftsEqual,
   cloneCreatorDraft,
+  getDefaultCreatorCollapsedSections,
+  validateWorkoutCreatorDraft,
   workoutCreatorSections,
-  type LocalizedText,
   type WorkoutCreatorDraft,
   type WorkoutCreatorPhase,
   type WorkoutCreatorProfile
 } from "./src/domain/workoutCreator";
+import {
+  clearWorkoutCreatorSession,
+  loadWorkoutCreatorSession,
+  saveWorkoutCreatorSession
+} from "./src/domain/workoutCreatorSession";
 import {
   getActiveWorkoutSessionsForUi,
   getExerciseProgressItems,
@@ -175,6 +181,7 @@ import {
   replaceUnknownExercise,
   type AiWorkoutImportResult
 } from "./src/domain/aiCopyPaste";
+import { auditAiWorkoutPlan, formatAiWorkoutPlanQualityIssue } from "./src/domain/aiWorkoutPlanQuality";
 import { translate, type LanguageCode, type TranslationKey } from "./src/i18n/translations";
 import { ContactScreen } from "./src/screens/ContactScreen";
 import { BugReportScreen } from "./src/screens/BugReportScreen";
@@ -765,8 +772,11 @@ function GymminApp() {
   const [creatorAiPrompt, setCreatorAiPrompt] = useState("");
   const [creatorAiResponse, setCreatorAiResponse] = useState("");
   const [creatorAiResult, setCreatorAiResult] = useState<AiWorkoutImportResult | null>(null);
-  const [creatorCollapsedSections, setCreatorCollapsedSections] = useState<Record<string, boolean>>({});
+  const [creatorCollapsedSections, setCreatorCollapsedSections] = useState<Record<string, boolean>>(getDefaultCreatorCollapsedSections);
   const [creatorProfileName, setCreatorProfileName] = useState("");
+  const [creatorFieldErrors, setCreatorFieldErrors] = useState<Record<string, string>>({});
+  const [hasLoadedCreatorSession, setHasLoadedCreatorSession] = useState(false);
+  const creatorSessionLoadedRef = useRef(false);
   const [trainingFactIndex, setTrainingFactIndex] = useState(0);
   const [readOnlyWorkoutCollapsedPanels, setReadOnlyWorkoutCollapsedPanels] = useState<Record<string, boolean>>({});
   const {
@@ -838,11 +848,13 @@ function GymminApp() {
   } = useLocalWorkouts(hasLoadedAccountStorageMigration, initialWorkouts as SavedWorkout[]);
   const {
     creatorProfiles,
+    creatorProfilesStorageError,
     hasLoadedLocalCreatorProfiles,
     selectedCreatorProfileId,
     setCreatorProfiles,
     setSelectedCreatorProfileId
   } = useLocalCreatorProfiles(hasLoadedAccountStorageMigration);
+
   const {
     favoriteExercises,
     hasLoadedFavoriteExercises,
@@ -1019,20 +1031,54 @@ function GymminApp() {
     });
 
     return () => subscription.remove();
-  }, [activeScreen, activeSettingsSheet, creatorPhase, editingWorkoutId, exerciseDetailReturnScreen, exerciseProgressReturnScreen, selectedWorkoutId]);
+  }, [activeScreen, activeSettingsSheet, creatorAiPrompt, creatorDraft, creatorPhase, editingWorkoutId, exerciseDetailReturnScreen, exerciseProgressReturnScreen, selectedWorkoutId]);
 
   useEffect(() => {
-    if (creatorPhase !== "submitted") {
-      return undefined;
-    }
+    if (!hasLoadedAccountStorageMigration || !hasLoadedLocalCreatorProfiles || creatorSessionLoadedRef.current) return;
+    creatorSessionLoadedRef.current = true;
+    let mounted = true;
+    void loadWorkoutCreatorSession().then((session) => {
+      if (!mounted) return;
+      if (session) {
+        setCreatorDraft(session.draft);
+        setCreatorPhase(session.phase);
+        setCreatorProfileName(session.profileName);
+        setCreatorAiPrompt(session.prompt);
+        setCreatorAiResponse(session.response);
+        if (session.response.trim()) {
+          const parsed = parseAiWorkoutResponse(session.response, Date.now(), language);
+          setCreatorAiResult({
+            ...parsed,
+            errors: [...parsed.errors, ...(parsed.errors.length ? [] : auditAiWorkoutPlan(parsed.workouts, session.draft))
+              .map((issue) => formatAiWorkoutPlanQualityIssue(issue, language))]
+          });
+        }
+        setSelectedCreatorProfileId(session.selectedProfileId);
+      }
+      setHasLoadedCreatorSession(true);
+    });
+    return () => { mounted = false; };
+  }, [hasLoadedAccountStorageMigration, hasLoadedLocalCreatorProfiles, language, setSelectedCreatorProfileId]);
 
+  useEffect(() => {
+    if (!hasLoadedCreatorSession) return;
     const timeoutId = setTimeout(() => {
-      setActiveScreen("home");
-      setCreatorPhase("form");
-    }, 5000);
-
+      const hasContent = Object.keys(creatorDraft).length > 0 || creatorAiPrompt || creatorAiResponse;
+      if (!hasContent) {
+        void clearWorkoutCreatorSession();
+        return;
+      }
+      void saveWorkoutCreatorSession({
+        draft: creatorDraft,
+        phase: creatorPhase,
+        profileName: creatorProfileName,
+        prompt: creatorAiPrompt,
+        response: creatorAiResponse,
+        selectedProfileId: selectedCreatorProfileId
+      });
+    }, 300);
     return () => clearTimeout(timeoutId);
-  }, [creatorPhase]);
+  }, [creatorAiPrompt, creatorAiResponse, creatorDraft, creatorPhase, creatorProfileName, hasLoadedCreatorSession, selectedCreatorProfileId]);
 
   const filteredWorkouts = useMemo(() => {
     const phrase = search.trim().toLowerCase();
@@ -1328,13 +1374,23 @@ function GymminApp() {
   }
 
   function openWorkoutCreator() {
+    setCreatorSubmitError("");
+    setCreatorFieldErrors({});
+    setActiveScreen("workoutCreator");
+  }
+
+  function startNewWorkoutCreatorSession() {
     setCreatorDraft({});
     setCreatorProfileName("");
     setSelectedCreatorProfileId(null);
-    setCreatorCollapsedSections({});
+    setCreatorCollapsedSections(getDefaultCreatorCollapsedSections());
     setCreatorSubmitError("");
+    setCreatorFieldErrors({});
+    setCreatorAiPrompt("");
+    setCreatorAiResponse("");
+    setCreatorAiResult(null);
     setCreatorPhase("form");
-    setActiveScreen("workoutCreator");
+    void clearWorkoutCreatorSession();
   }
 
   function openWorkoutDetail(workoutId: string) {
@@ -1470,6 +1526,23 @@ function GymminApp() {
   }
 
   function submitWorkoutCreatorForm() {
+    const validationIssues = validateWorkoutCreatorDraft(creatorDraft);
+    if (validationIssues.length) {
+      setCreatorFieldErrors(Object.fromEntries(validationIssues.map((issue) => [
+        issue.fieldId,
+        issue.messageKey === "required" ? t("aiCreatorRequiredField") : t("aiCreatorInvalidRange")
+      ])));
+      const sectionsWithErrors = workoutCreatorSections.filter((section) =>
+        section.fields.some((field) => validationIssues.some((issue) => issue.fieldId === field.id))
+      );
+      setCreatorCollapsedSections((current) => ({
+        ...current,
+        ...Object.fromEntries(sectionsWithErrors.map((section) => [section.id, false]))
+      }));
+      setCreatorSubmitError(t("aiCreatorFixErrors"));
+      return;
+    }
+    setCreatorFieldErrors({});
     if (selectedCreatorProfileId) {
       const selectedProfile = creatorProfiles.find((profile) => profile.id === selectedCreatorProfileId);
       setCreatorProfileName(selectedProfile?.name ?? "");
@@ -1491,34 +1564,11 @@ function GymminApp() {
     setCreatorPhase("form");
   }
 
-  function buildWorkoutCreatorQuestionsAndAnswers(): Array<{ Answer: string; Question: string }> {
-    return workoutCreatorSections.flatMap((section) =>
-      section.fields.flatMap((field) => {
-        const value = creatorDraft[field.id];
-        const defaultValue = field.defaultValue ? getCreatorLabel(field.defaultValue) : "";
-        const answer = Array.isArray(value)
-          ? value.join(", ")
-          : typeof value === "string"
-            ? value.trim()
-            : defaultValue;
-
-        if (!answer.trim()) {
-          return [];
-        }
-
-        return {
-          Question: getCreatorLabel(field.label),
-          Answer: answer
-        };
-      })
-    );
-  }
-
   async function finishWorkoutCreatorRequest(_profileId = selectedCreatorProfileId) {
-    const questionsAndAnswers = buildWorkoutCreatorQuestionsAndAnswers();
-    const hasAnyAnswer = questionsAndAnswers.some((item) => item.Answer.trim());
-    if (!hasAnyAnswer) {
-      setCreatorSubmitError(t("aiCreatorSubmitError"));
+    const validationIssues = validateWorkoutCreatorDraft(creatorDraft);
+    if (validationIssues.length) {
+      setCreatorPhase("form");
+      submitWorkoutCreatorForm();
       return;
     }
     setCreatorSubmitError("");
@@ -1540,6 +1590,10 @@ function GymminApp() {
     setCreatorAiPrompt("");
     setCreatorAiResponse("");
     setCreatorAiResult(null);
+    setCreatorDraft({});
+    setCreatorProfileName("");
+    setSelectedCreatorProfileId(null);
+    void clearWorkoutCreatorSession();
     setActiveScreen("workouts");
   }
 
@@ -1557,6 +1611,10 @@ function GymminApp() {
       name: normalizedName
     };
 
+    if (creatorProfiles.length >= 25) {
+      setCreatorSubmitError(t("aiCreatorProfileLimit"));
+      return;
+    }
     setCreatorProfiles((current) => [nextProfile, ...current]);
     setSelectedCreatorProfileId(nextProfile.id);
     void finishWorkoutCreatorRequest(nextProfile.id);
@@ -1584,13 +1642,17 @@ function GymminApp() {
     void finishWorkoutCreatorRequest(selectedCreatorProfileId);
   }
 
-  function getCreatorLabel(text: LocalizedText) {
-    return text[language];
-  }
-
-  function getCreatorTextValue(fieldId: string) {
-    const value = creatorDraft[fieldId];
-    return typeof value === "string" ? value : "";
+  function deleteCreatorProfile(profile: WorkoutCreatorProfile) {
+    showConfirmDialog({
+      confirmLabel: t("delete"),
+      message: t("aiCreatorDeleteProfileConfirm"),
+      onConfirm: () => {
+        setCreatorProfiles((current) => current.filter((item) => item.id !== profile.id));
+        if (selectedCreatorProfileId === profile.id) startNewWorkoutCreatorSession();
+      },
+      title: t("aiCreatorDeleteProfile"),
+      variant: "destructive"
+    });
   }
 
   function toggleCreatorSection(sectionId: string) {
@@ -2054,8 +2116,19 @@ function GymminApp() {
     }
 
     if (activeScreen === "workoutCreator") {
-      if (creatorPhase !== "form") {
+      if (creatorAiPrompt) {
+        setCreatorAiPrompt("");
+        setCreatorAiResult(null);
+      } else if (creatorPhase !== "form") {
         setCreatorPhase("form");
+      } else if (Object.keys(creatorDraft).length) {
+        showConfirmDialog({
+          confirmLabel: t("leave"),
+          message: t("aiCreatorLeaveConfirm"),
+          onConfirm: () => setActiveScreen("workouts"),
+          title: t("aiCreatorLeaveTitle"),
+          variant: "destructive"
+        });
       } else {
         setActiveScreen("workouts");
       }
@@ -2861,7 +2934,23 @@ function GymminApp() {
                   t={t}
                   theme={theme}
                   onApply={applyCreatedAiWorkouts}
-                  onParse={() => setCreatorAiResult(parseAiWorkoutResponse(creatorAiResponse))}
+                  onClearResponse={() => {
+                    setCreatorAiResponse("");
+                    setCreatorAiResult(null);
+                  }}
+                  onEditForm={() => {
+                    setCreatorAiPrompt("");
+                    setCreatorAiResult(null);
+                    setCreatorPhase("form");
+                  }}
+                  onParse={() => {
+                    const parsed = parseAiWorkoutResponse(creatorAiResponse, Date.now(), language);
+                    setCreatorAiResult({
+                      ...parsed,
+                      errors: [...parsed.errors, ...(parsed.errors.length ? [] : auditAiWorkoutPlan(parsed.workouts, creatorDraft))
+                        .map((issue) => formatAiWorkoutPlanQualityIssue(issue, language))]
+                    });
+                  }}
                   onReplaceExercise={(stepId, exerciseId) => setCreatorAiResult((current) => current
                     ? replaceUnknownExercise(current, stepId, exerciseId)
                     : current)}
@@ -2874,20 +2963,29 @@ function GymminApp() {
                 <WorkoutCreatorScreen
                   collapsedSections={creatorCollapsedSections}
                   draft={creatorDraft}
+                  fieldErrors={creatorFieldErrors}
                   language={language}
                   phase={creatorPhase}
                   profileName={creatorProfileName}
                   profiles={creatorProfiles}
                   selectedProfileId={selectedCreatorProfileId}
-                  submitError={creatorSubmitError}
+                  submitError={creatorProfilesStorageError ? t("aiCreatorProfileSaveError") : creatorSubmitError}
                   t={t}
                   theme={theme}
                   onDraftFieldChange={(fieldId, value) => {
                     setCreatorDraft((current) => ({ ...current, [fieldId]: value }));
+                    setCreatorFieldErrors((current) => {
+                      if (!current[fieldId]) return current;
+                      const next = { ...current };
+                      delete next[fieldId];
+                      return next;
+                    });
                   }}
+                  onDeleteProfile={deleteCreatorProfile}
                   onLoadProfile={loadCreatorProfile}
                   onProfileNameChange={setCreatorProfileName}
                   onSaveProfileAndSubmit={saveCreatorProfileAndSubmit}
+                  onStartNewProfile={startNewWorkoutCreatorSession}
                   onSendWithoutSaving={() => void finishWorkoutCreatorRequest()}
                   onSubmit={submitWorkoutCreatorForm}
                   onToggleSection={toggleCreatorSection}

@@ -1,6 +1,6 @@
 # Exercise Picker V2
 
-Exercise Picker V2 is the production picker used by the workout builder. The legacy picker remains in the repository as an inactive fallback and is not exposed through user settings.
+Exercise Picker V2 is the only picker used by the workout builder. The former picker was removed after V2 stabilization; there is no user switch, dormant route or automatic fallback to V1.
 
 ## Data and privacy
 
@@ -31,4 +31,4 @@ Recent use counts one canonical exercise at most once per completed session, reg
 
 ## Validation and performance
 
-`npm run validate:exercise-search` verifies index coverage, canonical uniqueness, normalization, aliases, ranking, filters, fuzzy fallback, and session-derived usage. The controlled benchmark covers repeated one-character, multi-character, typo, PL, and EN queries. Actual low-end-device interaction remains a manual release smoke test.
+`npm --prefix apps/mobile run validate:exercise-search` verifies index coverage, canonical uniqueness, normalization, aliases, ranking, filters, fuzzy fallback, and session-derived usage. The controlled benchmark covers repeated one-character, multi-character, typo, PL, and EN queries. Actual low-end-device interaction remains a manual release smoke test.

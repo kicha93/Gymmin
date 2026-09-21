@@ -11,6 +11,8 @@ Gymmin keeps editable exercise image sources separate from production runtime as
 
 The logical keys remain `<exercise-id>/start` and `<exercise-id>/end`. `exerciseImageAssets.ts` therefore remains independent of the physical image format. Metro receives a generated, static `require()` map in `exerciseImageSources.ts`; dynamic requires are not used.
 
+Exercise Detail renders one image at a time in the compact `Exercise execution` / `Wykonanie ćwiczenia` card. If both START and END exist, the visible image alternates every second. A single available image remains static. Tapping the image opens a contained full-screen preview; the runtime does not generate frames, galleries or bitmap variants.
+
 ## Production profile
 
 - WebP, quality 90;

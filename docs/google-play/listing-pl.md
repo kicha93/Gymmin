@@ -24,7 +24,7 @@ Z Gymmin możesz:
 • analizować orientacyjną tygodniową objętość trenowanych mięśni na interaktywnej sylwetce,
 • ustawiać lokalne przypomnienia,
 • eksportować treningi i tworzyć lokalne kopie zapasowe,
-• przygotowywać plany z pomocą wybranego zewnętrznego AI przez bezpieczny mechanizm kopiuj/wklej.
+• przygotowywać plany przez ręczny mechanizm kopiuj/wklej z promptem zoptymalizowanym dla Głębokiego badania w ChatGPT.
 
 Prywatność od początku
 
@@ -32,7 +32,7 @@ Gymmin nie wymaga rejestracji i nie synchronizuje danych z serwerem. Treningi, h
 
 AI pod Twoją kontrolą
 
-Aplikacja nie wysyła zapytań do OpenAI ani innego modelu. Gymmin przygotowuje prompt lokalnie, a Ty sam wybierasz usługę zewnętrzną i decydujesz, co do niej przekazać.
+Aplikacja nie wysyła zapytań do OpenAI ani innego modelu. Gymmin przygotowuje prompt lokalnie, a Ty sam uruchamiasz Głębokie badanie w ChatGPT i decydujesz, czy przekazać tam jego treść.
 
 Bezpieczne kopie danych
 

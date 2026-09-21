@@ -6,6 +6,7 @@ Product availability invariants: the top-right local profile action is always vi
 
 ## Code gates
 
+- [ ] `npm run docs:validate`
 - [ ] `npm ci --prefix apps/mobile`
 - [ ] `npm --prefix apps/mobile run test`
 - [ ] `npm --prefix apps/mobile run typecheck`
@@ -31,7 +32,9 @@ Do not run `npm audit fix --force`. Review every documented upstream audit excep
 
 ## Functional smoke — physical Android device
 
-Record exactly one status for every scenario: `PASS`, `FAIL`, or `NOT TESTED`. A `FAIL` must include reproduction notes before any code change is considered. Do not treat automated gates as a substitute for this matrix.
+Record exactly one status for every scenario: `PASS`, `FAIL`, or `NOT TESTED`. A `FAIL` must include reproduction notes before any code change is considered. Do not treat automated gates as a substitute for this matrix. Results below apply only to a candidate identified by commit, versionCode, build date and device; historical verbal confirmation must not be silently copied to a newer candidate.
+
+Current candidate record: **not assigned**. Fill in `commit / versionCode / build date / device` before changing any row to `PASS`.
 
 | Scenario | Priority | Result (`PASS` / `FAIL` / `NOT TESTED`) | Device / Android / build | Notes |
 | --- | --- | --- | --- | --- |
@@ -50,7 +53,7 @@ Record exactly one status for every scenario: `PASS`, `FAIL`, or `NOT TESTED`. A
 
 Exercise media visual smoke: **PASS** on a physical Android device (2026-08-10). The approved sample compared original PNG against Balanced WebP Q90, max 900 x 1140, without crop. This result does not change the status of unrelated A-M scenarios.
 
-P0 execution order: C → E → G → M. P1 follows after P0 or in parallel on a separate prepared device. If a smoke test fails, preserve RC commit `2947f7d`, document the exact failure and root cause, and make any approved fix in a separate commit.
+P0 execution order: C → E → G → M. P1 follows after P0 or in parallel on a separate prepared device. If a smoke test fails, preserve the exact candidate commit and artifact, document the failure and root cause, and make any approved fix in a separate commit.
 
 ### A. Fresh install
 
@@ -126,7 +129,7 @@ P0 execution order: C → E → G → M. P1 follows after P0 or in parallel on a
 
 - [ ] fill in the local creator form
 - [ ] copy the generated prompt
-- [ ] manually open an external AI service and obtain JSON
+- [ ] manually select Deep research in ChatGPT, paste the generated prompt, answer any clarification questions and obtain importable JSON
 - [ ] paste from clipboard, review, and save
 - [ ] repeat using manual text paste
 
@@ -178,13 +181,14 @@ P0 execution order: C → E → G → M. P1 follows after P0 or in parallel on a
 - [x] verify the deployed privacy URL: `https://kicha93.github.io/gymmin-privacy/`
 - [x] verify PL policy at the deployment root and EN policy under `/en/`
 - [x] verify deletion instructions under `/delete-data/` and `/en/delete-data/`
-- [ ] enter the verified public privacy URL in Play Console
-- [ ] complete Data safety using the actual local-only behavior
-- [ ] prepare phone/tablet screenshots and final icon/feature graphic
-- [ ] prepare PL/EN short and full store descriptions
-- [ ] complete ads, content rating, target audience, health-app, and other required declarations truthfully
+- [x] enter the verified public privacy URL in Play Console
+- [x] complete Data safety using the actual local-only behavior
+- [ ] prepare phone/tablet screenshots; icon and feature graphic are already present under `docs/google-play/assets`
+- [x] prepare PL/EN short and full store descriptions
+- [x] complete ads, content rating, target audience, health-app, and other required declarations truthfully
 - [ ] verify author `Paweł Kaliszewski`, contact `kontakt@gymmin.app`, and voluntary support disclosure
-- [ ] run an internal-testing release before production rollout
+- [x] run an internal-testing release for version 1.0 / versionCode 2
+- [ ] repeat the internal-test upload and smoke test for the next candidate after source changes
 
 ## Retained legacy data safety
 

@@ -14,6 +14,19 @@ workflows:
         script: |
           cd "$CM_BUILD_DIR/apps/mobile"
           npm ci
+      - name: Validate source and mobile runtime
+        script: |
+          set -euo pipefail
+          cd "$CM_BUILD_DIR"
+          npm run docs:validate
+          npm run security:dependencies
+          cd "$CM_BUILD_DIR/apps/mobile"
+          npx --no-install expo install --check
+          npx --no-install expo-doctor
+          npm test
+          npm run typecheck
+          cd "$CM_BUILD_DIR"
+          git diff --check
       - name: Generate native iOS project
         script: |
           cd "$CM_BUILD_DIR/apps/mobile"

@@ -36,6 +36,9 @@ jobs:
       - run: npm ci
       - name: Tracked secrets
         run: npm run security:secrets
+      - name: Documentation
+        working-directory: .
+        run: npm run docs:validate
       - name: Dependency advisory policy
         run: npm run security:dependencies
       - name: Local-only architecture guard

@@ -42,4 +42,4 @@ The main Android manifest explicitly removes `INTERNET` and `com.android.vending
 
 ## Delivery
 
-Production Gate is mobile-only: secret scan, catalog validation, local-only/product guards, Android source security, tests, typecheck, Expo Doctor/export, diff check, native debug APK, signed release AAB, merged-manifest checks, signature verification, and exported-component validation.
+Production Gate is mobile-only: secret and documentation checks, catalog/media validation, local-only/product guards, Android source security, tests, typecheck, Expo Doctor/export, diff check, native debug APK, signed release AAB, merged-manifest checks, signature verification, and exported-component validation. Unsigned iOS builds use separate manually triggered GitHub Actions or Codemagic workflows and are not App Store releases.

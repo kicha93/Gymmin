@@ -10,12 +10,14 @@ Gymmin is a local-only Expo/React Native workout app created and maintained by *
 - Home can expand the current Monday-Sunday plan into a local weekly muscle-volume estimate, separating completed sets from projected end-of-week volume and reusing the exercise catalog's muscle-impact data; the responsive list and anatomy view share one status model, and individual muscle groups can be temporarily hidden or restored on the figure;
 - the local profile action is always visible in the top-right header and never opens login; the workout creator remains available from the Workouts screen regardless of saved workouts or connectivity, but is not duplicated on Home;
 - Profile is a local dashboard with a private avatar, derived completed-session and active-plan counts, achievements and bug reporting; Gymmin does not collect a display name, so the UI uses a localized local-profile label;
-- AI workout creation works by local prompt generation, clipboard hand-off to an external AI chosen by the user, and strict local JSON validation/import; AI modification of saved workouts is not part of the product;
+- AI workout creation works by local generation of a prompt optimized for ChatGPT Deep Research, manual clipboard hand-off, and strict local JSON validation/import; Gymmin does not call an AI API, and AI modification of saved workouts is not part of the product;
 - backup/import uses `.gymmin.json`; v1 backups without `profile` preserve the current local profile, and orphan weekly-plan references are safely discarded without rejecting otherwise valid user data;
 - Contact and bug reports prepare `mailto:` messages locally for `kontakt@gymmin.app`; only the user can send them from the system email client, with clipboard fallback when no client is available;
 - workout CSV/XLSX export and backup work offline;
 - voluntary support only opens [Buy Me a Coffee](https://buymeacoffee.com/atomicjumpr) and grants no product benefits.
 - optional [Advanced Muscle Mode](docs/advanced-muscle-mode.md) adds local, generated subdivision profiles to Exercise Detail without changing the standard catalog or weekly-volume semantics.
+
+The repository is public source-available software. Copyright remains with Paweł Kaliszewski and no reuse license is granted beyond the terms in [LICENSE](LICENSE). Product, architecture, build, release and historical documentation is indexed in [docs/README.md](docs/README.md).
 
 The released runtime opens `gymmin.local.v1.*` directly. Pre-release `gymmin.account.*` test namespaces are ignored and never merged into product data; they cannot block startup.
 
@@ -51,6 +53,7 @@ Push-Location apps/mobile; npx expo-doctor; Pop-Location
 Useful root checks:
 
 ```powershell
+npm run docs:validate
 npm run exercise:catalog:validate
 npm run security:secrets
 npm run security:dependencies
@@ -68,7 +71,7 @@ The hypertrophy-oriented weekly dashboard uses fractional working sets rather th
 
 ## Android artifacts
 
-Phone APK, dependency/Expo/mobile gates + signed release build + merged-manifest, package and signature verification + private GitHub Release upload:
+Phone APK, dependency/Expo/mobile gates + signed release build + merged-manifest, package and signature verification + public GitHub Release upload:
 
 ```powershell
 npm run mobile:github:apk:oneclick
@@ -86,17 +89,17 @@ Niepodpisana paczka iOS do 7-dniowych testów, budowana na macOS przez GitHub Ac
 npm run mobile:ios:personal
 ```
 
-IPA jest dostępne jako GitHub Artifact i musi zostać podpisane podczas instalacji darmowym Apple ID przez AltStore, SideStore albo Sideloadly. Podpis jest ważny 7 dni. Workflow nie korzysta z Apple Developer ani EAS i nie wysyła aplikacji do App Store. Szczegóły: [prywatny build iOS](docs/build-ios-personal.md).
+IPA jest dostępne jako GitHub Artifact i musi zostać podpisane podczas instalacji darmowym Apple ID przez AltStore, SideStore albo Sideloadly. Podpis jest ważny 7 dni. Alternatywny, również niepodpisany build może uruchomić Codemagic z pliku `codemagic.yaml`. Żaden z tych workflow nie publikuje aplikacji w App Store. Szczegóły: [prywatny build iOS](docs/build-ios-personal.md).
 
 Release builds require all four `GYMMIN_UPLOAD_*` values (directly or via the local ignored signing properties/environment file). Gradle fails closed when they are missing and never falls back to the debug keystore. Neither command accepts or embeds a backend URL.
 
-The one-click command reads the version, `versionCode`, and package directly from `apps/mobile/app.json`. It publishes a versioned APK such as `Gymmin-1.0-vc2-arm64-v8a-release.apk` to the matching `v1.0` private release unless tag/title overrides are supplied. The user-facing version remains `1.0`; Android `versionCode` increments independently for upgrade compatibility. It performs Git/GitHub preflight checks before the expensive build, retries transient network failures, updates an existing release instead of recreating its tag, and verifies the uploaded asset size.
+The one-click command reads the version, `versionCode`, and package directly from `apps/mobile/app.json`. It publishes a versioned APK such as `Gymmin-1.0-vc2-arm64-v8a-release.apk` to the matching `v1.0` release unless tag/title overrides are supplied. Because the repository is public, its release and assets are public. The user-facing version remains `1.0`; Android `versionCode` increments independently for upgrade compatibility. It performs Git/GitHub preflight checks before the expensive build, retries transient network failures, updates an existing release instead of recreating its tag, and verifies the uploaded asset size.
 
 See [Android builds](docs/build-android-apk.md), the [release checklist](docs/release-checklist.md), and the prepared [Google Play materials](docs/google-play/console-declarations.md).
 
 ## Privacy and support
 
-Gymmin has an in-app PL/EN privacy policy and canonical static sources under `docs/privacy/`. Because the application repository is private and its current GitHub plan does not support Pages for private repositories, the same static files are published from the dedicated public repository `kicha93/gymmin-privacy`.
+Gymmin has an in-app PL/EN privacy policy and canonical static sources under `docs/privacy/`. The same publishable files are mirrored to the dedicated `kicha93/gymmin-privacy` repository so the stable Google Play privacy URLs remain independent of the application repository and its release workflow.
 
 - Privacy policy PL: <https://kicha93.github.io/gymmin-privacy/>
 - Privacy policy EN: <https://kicha93.github.io/gymmin-privacy/en/>

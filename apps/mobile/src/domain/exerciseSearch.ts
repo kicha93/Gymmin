@@ -21,7 +21,9 @@ export type ExerciseUsageById = ReadonlyMap<string, ExerciseUsage>;
 export type ExerciseSearchRecord = {
   exercise: Exercise;
   normalizedEnglish: string;
+  normalizedEnglishTokens: readonly string[];
   normalizedPolish: string;
+  normalizedPolishTokens: readonly string[];
   normalizedAliases: readonly string[];
   normalizedMetadata: readonly string[];
   tokens: readonly string[];
@@ -83,6 +85,8 @@ const aliasesByCanonicalId = (() => {
 export const exerciseSearchIndex: readonly ExerciseSearchRecord[] = exercises.map((exercise) => {
   const normalizedEnglish = normalizeExerciseSearchText(exercise.name);
   const normalizedPolish = normalizeExerciseSearchText(exercise.polishName);
+  const normalizedEnglishTokens = normalizedEnglish.split(" ");
+  const normalizedPolishTokens = normalizedPolish.split(" ");
   const normalizedAliases = aliasesByCanonicalId.get(exercise.id) ?? [];
   const muscles = muscleKeys
     .filter((key) => exercise.muscleImpact[key] >= 2)
@@ -96,13 +100,15 @@ export const exerciseSearchIndex: readonly ExerciseSearchRecord[] = exercises.ma
   return {
     exercise,
     normalizedEnglish,
+    normalizedEnglishTokens,
     normalizedPolish,
+    normalizedPolishTokens,
     normalizedAliases,
     normalizedMetadata,
     // Typo tolerance is deliberately limited to displayed PL/EN names. Alias
     // and metadata tokens would make a broad query such as "wyciskanie"
     // surface unrelated canonical exercises through a long historical alias.
-    tokens: [...new Set([normalizedEnglish, normalizedPolish].flatMap((value) => value.split(" ")))],
+    tokens: [...new Set([...normalizedEnglishTokens, ...normalizedPolishTokens])],
     muscles,
     equipment,
     category: exercise.category,
@@ -110,26 +116,32 @@ export const exerciseSearchIndex: readonly ExerciseSearchRecord[] = exercises.ma
   };
 });
 
-function tokenPrefixMatch(text: string, queryTokens: readonly string[]) {
-  const tokens = text.split(" ");
+function tokenPrefixMatch(tokens: readonly string[], queryTokens: readonly string[]) {
   return queryTokens.every((queryToken) => tokens.some((token) => token.startsWith(queryToken)));
 }
 
-function textualScore(record: ExerciseSearchRecord, query: string, language: "pl" | "en", allowPartialAliases = false) {
+function textualScore(
+  record: ExerciseSearchRecord,
+  query: string,
+  queryTokens: readonly string[],
+  language: "pl" | "en",
+  allowPartialAliases = false
+) {
   if (!query) return 0;
   const primary = language === "pl" ? record.normalizedPolish : record.normalizedEnglish;
   const secondary = language === "pl" ? record.normalizedEnglish : record.normalizedPolish;
+  const primaryTokens = language === "pl" ? record.normalizedPolishTokens : record.normalizedEnglishTokens;
+  const secondaryTokens = language === "pl" ? record.normalizedEnglishTokens : record.normalizedPolishTokens;
   if (primary === query) return 10_000;
   if (secondary === query) return 9_500;
   if (record.normalizedAliases.includes(query)) return 9_000;
   if (primary.startsWith(query)) return 8_000;
   if (secondary.startsWith(query)) return 7_500;
-  const queryTokens = query.split(" ");
-  if (tokenPrefixMatch(primary, queryTokens)) return 7_000;
-  if (tokenPrefixMatch(secondary, queryTokens)) return 6_500;
+  if (tokenPrefixMatch(primaryTokens, queryTokens)) return 7_000;
+  if (tokenPrefixMatch(secondaryTokens, queryTokens)) return 6_500;
   if (primary.includes(query) || secondary.includes(query)) return 5_000;
   if (allowPartialAliases && record.normalizedAliases.some((alias) => alias.startsWith(query))) return 4_500;
-  if (allowPartialAliases && record.normalizedAliases.some((alias) => tokenPrefixMatch(alias, queryTokens))) return 4_000;
+  if (allowPartialAliases && record.normalizedAliases.some((alias) => tokenPrefixMatch(alias.split(" "), queryTokens))) return 4_000;
   if (record.normalizedMetadata.some((field) => field.includes(query))) return 2_000;
   return -1;
 }
@@ -164,6 +176,7 @@ function matchesFilters(record: ExerciseSearchRecord, filters: ExerciseSearchFil
 
 export function searchExercises(options: ExerciseSearchOptions): ExerciseSearchResult[] {
   const query = normalizeExerciseSearchText(options.query);
+  const queryTokens = query ? query.split(" ") : [];
   const mode = options.mode ?? "all";
   const candidates = exerciseSearchIndex.filter((record) => {
     if (options.allowedExerciseIds && !options.allowedExerciseIds.has(record.exercise.id)) return false;
@@ -173,14 +186,14 @@ export function searchExercises(options: ExerciseSearchOptions): ExerciseSearchR
     return true;
   });
   let scored = candidates
-    .map((record) => ({ record, score: textualScore(record, query, options.language) }))
+    .map((record) => ({ record, score: textualScore(record, query, queryTokens, options.language) }))
     .filter(({ score }) => !query || score >= 0);
 
   // Partial historical aliases are a fallback, not an additional bucket mixed
   // into a healthy name search. Exact aliases remain searchable above.
   if (query && scored.length === 0) {
     scored = candidates
-      .map((record) => ({ record, score: textualScore(record, query, options.language, true) }))
+      .map((record) => ({ record, score: textualScore(record, query, queryTokens, options.language, true) }))
       .filter(({ score }) => score >= 0);
   }
 
@@ -190,7 +203,6 @@ export function searchExercises(options: ExerciseSearchOptions): ExerciseSearchR
     const existing = new Set(scored.map(({ record }) => record.exercise.id));
     candidates.forEach((record) => {
       if (existing.has(record.exercise.id)) return;
-      const queryTokens = query.split(" ");
       const fuzzy = queryTokens.every((queryToken) => record.tokens.some((token) => editDistanceAtMostTwo(queryToken, token)));
       if (fuzzy) scored.push({ record, score: 3_000 });
     });

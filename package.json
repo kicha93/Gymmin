@@ -2,6 +2,7 @@
   "name": "gymmin",
   "private": true,
   "scripts": {
+    "docs:validate": "node scripts/validate-documentation.mjs",
     "security:secrets": "node scripts/validate-tracked-secrets.mjs",
     "security:dependencies": "npm --prefix apps/mobile run security:dependencies",
     "google-play:validate": "node scripts/validate-google-play-release.mjs",

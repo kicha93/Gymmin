@@ -177,6 +177,16 @@ describe("local AI copy/paste", () => {
     expect(byName.issues[0].code).toBe("unknown-exercise");
   });
 
+  it("allows a canonical strength exercise to be used as a warm-up set", () => {
+    const payload = JSON.parse(response());
+    payload.workouts[0].stages[0].type = "warmup";
+    const result = parseAiWorkoutResponse(JSON.stringify(payload));
+
+    expect(result.errors).toEqual([]);
+    expect(result.issues).toEqual([]);
+    expect(canApplyAiWorkoutResult(result)).toBe(true);
+  });
+
   it("blocks unknown exercises, offers replacements and enables apply after replacement", () => {
     const result = parseAiWorkoutResponse(response({ exerciseId: "mystery-lift" }));
     expect(result.issues).toHaveLength(1);

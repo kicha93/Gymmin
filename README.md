@@ -1,5 +1,9 @@
 # Gymmin
 
+[![Download Android APK](https://img.shields.io/badge/Android-Download%20latest%20APK-138A87?logo=android&logoColor=white)](https://github.com/kicha93/Gymmin/releases/latest)
+
+**[Download the latest signed Android APK](https://github.com/kicha93/Gymmin/releases/latest)** — open the release and choose `Gymmin-arm64-v8a-release-latest.apk`. Source code and installable packages are published together in this repository.
+
 Gymmin is a local-only Expo/React Native workout app created and maintained by **Paweł Kaliszewski**.
 
 ## Product architecture

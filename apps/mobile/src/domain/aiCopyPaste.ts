@@ -1,9 +1,7 @@
 import { exerciseCatalogDataSource, type ExerciseCatalogDataSource } from "./exerciseCatalogDataSource";
 import {
-  activeExerciseLibraryTiers,
   getPrimaryMuscles,
   getRequiredEquipment,
-  isExerciseAvailableForStageType,
   resolveExerciseId
 } from "./exercises";
 import type { SavedWorkout } from "./savedWorkouts";
@@ -299,11 +297,6 @@ export function parseAiWorkoutResponse(text: string, now = Date.now(), language:
               stepId,
               suggestions: suggestCatalogExercises(rawName || rawId)
             });
-          } else if (!isExerciseAvailableForStageType(catalogExercise, stageType, activeExerciseLibraryTiers)) {
-            errors.push(message(
-              `Exercise ${catalogExercise.name} is not valid for the ${stageType} stage.`,
-              `Ćwiczenie ${catalogExercise.polishName} nie pasuje do etapu typu ${stageType}.`
-            ));
           }
         });
       });

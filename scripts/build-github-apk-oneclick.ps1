@@ -1,6 +1,6 @@
 param(
   [string]$Architectures = "arm64-v8a",
-  [string]$GitHubRepo = "kicha93/gymmin-apk",
+  [string]$GitHubRepo = "kicha93/Gymmin",
   [string]$ReleaseTag = "",
   [string]$ReleaseTitle = "",
   [string]$CommitMessage = "",

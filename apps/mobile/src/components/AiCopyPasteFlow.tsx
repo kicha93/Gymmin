@@ -113,7 +113,7 @@ export function AiCopyPasteFlow({
           {result.errors.map((error) => (
             <Text key={error} style={[styles.inlineError, { color: theme.danger }]}>{error}</Text>
           ))}
-          {result.errors.length ? (
+          {result.errors.length && result.workouts.length === 0 ? (
             <Text style={[styles.creatorDescription, { color: theme.muted }]}>{t("aiLocalJsonOnlyHint")}</Text>
           ) : null}
           {result.workouts.map((workout) => (

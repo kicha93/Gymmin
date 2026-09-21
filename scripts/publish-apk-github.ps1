@@ -1,6 +1,6 @@
 param(
   [string]$ApkPath = "",
-  [string]$GitHubRepo = "kicha93/gymmin-apk",
+  [string]$GitHubRepo = "kicha93/Gymmin",
   [string]$ReleaseTag = "",
   [string]$ReleaseTitle = "",
   [ValidateRange(1, 20)][int]$GitHubMaxAttempts = 6,
@@ -16,6 +16,19 @@ $appConfig = Get-Content -LiteralPath (Join-Path $repoRoot "apps\mobile\app.json
 $appVersion = [string]$appConfig.expo.version
 if (-not $ReleaseTag) { $ReleaseTag = "v$appVersion" }
 if (-not $ReleaseTitle) { $ReleaseTitle = "Gymmin $appVersion" }
+$releaseNotes = @"
+## Gymmin $appVersion for Android
+
+Download Gymmin-arm64-v8a-release-latest.apk for the latest signed Android build, or the versioned APK for an immutable filename.
+
+### Installation
+
+1. Download the APK directly on an Android phone.
+2. Allow installation from the browser or file manager when Android asks.
+3. Open the downloaded APK and install it.
+
+The APK is built from this public source repository, targets arm64-v8a devices, and is verified by the one-click release pipeline before upload.
+"@
 
 if (-not $ApkPath) {
   $ApkPath = Join-Path $artifactsRoot "Gymmin-arm64-v8a-release-latest.apk"
@@ -143,7 +156,7 @@ if (-not $releaseExists) {
   $releaseUploaded = Invoke-GitHubCliWithRetry -Arguments (@("release", "upload", $ReleaseTag) + $publishAssetPaths + @("--repo", $GitHubRepo, "--clobber")) -MaxAttempts 2
   if (-not $releaseUploaded) {
     Write-Step "Creating GitHub release $ReleaseTag in $GitHubRepo..."
-    $releaseCreated = Invoke-GitHubCliWithRetry -Arguments (@("release", "create", $ReleaseTag) + $publishAssetPaths + @("--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", "Gymmin Android APK build."))
+    $releaseCreated = Invoke-GitHubCliWithRetry -Arguments (@("release", "create", $ReleaseTag) + $publishAssetPaths + @("--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", $releaseNotes))
   }
 } else {
   Write-Step "Uploading versioned APK and latest alias to existing GitHub release $ReleaseTag in $GitHubRepo..."
@@ -152,6 +165,10 @@ if (-not $releaseExists) {
 
 if (-not $releaseCreated -and -not $releaseUploaded) {
   throw "Could not upload APK to GitHub release $ReleaseTag."
+}
+
+if (-not (Invoke-GitHubCliWithRetry -Arguments @("release", "edit", $ReleaseTag, "--repo", $GitHubRepo, "--title", $ReleaseTitle, "--notes", $releaseNotes))) {
+  throw "APK was uploaded, but the public release description could not be updated."
 }
 
 $releaseJson = Invoke-GitHubCliCaptureWithRetry -Arguments @("release", "view", $ReleaseTag, "--repo", $GitHubRepo, "--json", "url,assets")

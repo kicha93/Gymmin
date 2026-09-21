@@ -31,7 +31,7 @@ The command:
 5. validates the final merged manifest, package/version metadata, and APK signature;
 6. writes both the `latest` build output and a versioned artifact such as `.artifacts/Gymmin-1.0-vc2-arm64-v8a-release.apk`;
 7. commits and pushes the verified source state, retrying transient Git network failures without opening an interactive credential prompt;
-8. creates or updates the matching GitHub Release (`v1.0` for app version `1.0`) with `--clobber`, then verifies the remote asset name and byte size. The repository is public, so release assets are public downloads.
+8. creates or updates the matching GitHub Release (`v1.0` for app version `1.0`) in the main public `kicha93/Gymmin` source repository with `--clobber`, updates the public installation instructions, then verifies the remote asset name and byte size. The code and installable APK are therefore discoverable in one place.
 
 It takes no URL, performs no health/tunnel check, and does not inspect account or internet availability. `-ReleaseTag` and `-ReleaseTitle` remain optional explicit overrides. Use `-SkipPublish` to perform the complete preparation and verification without GitHub upload.
 

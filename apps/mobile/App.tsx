@@ -181,7 +181,11 @@ import {
   replaceUnknownExercise,
   type AiWorkoutImportResult
 } from "./src/domain/aiCopyPaste";
-import { auditAiWorkoutPlan, formatAiWorkoutPlanQualityIssue } from "./src/domain/aiWorkoutPlanQuality";
+import {
+  auditAiWorkoutPlan,
+  formatAiWorkoutPlanQualityIssue,
+  isBlockingAiWorkoutPlanQualityIssue
+} from "./src/domain/aiWorkoutPlanQuality";
 import { translate, type LanguageCode, type TranslationKey } from "./src/i18n/translations";
 import { ContactScreen } from "./src/screens/ContactScreen";
 import { BugReportScreen } from "./src/screens/BugReportScreen";
@@ -1047,9 +1051,12 @@ function GymminApp() {
         setCreatorAiResponse(session.response);
         if (session.response.trim()) {
           const parsed = parseAiWorkoutResponse(session.response, Date.now(), language);
+          const qualityIssues = parsed.errors.length ? [] : auditAiWorkoutPlan(parsed.workouts, session.draft);
           setCreatorAiResult({
             ...parsed,
-            errors: [...parsed.errors, ...(parsed.errors.length ? [] : auditAiWorkoutPlan(parsed.workouts, session.draft))
+            errors: [...parsed.errors, ...qualityIssues.filter(isBlockingAiWorkoutPlanQualityIssue)
+              .map((issue) => formatAiWorkoutPlanQualityIssue(issue, language))],
+            warnings: [...parsed.warnings, ...qualityIssues.filter((issue) => !isBlockingAiWorkoutPlanQualityIssue(issue))
               .map((issue) => formatAiWorkoutPlanQualityIssue(issue, language))]
           });
         }
@@ -2945,9 +2952,12 @@ function GymminApp() {
                   }}
                   onParse={() => {
                     const parsed = parseAiWorkoutResponse(creatorAiResponse, Date.now(), language);
+                    const qualityIssues = parsed.errors.length ? [] : auditAiWorkoutPlan(parsed.workouts, creatorDraft);
                     setCreatorAiResult({
                       ...parsed,
-                      errors: [...parsed.errors, ...(parsed.errors.length ? [] : auditAiWorkoutPlan(parsed.workouts, creatorDraft))
+                      errors: [...parsed.errors, ...qualityIssues.filter(isBlockingAiWorkoutPlanQualityIssue)
+                        .map((issue) => formatAiWorkoutPlanQualityIssue(issue, language))],
+                      warnings: [...parsed.warnings, ...qualityIssues.filter((issue) => !isBlockingAiWorkoutPlanQualityIssue(issue))
                         .map((issue) => formatAiWorkoutPlanQualityIssue(issue, language))]
                     });
                   }}

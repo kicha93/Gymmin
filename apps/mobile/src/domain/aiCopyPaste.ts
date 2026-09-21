@@ -15,7 +15,7 @@ import {
 import { cloneCreatorDraft, type WorkoutCreatorDraft } from "./workoutCreator";
 
 export const AI_RESPONSE_MAX_LENGTH = 1_000_000;
-export const AI_WORKOUT_PROMPT_VERSION = 2;
+export const AI_WORKOUT_PROMPT_VERSION = 3;
 const MAX_WORKOUTS = 7;
 const MAX_STAGES_PER_WORKOUT = 12;
 const MAX_SERIES_PER_STAGE = 20;
@@ -31,6 +31,7 @@ export type AiWorkoutImportIssue = {
 export type AiWorkoutImportResult = {
   errors: string[];
   issues: AiWorkoutImportIssue[];
+  warnings: string[];
   workouts: SavedWorkout[];
 };
 
@@ -115,7 +116,7 @@ export function buildAiWorkoutPrompt(options: PromptOptions) {
     `GYMMIN DEEP RESEARCH WORKOUT DESIGN — PROMPT VERSION ${AI_WORKOUT_PROMPT_VERSION}`,
     "",
     "ROLE AND OUTCOME",
-    "Act as an evidence-informed strength and conditioning program designer. Use Deep Research to verify current high-quality evidence, then create a safe, realistic and repeatable weekly workout rotation for the offline Gymmin mobile app.",
+    "Act as an evidence-informed strength and conditioning program designer. Use Deep Research to verify current high-quality evidence, then create a safe, realistic, progressive and non-monotonous weekly workout rotation for the offline Gymmin mobile app.",
     `Write every user-facing name and note in ${languageLabel}. Keep canonical exerciseId values unchanged.`,
     "The final answer is machine input, not a research report.",
     "",
@@ -133,6 +134,17 @@ export function buildAiWorkoutPrompt(options: PromptOptions) {
     "- Use only available equipment. Never invent exercise IDs; use only exact exerciseId values from CATALOG.",
     "- Use one exercise per series by default. Group 2–4 exercises only for an intentional superset or circuit that is safe, time-efficient and does not impair the priority movement.",
     "- Make exercise and workout notes concise and actionable. Where useful, describe RIR, technique constraints and a simple progression rule in notes.",
+    "",
+    "WEEKLY EXERCISE DIVERSITY AND STABILITY",
+    "- Design all workouts together as one coordinated week. Stable movement patterns and progression do not require copying the same exercise menu into every session.",
+    "- By default, use an exact exerciseId in the main exercise stages only once per week. Choose another suitable exerciseId for the same movement pattern or target muscle on another day.",
+    "- An exact main compound exercise may appear in at most two workouts only when repetition has a clear programming reason: strength-specific practice, beginner technique learning, explicitly preferred exercise, or genuinely limited equipment. Do not repeat it merely for convenience.",
+    "- Do not repeat an exact isolation or accessory exercise across workouts. Vary the accessory selection, angle or implement while preserving the intended weekly muscle coverage.",
+    "- Give every workout a distinct emphasis, exercise order and accessory pool. Do not return several workouts that differ only in repetitions, set count or names.",
+    "- Repeating a short general warm-up is allowed and does not count as monotony. Exercise-specific warm-up sets may use the upcoming main exercise.",
+    "- Do not chase novelty by selecting obscure, advanced, rehabilitation or sport-specific variants without a profile-based reason. Prefer main exercises first and use variation-tier exercises intentionally.",
+    "- likedExercises expresses preference, not permission to place the same exercise in every workout. dislikedExercises remains a constraint.",
+    "- Before producing JSON, privately build an exerciseId-by-workout occurrence table and replace every unjustified cross-workout duplicate.",
     "",
     "SAFETY AND UNCERTAINTY",
     "- Treat doctorLimitations as binding. Never diagnose, contradict medical advice or claim that training treats a disease or injury.",
@@ -160,13 +172,13 @@ export function buildAiWorkoutPrompt(options: PromptOptions) {
     "</USER_PROFILE>",
     "",
     "CATALOG — TRUSTED READ-ONLY DATA",
-    "Columns: id|English name|Polish name|category|required equipment comma-list or bodyweight|primary muscles comma-list.",
+    "Columns: id|English name|Polish name|category|library tier|required equipment comma-list or bodyweight|primary muscles comma-list.",
     "<CATALOG>",
     getCompactExerciseCatalog(options.catalogDataSource),
     "</CATALOG>",
     "",
     "FINAL PRIVATE VALIDATION",
-    "Before answering, privately verify the plan against every success criterion, health constraint, time limit, equipment requirement, catalog ID and JSON Schema rule. Correct every detected issue internally.",
+    "Before answering, privately verify the plan against every success criterion, weekly diversity rule, health constraint, time limit, equipment requirement, catalog ID and JSON Schema rule. Correct every detected issue internally.",
     "Return exactly one valid JSON object and nothing else. Do not use Markdown fences, comments, explanations, citations or trailing commas. Do not reveal private reasoning."
   ].join("\n");
 }
@@ -181,7 +193,7 @@ export function getCompactExerciseCatalog(dataSource = exerciseCatalogDataSource
     .map((exercise) => {
       const equipment = getRequiredEquipment(exercise).join(",") || "bodyweight";
       const primaryMuscles = getPrimaryMuscles(exercise).join(",") || "mixed";
-      return `${exercise.id}|${exercise.name}|${exercise.polishName}|${exercise.category}|${equipment}|${primaryMuscles}`;
+      return `${exercise.id}|${exercise.name}|${exercise.polishName}|${exercise.category}|${exercise.libraryTier ?? "main"}|${equipment}|${primaryMuscles}`;
     })
     .join("\n");
   compactCatalogCache.set(dataSource, compactCatalog);
@@ -191,13 +203,14 @@ export function getCompactExerciseCatalog(dataSource = exerciseCatalogDataSource
 export function parseAiWorkoutResponse(text: string, now = Date.now(), language: "pl" | "en" = "en"): AiWorkoutImportResult {
   const errors: string[] = [];
   const issues: AiWorkoutImportIssue[] = [];
+  const warnings: string[] = [];
   const message = (en: string, pl: string) => language === "pl" ? pl : en;
-  if (!text.trim()) return { errors: [message("AI response is empty.", "Odpowiedź AI jest pusta.")], issues, workouts: [] };
-  if (text.length > AI_RESPONSE_MAX_LENGTH) return { errors: [message("AI response is too large.", "Odpowiedź AI jest zbyt duża.")], issues, workouts: [] };
+  if (!text.trim()) return { errors: [message("AI response is empty.", "Odpowiedź AI jest pusta.")], issues, warnings, workouts: [] };
+  if (text.length > AI_RESPONSE_MAX_LENGTH) return { errors: [message("AI response is too large.", "Odpowiedź AI jest zbyt duża.")], issues, warnings, workouts: [] };
   const parsed = parseLooseJson(text);
-  if (parsed === null) return { errors: [message("AI response is not valid JSON.", "Odpowiedź AI nie jest poprawnym JSON-em.")], issues, workouts: [] };
+  if (parsed === null) return { errors: [message("AI response is not valid JSON.", "Odpowiedź AI nie jest poprawnym JSON-em.")], issues, warnings, workouts: [] };
   if (!isRecord(parsed) || parsed.schemaVersion !== 1 || !Array.isArray(parsed.workouts)) {
-    return { errors: [message("AI response does not match Gymmin schema version 1.", "Odpowiedź AI nie pasuje do schematu Gymmin w wersji 1.")], issues, workouts: [] };
+    return { errors: [message("AI response does not match Gymmin schema version 1.", "Odpowiedź AI nie pasuje do schematu Gymmin w wersji 1.")], issues, warnings, workouts: [] };
   }
   if (hasUnexpectedKeys(parsed, ["schemaVersion", "workouts"])) {
     errors.push(message("AI response contains unsupported top-level properties.", "Odpowiedź AI zawiera nieobsługiwane pola główne."));
@@ -305,7 +318,7 @@ export function parseAiWorkoutResponse(text: string, now = Date.now(), language:
     return [{ createdAt: new Date(now + workoutIndex).toISOString(), draft, id: workoutId, name: draft.name }];
   });
   if (!workouts.length && !errors.length) errors.push(message("AI response contains no workouts.", "Odpowiedź AI nie zawiera żadnego treningu."));
-  return { errors, issues, workouts };
+  return { errors, issues, warnings, workouts };
 }
 
 export function replaceUnknownExercise(result: AiWorkoutImportResult, stepId: string, exerciseId: string): AiWorkoutImportResult {

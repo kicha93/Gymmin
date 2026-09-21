@@ -113,6 +113,12 @@ export function AiCopyPasteFlow({
           {result.errors.map((error) => (
             <Text key={error} style={[styles.inlineError, { color: theme.danger }]}>{error}</Text>
           ))}
+          {result.warnings.map((warning) => (
+            <View key={warning} style={styles.creatorSectionHeader}>
+              <Ionicons name="warning-outline" size={18} color={theme.primary} />
+              <Text style={[styles.workoutMeta, { color: theme.primary, flex: 1 }]}>{warning}</Text>
+            </View>
+          ))}
           {result.errors.length && result.workouts.length === 0 ? (
             <Text style={[styles.creatorDescription, { color: theme.muted }]}>{t("aiLocalJsonOnlyHint")}</Text>
           ) : null}

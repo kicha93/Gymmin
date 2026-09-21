@@ -51,7 +51,7 @@ Draft formularza, etap, nazwa profilu, prompt oraz wklejona odpowiedź są autom
 
 ## Prompt
 
-`buildAiWorkoutPrompt` generuje wersjonowany Prompt V2 zoptymalizowany dla Deep Research i dołącza:
+`buildAiWorkoutPrompt` generuje wersjonowany Prompt V3 zoptymalizowany dla Deep Research i dołącza:
 
 - język tekstów użytkowych PL albo EN;
 - odpowiedzi formularza jako JSON;
@@ -60,9 +60,10 @@ Draft formularza, etap, nazwa profilu, prompt oraz wklejona odpowiedź są autom
 - kryteria skutecznego, realistycznego planu i prywatną autoweryfikację;
 - zasady bezpieczeństwa dla bólu, urazów, chorób, leków i zaleceń lekarza;
 - politykę brakujących i sprzecznych danych oraz zakaz zgadywania ciężaru;
+- politykę kontrolowanej różnorodności całego tygodnia: stabilne wzorce ruchowe bez kopiowania identycznego zestawu ćwiczeń pomiędzy dniami, niepowtarzane akcesoria oraz ograniczone do dwóch dni powtórzenie ćwiczenia bazowego wyłącznie przy uzasadnieniu siłowym, technicznym, sprzętowym lub wynikającym z preferencji;
 - oznaczenie formularza jako niezaufanych danych, a nie instrukcji;
 - zakaz samodzielnych elementów odpoczynku;
-- katalog wszystkich canonical exercises w formacie `id|English name|Polish name|category|required equipment|primary muscles`.
+- katalog wszystkich canonical exercises w formacie `id|English name|Polish name|category|library tier|required equipment|primary muscles`.
 
 Prompt poleca przeprowadzenie badania i analizy wewnętrznie, bez ujawniania chain-of-thought. Wynik końcowy musi być dokładnie jednym obiektem JSON bez raportu, cytowań ani Markdownu. Pytania doprecyzowujące mogą wystąpić przed rozpoczęciem badania w interfejsie ChatGPT, ale nie są typem odpowiedzi importowanym do Gymmin. Gymmin nie normalizuje katalogu ponownie dla każdego renderu; kompaktowy katalog jest buforowany dla źródła danych.
 
@@ -93,7 +94,7 @@ Parser przyjmuje czysty JSON, JSON w bloku Markdown oraz pojedynczy możliwy do 
 
 Rozwiązywane jest canonical ID, w tym historyczny alias, ale wynik musi należeć do aktywnego katalogu przekazanego w promptcie. Dopasowanie wyłącznie po nazwie nie omija kontraktu ID. Nierozpoznane ćwiczenie blokuje zapis i otrzymuje maksymalnie pięć propozycji z katalogu. Po ręcznym zastąpieniu wszystkich nieznanych pozycji i usunięciu błędów można zapisać wynik.
 
-Przed zapisem działa dodatkowy lokalny audyt jakości: liczba treningów musi odpowiadać deklarowanej liczbie dni, szacowany czas nie może rażąco przekraczać limitu, ćwiczenie nie może wymagać niezadeklarowanego sprzętu ani powtarzać się w części głównej tego samego treningu. Kategoria ćwiczenia musi pasować do typu etapu.
+Przed zapisem działa dodatkowy lokalny audyt jakości: liczba treningów musi odpowiadać deklarowanej liczbie dni, szacowany czas nie może rażąco przekraczać limitu, ćwiczenie nie może wymagać niezadeklarowanego sprzętu ani powtarzać się w części głównej tego samego treningu. Te błędy blokują zapis. Audyt analizuje również cały tydzień i pokazuje nieblokujące ostrzeżenia o identycznym ćwiczeniu użytym w zbyt wielu treningach oraz o nadmiernej koncentracji na jednej rodzinie podobnych ruchów. Dla celu siłowego jedno bazowe ćwiczenie może wystąpić w dwóch treningach bez ostrzeżenia; rozgrzewka nie jest liczona jako monotonia.
 
 Podgląd przed zapisem pokazuje etapy, liczbę serii, ćwiczenia, cele, odpoczynek, obciążenie i uwagi. Zapis tworzy nowe lokalne definicje treningów. Prompt i odpowiedź istnieją tylko jako odzyskiwalna, lokalna sesja robocza i są usuwane po zapisie; nie tworzą historii AI i nie zmieniają istniejących treningów.
 
@@ -112,7 +113,8 @@ Minimalny zestaw obejmuje:
 - zgodność sekcji i unikalność identyfikatorów pól;
 - budowę promptu PL/EN z aktywnego katalogu;
 - obecność instrukcji Deep Research, kryteriów sukcesu, ochrony przed instrukcjami w formularzu i zakazu zgadywania ciężaru;
-- metadata sprzętu, kategorii i głównych mięśni w katalogu promptu;
+- reguły kontrolowanej różnorodności całego tygodnia;
+- metadata sprzętu, kategorii, poziomu biblioteki i głównych mięśni w katalogu promptu;
 - brak pól backend/auth/billing;
 - czysty, fenced i otoczony tekstem JSON;
 - błędny schemat, typy, liczby ujemne i limit rozmiaru;
@@ -120,7 +122,7 @@ Minimalny zestaw obejmuje:
 - aktywne ID, odrzucanie wpisów wyłącznie po nazwie i ścisłe dodatkowe pola;
 - blokadę nieznanych ćwiczeń i ręczne zastąpienie.
 - odzyskiwanie i czyszczenie sesji kreatora;
-- lokalny audyt liczby dni, czasu, sprzętu i duplikatów;
+- lokalny audyt liczby dni, czasu, sprzętu, duplikatów w treningu, powtórzeń między dniami, wyjątków dla ćwiczeń bazowych, powtarzalnej rozgrzewki i koncentracji jednej rodziny ruchów;
 - budżet rozmiaru promptu.
 
 Testy znajdują się w `apps/mobile/src/domain/tests/workoutCreator.test.ts`, `aiCopyPaste.test.ts`, `aiWorkoutPlanQuality.test.ts` i `workoutCreatorSession.test.ts`.

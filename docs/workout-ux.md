@@ -13,6 +13,7 @@ The profile/avatar action is permanently visible in the top-right application he
 - A local creator profile can save the form for reuse. Preparing a prompt never sends the profile or creates a remote job.
 - Unknown exercises block Save and offer canonical catalog replacements. There is no saved-workout AI rewrite or Apply flow.
 - Prompts use the current validated exercise catalog, canonical IDs and `restSeconds` on exercises; no standalone rest elements are generated.
+- Prompt V3 designs all requested sessions as one coordinated week: movement patterns remain stable for progression, while exact accessories and unjustified cross-workout exercise duplicates are avoided. The review step shows cross-week monotony as a non-blocking warning; repeated warm-ups and justified strength-anchor practice are treated separately.
 - Plain JSON, fenced JSON and a recoverable text wrapper are supported. Malformed, oversized and schema-invalid responses are rejected.
 - The response contract accepts a finished workout JSON object only. Follow-up questions from the external assistant are not an application response type.
 - Auth, credits, billing, consent-to-upload, job status and polling are absent from the product flow.

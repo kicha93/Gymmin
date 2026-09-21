@@ -52,6 +52,9 @@ describe("local AI copy/paste", () => {
       expect(prompt).toContain("Do not reveal private reasoning");
       expect(prompt).toContain("restSeconds");
       expect(prompt).toContain("Never invent exercise IDs");
+      expect(prompt).toContain("WEEKLY EXERCISE DIVERSITY AND STABILITY");
+      expect(prompt).toContain("exerciseId-by-workout occurrence table");
+      expect(prompt).toContain("Do not repeat an exact isolation or accessory exercise across workouts");
       expect(prompt).not.toContain("consume credit");
       expect(prompt).not.toContain("start job");
     }
@@ -77,7 +80,7 @@ describe("local AI copy/paste", () => {
     expect(availableExercises.length).toBeGreaterThan(0);
     for (const exercise of availableExercises) {
       expect(compactCatalog).toContain(`${exercise.id}|${exercise.name}|${exercise.polishName}`);
-      expect(compactCatalog).toContain(`|${exercise.category}|`);
+      expect(compactCatalog).toContain(`|${exercise.category}|${exercise.libraryTier ?? "main"}|`);
       expect(exercise.libraryTier).not.toBe("progression");
     }
   });
@@ -118,6 +121,13 @@ describe("local AI copy/paste", () => {
       });
       expect(canApplyAiWorkoutResult(result)).toBe(true);
     }
+  });
+
+  it("keeps quality warnings non-blocking", () => {
+    const result = parseAiWorkoutResponse(response());
+    result.warnings.push("Repeated accessory across weekly workouts.");
+
+    expect(canApplyAiWorkoutResult(result)).toBe(true);
   });
 
   it("recovers JSON surrounded by text and rejects malformed, missing and oversized responses", () => {

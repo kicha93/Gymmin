@@ -128,9 +128,10 @@ describe("exercise catalog cleanup", () => {
     }
   });
 
-  it("keeps a single available start or end image", () => {
-    expect(getExerciseImageAssetKeys("plank-45-degree-plank-728")).toEqual([
-      "plank-45-degree-plank-728/start"
+  it("keeps a single available end image and the completed jump-rope pair", () => {
+    expect(getExerciseImageAssetKeys("cardio-jump-rope-128")).toEqual([
+      "cardio-jump-rope-128/start",
+      "cardio-jump-rope-128/end"
     ]);
     expect(getExerciseImageAssetKeys("total-body-burpee-1381")).toEqual([
       "total-body-burpee-1381/end"
